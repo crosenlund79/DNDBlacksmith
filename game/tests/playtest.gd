@@ -622,7 +622,7 @@ func craft_ui(rid: String, frac: float, dice_mode: String, phys := {}, tag := ""
 			shot_stations[st] = true
 			await shot("check_" + st)
 		if _minigame() != null:
-			check_log.append_array(await play_minigame(frac < 0.3, ("mg_" + st) if tag != "" and not shot_stations.has(st) else ""))
+			check_log.append_array(await play_minigame(true, ("mg_" + st) if tag != "" and not shot_stations.has(st) else ""))
 			shot_stations[st] = true
 		else:
 			await play_checks(true, frac)
