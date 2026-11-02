@@ -497,3 +497,57 @@ func phase_panels() -> void:
 			await shot("panel_" + a)
 		await press("cancel")
 		await wait(0.3)
+
+
+## Visits the rooms of the redesigned buildings and photographs them (plus a zoomed-out plan).
+func phase_interiors() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(10, 0)
+	var tour := [["smithy", [5.0, 7.0], "forge_room"], ["smithy", [14.5, 1.6], "shop"], ["smithy", [14.5, 8.0], "stock_hall"],
+		["smithy", [3.6, 13.6], "rune_room"], ["smithy", [10.0, 13.0], "alchemy_room"], ["smithy", [16.0, 13.6], "leather_room"],
+		["smithy", [5.5, 22.2], "arcane_room"], ["smithy", [15.6, 20.4], "material_store"], ["smithy", [24.0, 2.4], "living"],
+		["smithy", [20.6, 10.4], "study"], ["smithy", [26.0, 11.6], "bedroom"], ["smithy", [21.0, 16.0], "storage"],
+		["smithy", [27.0, 19.0], "pantry"], ["inn", [7.0, 8.4], "common"], ["inn", [16.6, 3.4], "kitchen"],
+		["inn", [16.6, 10.6], "hilde_room"], ["grocery", [3.6, 7.0], "g_shop"], ["grocery", [4.6, 2.4], "g_living"],
+		["house_tobin", [3.0, 4.6], "house_tobin_main"], ["inn_upstairs", [6.0, 7.0], "landing"],
+		["inn_upstairs", [15.0, 6.0], "velvet_parlour"]]
+	for t in tour:
+		await tp(W().bpos(t[0], t[1][0], t[1][1]))
+		await wait(0.9)
+		expect(W().area == t[0] and W().room == t[2], "room: %s/%s (area %s room %s)" % [t[0], t[2], W().area, W().room])
+		await shot("room_%s_%s" % [t[0], t[2]])
+	# zoomed-out plan of the smithy with its roof hidden
+	await tp(W().bpos("smithy", 15.0, 11.5))
+	W().camera.zoom = Vector2(0.62, 0.62)
+	W().camera.limit_bottom = 100000
+	await wait(1.0)
+	await shot("plan_smithy")
+	W().camera.zoom = Vector2.ONE
+	# NPC routing through rooms: path from the front door to the private study must use doorways
+	var path: PackedVector2Array = W().path_to(W().spots["smithy_door_out"], "quarters_table")
+	expect(path.size() >= 6, "nav: path into the living room goes room to room (%d points)" % path.size())
+
+
+## Every named spot must be reachable on the navigation graph from the village square.
+func phase_nav() -> void:
+	await click("New Game")
+	await wait(2.0)
+	var start: int = W().spot_ids["square_0"]
+	var up_start: int = W().spot_ids["upstairs_hall"]
+	var up_rect: Rect2 = W().brect(DB.building("inn_upstairs"))
+	var bad := []
+	for name in W().spot_ids:
+		# the upper floor is its own graph island, reached by the stairs (a floor change, not a walk)
+		var from: int = up_start if up_rect.has_point(W().spots[name]) else start
+		var ids: PackedInt64Array = W().astar.get_id_path(from, W().spot_ids[name])
+		if ids.is_empty():
+			bad.append(name)
+	expect(bad.is_empty(), "nav: all %d spots reachable from the square %s" % [W().spot_ids.size(), bad])
+	var missing := []
+	for id in W().npcs:
+		W().spot_for(id)
+	for name in ["smithy_counter_front", "work_mining", "work_alchemy", "work_runecraft", "work_smithing", "quarters_table", "inn_t1", "inn_behind_bar", "grocery_behind", "lantern_1"]:
+		if not W().spot_ids.has(name):
+			missing.append(name)
+	expect(missing.is_empty(), "nav: schedule spots exist %s" % [missing])

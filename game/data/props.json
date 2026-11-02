@@ -486,5 +486,213 @@
   ],
   "solid": true,
   "desc": "training dummy"
+ },
+ "tool_wall": {
+  "size": [
+   160,
+   48
+  ],
+  "solid": true,
+  "desc": "wall-mounted rack of hammers, tongs and files (smithy)"
+ },
+ "iron_bars": {
+  "size": [
+   96,
+   64
+  ],
+  "solid": true,
+  "desc": "stack of iron bars and billets"
+ },
+ "soot_decal": {
+  "size": [
+   192,
+   160
+  ],
+  "solid": false,
+  "desc": "floor soot/char stains around a forge (semi-transparent decal)"
+ },
+ "rune_shelf": {
+  "size": [
+   128,
+   48
+  ],
+  "solid": true,
+  "desc": "shelf of carved runestones with faint pale-gold glow marks"
+ },
+ "rune_glyph_decal": {
+  "size": [
+   160,
+   160
+  ],
+  "solid": false,
+  "desc": "faint inscribed rune circle on the floor"
+ },
+ "stone_blocks": {
+  "size": [
+   80,
+   72
+  ],
+  "solid": true,
+  "desc": "raw runestone blocks and slabs"
+ },
+ "herb_rack": {
+  "size": [
+   160,
+   48
+  ],
+  "solid": true,
+  "desc": "rack of drying herb bundles"
+ },
+ "bottle_shelf": {
+  "size": [
+   128,
+   48
+  ],
+  "solid": true,
+  "desc": "shelf with muted green/amber/red bottles"
+ },
+ "ingredient_crates": {
+  "size": [
+   96,
+   80
+  ],
+  "solid": true,
+  "desc": "crates of roots, mushrooms and salts"
+ },
+ "spill_decal": {
+  "size": [
+   96,
+   72
+  ],
+  "solid": false,
+  "desc": "coloured alchemical stains on the floor"
+ },
+ "arcane_rack": {
+  "size": [
+   112,
+   56
+  ],
+  "solid": true,
+  "desc": "rack of charged metal bars with a restrained violet glow"
+ },
+ "arcane_glyph_decal": {
+  "size": [
+   192,
+   192
+  ],
+  "solid": false,
+  "desc": "faint violet floor sigils"
+ },
+ "hide_rack": {
+  "size": [
+   128,
+   96
+  ],
+  "solid": true,
+  "desc": "stretched hide laced into a wooden frame"
+ },
+ "pattern_board": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "wall board with hanging leather patterns"
+ },
+ "thread_spools": {
+  "size": [
+   72,
+   56
+  ],
+  "solid": true,
+  "desc": "tray of thread spools incl. one pale ethereal spool"
+ },
+ "leather_bundle": {
+  "size": [
+   80,
+   56
+  ],
+  "solid": true,
+  "desc": "rolled leather and offcuts"
+ },
+ "desk_ledger": {
+  "size": [
+   144,
+   80
+  ],
+  "solid": true,
+  "desc": "writing desk with open ledger, quill, candle, papers and a small keepsake"
+ },
+ "dining_table": {
+  "size": [
+   192,
+   96
+  ],
+  "solid": true,
+  "desc": "dining table set with plates, bread and tankards"
+ },
+ "cupboard": {
+  "size": [
+   112,
+   48
+  ],
+  "solid": true,
+  "desc": "kitchen cupboard with crocks on top"
+ },
+ "kitchen_stove": {
+  "size": [
+   112,
+   80
+  ],
+  "solid": true,
+  "desc": "iron kitchen stove on a stone hearth with a pot"
+ },
+ "bed_double": {
+  "size": [
+   128,
+   160
+  ],
+  "solid": true,
+  "desc": "double bed with patchwork quilt"
+ },
+ "dresser": {
+  "size": [
+   96,
+   48
+  ],
+  "solid": true,
+  "desc": "dresser with wash basin and jug"
+ },
+ "bath_tub": {
+  "size": [
+   128,
+   80
+  ],
+  "solid": true,
+  "desc": "wooden bath tub with water and towel"
+ },
+ "trophy_wall": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "mounted old adventuring trophies: crossed swords, battered shield, horn"
+ },
+ "nightstand": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": true,
+  "desc": "nightstand with candle and book"
+ },
+ "bar_shelf": {
+  "size": [
+   192,
+   40
+  ],
+  "solid": true,
+  "desc": "behind-the-bar shelf of bottles and mugs"
  }
 }

@@ -89,11 +89,11 @@
    "width": 1.6,
    "points": [
     [
-     33,
+     32.0,
      31.2
     ],
     [
-     33,
+     32.0,
      34.2
     ]
    ]
@@ -254,7 +254,7 @@
     18,
     34,
     30,
-    19
+    23
    ],
    "roof": "slate",
    "ridge": "h",
@@ -262,38 +262,901 @@
    "doors": [
     {
      "side": "n",
-     "at": 14,
+     "at": 13,
      "w": 2
     }
    ],
    "chimneys": [
     [
-     3,
-     9
+     1,
+     1
     ],
     [
-     26,
-     4
+     27,
+     0
+    ],
+    [
+     11,
+     15
     ]
    ],
    "rooms": [
     {
-     "id": "quarters",
+     "id": "forge_room",
+     "name": "Smithing Hall",
+     "rect": [
+      0,
+      0,
+      10,
+      10
+     ],
+     "floor": "floor_soot",
+     "wall": "wall_stone",
+     "tint": [
+      1.0,
+      0.92,
+      0.84
+     ]
+    },
+    {
+     "id": "shop",
+     "name": "Shopfront",
+     "rect": [
+      10,
+      0,
+      9,
+      6
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "stock_hall",
+     "name": "Stock Hall",
+     "rect": [
+      10,
+      6,
+      9,
+      4
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "rune_room",
+     "name": "Runecrafting Room",
+     "rect": [
+      0,
+      10,
+      7,
+      8
+     ],
+     "floor": "floor_slate",
+     "wall": "wall_stone",
+     "tint": [
+      0.92,
+      0.95,
+      1.0
+     ]
+    },
+    {
+     "id": "alchemy_room",
+     "name": "Alchemy Room",
+     "rect": [
+      7,
+      10,
+      6,
+      8
+     ],
+     "floor": "floor_herb",
+     "wall": "wall_timber",
+     "tint": [
+      0.95,
+      1.0,
+      0.92
+     ]
+    },
+    {
+     "id": "leather_room",
+     "name": "Leatherworking & Stitching",
+     "rect": [
+      13,
+      10,
+      6,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber",
+     "tint": [
+      1.0,
+      0.96,
+      0.9
+     ]
+    },
+    {
+     "id": "arcane_room",
+     "name": "Arcane Foundry",
+     "rect": [
+      0,
+      18,
+      12,
+      5
+     ],
+     "floor": "floor_arcane",
+     "wall": "wall_stone",
+     "tint": [
+      0.92,
+      0.88,
+      1.0
+     ]
+    },
+    {
+     "id": "material_store",
+     "name": "Material Store",
+     "rect": [
+      12,
+      18,
+      7,
+      5
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "living",
+     "name": "Living & Dining Room",
+     "rect": [
+      19,
+      0,
+      11,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "study",
+     "name": "Study",
+     "rect": [
+      19,
+      7,
+      5,
+      6
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "bedroom",
+     "name": "Bedroom",
      "rect": [
       24,
-      0,
+      7,
       6,
+      9
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "storage",
+     "name": "Personal Storage",
+     "rect": [
+      19,
+      13,
+      5,
       10
      ],
      "floor": "floor_wood",
-     "door": {
-      "side": "w",
-      "at": 6,
-      "w": 2
-     }
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "pantry",
+     "name": "Pantry & Washroom",
+     "rect": [
+      24,
+      16,
+      6,
+      7
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_plaster"
     }
    ],
-   "sign": "sign_smithy"
+   "sign": "sign_smithy",
+   "room_doors": [
+    {
+     "between": [
+      "shop",
+      "stock_hall"
+     ],
+     "at": 15,
+     "w": 2
+    },
+    {
+     "between": [
+      "forge_room",
+      "stock_hall"
+     ],
+     "at": 7,
+     "w": 2
+    },
+    {
+     "between": [
+      "stock_hall",
+      "alchemy_room"
+     ],
+     "at": 11,
+     "w": 2
+    },
+    {
+     "between": [
+      "stock_hall",
+      "leather_room"
+     ],
+     "at": 15,
+     "w": 2
+    },
+    {
+     "between": [
+      "forge_room",
+      "rune_room"
+     ],
+     "at": 3,
+     "w": 2
+    },
+    {
+     "between": [
+      "rune_room",
+      "arcane_room"
+     ],
+     "at": 3,
+     "w": 2
+    },
+    {
+     "between": [
+      "leather_room",
+      "material_store"
+     ],
+     "at": 15,
+     "w": 2
+    },
+    {
+     "between": [
+      "stock_hall",
+      "study"
+     ],
+     "at": 8,
+     "w": 2
+    },
+    {
+     "between": [
+      "living",
+      "study"
+     ],
+     "at": 20,
+     "w": 2
+    },
+    {
+     "between": [
+      "living",
+      "bedroom"
+     ],
+     "at": 25,
+     "w": 2
+    },
+    {
+     "between": [
+      "study",
+      "storage"
+     ],
+     "at": 20,
+     "w": 2
+    },
+    {
+     "between": [
+      "bedroom",
+      "pantry"
+     ],
+     "at": 26,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "soot_decal",
+     3.0,
+     3.4,
+     0
+    ],
+    [
+     "tool_wall",
+     6.6,
+     0.55,
+     0
+    ],
+    [
+     "iron_bars",
+     8.6,
+     4.6,
+     0
+    ],
+    [
+     "coal_pile",
+     1.4,
+     4.2,
+     0
+    ],
+    [
+     "ore_pile",
+     1.4,
+     8.6,
+     0
+    ],
+    [
+     "woodpile",
+     8.8,
+     6.0,
+     0
+    ],
+    [
+     "shop_counter",
+     14.5,
+     3.6,
+     0
+    ],
+    [
+     "weapon_rack",
+     17.3,
+     0.6,
+     0
+    ],
+    [
+     "armor_stand",
+     11.0,
+     1.2,
+     0
+    ],
+    [
+     "armor_stand",
+     12.3,
+     1.2,
+     0
+    ],
+    [
+     "display_table",
+     17.4,
+     2.6,
+     0
+    ],
+    [
+     "door_mat",
+     14.0,
+     0.5,
+     0
+    ],
+    [
+     "candle",
+     16.2,
+     3.5,
+     0
+    ],
+    [
+     "crate",
+     13.9,
+     9.45,
+     0
+    ],
+    [
+     "barrel",
+     18.4,
+     6.7,
+     0
+    ],
+    [
+     "sack",
+     12.0,
+     6.7,
+     0
+    ],
+    [
+     "rune_shelf",
+     6.55,
+     13.7,
+     90
+    ],
+    [
+     "rune_glyph_decal",
+     3.6,
+     14.0,
+     0
+    ],
+    [
+     "stone_blocks",
+     6.2,
+     17.2,
+     0
+    ],
+    [
+     "candle",
+     3.8,
+     16.8,
+     0
+    ],
+    [
+     "herb_rack",
+     9.0,
+     10.55,
+     0
+    ],
+    [
+     "bottle_shelf",
+     11.0,
+     17.6,
+     0
+    ],
+    [
+     "spill_decal",
+     10.0,
+     14.4,
+     0
+    ],
+    [
+     "pattern_board",
+     14.0,
+     10.55,
+     0
+    ],
+    [
+     "thread_spools",
+     18.3,
+     10.9,
+     0
+    ],
+    [
+     "hide_rack",
+     18.1,
+     17.3,
+     0
+    ],
+    [
+     "arcane_glyph_decal",
+     5.4,
+     20.6,
+     0
+    ],
+    [
+     "arcane_rack",
+     3.4,
+     22.3,
+     0
+    ],
+    [
+     "coal_pile",
+     13.4,
+     19.0,
+     0
+    ],
+    [
+     "ore_pile",
+     15.0,
+     22.2,
+     0
+    ],
+    [
+     "barrel",
+     18.3,
+     18.8,
+     0
+    ],
+    [
+     "barrel",
+     18.3,
+     19.8,
+     0
+    ],
+    [
+     "crate",
+     17.0,
+     22.2,
+     0
+    ],
+    [
+     "woodpile",
+     17.4,
+     20.6,
+     0
+    ],
+    [
+     "grain_sacks",
+     13.4,
+     22.0,
+     0
+    ],
+    [
+     "ingredient_crates",
+     13.4,
+     20.6,
+     0
+    ],
+    [
+     "leather_bundle",
+     18.2,
+     22.2,
+     0
+    ],
+    [
+     "dining_table",
+     23.6,
+     3.8,
+     0
+    ],
+    [
+     "chair",
+     21.6,
+     3.8,
+     0
+    ],
+    [
+     "chair",
+     25.6,
+     3.8,
+     0
+    ],
+    [
+     "chair",
+     23.0,
+     5.0,
+     0
+    ],
+    [
+     "chair",
+     24.3,
+     5.0,
+     0
+    ],
+    [
+     "fireplace",
+     27.8,
+     0.7,
+     0
+    ],
+    [
+     "rug_red",
+     27.6,
+     3.4,
+     90
+    ],
+    [
+     "trophy_wall",
+     21.5,
+     0.55,
+     0
+    ],
+    [
+     "cupboard",
+     29.2,
+     3.6,
+     90
+    ],
+    [
+     "candle",
+     23.6,
+     3.6,
+     0
+    ],
+    [
+     "desk_ledger",
+     22.8,
+     9.8,
+     90
+    ],
+    [
+     "bookshelf",
+     23.0,
+     12.4,
+     0
+    ],
+    [
+     "candle",
+     22.8,
+     9.6,
+     0
+    ],
+    [
+     "bed_double",
+     28.6,
+     9.6,
+     0
+    ],
+    [
+     "nightstand",
+     26.9,
+     9.6,
+     0
+    ],
+    [
+     "dresser",
+     25.0,
+     15.4,
+     0
+    ],
+    [
+     "wardrobe",
+     29.3,
+     13.6,
+     90
+    ],
+    [
+     "rug_brown",
+     27.2,
+     12.6,
+     0
+    ],
+    [
+     "candle",
+     26.9,
+     9.5,
+     0
+    ],
+    [
+     "chest",
+     23.2,
+     14.6,
+     0
+    ],
+    [
+     "chest",
+     23.2,
+     16.0,
+     0
+    ],
+    [
+     "wardrobe",
+     19.6,
+     18.0,
+     90
+    ],
+    [
+     "barrel",
+     23.2,
+     21.8,
+     0
+    ],
+    [
+     "crate",
+     22.0,
+     21.8,
+     0
+    ],
+    [
+     "sack",
+     20.2,
+     21.9,
+     0
+    ],
+    [
+     "bath_tub",
+     28.6,
+     21.6,
+     0
+    ],
+    [
+     "washtub",
+     25.2,
+     21.8,
+     0
+    ],
+    [
+     "kitchen_stove",
+     25.0,
+     16.9,
+     0
+    ],
+    [
+     "shelf",
+     29.4,
+     19.0,
+     90
+    ],
+    [
+     "produce_crate",
+     25.0,
+     19.2,
+     0
+    ]
+   ],
+   "spots": {
+    "smithy_counter_front": [
+     14.5,
+     2.0
+    ],
+    "smithy_counter_back": [
+     14.5,
+     4.9
+    ],
+    "smithy_inside": [
+     14.0,
+     1.4
+    ],
+    "smithy_bag": [
+     12.0,
+     7.6
+    ],
+    "work_mining": [
+     15.6,
+     20.4
+    ],
+    "work_smithing": [
+     6.8,
+     6.8
+    ],
+    "work_alchemy": [
+     10.0,
+     12.8
+    ],
+    "work_runecraft": [
+     3.6,
+     13.6
+    ],
+    "work_travelling": [
+     11.6,
+     4.8
+    ],
+    "work_relic_hunting": [
+     16.4,
+     8.0
+    ],
+    "quarters_table": [
+     23.6,
+     2.4
+    ],
+    "quarters_bed": [
+     27.0,
+     11.4
+    ]
+   },
+   "interact": [
+    {
+     "kind": "bed",
+     "id": "player_bed",
+     "pos": [
+      28.6,
+      9.6
+     ],
+     "r": 120,
+     "label": "Your bed \u2014 sleep until morning (autosave)"
+    },
+    {
+     "kind": "ledger",
+     "id": "study_desk",
+     "pos": [
+      22.8,
+      9.8
+     ],
+     "r": 110,
+     "label": "Your ledger \u2014 accounts, journal & upgrades"
+    },
+    {
+     "kind": "counter",
+     "id": "smithy",
+     "pos": [
+      14.5,
+      3.6
+     ],
+     "r": 150,
+     "label": "Shop counter \u2014 stock, customers & ledger"
+    }
+   ],
+   "station_pos": {
+    "forge": [
+     2.0,
+     2.2
+    ],
+    "bellows": [
+     4.5,
+     1.8
+    ],
+    "anvil": [
+     5.2,
+     5.4
+    ],
+    "crucible": [
+     1.7,
+     6.0
+    ],
+    "quench_trough": [
+     7.0,
+     8.8
+    ],
+    "grinding_wheel": [
+     8.4,
+     2.0
+    ],
+    "rune_cutting_bench": [
+     1.6,
+     12.0
+    ],
+    "rune_engraving_stand": [
+     5.7,
+     12.2
+    ],
+    "rune_cleansing_basin": [
+     1.5,
+     15.0
+    ],
+    "resonance_pedestal": [
+     5.5,
+     15.2
+    ],
+    "rune_polishing_wheel": [
+     1.5,
+     17.0
+    ],
+    "mortar_station": [
+     8.2,
+     11.6
+    ],
+    "infusion_rack": [
+     11.7,
+     12.4
+    ],
+    "alembic": [
+     8.3,
+     14.2
+    ],
+    "cauldron": [
+     11.4,
+     15.3
+    ],
+    "reagent_table": [
+     8.7,
+     17.0
+    ],
+    "stitching_table": [
+     14.3,
+     11.8
+    ],
+    "thread_spinner": [
+     17.9,
+     12.2
+    ],
+    "leather_vat": [
+     14.2,
+     14.8
+    ],
+    "embroidery_frame": [
+     17.8,
+     15.0
+    ],
+    "fitting_mannequin": [
+     14.0,
+     17.2
+    ],
+    "arcane_crucible": [
+     1.6,
+     20.6
+    ],
+    "spellbinding_array": [
+     5.4,
+     20.6
+    ],
+    "leyline_conductor": [
+     8.0,
+     19.7
+    ],
+    "arcane_anvil": [
+     10.3,
+     21.6
+    ],
+    "aetheric_stabilizer": [
+     10.6,
+     19.4
+    ]
+   },
+   "customer_rooms": [
+    "shop"
+   ]
   },
   {
    "id": "inn",
@@ -327,11 +1190,247 @@
    "sign": "sign_inn",
    "stairs": {
     "pos": [
-     17,
-     2
+     12.6,
+     1.6
     ],
     "to": "inn_upstairs"
-   }
+   },
+   "rooms": [
+    {
+     "id": "common",
+     "name": "Common Room",
+     "rect": [
+      0,
+      0,
+      14,
+      14
+     ],
+     "floor": "floor_tavern",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "kitchen",
+     "name": "Kitchen",
+     "rect": [
+      14,
+      0,
+      6,
+      7
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "hilde_room",
+     "name": "Hilde's Room",
+     "rect": [
+      14,
+      7,
+      6,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "common",
+      "kitchen"
+     ],
+     "at": 3,
+     "w": 2
+    },
+    {
+     "between": [
+      "common",
+      "hilde_room"
+     ],
+     "at": 10,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bar_counter",
+     6.0,
+     3.0,
+     0
+    ],
+    [
+     "bar_shelf",
+     6.0,
+     0.55,
+     0
+    ],
+    [
+     "keg",
+     2.4,
+     1.2,
+     0
+    ],
+    [
+     "keg",
+     9.6,
+     1.2,
+     0
+    ],
+    [
+     "fireplace",
+     1.0,
+     7.0,
+     270
+    ],
+    [
+     "rug_red",
+     7.4,
+     8.8,
+     0
+    ],
+    [
+     "table_round",
+     4.4,
+     6.6,
+     0
+    ],
+    [
+     "table_round",
+     9.4,
+     6.2,
+     0
+    ],
+    [
+     "table_round",
+     4.0,
+     11.0,
+     0
+    ],
+    [
+     "table_round",
+     8.8,
+     10.6,
+     0
+    ],
+    [
+     "table_long",
+     11.4,
+     12.7,
+     0
+    ],
+    [
+     "bench",
+     11.4,
+     11.6,
+     0
+    ],
+    [
+     "table_round",
+     11.6,
+     4.4,
+     0
+    ],
+    [
+     "kitchen_stove",
+     17.0,
+     1.0,
+     0
+    ],
+    [
+     "cupboard",
+     19.4,
+     3.6,
+     90
+    ],
+    [
+     "barrel",
+     15.0,
+     6.2,
+     0
+    ],
+    [
+     "produce_crate",
+     18.6,
+     6.0,
+     0
+    ],
+    [
+     "bed",
+     18.8,
+     9.6,
+     0
+    ],
+    [
+     "dresser",
+     15.4,
+     13.4,
+     0
+    ],
+    [
+     "nightstand",
+     17.4,
+     8.4,
+     0
+    ],
+    [
+     "chest",
+     15.2,
+     9.0,
+     0
+    ]
+   ],
+   "spots": {
+    "inn_bar": [
+     6.0,
+     4.3
+    ],
+    "inn_behind_bar": [
+     6.0,
+     1.9
+    ],
+    "inn_hearth": [
+     2.2,
+     8.6
+    ],
+    "inn_inside": [
+     10.0,
+     12.6
+    ],
+    "inn_kitchen": [
+     16.6,
+     3.4
+    ],
+    "hilde_bed": [
+     17.0,
+     10.6
+    ]
+   },
+   "tables": [
+    [
+     4.4,
+     6.6
+    ],
+    [
+     9.4,
+     6.2
+    ],
+    [
+     4.0,
+     11.0
+    ],
+    [
+     8.8,
+     10.6
+    ],
+    [
+     11.4,
+     12.7
+    ],
+    [
+     11.6,
+     4.4
+    ]
+   ]
   },
   {
    "id": "grocery",
@@ -358,7 +1457,175 @@
      2
     ]
    ],
-   "sign": "sign_grocer"
+   "sign": "sign_grocer",
+   "rooms": [
+    {
+     "id": "g_shop",
+     "name": "Pell's Provisions",
+     "rect": [
+      0,
+      4,
+      7,
+      5
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "g_store",
+     "name": "Storeroom",
+     "rect": [
+      7,
+      4,
+      4,
+      5
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "g_living",
+     "name": "The Pells' Rooms",
+     "rect": [
+      0,
+      0,
+      11,
+      4
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "g_shop",
+      "g_store"
+     ],
+     "at": 6,
+     "w": 2
+    },
+    {
+     "between": [
+      "g_shop",
+      "g_living"
+     ],
+     "at": 1,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "shop_counter",
+     3.6,
+     5.6,
+     0
+    ],
+    [
+     "produce_crate",
+     0.9,
+     7.8,
+     0
+    ],
+    [
+     "produce_crate",
+     2.0,
+     8.1,
+     0
+    ],
+    [
+     "grain_sacks",
+     6.3,
+     5.0,
+     0
+    ],
+    [
+     "shelf",
+     6.4,
+     8.6,
+     0
+    ],
+    [
+     "crate",
+     9.0,
+     5.0,
+     0
+    ],
+    [
+     "crate",
+     10.2,
+     6.4,
+     0
+    ],
+    [
+     "sack",
+     10.3,
+     5.0,
+     0
+    ],
+    [
+     "barrel",
+     10.2,
+     8.2,
+     0
+    ],
+    [
+     "ingredient_crates",
+     9.0,
+     8.2,
+     0
+    ],
+    [
+     "bed",
+     9.6,
+     1.6,
+     0
+    ],
+    [
+     "bed",
+     7.6,
+     1.6,
+     0
+    ],
+    [
+     "table_round",
+     3.4,
+     2.0,
+     0
+    ],
+    [
+     "chair",
+     2.4,
+     2.0,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.0,
+     90
+    ],
+    [
+     "candle",
+     3.4,
+     1.8,
+     0
+    ]
+   ],
+   "spots": {
+    "grocery_behind": [
+     3.6,
+     4.7
+    ],
+    "grocery_front": [
+     3.6,
+     6.9
+    ],
+    "grocery_home": [
+     4.6,
+     2.6
+    ]
+   }
   },
   {
    "id": "house_martha",
@@ -384,7 +1651,115 @@
      7,
      2
     ]
-   ]
+   ],
+   "rooms": [
+    {
+     "id": "house_martha_main",
+     "name": "Main Room",
+     "rect": [
+      0,
+      0,
+      6,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "house_martha_bed",
+     "name": "Bedroom",
+     "rect": [
+      6,
+      0,
+      3,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "house_martha_main",
+      "house_martha_bed"
+     ],
+     "at": 2,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     7.5,
+     1.6,
+     0
+    ],
+    [
+     "chest",
+     8.1,
+     7.0,
+     0
+    ],
+    [
+     "nightstand",
+     8.5,
+     3.8,
+     0
+    ],
+    [
+     "table_round",
+     3.0,
+     4.8,
+     0
+    ],
+    [
+     "chair",
+     2.05,
+     4.8,
+     0
+    ],
+    [
+     "shelf",
+     3.0,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     3.0,
+     4.64,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.2,
+     90
+    ],
+    [
+     "rug_brown",
+     2.6,
+     4.6,
+     0
+    ],
+    [
+     "washtub",
+     1.2,
+     6.6,
+     0
+    ]
+   ],
+   "spots": {
+    "house_martha_inside": [
+     4.0,
+     5.6
+    ],
+    "house_martha_bedside": [
+     7.5,
+     4.0
+    ]
+   }
   },
   {
    "id": "house_tobin",
@@ -410,7 +1785,115 @@
      2,
      2
     ]
-   ]
+   ],
+   "rooms": [
+    {
+     "id": "house_tobin_main",
+     "name": "Workshop",
+     "rect": [
+      0,
+      0,
+      6,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "house_tobin_bed",
+     "name": "Bedroom",
+     "rect": [
+      6,
+      0,
+      3,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "house_tobin_main",
+      "house_tobin_bed"
+     ],
+     "at": 2,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     7.5,
+     1.6,
+     0
+    ],
+    [
+     "chest",
+     8.1,
+     7.0,
+     0
+    ],
+    [
+     "nightstand",
+     8.5,
+     3.8,
+     0
+    ],
+    [
+     "table_round",
+     3.0,
+     4.8,
+     0
+    ],
+    [
+     "chair",
+     2.05,
+     4.8,
+     0
+    ],
+    [
+     "shelf",
+     3.0,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     3.0,
+     4.64,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.2,
+     90
+    ],
+    [
+     "workbench",
+     2.6,
+     6.4,
+     0
+    ],
+    [
+     "woodpile",
+     4.8,
+     1.2,
+     0
+    ]
+   ],
+   "spots": {
+    "house_tobin_inside": [
+     4.0,
+     5.6
+    ],
+    "house_tobin_bedside": [
+     7.5,
+     4.0
+    ]
+   }
   },
   {
    "id": "house_oswin",
@@ -431,7 +1914,109 @@
      "w": 1
     }
    ],
-   "chimneys": []
+   "chimneys": [],
+   "rooms": [
+    {
+     "id": "nave",
+     "name": "Nave",
+     "rect": [
+      0,
+      0,
+      7,
+      9
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_stone"
+    },
+    {
+     "id": "vestry",
+     "name": "Vestry",
+     "rect": [
+      7,
+      0,
+      3,
+      9
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "nave",
+      "vestry"
+     ],
+     "at": 1,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "altar",
+     6.2,
+     4.5,
+     90
+    ],
+    [
+     "pew",
+     3.0,
+     2.0,
+     0
+    ],
+    [
+     "pew",
+     3.0,
+     3.4,
+     0
+    ],
+    [
+     "pew",
+     3.0,
+     5.6,
+     0
+    ],
+    [
+     "pew",
+     3.0,
+     7.0,
+     0
+    ],
+    [
+     "bed",
+     8.5,
+     6.6,
+     0
+    ],
+    [
+     "bookshelf",
+     8.5,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     6.2,
+     3.2,
+     0
+    ],
+    [
+     "candle",
+     6.2,
+     5.8,
+     0
+    ]
+   ],
+   "spots": {
+    "house_oswin_inside": [
+     5.2,
+     4.5
+    ],
+    "oswin_bed": [
+     8.5,
+     4.0
+    ]
+   }
   },
   {
    "id": "house_jory",
@@ -457,7 +2042,115 @@
      8,
      2
     ]
-   ]
+   ],
+   "rooms": [
+    {
+     "id": "house_jory_main",
+     "name": "Main Room",
+     "rect": [
+      0,
+      0,
+      6,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "house_jory_bed",
+     "name": "Bedroom",
+     "rect": [
+      6,
+      0,
+      4,
+      8
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "house_jory_main",
+      "house_jory_bed"
+     ],
+     "at": 2,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     8.0,
+     1.6,
+     0
+    ],
+    [
+     "chest",
+     9.1,
+     7.0,
+     0
+    ],
+    [
+     "nightstand",
+     9.5,
+     3.8,
+     0
+    ],
+    [
+     "table_round",
+     3.0,
+     4.8,
+     0
+    ],
+    [
+     "chair",
+     2.05,
+     4.8,
+     0
+    ],
+    [
+     "shelf",
+     3.0,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     3.0,
+     4.64,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.2,
+     90
+    ],
+    [
+     "grain_sacks",
+     1.2,
+     6.4,
+     0
+    ],
+    [
+     "produce_crate",
+     4.6,
+     6.6,
+     0
+    ]
+   ],
+   "spots": {
+    "house_jory_inside": [
+     4.0,
+     5.6
+    ],
+    "house_jory_bedside": [
+     8.0,
+     4.0
+    ]
+   }
   },
   {
    "id": "house_eda",
@@ -483,7 +2176,109 @@
      2,
      2
     ]
-   ]
+   ],
+   "rooms": [
+    {
+     "id": "house_eda_main",
+     "name": "Main Room",
+     "rect": [
+      0,
+      0,
+      5,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "house_eda_bed",
+     "name": "Bedroom",
+     "rect": [
+      5,
+      0,
+      3,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "house_eda_main",
+      "house_eda_bed"
+     ],
+     "at": 2,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     6.5,
+     1.6,
+     0
+    ],
+    [
+     "chest",
+     7.1,
+     6.0,
+     0
+    ],
+    [
+     "nightstand",
+     7.5,
+     3.8,
+     0
+    ],
+    [
+     "table_round",
+     2.5,
+     4.2,
+     0
+    ],
+    [
+     "chair",
+     1.55,
+     4.2,
+     0
+    ],
+    [
+     "shelf",
+     2.5,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     2.5,
+     4.06,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.2,
+     90
+    ],
+    [
+     "washtub",
+     1.4,
+     5.6,
+     0
+    ]
+   ],
+   "spots": {
+    "house_eda_inside": [
+     3.5,
+     4.8999999999999995
+    ],
+    "house_eda_bedside": [
+     6.5,
+     4.0
+    ]
+   }
   },
   {
    "id": "house_wenna",
@@ -509,7 +2304,109 @@
      7,
      2
     ]
-   ]
+   ],
+   "rooms": [
+    {
+     "id": "house_wenna_main",
+     "name": "Main Room",
+     "rect": [
+      0,
+      0,
+      6,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "house_wenna_bed",
+     "name": "Bedroom",
+     "rect": [
+      6,
+      0,
+      3,
+      7
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    }
+   ],
+   "room_doors": [
+    {
+     "between": [
+      "house_wenna_main",
+      "house_wenna_bed"
+     ],
+     "at": 2,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     7.5,
+     1.6,
+     0
+    ],
+    [
+     "chest",
+     8.1,
+     6.0,
+     0
+    ],
+    [
+     "nightstand",
+     8.5,
+     3.8,
+     0
+    ],
+    [
+     "table_round",
+     3.0,
+     4.2,
+     0
+    ],
+    [
+     "chair",
+     2.05,
+     4.2,
+     0
+    ],
+    [
+     "shelf",
+     3.0,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     3.0,
+     4.06,
+     0
+    ],
+    [
+     "kitchen_stove",
+     0.9,
+     1.2,
+     90
+    ],
+    [
+     "rug_red",
+     3.0,
+     4.0,
+     0
+    ]
+   ],
+   "spots": {
+    "house_wenna_inside": [
+     4.0,
+     4.8999999999999995
+    ],
+    "house_wenna_bedside": [
+     7.5,
+     4.0
+    ]
+   }
   }
  ],
  "areas": [
@@ -525,28 +2422,303 @@
    "floor": "floor_wood",
    "rooms": [
     {
-     "id": "velvet_lantern",
-     "name": "The Velvet Lantern",
+     "id": "landing",
+     "name": "Landing",
      "rect": [
-      10,
       0,
-      10,
-      14
+      5,
+      12,
+      4
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_timber"
+    },
+    {
+     "id": "guest_1",
+     "name": "Guest Room I",
+     "rect": [
+      0,
+      0,
+      6,
+      5
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "guest_2",
+     "name": "Guest Room II",
+     "rect": [
+      6,
+      0,
+      6,
+      5
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "guest_3",
+     "name": "Guest Room III",
+     "rect": [
+      0,
+      9,
+      6,
+      5
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "guest_4",
+     "name": "Guest Room IV",
+     "rect": [
+      6,
+      9,
+      6,
+      5
+     ],
+     "floor": "floor_wood",
+     "wall": "wall_plaster"
+    },
+    {
+     "id": "velvet_parlour",
+     "name": "The Velvet Lantern \u2014 Parlour",
+     "rect": [
+      12,
+      0,
+      8,
+      9
      ],
      "floor": "floor_tavern",
-     "door": {
-      "side": "w",
-      "at": 6,
-      "w": 2
-     }
+     "wall": "wall_timber",
+     "tint": [
+      1.0,
+      0.9,
+      0.9
+     ]
+    },
+    {
+     "id": "velvet_a",
+     "name": "The Velvet Lantern \u2014 Rose Room",
+     "rect": [
+      12,
+      9,
+      4,
+      5
+     ],
+     "floor": "floor_tavern",
+     "wall": "wall_timber",
+     "tint": [
+      1.0,
+      0.88,
+      0.88
+     ]
+    },
+    {
+     "id": "velvet_b",
+     "name": "The Velvet Lantern \u2014 Amber Room",
+     "rect": [
+      16,
+      9,
+      4,
+      5
+     ],
+     "floor": "floor_tavern",
+     "wall": "wall_timber",
+     "tint": [
+      1.0,
+      0.92,
+      0.84
+     ]
     }
    ],
    "stairs": {
     "pos": [
-     2,
-     2
+     0.8,
+     7.0
     ],
     "to": "inn"
+   },
+   "room_doors": [
+    {
+     "between": [
+      "landing",
+      "guest_1"
+     ],
+     "at": 2,
+     "w": 2
+    },
+    {
+     "between": [
+      "landing",
+      "guest_2"
+     ],
+     "at": 8,
+     "w": 2
+    },
+    {
+     "between": [
+      "landing",
+      "guest_3"
+     ],
+     "at": 2,
+     "w": 2
+    },
+    {
+     "between": [
+      "landing",
+      "guest_4"
+     ],
+     "at": 8,
+     "w": 2
+    },
+    {
+     "between": [
+      "landing",
+      "velvet_parlour"
+     ],
+     "at": 6,
+     "w": 2
+    },
+    {
+     "between": [
+      "velvet_parlour",
+      "velvet_a"
+     ],
+     "at": 13,
+     "w": 2
+    },
+    {
+     "between": [
+      "velvet_parlour",
+      "velvet_b"
+     ],
+     "at": 17,
+     "w": 2
+    }
+   ],
+   "furniture": [
+    [
+     "bed",
+     1.4,
+     2.4,
+     0
+    ],
+    [
+     "nightstand",
+     3.0,
+     0.8,
+     0
+    ],
+    [
+     "bed",
+     10.6,
+     2.4,
+     0
+    ],
+    [
+     "chest",
+     7.2,
+     3.8,
+     0
+    ],
+    [
+     "bed",
+     1.4,
+     11.6,
+     0
+    ],
+    [
+     "chest",
+     4.6,
+     12.8,
+     0
+    ],
+    [
+     "bed",
+     10.6,
+     11.6,
+     0
+    ],
+    [
+     "nightstand",
+     7.0,
+     12.6,
+     0
+    ],
+    [
+     "rug_red",
+     16.0,
+     4.4,
+     90
+    ],
+    [
+     "table_round",
+     15.0,
+     4.4,
+     0
+    ],
+    [
+     "chair",
+     14.0,
+     4.4,
+     0
+    ],
+    [
+     "chair",
+     16.0,
+     4.4,
+     0
+    ],
+    [
+     "bar_shelf",
+     16.0,
+     0.55,
+     0
+    ],
+    [
+     "candle",
+     15.0,
+     4.2,
+     0
+    ],
+    [
+     "candle",
+     19.2,
+     2.0,
+     0
+    ],
+    [
+     "bed_fancy",
+     14.0,
+     11.8,
+     0
+    ],
+    [
+     "bed_fancy",
+     18.0,
+     11.8,
+     0
+    ]
+   ],
+   "spots": {
+    "lantern_1": [
+     13.4,
+     6.8
+    ],
+    "lantern_2": [
+     17.0,
+     6.8
+    ],
+    "lantern_3": [
+     18.6,
+     3.0
+    ],
+    "upstairs_hall": [
+     6.0,
+     7.0
+    ]
    }
   }
  ]

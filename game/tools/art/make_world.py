@@ -1,6 +1,7 @@
 """Builds every Ember & Ash world/UI sprite, then the manifest and review contact sheets.
 python3 make_world.py            (all)
-python3 make_world.py stations props   (subset: stations props icons textures roofs ui)"""
+python3 make_world.py stations props   (subset: stations props icons textures roofs ui interiors)
+"interiors" (make_interiors.py) writes extra props/textures/ui files into those same folders."""
 import json
 import os
 import sys
@@ -8,17 +9,21 @@ from PIL import Image
 import artlib
 from artlib import render, SPR
 
-GROUPS = ["stations", "props", "icons", "textures", "roofs", "ui"]
+GROUPS = ["stations", "props", "icons", "textures", "roofs", "ui", "interiors"]
 
 
 def build(groups):
-    import make_stations, make_props, make_icons, make_textures, make_roofs, make_ui
-    mods = dict(stations=make_stations, props=make_props, icons=make_icons, textures=make_textures, roofs=make_roofs, ui=make_ui)
+    import make_stations, make_props, make_icons, make_textures, make_roofs, make_ui, make_interiors
+    mods = dict(stations=make_stations, props=make_props, icons=make_icons, textures=make_textures, roofs=make_roofs, ui=make_ui,
+                interiors=make_interiors)
     for g in groups:
         print("==", g)
         render(mods[g].jobs(), workers=3 if g in ("roofs", "ui") else 4)
         if g == "textures":
             make_textures.tile_test()
+        if g == "interiors":
+            make_interiors.tile_test(list(make_interiors.TEX_I))
+            make_interiors.contact_sheets()
 
 
 def manifest():

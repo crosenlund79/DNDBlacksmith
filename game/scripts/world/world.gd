@@ -35,6 +35,9 @@ var _bag_nodes: Array = []
 var _eggs_node: Node2D
 var _focus: Dictionary = {}
 var _next_point := 0
+var _room_doors: Array = []
+var room := ""
+var _marker: Sprite2D
 
 
 
@@ -292,11 +295,72 @@ func _wall_segments(r: Rect2, doors: Array, skip_sides := []) -> Array:
 
 
 func _draw_walls(segs: Array, tex: String) -> void:
+	# lime-plaster partitions are pale: tone them down and ink them harder so rooms read clearly
+	var tint := Color(0.74, 0.68, 0.6) if tex == "wall_plaster" else Color.WHITE
 	for s in segs:
 		var pts := _rect_pts(s)
-		_tex_poly(pts, tex, floor_layer)
-		_outline(pts, 2.5, floor_layer)
+		_tex_poly(pts, tex, floor_layer, tint)
+		_outline(pts, 3.5 if tex == "wall_plaster" else 2.5, floor_layer)
 		_solid(s)
+
+
+func _room_rect(r: Rect2, room: Dictionary) -> Rect2:
+	var rr: Array = room["rect"]
+	return Rect2(r.position + Vector2(float(rr[0]), float(rr[1])) * T, Vector2(float(rr[2]), float(rr[3])) * T)
+
+
+## Interior walls: one wall per shared edge between two rooms, with gaps for the doors between them.
+func _interior_walls(b: Dictionary, r: Rect2) -> void:
+	var rooms: Array = b.get("rooms", [])
+	var doors: Array = b.get("room_doors", [])
+	for i in rooms.size():
+		for j in range(i + 1, rooms.size()):
+			var a: Array = rooms[i]["rect"]
+			var c: Array = rooms[j]["rect"]
+			var ax0 := float(a[0]); var ay0 := float(a[1]); var ax1 := ax0 + float(a[2]); var ay1 := ay0 + float(a[3])
+			var cx0 := float(c[0]); var cy0 := float(c[1]); var cx1 := cx0 + float(c[2]); var cy1 := cy0 + float(c[3])
+			var vertical := false
+			var line := 0.0
+			var lo := 0.0
+			var hi := 0.0
+			if is_equal_approx(ax1, cx0) or is_equal_approx(cx1, ax0):
+				vertical = true
+				line = ax1 if is_equal_approx(ax1, cx0) else ax0
+				lo = maxf(ay0, cy0)
+				hi = minf(ay1, cy1)
+			elif is_equal_approx(ay1, cy0) or is_equal_approx(cy1, ay0):
+				line = ay1 if is_equal_approx(ay1, cy0) else ay0
+				lo = maxf(ax0, cx0)
+				hi = minf(ax1, cx1)
+			else:
+				continue
+			if hi - lo < 0.5:
+				continue
+			# door gaps on this edge
+			var gaps := []
+			for d in doors:
+				var pair: Array = d["between"]
+				if (pair[0] == rooms[i]["id"] and pair[1] == rooms[j]["id"]) or (pair[1] == rooms[i]["id"] and pair[0] == rooms[j]["id"]):
+					gaps.append([float(d["at"]), float(d["at"]) + float(d["w"])])
+					var dc := r.position + (Vector2(line, float(d["at"]) + float(d["w"]) * 0.5) if vertical else Vector2(float(d["at"]) + float(d["w"]) * 0.5, line)) * T
+					_room_doors.append({"b": b["id"], "pos": dc, "vertical": vertical, "a": rooms[i]["id"], "c": rooms[j]["id"]})
+			gaps.sort_custom(func(x, y): return x[0] < y[0])
+			var start := lo
+			var pieces := []
+			for g in gaps:
+				if g[0] > start:
+					pieces.append([start, g[0]])
+				start = maxf(start, g[1])
+			if start < hi:
+				pieces.append([start, hi])
+			var tex: String = rooms[i].get("wall", "wall_timber")
+			for pc in pieces:
+				var seg: Rect2
+				if vertical:
+					seg = Rect2(r.position.x + line * T - WALL * 0.5, r.position.y + float(pc[0]) * T, WALL, (float(pc[1]) - float(pc[0])) * T)
+				else:
+					seg = Rect2(r.position.x + float(pc[0]) * T, r.position.y + line * T - WALL * 0.5, (float(pc[1]) - float(pc[0])) * T, WALL)
+				_draw_walls([seg], tex)
 
 
 func _build_building(b: Dictionary, is_area: bool) -> void:
@@ -305,22 +369,17 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 		# interior areas live outside the village map: frame them with dim roof timbers, not a void
 		_tex_poly(_rect_pts(r.grow(900)), "wall_timber", ground_layer, Color(0.32, 0.26, 0.22))
 	_tex_poly(_rect_pts(r), b.get("floor", "floor_wood"), floor_layer)
+	var rooms_info := []
+	for room in b.get("rooms", []):
+		var rr := _room_rect(r, room)
+		var tint := Color.WHITE
+		if room.has("tint"):
+			tint = Color(float(room["tint"][0]), float(room["tint"][1]), float(room["tint"][2]))
+		_tex_poly(_rect_pts(rr), room.get("floor", "floor_wood"), floor_layer, tint)
+		rooms_info.append({"id": room["id"], "name": room.get("name", room["id"]), "rect": rr})
+	_interior_walls(b, r)
 	var wall_tex := "wall_timber" if b.get("roof", "") == "thatch" else "wall_stone"
 	_draw_walls(_wall_segments(r, b.get("doors", [])), wall_tex)
-	for room in b.get("rooms", []):
-		var rr: Array = room["rect"]
-		var rrect := Rect2(r.position + Vector2(float(rr[0]), float(rr[1])) * T, Vector2(float(rr[2]), float(rr[3])) * T)
-		_tex_poly(_rect_pts(rrect.grow(-2)), room.get("floor", "floor_wood"), floor_layer)
-		var skip := []
-		if is_equal_approx(rrect.position.y, r.position.y):
-			skip.append("n")
-		if is_equal_approx(rrect.end.y, r.end.y):
-			skip.append("s")
-		if is_equal_approx(rrect.position.x, r.position.x):
-			skip.append("w")
-		if is_equal_approx(rrect.end.x, r.end.x):
-			skip.append("e")
-		_draw_walls(_wall_segments(rrect, [room.get("door", {"side": "x", "at": 0, "w": 0})], skip), "wall_timber")
 	# doors: mat + light outside
 	for d in b.get("doors", []):
 		var dc := _door_center(r, d)
@@ -332,7 +391,7 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 			l.position = dc + _door_out(d) * 44
 			add_child(l)
 			night_lights.append(l)
-	var info := {"rect": r, "roof": null, "alpha": 1.0, "name": b.get("name", b["id"]), "area": is_area}
+	var info := {"rect": r, "roof": null, "alpha": 1.0, "name": b.get("name", b["id"]), "area": is_area, "rooms": rooms_info}
 	if not is_area:
 		# cast shadow + roof
 		var sh := Polygon2D.new()
@@ -368,7 +427,21 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 		var spos := r.position + Vector2(float(s[0]) + 0.75, float(s[1]) + 1.0) * T
 		_sprite("props/stairs_up" if not is_area else "props/stairs_down", spos, floor_layer)
 		_add_interactable(spos, 70.0, "stairs", b["stairs"]["to"], "Stairs — " + ("up to the rooms" if not is_area else "down to the common room"))
-		spots["stairs_" + b["id"]] = spos + Vector2(0, 90)
+		spots["stairs_" + b["id"]] = spos + Vector2(0, 90) if not is_area else spos + Vector2(110, 0)
+	# furniture, spots and interactables from data
+	for f in b.get("furniture", []):
+		_furniture(str(f[0]), r.position + Vector2(float(f[1]), float(f[2])) * T, float(f[3]) if f.size() > 3 else 0.0)
+	for name in b.get("spots", {}):
+		var sp2: Array = b["spots"][name]
+		spots[name] = r.position + Vector2(float(sp2[0]), float(sp2[1])) * T
+	var ti := 0
+	for t in b.get("tables", []):
+		ti += 1
+		spots["inn_t%d" % ti] = r.position + Vector2(float(t[0]) - 1.0, float(t[1]) + 0.05) * T
+		spots["inn_t%db" % ti] = r.position + Vector2(float(t[0]) + 1.0, float(t[1]) + 0.05) * T
+	for it in b.get("interact", []):
+		var ip: Array = it["pos"]
+		_add_interactable(r.position + Vector2(float(ip[0]), float(ip[1])) * T, float(it.get("r", 100)), it["kind"], it["id"], it["label"])
 
 
 func _door_center(r: Rect2, d: Dictionary) -> Vector2:
@@ -394,6 +467,7 @@ func _sprite(id: String, pos: Vector2, parent: Node) -> Sprite2D:
 
 
 ## Places a prop: floor props go flat on the floor layer, others are Y-sorted with collision.
+## `rot` is in radians; quarter turns swap the footprint so collisions match the drawn sprite.
 func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 	var info: Dictionary = DB.props.get(id, {"size": [64, 64], "solid": true})
 	var size := Vector2(float(info["size"][0]), float(info["size"][1]))
@@ -401,157 +475,64 @@ func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 		var fs := _sprite("props/" + id, pos, floor_layer)
 		fs.rotation = rot
 		return fs
+	var quarter := int(round(rot / (PI / 2))) % 2 != 0
+	var ext := Vector2(size.y, size.x) if quarter else size
 	var holder := Node2D.new()
-	holder.position = pos + Vector2(0, size.y * 0.3)
+	holder.position = pos + Vector2(0, ext.y * 0.3)
 	var s := Sprite2D.new()
 	s.texture = Assets.get_tex("props/" + id, Vector2i(int(size.x), int(size.y)))
-	s.offset = Vector2(0, -size.y * 0.3)
+	s.position = Vector2(0, -ext.y * 0.3)
 	s.rotation = rot
 	holder.add_child(s)
 	ysort.add_child(holder)
-	var foot := size * Vector2(0.75, 0.55)
+	var foot := ext * Vector2(0.75, 0.55)
 	if id.begins_with("tree"):
 		foot = Vector2(size.x * 0.22, size.y * 0.18)
-	_solid(Rect2(pos - foot * 0.5 + Vector2(0, size.y * 0.1), foot))
+	_solid(Rect2(pos - foot * 0.5 + Vector2(0, ext.y * 0.1), foot))
 	return holder
 
 
+## Furniture with its own light/particles (candles, hearths, stoves).
+func _furniture(id: String, pos: Vector2, rot_deg: float) -> void:
+	_prop(id, pos, deg_to_rad(rot_deg))
+	match id:
+		"candle":
+			var l := FX.light(Color("#ffb868"), 190.0, 0.6, true)
+			l.position = pos
+			add_child(l)
+		"fireplace":
+			var fl := FX.light(Color("#ff9a40"), 380.0, 1.0, true)
+			fl.position = pos
+			add_child(fl)
+			var fe := FX.embers(10)
+			fe.position = pos
+			add_child(fe)
+		"kitchen_stove":
+			var sl := FX.light(Color("#ff9a50"), 220.0, 0.6, true)
+			sl.position = pos
+			add_child(sl)
+		"arcane_rack", "arcane_glyph_decal":
+			var al := FX.light(Color("#9a6cff"), 160.0, 0.35, true)
+			al.position = pos
+			add_child(al)
+		"rune_shelf", "rune_glyph_decal":
+			var rl := FX.light(Color("#ffe0a0"), 140.0, 0.3)
+			rl.position = pos
+			add_child(rl)
+
+
 func _furnish() -> void:
-	# --- smithy shop front
-	var B := "smithy"
-	_prop("shop_counter", bpos(B, 15, 4.2))
-	_prop("weapon_rack", bpos(B, 10, 0.95))
-	_prop("armor_stand", bpos(B, 12.6, 1.3))
-	_prop("armor_stand", bpos(B, 19.4, 1.3))
-	_prop("display_table", bpos(B, 21.4, 2.2))
-	_add_interactable(bpos(B, 15, 4.2), 150.0, "counter", "smithy", "Shop counter — stock, customers & ledger")
-	spots["smithy_counter_front"] = bpos(B, 15, 2.9)
-	spots["smithy_counter_back"] = bpos(B, 15, 5.6)
-	spots["smithy_bag"] = bpos(B, 11.2, 6.4)
-	spots["smithy_inside"] = bpos(B, 15, 7.5)
-	_prop("coal_pile", bpos(B, 4.6, 14.6))
-	_prop("ore_pile", bpos(B, 9.0, 14.3))
-	_prop("barrel", bpos(B, 1.0, 1.2))
-	_prop("crate", bpos(B, 2.1, 1.1))
-	_prop("woodpile", bpos(B, 4.2, 1.0))
-	_prop("rug_brown", bpos(B, 12, 10), 0.0)
-	var work := {"mining": [5.4, 13.6], "alchemy": [17.8, 15.0], "runecraft": [7.8, 15.2], "smithing": [10.6, 9.2], "travelling": [20.5, 3.2], "relic_hunting": [22.6, 4.2]}
-	for k in work:
-		spots["work_" + k] = bpos(B, work[k][0], work[k][1])
-	# quarters
-	_prop("bed", bpos(B, 28.6, 2.6))
-	_add_interactable(bpos(B, 28.6, 2.6), 110.0, "bed", "player_bed", "Your bed — sleep until morning (autosave)")
-	_prop("wardrobe", bpos(B, 26.2, 0.8))
-	_prop("table_round", bpos(B, 26.4, 5.8))
-	_prop("chair", bpos(B, 25.3, 5.8))
-	_prop("chest", bpos(B, 28.9, 8.4))
-	_prop("rug_red", bpos(B, 27.2, 4.6), PI / 2)
-	_prop("candle", bpos(B, 26.4, 5.6))
-	spots["quarters_table"] = bpos(B, 27.4, 6.4)
-	spots["quarters_door_in"] = bpos(B, 24.8, 7.0)
-	var cl := FX.light(Color("#ffb060"), 220.0, 0.8, true)
-	cl.position = bpos(B, 26.4, 5.6)
-	add_child(cl)
-	# --- inn
-	B = "inn"
-	_prop("bar_counter", bpos(B, 6, 3.0))
-	for x in [4.6, 6.0, 7.4]:
-		_prop("keg", bpos(B, x, 1.0))
-	_prop("fireplace", bpos(B, 12, 0.8))
-	var fl := FX.light(Color("#ff9a40"), 380.0, 1.1, true)
-	fl.position = bpos(B, 12, 1.3)
-	add_child(fl)
-	var fe := FX.embers(10)
-	fe.position = bpos(B, 12, 0.9)
-	add_child(fe)
-	var tables := [[5, 7], [9, 6.2], [14, 5.4], [15.2, 9.4], [4.6, 11.0], [10, 10.4]]
-	var ti := 0
-	for t in tables:
-		ti += 1
-		_prop("table_round", bpos(B, t[0], t[1]))
-		_prop("candle", bpos(B, t[0], t[1] - 0.1))
-		for off in [Vector2(-1.0, 0), Vector2(1.0, 0), Vector2(0, 0.95)]:
-			_prop("stool", bpos(B, t[0] + off.x, t[1] + off.y))
-		spots["inn_t%d" % ti] = bpos(B, t[0] - 1.0, t[1] + 0.05)
-		spots["inn_t%db" % ti] = bpos(B, t[0] + 1.0, t[1] + 0.05)
-		var tl := FX.light(Color("#ffb868"), 170.0, 0.55)
-		tl.position = bpos(B, t[0], t[1])
-		add_child(tl)
-	_prop("bench", bpos(B, 17.4, 12.6))
-	_prop("rug_red", bpos(B, 9.8, 8.4))
-	_prop("barrel", bpos(B, 1.0, 12.8))
-	_prop("barrel", bpos(B, 1.9, 12.9))
-	spots["inn_bar"] = bpos(B, 6.0, 4.3)
-	spots["inn_behind_bar"] = bpos(B, 6.0, 1.95)
-	spots["inn_hearth"] = bpos(B, 12, 2.2)
-	spots["inn_inside"] = bpos(B, 10, 12.2)
+	# outdoor dressing that belongs to buildings (interiors are data-driven in layout.json)
 	_prop("beer_table", Vector2(21.6 * T, 22.0 * T))
 	_prop("beer_table", Vector2(21.6 * T, 25.6 * T))
 	spots["inn_garden"] = Vector2(22.9 * T, 23.8 * T)
-	# --- grocery
-	B = "grocery"
-	_prop("shop_counter", bpos(B, 5.5, 3.2))
-	_prop("shelf", bpos(B, 5.5, 0.8))
-	for p in [[1.6, 6.6], [3.0, 6.8], [8.4, 6.6], [9.6, 2.2]]:
-		_prop("produce_crate", bpos(B, p[0], p[1]))
-	_prop("grain_sacks", bpos(B, 1.6, 2.0))
-	_prop("sack", bpos(B, 9.6, 4.6))
-	spots["grocery_behind"] = bpos(B, 5.5, 1.9)
-	spots["grocery_front"] = bpos(B, 5.5, 4.6)
-	var gl := FX.light(Color("#ffc070"), 260.0, 0.6)
-	gl.position = bpos(B, 5.5, 3.0)
-	add_child(gl)
-	# --- homes
-	for hid in ["house_martha", "house_tobin", "house_jory", "house_eda", "house_wenna"]:
-		var b := DB.building(hid)
-		var w := float(b["rect"][2])
-		var h := float(b["rect"][3])
-		_prop("bed", bpos(hid, w - 1.4, 2.0))
-		_prop("table_round", bpos(hid, w * 0.45, h * 0.55))
-		_prop("chair", bpos(hid, w * 0.45 - 0.9, h * 0.55))
-		_prop("chest", bpos(hid, 1.2, h - 1.2))
-		_prop("shelf", bpos(hid, w * 0.5, 0.75))
-		_prop("candle", bpos(hid, w * 0.45, h * 0.53))
-		spots[hid + "_inside"] = bpos(hid, w * 0.45 + 1.0, h * 0.62)
-		var hl := FX.light(Color("#ffb060"), 220.0, 0.6, true)
-		hl.position = bpos(hid, w * 0.45, h * 0.5)
-		add_child(hl)
-	_prop("workbench", bpos("house_tobin", 2.4, 4.2))
-	_prop("washtub", bpos("house_eda", 1.6, 1.6))
-	# chapel
-	_prop("altar", bpos("house_oswin", 8.6, 4.5), PI / 2)
-	for y in [2.0, 3.5, 5.5, 7.0]:
-		_prop("pew", bpos("house_oswin", 4.6, y))
-	spots["house_oswin_inside"] = bpos("house_oswin", 7.4, 4.5)
-	for c in [[8.6, 3.2], [8.6, 5.8]]:
-		var al := FX.light(Color("#ffd080"), 160.0, 0.7, true)
-		al.position = bpos("house_oswin", c[0], c[1])
-		add_child(al)
-	# --- upstairs: inn rooms + the Velvet Lantern
-	B = "inn_upstairs"
-	for p in [[3.4, 6.0], [3.4, 11.0], [7.4, 6.0], [7.4, 11.0]]:
-		_prop("bed", bpos(B, p[0], p[1]))
-	_prop("bed_fancy", bpos(B, 17.6, 3.4))
-	_prop("bed_fancy", bpos(B, 17.6, 10.6))
-	_prop("rug_red", bpos(B, 14.6, 7.0), PI / 2)
-	_prop("table_round", bpos(B, 13.0, 7.0))
-	_prop("chair", bpos(B, 12.0, 7.0))
-	_prop("chair", bpos(B, 14.0, 7.0))
-	for c in [[13.0, 6.8], [11.2, 2.0], [11.2, 12.0], [19.0, 7.0]]:
-		_prop("candle", bpos(B, c[0], c[1]))
-		var ll := FX.light(Color("#ff8a6a"), 200.0, 0.75, true)
-		ll.position = bpos(B, c[0], c[1])
-		add_child(ll)
-	spots["lantern_1"] = bpos(B, 12.8, 4.2)
-	spots["lantern_2"] = bpos(B, 12.8, 10.0)
-	spots["lantern_3"] = bpos(B, 16.2, 7.0)
-	spots["upstairs_hall"] = bpos(B, 5.4, 8.4)
 
 
 # ======================================================================= stations
 func _build_stations() -> void:
+	var override: Dictionary = DB.building("smithy").get("station_pos", {})
 	for st in DB.stations.values():
-		var p: Array = st["pos"]
+		var p: Array = override.get(st["id"], st["pos"])
 		var pos := bpos("smithy", float(p[0]), float(p[1]))
 		var size := Vector2(float(st["size"][0]), float(st["size"][1]))
 		var tex := Assets.get_tex("stations/" + st["id"], Vector2i(int(size.x), int(size.y)))
@@ -574,6 +555,14 @@ func _build_stations() -> void:
 		for fx in st.get("fx", []):
 			_station_fx(fx, pos, size)
 	_refresh_station_locks()
+	_marker = Sprite2D.new()
+	_marker.texture = Assets.get_tex("ui/station_marker", Vector2i(48, 48))
+	_marker.z_index = 30
+	_marker.visible = false
+	add_child(_marker)
+	Events.crafting_changed.connect(_update_marker)
+	Events.station_worked.connect(_station_worked)
+	_update_marker()
 	Events.world_flag_changed.connect(func(_f): _refresh_station_locks())
 	Events.skill_level_up.connect(func(_a, _b, _c): _refresh_station_locks())
 
@@ -630,6 +619,71 @@ func _station_fx(fx: String, pos: Vector2, size: Vector2) -> void:
 			var tm := FX.motes(Color("#e0e8ff"), 6, 22.0)
 			tm.position = pos
 			add_child(tm)
+
+
+func station_pos(id: String) -> Vector2:
+	var p: Array = DB.building("smithy").get("station_pos", {}).get(id, DB.station(id).get("pos", [0, 0]))
+	return bpos("smithy", float(p[0]), float(p[1]))
+
+
+## Ember marker bobbing over the station the current crafting job needs next.
+func _update_marker() -> void:
+	var st := Crafting.current_station()
+	if st == "":
+		_marker.visible = false
+		return
+	var size: Array = DB.station(st)["size"]
+	_marker.visible = true
+	var base := station_pos(st) - Vector2(0, float(size[1]) * 0.5 + 30.0)
+	_marker.position = base
+	var tw := _marker.create_tween().set_loops()
+	tw.tween_property(_marker, "position:y", base.y - 12.0, 0.45).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_marker, "position:y", base.y, 0.45).set_trans(Tween.TRANS_SINE)
+
+
+## Tactile feedback in the world for each resolved check: sparks, steam, bubbles, rune and arcane flashes.
+func _station_worked(id: String, quality: float) -> void:
+	var pos := station_pos(id)
+	var good := quality >= 95.0
+	match id:
+		"anvil", "arcane_anvil", "grinding_wheel", "rune_polishing_wheel":
+			var sp := FX.sparks()
+			sp.amount = 40 if good else 22
+			if id == "arcane_anvil":
+				sp.color_ramp.set_color(0, Color("#d8c0ff"))
+			sp.position = pos
+			add_child(sp)
+			sp.emitting = true
+			get_tree().create_timer(2.0).timeout.connect(sp.queue_free)
+		"quench_trough", "leather_vat", "rune_cleansing_basin":
+			var st := FX.smoke(18)
+			st.one_shot = true
+			st.explosiveness = 0.8
+			st.lifetime = 2.2
+			st.modulate = Color(1.4, 1.4, 1.5, 0.9)
+			st.position = pos
+			add_child(st)
+			st.emitting = true
+			get_tree().create_timer(3.0).timeout.connect(st.queue_free)
+		"cauldron", "alembic", "mortar_station", "reagent_table", "infusion_rack":
+			var bu := FX.motes(Color("#b8e08a"), 24, 30.0)
+			bu.one_shot = true
+			bu.explosiveness = 0.6
+			bu.position = pos
+			add_child(bu)
+			bu.emitting = true
+			get_tree().create_timer(3.0).timeout.connect(bu.queue_free)
+	var flash_col: Color = {"forge": Color("#ff8a2a"), "bellows": Color("#ff8a2a"), "crucible": Color("#ff9a40"),
+		"rune_cutting_bench": Color("#ffe0a0"), "rune_engraving_stand": Color("#ffe0a0"), "resonance_pedestal": Color("#ffe0a0"),
+		"rune_cleansing_basin": Color("#c8e0ff"), "arcane_crucible": Color("#9a6cff"), "spellbinding_array": Color("#9a6cff"),
+		"leyline_conductor": Color("#9a6cff"), "aetheric_stabilizer": Color("#9a6cff"), "arcane_anvil": Color("#b08cff"),
+		"thread_spinner": Color("#e0e8ff"), "embroidery_frame": Color("#e0e8ff")}.get(id, Color("#ffc070"))
+	var l := FX.light(flash_col, 320.0, 1.6 if good else 0.9)
+	l.position = pos
+	add_child(l)
+	var tw := l.create_tween()
+	tw.tween_property(l, "energy", 0.0, 0.9)
+	tw.tween_callback(l.queue_free)
 
 
 func _refresh_station_locks() -> void:
@@ -804,7 +858,22 @@ func _build_nav() -> void:
 			spot_ids[name] = id
 			_link_nearest(id, 1400.0, 2)
 			outdoor_ids.append(id)
-	# building doors: outside ↔ inside, interiors star-linked to the inside door
+	# room hubs: every room gets a centre node; rooms are convex, so hub ↔ anything inside is wall-free
+	var hubs := {}
+	for bid in buildings:
+		for rm in buildings[bid].get("rooms", []):
+			hubs[bid + "/" + str(rm["id"])] = _pt((rm["rect"] as Rect2).get_center())
+	# interior doors: a node on each side, linked through the gap and to their room hubs
+	for d in _room_doors:
+		var off := Vector2(56, 0) if d["vertical"] else Vector2(0, 56)
+		var p1 := _pt((d["pos"] as Vector2) - off)
+		var p2 := _pt((d["pos"] as Vector2) + off)
+		astar.connect_points(p1, p2)
+		for q in [p1, p2]:
+			var rid := room_at(d["b"], astar.get_point_position(q))
+			if rid != "":
+				astar.connect_points(q, hubs[d["b"] + "/" + rid])
+	# exterior doors: outside ↔ inside ↔ hub of the entrance room
 	for b in DB.layout.get("buildings", []):
 		var r := brect(b)
 		var d: Dictionary = b["doors"][0]
@@ -812,37 +881,44 @@ func _build_nav() -> void:
 		var out_id := _pt(dc + _door_out(d) * 70.0)
 		var in_id := _pt(dc - _door_out(d) * 70.0)
 		astar.connect_points(out_id, in_id)
-		_link_nearest(out_id, 1400.0, 1)
+		# the doorstep joins the outdoor network only (never its own building's interior nodes)
+		var best := -1
+		var best_d := INF
+		for o in outdoor_ids:
+			var dd := astar.get_point_position(o).distance_to(astar.get_point_position(out_id))
+			if dd < best_d:
+				best_d = dd
+				best = o
+		if best >= 0:
+			astar.connect_points(out_id, best)
 		spots[b["id"] + "_door_out"] = dc + _door_out(d) * 70.0
 		spot_ids[b["id"] + "_door_out"] = out_id
-		for name in spots.keys():
-			if spot_ids.has(name):
+		var rid2 := room_at(b["id"], astar.get_point_position(in_id))
+		if rid2 != "":
+			astar.connect_points(in_id, hubs[b["id"] + "/" + rid2])
+	# interior spots hang off their room's hub
+	for name in spots.keys():
+		if spot_ids.has(name):
+			continue
+		for bid in buildings:
+			if not (buildings[bid]["rect"] as Rect2).has_point(spots[name]):
 				continue
-			if r.grow(-4).has_point(spots[name]):
+			var rid3 := room_at(bid, spots[name])
+			if rid3 != "":
 				var sid := _pt(spots[name])
 				spot_ids[name] = sid
-				astar.connect_points(sid, in_id)
-	# the smithy quarters sit behind an inner door
-	if spot_ids.has("quarters_door_in") and spot_ids.has("smithy_inside"):
-		var qd: int = spot_ids["quarters_door_in"]
-		for name in ["quarters_table"]:
-			if spot_ids.has(name):
-				astar.disconnect_points(spot_ids[name], _closest_in("smithy"))
-				astar.connect_points(spot_ids[name], qd)
-	# upstairs graph
-	var up_hall := _pt(spots.get("upstairs_hall", Vector2.ZERO))
-	spot_ids["upstairs_hall"] = up_hall
-	for name in ["lantern_1", "lantern_2", "lantern_3", "stairs_inn_upstairs"]:
-		if spots.has(name):
-			var id := _pt(spots[name])
-			spot_ids[name] = id
-			astar.connect_points(id, up_hall)
+				astar.connect_points(sid, hubs[bid + "/" + rid3])
+			break
+	if spot_ids.has("upstairs_hall"):
+		pass
 
 
-func _closest_in(bid: String) -> int:
-	var r := brect(DB.building(bid))
-	var d: Dictionary = DB.building(bid)["doors"][0]
-	return astar.get_closest_point(_door_center(r, d) - _door_out(d) * 70.0)
+## Room id at a world position inside building `bid` ("" outside any room).
+func room_at(bid: String, pos: Vector2) -> String:
+	for rm in buildings.get(bid, {}).get("rooms", []):
+		if (rm["rect"] as Rect2).has_point(pos):
+			return rm["id"]
+	return ""
 
 
 func path_to(from: Vector2, spot: String) -> PackedVector2Array:
@@ -1097,7 +1173,16 @@ func _update_area(delta: float) -> void:
 	if new_area != area:
 		area = new_area
 		Game.state["player"]["area"] = area
+		room = room_at(area, player.position)
 		_on_area_changed()
+	else:
+		var new_room := room_at(area, player.position)
+		if new_room != room:
+			room = new_room
+			if room != "":
+				for rm in buildings[area]["rooms"]:
+					if rm["id"] == room:
+						Events.toast.emit(str(rm["name"]), "area")
 
 
 func _on_area_changed() -> void:
@@ -1160,6 +1245,8 @@ func interact(e: Dictionary) -> void:
 			Events.open_panel.emit("dialogue", {"npc": e["id"], "area": area})
 		"bed":
 			Events.open_panel.emit("sleep", {})
+		"ledger":
+			Events.open_panel.emit("shop", {"tab": "ledger"})
 		"bag":
 			Events.open_panel.emit("loot", {"uid": int(e["id"])})
 		"eggs":

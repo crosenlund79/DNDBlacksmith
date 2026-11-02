@@ -110,6 +110,14 @@
    128,
    64
   ],
+  "props/arcane_glyph_decal.png": [
+   192,
+   192
+  ],
+  "props/arcane_rack.png": [
+   112,
+   56
+  ],
   "props/armor_stand.png": [
    72,
    88
@@ -118,12 +126,24 @@
    320,
    64
   ],
+  "props/bar_shelf.png": [
+   192,
+   40
+  ],
   "props/barrel.png": [
    56,
    56
   ],
+  "props/bath_tub.png": [
+   128,
+   80
+  ],
   "props/bed.png": [
    96,
+   160
+  ],
+  "props/bed_double.png": [
+   128,
    160
   ],
   "props/bed_fancy.png": [
@@ -141,6 +161,10 @@
   "props/bookshelf.png": [
    128,
    40
+  ],
+  "props/bottle_shelf.png": [
+   128,
+   48
   ],
   "props/bush.png": [
    80,
@@ -174,6 +198,18 @@
    56,
    56
   ],
+  "props/cupboard.png": [
+   112,
+   48
+  ],
+  "props/desk_ledger.png": [
+   144,
+   80
+  ],
+  "props/dining_table.png": [
+   192,
+   96
+  ],
   "props/display_table.png": [
    128,
    80
@@ -181,6 +217,10 @@
   "props/door_mat.png": [
    96,
    40
+  ],
+  "props/dresser.png": [
+   96,
+   48
   ],
   "props/dummy_target.png": [
    64,
@@ -218,13 +258,37 @@
    64,
    64
   ],
+  "props/herb_rack.png": [
+   160,
+   48
+  ],
+  "props/hide_rack.png": [
+   128,
+   96
+  ],
+  "props/ingredient_crates.png": [
+   96,
+   80
+  ],
+  "props/iron_bars.png": [
+   96,
+   64
+  ],
   "props/keg.png": [
    56,
    56
   ],
+  "props/kitchen_stove.png": [
+   112,
+   80
+  ],
   "props/lantern_post.png": [
    48,
    48
+  ],
+  "props/leather_bundle.png": [
+   80,
+   56
   ],
   "props/loot_pile.png": [
    64,
@@ -234,6 +298,10 @@
    192,
    128
   ],
+  "props/nightstand.png": [
+   48,
+   48
+  ],
   "props/notice_board.png": [
    144,
    72
@@ -241,6 +309,10 @@
   "props/ore_pile.png": [
    80,
    64
+  ],
+  "props/pattern_board.png": [
+   128,
+   40
   ],
   "props/pew.png": [
    160,
@@ -266,6 +338,14 @@
    192,
    128
   ],
+  "props/rune_glyph_decal.png": [
+   160,
+   160
+  ],
+  "props/rune_shelf.png": [
+   128,
+   48
+  ],
   "props/sack.png": [
    48,
    48
@@ -290,6 +370,14 @@
    80,
    48
   ],
+  "props/soot_decal.png": [
+   192,
+   160
+  ],
+  "props/spill_decal.png": [
+   96,
+   72
+  ],
   "props/stairs_down.png": [
    96,
    128
@@ -297,6 +385,10 @@
   "props/stairs_up.png": [
    96,
    128
+  ],
+  "props/stone_blocks.png": [
+   80,
+   72
   ],
   "props/stool.png": [
    32,
@@ -309,6 +401,14 @@
   "props/table_round.png": [
    96,
    96
+  ],
+  "props/thread_spools.png": [
+   72,
+   56
+  ],
+  "props/tool_wall.png": [
+   160,
+   48
   ],
   "props/tree_oak_a.png": [
    224,
@@ -325,6 +425,10 @@
   "props/tree_small.png": [
    128,
    128
+  ],
+  "props/trophy_wall.png": [
+   128,
+   40
   ],
   "props/wardrobe.png": [
    112,
@@ -594,6 +698,22 @@
    256,
    256
   ],
+  "textures/floor_arcane.png": [
+   256,
+   256
+  ],
+  "textures/floor_herb.png": [
+   256,
+   256
+  ],
+  "textures/floor_slate.png": [
+   256,
+   256
+  ],
+  "textures/floor_soot.png": [
+   256,
+   256
+  ],
   "textures/floor_stone.png": [
    256,
    256
@@ -607,6 +727,10 @@
    256
   ],
   "textures/grass.png": [
+   256,
+   256
+  ],
+  "textures/wall_plaster.png": [
    256,
    256
   ],
@@ -656,7 +780,7 @@
   ],
   "roofs/smithy.png": [
    1920,
-   1216
+   1472
   ],
   "ui/button_disabled.png": [
    192,
@@ -721,6 +845,10 @@
   "ui/slot_select.png": [
    72,
    72
+  ],
+  "ui/station_marker.png": [
+   48,
+   48
   ],
   "ui/tooltip_bg.png": [
    128,

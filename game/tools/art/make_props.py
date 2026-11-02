@@ -890,6 +890,8 @@ def jobs():
     for pid, spec in load("props.json").items():
         if only and pid not in only:
             continue
+        if pid not in PROPS:  # interior decor props are drawn by make_interiors.py
+            continue
         W, H = spec["size"]
         P = painter(scale=1.0, lw_mul=0.7)
         fn = PROPS[pid]
