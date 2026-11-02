@@ -341,6 +341,13 @@ func phase_full() -> void:
 	Game.add_item(axe, false)
 	Adv.get_a("varn")["gold"] = 500
 	Shop._add_customer("varn", "browse")
+	# customers are only served once they have walked over and sat down outside
+	W()._update_schedules()
+	var vw := 0.0
+	while not Shop.waiting().any(func(c): return c["npc"] == "varn") and vw < 60.0:
+		await wait(1.0)
+		vw += 1.0
+	expect(Shop.waiting().any(func(c): return c["npc"] == "varn"), "shop: Varn walked over and took a seat (%.0fs)" % vw)
 	await use("counter", "smithy")
 	expect(panel() is ShopPanel, "shop counter opens the shop panel")
 	await shot("shop_counter")
@@ -688,7 +695,14 @@ func phase_craft() -> void:
 	expect(sword.get("craft", {}).get("dice_mode") == "digital", "7a. digital dice recorded")
 	# 2. higher-quality steel weapon (7 operations), physical dice
 	var steel := await craft_ui("steel_longsword", 0.25, "physical", {"edge": 14, "temper": 9, "fortune": 41}, "steel")
-	expect(steel.get("def") == "sword_steel" and Items.stat(steel, "attack") > Items.stat(sword, "attack"), "2. steel longsword outclasses the iron one (%d vs %d attack)" % [Items.stat(steel, "attack"), Items.stat(sword, "attack")])
+	# like for like: the same craftsmanship and the same rolls in iron would make a weaker blade
+	var sc: Dictionary = steel.get("craft", {})
+	var rolls := {}
+	for k in sc.get("dice", {}):
+		rolls[k] = int(sc["dice"][k]["total"])
+	var iron_twin := Crafting.compute_stats(DB.item("sword_iron"), float(steel.get("quality", 0)), rolls, DB.recipe("iron_longsword")["dice"], DB.crafting["materials"]["iron"], int(sc.get("level", 0)))
+	var steel_base := Crafting.compute_stats(DB.item("sword_steel"), float(steel.get("quality", 0)), rolls, DB.recipe("steel_longsword")["dice"], DB.crafting["materials"]["steel"], int(sc.get("level", 0)))
+	expect(steel.get("def") == "sword_steel" and int(steel_base["attack"]) > int(iron_twin["attack"]), "2. steel longsword outclasses iron at equal craft and rolls (%d vs %d base attack; finished %d)" % [int(steel_base["attack"]), int(iron_twin["attack"]), Items.stat(steel, "attack")])
 	expect(steel.get("craft", {}).get("dice_mode") == "physical" and int(steel.get("craft", {}).get("dice", {}).get("edge", {}).get("total", 0)) == 14, "7b. physical dice entered and used (edge 14)")
 	# 3. armour
 	var cuirass := await craft_ui("iron_cuirass", 0.4, "auto", {}, "cuirass")
