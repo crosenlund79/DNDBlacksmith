@@ -43,7 +43,7 @@
    "weight": 1.0
   },
   "unlock": {},
-  "sfx": "forge",
+  "sfx": "bellows",
   "fx": [
    "fire",
    "light_forge",

@@ -180,3 +180,10 @@ func _startup_regressions() -> void:
 	check(menu != null and menu.size.x > 100.0 and menu.size.y > 100.0, "regression: main menu has full-screen size %s" % [menu.size if menu else Vector2.ZERO])
 	main.queue_free()
 	ui.queue_free()
+	# every station sound must resolve ("hammer" maps to the hammer_1..3 variants)
+	var missing := []
+	for st in DB.stations.values():
+		var id: String = "sfx/hammer_1" if st["sfx"] == "hammer" else "sfx/" + str(st["sfx"])
+		if Audio.get_stream(id) == null:
+			missing.append(id)
+	check(missing.is_empty(), "regression: all station sounds exist %s" % [missing])

@@ -15,7 +15,7 @@ def st(id, name, disc, pos, size, purpose, check, unlock=None, sfx="hammer", fx=
 C = lambda n, spd, zone, w=1.0: dict(count=n, speed=spd, zone=zone, weight=w)
 stations = [
  st("anvil", "The Anvil", "classic", [12, 10], [112, 80], "Shapes heated metal into blades, plates and fittings. The heart of ordinary smithing.", C(3, 0.55, 34, 1.4), sfx="hammer"),
- st("forge", "Forge / Hearth", "classic", [2.6, 9], [160, 128], "Heats metal to working temperature. Colour of the glow tells the smith when to strike.", C(1, 0.45, 40), sfx="forge", fx=["fire", "light_forge", "embers"]),
+ st("forge", "Forge / Hearth", "classic", [2.6, 9], [160, 128], "Heats metal to working temperature. Colour of the glow tells the smith when to strike.", C(1, 0.45, 40), sfx="bellows", fx=["fire", "light_forge", "embers"]),
  st("crucible", "Crucible", "classic", [2.4, 12.8], [96, 96], "Melts ore and combines metals into ingots and alloys.", C(2, 0.5, 36), sfx="bubble", fx=["glow_small"]),
  st("quench_trough", "Quenching Trough", "classic", [6.6, 12.6], [128, 64], "Cools and hardens finished work. Too slow and the steel stays soft; too fast and it cracks.", C(1, 0.65, 30), sfx="quench", fx=["steam"]),
  st("bellows", "Bellows", "classic", [5.0, 8.4], [96, 96], "Feeds air to the forge to raise the heat for steel and alloys.", C(2, 0.6, 38, 0.7), sfx="bellows"),
