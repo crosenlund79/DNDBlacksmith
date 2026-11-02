@@ -54,7 +54,7 @@ static func table_talk() -> String:
 				var credit := ""
 				for uid in h.get("credits", {}):
 					credit = h["credits"][uid]
-				lines.append("%s is telling the table about %s%s." % [a["name"], dn, (" — and how the smith's work %s" % credit) if credit != "" else ""])
+				lines.append("%s is telling the table about %s%s." % [a["name"], dn, (" — the smith's work won the day (%s)" % credit) if credit != "" else ""])
 			else:
 				lines.append("%s nurses a drink and won't talk about %s." % [a["name"], dn])
 	if Social.spouse() != "":

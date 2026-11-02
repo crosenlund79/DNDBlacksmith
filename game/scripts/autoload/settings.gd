@@ -38,6 +38,7 @@ const DEFAULT_KEYS := {
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"debug_overlay": [KEY_F3],
+	"dev_panel": [KEY_F10],
 	"run": [KEY_SHIFT],
 }
 

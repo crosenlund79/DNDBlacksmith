@@ -323,6 +323,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		debug_label.visible = not debug_label.visible
 		Settings.set_value("debug/overlay", debug_label.visible)
 		return
+	if event.is_action_pressed("dev_panel"):
+		get_viewport().set_input_as_handled()
+		if current is DevPanel:
+			close_current()
+		else:
+			open(DevPanel.new())
+		return
 	if is_instance_valid(current):
 		return
 	var map := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skills",

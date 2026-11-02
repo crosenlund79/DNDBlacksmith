@@ -1,4 +1,6 @@
-# Ember & Ash — gameplay systems in the first build
+# Ember & Ash — gameplay systems
+
+> **Vertical-slice candidate (iterations 003–008):** see [PLAYGUIDE.md](PLAYGUIDE.md) for how to play the whole loop and [VERTICAL_SLICE_REPORT.md](VERTICAL_SLICE_REPORT.md) for what works, what is shallow and what is deferred. The sections below describe the systems in detail. Iteration 003–008 additions are summarised at the end.
 
 > **Build status:** runs in Godot 4.3. It is covered by headless unit tests (`tests/test_runner.tscn`) and by rendered play-test phases (`tests/playtest.tscn`) that play the real game with synthetic input.
 
@@ -357,3 +359,72 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 - the four-seat waiting area, asking a customer to leave, and the freed seat
 - the crafting display
 - tabletop figures, cats and dogs, flowers in the breeze, and the darker forge corner
+
+
+## Iterations 003–008 in brief
+
+### 003 — Materials, relics and discovery
+
+**Gems and rare minerals:** garnet, sapphire, moonstone, starstone, starmetal and adamantine. What you find depends on the region and on the finder's skill.
+
+**Regions:** scouting knowledge lowers danger for everyone, and new suppliers are found along the way.
+
+**Trade runs:** a hireling carries a purse to buy materials and sells the goods you marked for trade.
+
+**Relics:** unidentified relics are studied by you, or by a relic hunter during work hours. They turn out to be ancient arms, components or forgotten recipes.
+
+**Processing:** skilled hirelings turn stored herbs into draughts and oils, and runestone blanks into prepared runestones.
+
+### 004 — The adventurers' world
+
+**Encounters:** expeditions are fought one encounter at a time. Each threat has weaknesses and resistances.
+
+- What decides a fight: attack, fire, frost, magic, protection, ward, carried draughts and coatings.
+- Logs credit the gear that mattered.
+
+**Adventurers:** each has a trait, a planned next trip, and orders that follow that trip's threats. They buy draughts before leaving.
+
+**Overview:** what you see depends on how well you know them.
+
+### 005 — The village remembers
+
+**Commerce:**
+- Reputation sets how busy the shop is and what prices people accept.
+- Customers bring budgets and wants, and villagers buy goods.
+- Upkeep is charged daily, and stock is laid out on the display table.
+
+**Consequences:**
+- Disputes can be refunded or refused.
+- Hostile people refuse to trade.
+- Friends share road knowledge, and devoted friends bring relics.
+
+### 006 — A life beyond the anvil
+
+**The inn:** table talk drawn from real events, and knucklebones.
+
+**Romance:** personal beats lead to marriage: a walk by the stream, a keepsake, and a wedding of her own.
+
+**Married life:** her family warms to you, she greets you in her own words, gear is free for her, and spoils are shared.
+
+### 007 — Masters of the forge
+
+**New crafts:**
+- Jewellery with gems.
+- Frost coating, and treating equipment with oils and coatings.
+- Ranger's boots and an embroidered hood.
+
+**Arcane metalworking:** the adamantine chain, with magic **bound into the metal**.
+
+**Special blades:**
+- The four-discipline Emberwarden.
+- The forgotten Starsteel recipe.
+
+**Workshop help:** hirelings assist at the bench, and adventurers bring their own gear for repair.
+
+### 008 — Integration
+
+**Developer Tools (F10):** for testing only, separate from normal play.
+
+**Verification:**
+- A 28-day soak test of the living world.
+- The end-to-end rendered session and reload, `slice` and `slice_reload`.

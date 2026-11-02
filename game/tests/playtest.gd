@@ -1135,3 +1135,168 @@ func _xpv(h: Dictionary, sk: String) -> int:
 	for l in range(1, lv + 1):
 		tot += SkillSys.xp_needed(l)
 	return tot
+
+
+# ======================================================================= vertical slice (iterations 3–8)
+## One end-to-end session in the running game: the developer panel, an expedition and its bag, a
+## relic studied, a multi-discipline blade forged through the minigames, sold to an adventurer who
+## takes it on an expedition that it measurably decides, the inn, a dispute — then save.
+func phase_slice() -> void:
+	Events.toast.connect(_on_toast)
+	await click("New Game")
+	await wait(2.5)
+	Settings.set_value("gameplay/dice_mode", "auto")
+	# developer tools (F10) — separate from normal play
+	await press("dev_panel")
+	await wait(0.6)
+	expect(panel() is DevPanel, "dev: F10 opens the developer tools")
+	await shot("dev_panel")
+	for b in ["Smithing kit", "Runecraft kit", "Alchemy kit", "Stitching kit", "Gems & rare minerals", "Relics to study", "+1000 gold", "+2 levels in every craft"]:
+		await click(b)
+	await close_panel()
+	# --- iteration 3: an expedition comes home, the bag is revealed item by item
+	await press("panel_hirelings")
+	await wait(0.6)
+	for b in _buttons(panel()):
+		if b.text == "Send" and _row_text(b).begins_with("Ironroot Mine"):
+			b.pressed.emit()
+			break
+	await wait(0.4)
+	expect(Hire.get_h("borin")["status"] == "away", "slice: Borin sets out for Ironroot Mine")
+	Hire.get_h("borin")["expedition"]["days_left"] = 1
+	Hire.on_day()
+	Events.inventory_changed.emit()
+	await wait(0.5)
+	var bag: Dictionary = Game.state["returns"][-1] if not Game.state["returns"].is_empty() else {}
+	expect(not bag.is_empty(), "slice: Borin's bag waits in the workshop (%d items)" % bag.get("contents", []).size())
+	if not bag.is_empty():
+		await use("bag", str(bag["uid"]))
+		await wait(0.4)
+		expect(panel() is LootPanel, "slice: the bag opens with a progressive reveal")
+		await wait(1.0)
+		await shot("slice_bag_reveal_progress")
+		await wait(6.0)
+		await shot("slice_bag_reveal_done")
+		await click("Take everything")
+		await wait(0.4)
+	await close_panel()
+	# a relic studied at the cleansing basin
+	await press("inventory")
+	await wait(0.6)
+	var inv := panel() as InventoryPanel
+	var relic := {}
+	for it in Game.inventory():
+		if Regions.is_unidentified(it):
+			relic = it
+	if inv and not relic.is_empty():
+		inv._select(relic)
+		await wait(0.3)
+		await shot("slice_relic_selected")
+		expect(await click("Study the relic"), "slice: an unidentified relic can be studied")
+		await wait(0.4)
+		await play_checks(true, 0.2)
+		await wait(1.0)
+		expect(panel() is RevealPanel, "slice: the relic is revealed as %s" % ((panel() as RevealPanel).item.get("name", "?") if panel() is RevealPanel else "?"))
+		await shot("slice_relic_identified")
+	await close_panel()
+	await close_panel()
+	# --- iteration 7: the multi-discipline Emberwarden, through the minigames
+	var ember := await craft_ui("emberwarden_longsword", 0.15, "auto", {}, "ember")
+	expect(ember.get("def", "") == "sword_emberwarden" and Items.stat(ember, "fire") > 0, "slice: Emberwarden forged (%s, fire %d)" % [ember.get("rarity", "?"), Items.stat(ember, "fire")])
+	# --- iteration 4: Garrick buys it at the shop and takes it to the barrows
+	var gar := Adv.get_a("garrick")
+	Adv.ensure(gar)
+	gar["status"] = "in_town"
+	gar["gold"] = 3000
+	var it_e := Game.find_uid(int(ember.get("uid", -1)))
+	if not it_e.is_empty():
+		it_e["for_sale"] = true
+		it_e["price"] = 400
+	Events.inventory_changed.emit()
+	Game.state["customers"].clear()
+	Shop._add_customer("garrick", "browse")
+	W()._update_schedules()
+	var gw := 0.0
+	while not Shop.waiting().any(func(c): return c["npc"] == "garrick") and gw < 60.0:
+		await wait(1.0)
+		gw += 1.0
+	await tp(W().bpos("smithy", 17.4, 2.0))
+	await wait(0.4)
+	await shot("slice_shop_display")
+	await use("counter", "smithy")
+	await shot("slice_shop_garrick")
+	await click("Emberwarden")
+	await wait(0.5)
+	expect(gar["equipment"].get("weapon", {}).get("uid", -1) == ember.get("uid", -2), "slice: Garrick bought and equipped the Emberwarden")
+	await close_panel()
+	gar["next_dest"] = "barrow_fields"
+	gar["depart_day"] = Game.day()
+	Adv.morning_departures()
+	expect(gar["status"] == "away" and gar["dest"] == "barrow_fields", "slice: Garrick departs for the Barrow Fields")
+	await wait(2.0)
+	gar["days_left"] = 1
+	Adv.on_day()
+	var last: Dictionary = gar["history"][-1] if not gar["history"].is_empty() else {}
+	expect(last.get("credits", {}).has(str(ember.get("uid", ""))), "slice: the expedition log credits the Emberwarden (%s)" % str(gar.get("log", [])))
+	Game.set_flag("rumour_garrick")
+	await press("panel_adventurers")
+	await wait(0.6)
+	await shot("slice_adventurers_overview")
+	await close_panel()
+	# --- iteration 6: the inn's table talk reflects it
+	await advance_to(19, 30)
+	Events.open_panel.emit("dialogue", {"npc": "hilde", "area": "inn"})
+	await wait(0.5)
+	await click("Sit in on the table talk")
+	await wait(0.5)
+	await shot("slice_inn_table_talk")
+	await close_panel()
+	# --- iteration 5: a dispute at the waiting seats
+	await advance_to(10, 0)
+	var kes := Adv.get_a("kestra")
+	kes["status"] = "in_town"
+	Game.state["customers"].clear()
+	Shop.raise_dispute("kestra", Items.make("dagger", {"quality": 40.0, "crafted_by": "Brannoc Ironhand"}))
+	W()._update_schedules()
+	var kw := 0.0
+	while not Shop.waiting().any(func(c): return c["npc"] == "kestra") and kw < 60.0:
+		await wait(1.0)
+		kw += 1.0
+	if await talk_to("kestra"):
+		await shot("slice_dispute")
+		await click("Refuse")
+		await wait(0.4)
+		await shot("slice_dispute_refused")
+		await click("Farewell")
+	expect(Social.has_memory("kestra", "refused_" + str(Game.day())), "slice: Kestra remembers the refusal")
+	await press("panel_ledger")
+	await wait(0.6)
+	await shot("slice_ledger_reputation")
+	await close_panel()
+	# save
+	await press("cancel")
+	await wait(0.4)
+	await click("Save game")
+	await wait(0.5)
+	await click("Save")
+	await wait(0.5)
+	var keep := {"ember": str(ember.get("uid", "")), "garrick_weapon": str(gar["equipment"].get("weapon", {}).get("uid", "")), "garrick_hist": gar["history"].size(),
+		"borin_hist": Hire.get_h("borin").get("history", []).size(), "kestra_aff": Social.aff("kestra"), "rep": Shop.reputation(), "scout": Regions.scouted("ironroot_mine"),
+		"inv": Game.inventory().size(), "day": Game.day()}
+	var f := FileAccess.open("user://playtest/expect_slice.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(keep))
+	note("saved " + JSON.stringify(keep))
+
+
+func phase_slice_reload() -> void:
+	expect(await click("Continue"), "restart: Continue")
+	await wait(3.0)
+	var e: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("user://playtest/expect_slice.json"))
+	var gar := Adv.get_a("garrick")
+	expect(str(gar.get("equipment", {}).get("weapon", {}).get("uid", "")) == str(e["garrick_weapon"]) and gar.get("history", []).size() == int(e["garrick_hist"]), "persist: Garrick still carries the Emberwarden, history intact")
+	expect(Hire.get_h("borin").get("history", []).size() == int(e["borin_hist"]), "persist: Borin's expedition history")
+	expect(is_equal_approx(Social.aff("kestra"), float(e["kestra_aff"])) and Social.has_memory("kestra", "refused_" + str(e["day"])), "persist: Kestra's grudge")
+	expect(is_equal_approx(Regions.scouted("ironroot_mine"), float(e["scout"])) and Game.inventory().size() == int(e["inv"]), "persist: scouting knowledge and stores")
+	await press("panel_adventurers")
+	await wait(0.6)
+	await shot("slice_reload_adventurers")

@@ -132,6 +132,27 @@ Adding a room is a data change: add a rect and a door to `make_layout.py`, then 
 - **Dust:** CPUParticles2D emitters over the streets and the workshop and inn rooms.
 - **Forge corner:** a radial soot gradient over the forge room's floor, a warm hearth light, smoke and embers.
 
+## Vertical-slice systems (iterations 003–008)
+
+**New and extended systems:**
+
+| Module | What it holds |
+|---|---|
+| `regions.gd` (`Regions`) | Scouting knowledge per destination (`world.scouted`), danger after scouting, supplier discovery (`suppliers.json`), trade runs, relic identification, reading recipe scrolls |
+| `adventurers.gd` | `run_encounters()`: threats from `destinations.json` (power, dmg, weak, resist). Offence = level + attack (+magic for casters) + 3 × matching damage type; defence reduces damage proportionally; draughts heal; coatings wear off after 3 trips. `plan_next()` sets the next trip and the damage type it calls for. |
+| `shop.gd` | Reputation (average village affection × 0.8 + `world.rep`), upkeep, goods customers, disputes, repairs of adventurers' own gear, refusals |
+| `inn.gd` (`InnLife`) | Table talk from real state; knucklebones on `Dice`; romance beats (walk, keepsake, wedding, married lines) |
+| `crafting.gd` | `treat()` applies coatings and oils. Arcane recipes add `bound` magic (spellweave die). Hirelings on shift add `hireling_assist()` to the skill bonus. `requires_flag` gates forgotten recipes. |
+
+**Developer and soak tools:**
+- `dev_panel.gd`: the F10 developer tools; the action is `dev_panel`.
+- `tests/soak.tscn`: 28 simulated days, with a printed summary.
+
+**Save compatibility:** every new field is added on first access, so older saves still load:
+- adventurers: trait, potions, log, history
+- hirelings: traits, log, history
+- `world.scouted` and `world.rep`
+
 ## NPCs
 
 - `AStar2D` waypoint graph: densified road polylines, outdoor spots, room hubs, doorway pairs and interior spots (see above).

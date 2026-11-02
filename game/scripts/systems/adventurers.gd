@@ -236,7 +236,7 @@ static func run_encounters(a: Dictionary, dest: String) -> Dictionary:
 	var res := {"wins": 0, "fought": 0, "wounds": 0.0, "lines": [], "credits": {}}
 	for i in maxi(1, n):
 		var th: Dictionary = threats.pick_random()
-		var power := float(th["power"]) * scale * randf_range(0.85, 1.2)
+		var power := float(th["power"]) * 1.25 * scale * randf_range(0.85, 1.25)
 		var atk := float(Items.stat(weapon, "attack")) + _coat(weapon, "attack")
 		if str(th.get("resist", "")) == "physical":
 			atk *= 0.45
@@ -263,7 +263,7 @@ static func run_encounters(a: Dictionary, dest: String) -> Dictionary:
 		if tr == "devout" and th["kind"] in ["spirit", "undead"]:
 			defence += 6.0
 		var hit := float(th["dmg"]) * scale * (0.5 if won else 1.2) * (1.25 if tr == "reckless" else 1.0)
-		var taken := maxf(0.0, hit - defence * 0.35)
+		var taken := hit * (1.0 - defence / (defence + 30.0))
 		res["fought"] = int(res["fought"]) + 1
 		res["wounds"] = float(res["wounds"]) + taken
 		var line := ""
@@ -329,7 +329,8 @@ static func _resolve(a: Dictionary) -> void:
 		"wins": enc["wins"], "fought": enc["fought"], "credits": enc["credits"]})
 	while a["history"].size() > 8:
 		a["history"].pop_front()
-	Regions.on_trip(a["dest"], 2, success)
+	# adventurers keep most of what they learn to themselves; a little reaches the smith
+	Regions.add_scouting(a["dest"], 0.6 if success else 0.3)
 	var mine := _crafted_by_player(a)
 	var spouse: bool = Social.spouse() == a["id"]
 	a["expeditions"] = int(a["expeditions"]) + 1

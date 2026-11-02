@@ -74,7 +74,7 @@ func _row(a: Dictionary) -> Control:
 	var lines := "[font_size=28][b]%s[/b][/font_size]  ·  %s %s, %s  ·  [i]%s[/i]\n%s · %s%s\n%s%s · %s\nGear: %s" % [
 		a["name"], Adv.rating_text(a), a["cls"], level_txt, Adv.TRAITS.get(a["trait"], ""),
 		where, ("She " if female else "He ") + attitude, cond,
-		Adv.skills_text(a).capitalize() if k >= 15.0 else "Capabilities: hard to judge yet", record, "%d expeditions" % int(a["expeditions"]),
+		(Adv.skills_text(a).left(1).to_upper() + Adv.skills_text(a).substr(1)) if k >= 15.0 else "Capabilities: hard to judge yet", record, "%d expeditions" % int(a["expeditions"]),
 		", ".join(gear) if not gear.is_empty() else "—"]
 	if k >= 10.0 and not a.get("log", []).is_empty():
 		lines += "\n[color=#5e421c][i]%s[/i][/color]" % "  ".join(a["log"])

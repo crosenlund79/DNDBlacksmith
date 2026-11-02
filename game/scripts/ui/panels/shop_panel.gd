@@ -87,7 +87,7 @@ func _customers() -> void:
 				var why := Adv.purchase_check(a, it, Shop.price_of(it))
 				var b := UIKit.button("%s — %s" % [Items.display_name(it), "free" if married else "%d g" % Shop.price_of(it)], func():
 					var err := Shop.sell_to(npc, int(it["uid"]))
-					Events.toast.emit(err if err != "" else "%s takes the %s." % [a["name"], it["name"]], "bad" if err != "" else "good")
+					Events.toast.emit(err if err != "" else "%s takes %s." % [a["name"], ("the " + str(it["name"])) if not str(it["name"]).contains(",") else str(it["name"])], "bad" if err != "" else "good")
 					_build(), 0)
 				b.disabled = why != ""
 				b.tooltip_text = why
