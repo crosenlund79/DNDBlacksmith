@@ -1,3 +1,6 @@
 .godot/
 export/
 user_overrides/
+tools/art/out/
+tools/audio/out/
+__pycache__/

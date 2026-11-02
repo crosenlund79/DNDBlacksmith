@@ -1,0 +1,262 @@
+{
+  "amb/tavern_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
+  "amb/village_day_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
+  "amb/village_night_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
+  "amb/workshop_loop": {
+    "bus": "Ambience",
+    "duration": 24.0,
+    "loop": true
+  },
+  "music/hearth_day": {
+    "bus": "Music",
+    "duration": 91.429,
+    "loop": true
+  },
+  "music/tavern": {
+    "bus": "Music",
+    "duration": 60.0,
+    "loop": true
+  },
+  "music/title": {
+    "bus": "Music",
+    "duration": 68.571,
+    "loop": true
+  },
+  "music/village_evening": {
+    "bus": "Music",
+    "duration": 87.273,
+    "loop": true
+  },
+  "sfx/arcane": {
+    "bus": "SFX",
+    "duration": 1.6,
+    "loop": false
+  },
+  "sfx/bag_open": {
+    "bus": "SFX",
+    "duration": 0.85,
+    "loop": false
+  },
+  "sfx/bellows": {
+    "bus": "SFX",
+    "duration": 1.25,
+    "loop": false
+  },
+  "sfx/bubble": {
+    "bus": "SFX",
+    "duration": 1.3,
+    "loop": false
+  },
+  "sfx/check_good": {
+    "bus": "SFX",
+    "duration": 1.0,
+    "loop": false
+  },
+  "sfx/check_great": {
+    "bus": "SFX",
+    "duration": 1.3,
+    "loop": false
+  },
+  "sfx/check_perfect": {
+    "bus": "SFX",
+    "duration": 1.9,
+    "loop": false
+  },
+  "sfx/check_poor": {
+    "bus": "SFX",
+    "duration": 0.5,
+    "loop": false
+  },
+  "sfx/check_start": {
+    "bus": "SFX",
+    "duration": 0.65,
+    "loop": false
+  },
+  "sfx/check_tick": {
+    "bus": "SFX",
+    "duration": 0.08,
+    "loop": false
+  },
+  "sfx/chisel": {
+    "bus": "SFX",
+    "duration": 1.0,
+    "loop": false
+  },
+  "sfx/coins": {
+    "bus": "SFX",
+    "duration": 0.95,
+    "loop": false
+  },
+  "sfx/dice_land": {
+    "bus": "SFX",
+    "duration": 0.4,
+    "loop": false
+  },
+  "sfx/dice_roll": {
+    "bus": "SFX",
+    "duration": 1.25,
+    "loop": false
+  },
+  "sfx/door": {
+    "bus": "SFX",
+    "duration": 1.7,
+    "loop": false
+  },
+  "sfx/door_bell": {
+    "bus": "SFX",
+    "duration": 1.6,
+    "loop": false
+  },
+  "sfx/eggs_splat": {
+    "bus": "SFX",
+    "duration": 0.6,
+    "loop": false
+  },
+  "sfx/error": {
+    "bus": "UI",
+    "duration": 0.42,
+    "loop": false
+  },
+  "sfx/footstep_1": {
+    "bus": "SFX",
+    "duration": 0.32,
+    "loop": false
+  },
+  "sfx/footstep_2": {
+    "bus": "SFX",
+    "duration": 0.32,
+    "loop": false
+  },
+  "sfx/forge_loop": {
+    "bus": "SFX",
+    "duration": 5.0,
+    "loop": true
+  },
+  "sfx/glass": {
+    "bus": "SFX",
+    "duration": 1.1,
+    "loop": false
+  },
+  "sfx/grind": {
+    "bus": "SFX",
+    "duration": 1.5,
+    "loop": false
+  },
+  "sfx/grind_soft": {
+    "bus": "SFX",
+    "duration": 1.3,
+    "loop": false
+  },
+  "sfx/hammer_1": {
+    "bus": "SFX",
+    "duration": 1.5,
+    "loop": false
+  },
+  "sfx/hammer_2": {
+    "bus": "SFX",
+    "duration": 1.5,
+    "loop": false
+  },
+  "sfx/hammer_3": {
+    "bus": "SFX",
+    "duration": 1.5,
+    "loop": false
+  },
+  "sfx/hammer_arcane": {
+    "bus": "SFX",
+    "duration": 2.4,
+    "loop": false
+  },
+  "sfx/hire": {
+    "bus": "SFX",
+    "duration": 1.25,
+    "loop": false
+  },
+  "sfx/legendary_drop": {
+    "bus": "SFX",
+    "duration": 2.7,
+    "loop": false
+  },
+  "sfx/level_up": {
+    "bus": "SFX",
+    "duration": 1.6,
+    "loop": false
+  },
+  "sfx/npc_greet": {
+    "bus": "SFX",
+    "duration": 0.5,
+    "loop": false
+  },
+  "sfx/page_turn": {
+    "bus": "UI",
+    "duration": 0.6,
+    "loop": false
+  },
+  "sfx/quench": {
+    "bus": "SFX",
+    "duration": 2.3,
+    "loop": false
+  },
+  "sfx/reveal_common": {
+    "bus": "SFX",
+    "duration": 0.7,
+    "loop": false
+  },
+  "sfx/reveal_magic": {
+    "bus": "SFX",
+    "duration": 1.1,
+    "loop": false
+  },
+  "sfx/reveal_rare": {
+    "bus": "SFX",
+    "duration": 1.35,
+    "loop": false
+  },
+  "sfx/rune_hum": {
+    "bus": "SFX",
+    "duration": 1.6,
+    "loop": false
+  },
+  "sfx/search_tick": {
+    "bus": "SFX",
+    "duration": 0.16,
+    "loop": false
+  },
+  "sfx/spin": {
+    "bus": "SFX",
+    "duration": 1.6,
+    "loop": false
+  },
+  "sfx/stitch": {
+    "bus": "SFX",
+    "duration": 1.0,
+    "loop": false
+  },
+  "sfx/ui_click": {
+    "bus": "UI",
+    "duration": 0.07,
+    "loop": false
+  },
+  "sfx/ui_hover": {
+    "bus": "UI",
+    "duration": 0.06,
+    "loop": false
+  },
+  "sfx/water": {
+    "bus": "SFX",
+    "duration": 1.1,
+    "loop": false
+  }
+}

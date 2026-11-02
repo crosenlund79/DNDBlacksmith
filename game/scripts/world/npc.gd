@@ -28,6 +28,7 @@ func setup(id: String, sprite_id: String, name: String) -> void:
 	sprite = AnimatedSprite2D.new()
 	sprite.sprite_frames = Assets.char_frames(sprite_id)
 	sprite.offset = Vector2(0, -12)
+	sprite.scale = Vector2(1.15, 1.15)
 	sprite.play("idle_s")
 	sprite.frame = randi() % 2
 	add_child(sprite)

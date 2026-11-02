@@ -1,0 +1,730 @@
+{
+ "generator": "game/tools/art/make_world.py",
+ "style": "ink_parchment_gothic_80_20",
+ "files": {
+  "stations/aetheric_stabilizer.png": [
+   112,
+   112
+  ],
+  "stations/alembic.png": [
+   112,
+   96
+  ],
+  "stations/anvil.png": [
+   112,
+   80
+  ],
+  "stations/arcane_anvil.png": [
+   128,
+   96
+  ],
+  "stations/arcane_crucible.png": [
+   128,
+   128
+  ],
+  "stations/bellows.png": [
+   96,
+   96
+  ],
+  "stations/cauldron.png": [
+   112,
+   112
+  ],
+  "stations/crucible.png": [
+   96,
+   96
+  ],
+  "stations/embroidery_frame.png": [
+   112,
+   112
+  ],
+  "stations/fitting_mannequin.png": [
+   80,
+   96
+  ],
+  "stations/forge.png": [
+   160,
+   128
+  ],
+  "stations/grinding_wheel.png": [
+   96,
+   96
+  ],
+  "stations/infusion_rack.png": [
+   128,
+   64
+  ],
+  "stations/leather_vat.png": [
+   112,
+   112
+  ],
+  "stations/leyline_conductor.png": [
+   96,
+   128
+  ],
+  "stations/mortar_station.png": [
+   96,
+   80
+  ],
+  "stations/quench_trough.png": [
+   128,
+   64
+  ],
+  "stations/reagent_table.png": [
+   128,
+   80
+  ],
+  "stations/resonance_pedestal.png": [
+   96,
+   96
+  ],
+  "stations/rune_cleansing_basin.png": [
+   96,
+   96
+  ],
+  "stations/rune_cutting_bench.png": [
+   128,
+   80
+  ],
+  "stations/rune_engraving_stand.png": [
+   96,
+   96
+  ],
+  "stations/rune_polishing_wheel.png": [
+   96,
+   96
+  ],
+  "stations/spellbinding_array.png": [
+   160,
+   160
+  ],
+  "stations/stitching_table.png": [
+   128,
+   80
+  ],
+  "stations/thread_spinner.png": [
+   112,
+   96
+  ],
+  "props/altar.png": [
+   128,
+   64
+  ],
+  "props/armor_stand.png": [
+   72,
+   88
+  ],
+  "props/bar_counter.png": [
+   320,
+   64
+  ],
+  "props/barrel.png": [
+   56,
+   56
+  ],
+  "props/bed.png": [
+   96,
+   160
+  ],
+  "props/bed_fancy.png": [
+   112,
+   160
+  ],
+  "props/beer_table.png": [
+   128,
+   96
+  ],
+  "props/bench.png": [
+   160,
+   36
+  ],
+  "props/bookshelf.png": [
+   128,
+   40
+  ],
+  "props/bush.png": [
+   80,
+   80
+  ],
+  "props/bush_flower.png": [
+   80,
+   80
+  ],
+  "props/candle.png": [
+   24,
+   24
+  ],
+  "props/cart.png": [
+   128,
+   96
+  ],
+  "props/chair.png": [
+   40,
+   40
+  ],
+  "props/chest.png": [
+   72,
+   56
+  ],
+  "props/coal_pile.png": [
+   80,
+   64
+  ],
+  "props/crate.png": [
+   56,
+   56
+  ],
+  "props/display_table.png": [
+   128,
+   80
+  ],
+  "props/door_mat.png": [
+   96,
+   40
+  ],
+  "props/dummy_target.png": [
+   64,
+   64
+  ],
+  "props/eggs_splat.png": [
+   96,
+   64
+  ],
+  "props/fence_h.png": [
+   64,
+   24
+  ],
+  "props/fence_v.png": [
+   24,
+   64
+  ],
+  "props/fireplace.png": [
+   128,
+   72
+  ],
+  "props/flowers.png": [
+   64,
+   64
+  ],
+  "props/grain_sacks.png": [
+   80,
+   64
+  ],
+  "props/gravestone.png": [
+   40,
+   48
+  ],
+  "props/haybale.png": [
+   64,
+   64
+  ],
+  "props/keg.png": [
+   56,
+   56
+  ],
+  "props/lantern_post.png": [
+   48,
+   48
+  ],
+  "props/loot_pile.png": [
+   64,
+   48
+  ],
+  "props/market_stall.png": [
+   192,
+   128
+  ],
+  "props/notice_board.png": [
+   144,
+   72
+  ],
+  "props/ore_pile.png": [
+   80,
+   64
+  ],
+  "props/pew.png": [
+   160,
+   40
+  ],
+  "props/produce_crate.png": [
+   64,
+   64
+  ],
+  "props/rock_a.png": [
+   64,
+   48
+  ],
+  "props/rock_b.png": [
+   88,
+   64
+  ],
+  "props/rug_brown.png": [
+   160,
+   112
+  ],
+  "props/rug_red.png": [
+   192,
+   128
+  ],
+  "props/sack.png": [
+   48,
+   48
+  ],
+  "props/shelf.png": [
+   128,
+   40
+  ],
+  "props/shop_counter.png": [
+   256,
+   64
+  ],
+  "props/sign_grocer.png": [
+   80,
+   48
+  ],
+  "props/sign_inn.png": [
+   80,
+   48
+  ],
+  "props/sign_smithy.png": [
+   80,
+   48
+  ],
+  "props/stairs_down.png": [
+   96,
+   128
+  ],
+  "props/stairs_up.png": [
+   96,
+   128
+  ],
+  "props/stool.png": [
+   32,
+   32
+  ],
+  "props/table_long.png": [
+   192,
+   80
+  ],
+  "props/table_round.png": [
+   96,
+   96
+  ],
+  "props/tree_oak_a.png": [
+   224,
+   224
+  ],
+  "props/tree_oak_b.png": [
+   192,
+   192
+  ],
+  "props/tree_pine.png": [
+   176,
+   176
+  ],
+  "props/tree_small.png": [
+   128,
+   128
+  ],
+  "props/wardrobe.png": [
+   112,
+   48
+  ],
+  "props/washtub.png": [
+   72,
+   72
+  ],
+  "props/weapon_rack.png": [
+   160,
+   56
+  ],
+  "props/well.png": [
+   112,
+   112
+  ],
+  "props/woodpile.png": [
+   96,
+   64
+  ],
+  "props/workbench.png": [
+   160,
+   64
+  ],
+  "icons/ale_mug.png": [
+   64,
+   64
+  ],
+  "icons/amulet_silver.png": [
+   64,
+   64
+  ],
+  "icons/axe_hand.png": [
+   64,
+   64
+  ],
+  "icons/bag_traveller.png": [
+   64,
+   64
+  ],
+  "icons/belt_leather.png": [
+   64,
+   64
+  ],
+  "icons/boots_leather.png": [
+   64,
+   64
+  ],
+  "icons/bread_cheese.png": [
+   64,
+   64
+  ],
+  "icons/chainmail.png": [
+   64,
+   64
+  ],
+  "icons/chest_recovered.png": [
+   64,
+   64
+  ],
+  "icons/coal.png": [
+   64,
+   64
+  ],
+  "icons/coating_flame.png": [
+   64,
+   64
+  ],
+  "icons/cuirass_iron.png": [
+   64,
+   64
+  ],
+  "icons/dagger.png": [
+   64,
+   64
+  ],
+  "icons/gloves_leather.png": [
+   64,
+   64
+  ],
+  "icons/gloves_warded.png": [
+   64,
+   64
+  ],
+  "icons/gold.png": [
+   32,
+   32
+  ],
+  "icons/grimhold.png": [
+   64,
+   64
+  ],
+  "icons/helm_iron.png": [
+   64,
+   64
+  ],
+  "icons/herb_emberleaf.png": [
+   64,
+   64
+  ],
+  "icons/herb_moonwort.png": [
+   64,
+   64
+  ],
+  "icons/hood_leather.png": [
+   64,
+   64
+  ],
+  "icons/ingot_iron.png": [
+   64,
+   64
+  ],
+  "icons/ingot_mithril.png": [
+   64,
+   64
+  ],
+  "icons/ingot_steel.png": [
+   64,
+   64
+  ],
+  "icons/jerkin_leather.png": [
+   64,
+   64
+  ],
+  "icons/leather_cured.png": [
+   64,
+   64
+  ],
+  "icons/leather_hide.png": [
+   64,
+   64
+  ],
+  "icons/lock.png": [
+   32,
+   32
+  ],
+  "icons/mace_flanged.png": [
+   64,
+   64
+  ],
+  "icons/oil_whetstone.png": [
+   64,
+   64
+  ],
+  "icons/ore_adamantine.png": [
+   64,
+   64
+  ],
+  "icons/ore_copper.png": [
+   64,
+   64
+  ],
+  "icons/ore_iron.png": [
+   64,
+   64
+  ],
+  "icons/ore_mithril.png": [
+   64,
+   64
+  ],
+  "icons/ore_silver.png": [
+   64,
+   64
+  ],
+  "icons/package_reward.png": [
+   64,
+   64
+  ],
+  "icons/potion_healing.png": [
+   64,
+   64
+  ],
+  "icons/purse_gift.png": [
+   64,
+   64
+  ],
+  "icons/reagent_salt.png": [
+   64,
+   64
+  ],
+  "icons/relic_coin.png": [
+   64,
+   64
+  ],
+  "icons/relic_crown_shard.png": [
+   64,
+   64
+  ],
+  "icons/relic_idol.png": [
+   64,
+   64
+  ],
+  "icons/relic_map.png": [
+   64,
+   64
+  ],
+  "icons/ring_silver.png": [
+   64,
+   64
+  ],
+  "icons/runestone_blank.png": [
+   64,
+   64
+  ],
+  "icons/runestone_ember.png": [
+   64,
+   64
+  ],
+  "icons/runestone_frost.png": [
+   64,
+   64
+  ],
+  "icons/runestone_ward.png": [
+   64,
+   64
+  ],
+  "icons/satchel_relic.png": [
+   64,
+   64
+  ],
+  "icons/shield_kite.png": [
+   64,
+   64
+  ],
+  "icons/shield_round.png": [
+   64,
+   64
+  ],
+  "icons/shipment_miner.png": [
+   64,
+   64
+  ],
+  "icons/star.png": [
+   32,
+   32
+  ],
+  "icons/sword_iron.png": [
+   64,
+   64
+  ],
+  "icons/sword_mithril.png": [
+   64,
+   64
+  ],
+  "icons/sword_steel.png": [
+   64,
+   64
+  ],
+  "icons/thread_ethereal.png": [
+   64,
+   64
+  ],
+  "icons/thread_linen.png": [
+   64,
+   64
+  ],
+  "icons/wyvernscale_pauldron.png": [
+   64,
+   64
+  ],
+  "textures/cobble.png": [
+   256,
+   256
+  ],
+  "textures/dirt_road.png": [
+   256,
+   256
+  ],
+  "textures/floor_stone.png": [
+   256,
+   256
+  ],
+  "textures/floor_tavern.png": [
+   256,
+   256
+  ],
+  "textures/floor_wood.png": [
+   256,
+   256
+  ],
+  "textures/grass.png": [
+   256,
+   256
+  ],
+  "textures/wall_stone.png": [
+   256,
+   256
+  ],
+  "textures/wall_timber.png": [
+   256,
+   256
+  ],
+  "textures/water.png": [
+   256,
+   256
+  ],
+  "roofs/grocery.png": [
+   704,
+   576
+  ],
+  "roofs/house_eda.png": [
+   512,
+   448
+  ],
+  "roofs/house_jory.png": [
+   640,
+   512
+  ],
+  "roofs/house_martha.png": [
+   576,
+   512
+  ],
+  "roofs/house_oswin.png": [
+   640,
+   576
+  ],
+  "roofs/house_tobin.png": [
+   576,
+   512
+  ],
+  "roofs/house_wenna.png": [
+   576,
+   448
+  ],
+  "roofs/inn.png": [
+   1280,
+   896
+  ],
+  "roofs/smithy.png": [
+   1920,
+   1216
+  ],
+  "ui/button_disabled.png": [
+   192,
+   56
+  ],
+  "ui/button_hover.png": [
+   192,
+   56
+  ],
+  "ui/button_normal.png": [
+   192,
+   56
+  ],
+  "ui/button_pressed.png": [
+   192,
+   56
+  ],
+  "ui/corner_ornament.png": [
+   96,
+   96
+  ],
+  "ui/dice_d12.png": [
+   96,
+   96
+  ],
+  "ui/dice_d20.png": [
+   96,
+   96
+  ],
+  "ui/dice_d6.png": [
+   96,
+   96
+  ],
+  "ui/divider.png": [
+   512,
+   24
+  ],
+  "ui/menu_background.png": [
+   1920,
+   1080
+  ],
+  "ui/panel_dark.png": [
+   256,
+   256
+  ],
+  "ui/panel_parchment.png": [
+   256,
+   256
+  ],
+  "ui/parchment_vignette.png": [
+   1920,
+   1080
+  ],
+  "ui/skillcheck_ring.png": [
+   384,
+   384
+  ],
+  "ui/slot.png": [
+   72,
+   72
+  ],
+  "ui/slot_select.png": [
+   72,
+   72
+  ],
+  "ui/tooltip_bg.png": [
+   128,
+   128
+  ]
+ }
+}

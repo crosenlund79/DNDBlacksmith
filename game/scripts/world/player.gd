@@ -22,6 +22,7 @@ func _ready() -> void:
 	sprite = AnimatedSprite2D.new()
 	sprite.sprite_frames = Assets.char_frames("chars/player")
 	sprite.offset = Vector2(0, -12)
+	sprite.scale = Vector2(1.1, 1.1)
 	sprite.play("idle_s")
 	add_child(sprite)
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
