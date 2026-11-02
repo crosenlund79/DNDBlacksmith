@@ -21,7 +21,7 @@ def font_css():
         parts = base.split("-latin-")
         fam = " ".join(w if w in ("SC", "EB", "IM") else w.capitalize() for w in parts[0].split("-"))
         fam = fam.replace("Im Fell English Sc", "IM Fell English SC").replace("Eb Garamond", "EB Garamond")
-        fam = fam.replace("Source Sans 3", "Source Sans 3")
+        fam = fam.replace("Amatic Sc", "Amatic SC")
         wt, sty = parts[1].split("-")
         css.append(f"@font-face{{font-family:'{fam}';src:url('file://{FONT_DIR}/{f}') format('woff2');"
                    f"font-weight:{wt};font-style:{sty};}}")
@@ -40,10 +40,10 @@ def page(body, w, h, extra_css=""):
             f"{extra_css}</style></head><body>{body}</body></html>")
 
 
-def sprite(st, fn, size=512):
+def sprite(st, fn, size=512, name=None):
     P = Painter(st)
     filt = P.sprite_filter()
-    body = fn(P)
+    body = subjects.guides(P, name) + fn(P)
     return svg_doc(size, size, f"<g {filt}>{body}</g>", P)
 
 
@@ -71,11 +71,17 @@ def main():
         outdir = os.path.join(ROOT, sk)
         os.makedirs(outdir, exist_ok=True)
         items = []
+        if "paper" in st:
+            items.append(("paper_grid", lambda st=st: page(*compositions.paper(st, True)), 512, 512, False))
+            items.append(("paper_plain", lambda st=st: page(*compositions.paper(st, False)), 512, 512, False))
         for name, fn in SPRITES.items():
-            items.append((name, lambda st=st, fn=fn: page(sprite(st, fn), 512, 512), 512, 512, True))
+            items.append((name, lambda st=st, fn=fn, name=name: page(sprite(st, fn, name=name), 512, 512), 512, 512, True))
         items.append(("town_view", lambda st=st: page(compositions.town(st, page), 1920, 1080), 1920, 1080, False))
         items.append(("menu_screen", lambda st=st: page(*compositions.menu(st)), 1920, 1080, False))
         items.append(("font_reference", lambda st=st: page(*compositions.fonts(st)), 1920, 1080, False))
+        if "paper" in st:
+            items.append(("scene_composite", lambda st=st: page(*compositions.scene_composite(st)), 1920, 1080, False))
+            items.append(("paper_comparison", lambda st=st: page(*compositions.paper_comparison(st)), 1920, 1080, False))
         for name, mk, w, h, tr in items:
             if only and name not in only:
                 continue

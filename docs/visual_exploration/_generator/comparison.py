@@ -14,13 +14,13 @@ COMPS = ["town_view", "menu_screen", "font_reference"]
 
 def label(d, x, y, sk):
     st = STYLES[sk]
-    d.text((x, y), f"{sk[:2]}  {st['name']}", fill=(30, 26, 22), font=F)
+    d.text((x, y), f"{sk[:2]}  {st['name']}"[:34], fill=(30, 26, 22), font=F)
     d.text((x, y + 26), st["title"], fill=(100, 90, 80), font=F2)
 
 
 for n in SPRITES:
     cell = 384
-    W = Image.new("RGB", (cell * 5, cell + 70), (236, 232, 224))
+    W = Image.new("RGB", (cell * len(ORDER), cell + 70), (236, 232, 224))
     d = ImageDraw.Draw(W)
     for i, sk in enumerate(ORDER):
         im = Image.open(f"{ROOT}/{sk}/{n}.png").convert("RGBA").resize((cell, cell), Image.LANCZOS)
@@ -38,7 +38,7 @@ for n in SPRITES:
 
 for n in COMPS:
     w, h = 960, 540
-    W = Image.new("RGB", (w * 2 + 20, (h + 70) * 3), (236, 232, 224))
+    W = Image.new("RGB", (w * 2 + 20, (h + 70) * ((len(ORDER) + 1) // 2)), (236, 232, 224))
     d = ImageDraw.Draw(W)
     for i, sk in enumerate(ORDER):
         x, y = (i % 2) * (w + 20), (i // 2) * (h + 70)

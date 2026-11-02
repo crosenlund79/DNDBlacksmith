@@ -1,4 +1,4 @@
-"""Style definitions for the five visual directions.
+"""Style definitions for the seven visual directions.
 
 Every role maps to (light, base, shadow).  The same subject geometry is
 rendered through each style so the directions stay directly comparable.
@@ -214,7 +214,106 @@ STYLES = {
         fonts=dict(title="Bree Serif", heading="Bree Serif", ui="Source Sans 3",
                    numbers="Source Sans 3"),
     ),
+    # ------------------------------------------------------------------
+    "06_ballpoint_sketch": dict(
+        key="ballpoint",
+        name="Ballpoint Sketch Fantasy",
+        title="The Inkbound Forge",
+        ink="#1f3a93",       # ballpoint blue
+        accent="#c62828",    # red ballpoint accent
+        line_w=2.4,
+        outer_w=0,
+        rough=1.6,
+        bg="#f7f6f0",
+        glow="#c62828", glow2="#e86a5a",
+        paper="paper_grid.png",
+        # roles drawn in red ink (important objects, magic, key equipment)
+        red_roles=("gem", "fire", "cloak"),
+        # hatch density per material (0 = clean paper, 3 = triple hatch)
+        tone=dict(skin=0, beard=0, hair=1, shirt=0, apron=2, leather=2, strap=3, metal=1, gold=1,
+                  cloak=1, tunic=1, boot=3, wood=1, foliage=1, foliage2=2, grass=0, road=0,
+                  roof_a=1, roof_b=2, stone=1, water=1, gem=2, fire=1),
+        pal=dict(
+            skin=("#fbfbfd", "#f6f7fb", "#dfe4f2"),
+            beard=("#ffffff", "#f8f9fc", "#e2e7f4"),
+            hair=("#eef1f9", "#e4e9f5", "#c9d2ea"),
+            shirt=("#fbfbfd", "#f5f6fb", "#dde3f1"),
+            apron=("#e9edf7", "#dfe5f3", "#c3cde7"),
+            leather=("#e6eaf6", "#dae1f1", "#bcc7e4"),
+            strap=("#d6ddef", "#c9d2ea", "#aab8de"),
+            metal=("#ffffff", "#f1f4fa", "#d4dcef"),
+            gold=("#fbfaf2", "#f3f2e8", "#dcdcd0"),
+            cloak=("#fdf1f0", "#f8dedb", "#e9b0aa"),
+            tunic=("#eff2f9", "#e6ebf6", "#cfd8ee"),
+            boot=("#d9dfef", "#ccd4ea", "#aebbe0"),
+            wood=("#f2f4fa", "#e9edf7", "#cdd6ec"),
+            foliage=("#eef2f8", "#e3e9f5", "#c7d2eb"),
+            foliage2=("#e6ebf6", "#d9e0f1", "#bcc8e6"),
+            grass=("#f7f6f0", "#f7f6f0", "#d9dfef"),
+            road=("#fbfaf6", "#f4f3ec", "#dfe3ee"),
+            roof_a=("#f3f5fa", "#e8ecf6", "#cbd4eb"),
+            roof_b=("#e4e9f5", "#d7deef", "#b9c5e3"),
+            stone=("#f6f7fb", "#eceff7", "#d0d8ec"),
+            water=("#e2e9f7", "#d3ddf2", "#aebfe6"),
+            gem=("#f9d9d5", "#ec8f86", "#c62828"),
+            fire=("#fde6e2", "#f4a9a0", "#c62828"),
+        ),
+        rarity=dict(Common="#1f2a44", Magic="#2456d8", Rare="#8f6e00",
+                    Legendary="#c4500e", Unique="#7a5426", Set="#2a7a3a"),
+        rarity_dark=dict(Common="#eef1fa", Magic="#8fb0ff", Rare="#f5d659",
+                         Legendary="#ff9a4a", Unique="#d9b070", Set="#70d890"),
+        fonts=dict(title="Caveat", heading="Architects Daughter", ui="Patrick Hand",
+                   numbers="Kalam"),
+    ),
+    # ------------------------------------------------------------------
+    "07_illustrated_sketchbook": dict(
+        key="sketchbook",
+        name="Illustrated Sketchbook Fantasy",
+        title="Tales from the Anvil",
+        ink="#3a2e28",
+        accent="#1fb5d6",    # vivid magical accent (teal)
+        accent2="#9a5cf0",   # secondary magic accent (violet)
+        pencil="#6e6862",
+        line_w=2.6,
+        outer_w=0,
+        rough=2.6,
+        bg="#f1e6cf",
+        glow="#ff9a3a", glow2="#ffd27a",
+        paper="paper_plain.png",
+        pal=dict(
+            skin=("#f6e0c8", "#e2bc9c", "#a8806a"),
+            beard=("#f6f3ec", "#dcd6ca", "#9e978a"),
+            hair=("#e2dccf", "#bdb4a4", "#857c6c"),
+            shirt=("#efe6d2", "#d6c8a8", "#9c8c6c"),
+            apron=("#c89c78", "#9c704e", "#644632"),
+            leather=("#c09a74", "#8e6c4e", "#5c4634"),
+            strap=("#9a7a5c", "#76583e", "#4c3828"),
+            metal=("#eceeec", "#bcc2c2", "#7c8686"),
+            gold=("#eed496", "#c8a258", "#8a6a34"),
+            cloak=("#a2b8a6", "#6e8a76", "#3e5446"),
+            tunic=("#d49a80", "#ac6650", "#704030"),
+            boot=("#9a7c66", "#6c5444", "#43342a"),
+            wood=("#d2b48e", "#a68664", "#6a5240"),
+            foliage=("#b8c698", "#879c6c", "#526a46"),
+            foliage2=("#cfc488", "#a49c5c", "#6a6640"),
+            grass=("#d8dcb4", "#b9c08e", "#8c9468"),
+            road=("#efe2c6", "#ddc9a6", "#b29a76"),
+            roof_a=("#d4a28a", "#b07a62", "#78503e"),
+            roof_b=("#a8b4bc", "#8494a0", "#56646e"),
+            stone=("#dcd4c4", "#b4aa94", "#7c7462"),
+            water=("#b6d4d8", "#86b0b8", "#507880"),
+            gem=("#a8f4ff", "#1fb5d6", "#0a6a8a"),
+            fire=("#ffe7a0", "#ff9a3a", "#c8501a"),
+        ),
+        rarity=dict(Common="#3a2e28", Magic="#2f5aa8", Rare="#8a6c00",
+                    Legendary="#b8501c", Unique="#74522a", Set="#3a7a3c"),
+        rarity_dark=dict(Common="#f4ecdc", Magic="#8eb2f2", Rare="#f2d266",
+                         Legendary="#f29a56", Unique="#d6b072", Set="#84d088"),
+        fonts=dict(title="Fondamento", heading="Amatic SC", ui="Shantell Sans",
+                   numbers="Shantell Sans"),
+    ),
 }
 
 ORDER = ["01_gothic_noir", "02_warm_storybook", "03_bold_adventure",
-         "04_ink_parchment", "05_production_light"]
+         "04_ink_parchment", "05_production_light",
+         "06_ballpoint_sketch", "07_illustrated_sketchbook"]

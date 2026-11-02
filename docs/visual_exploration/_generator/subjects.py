@@ -12,6 +12,8 @@ PROPS = {
     "bold":      dict(sh=1.04, hd=1.12, bl=1.00, tilt=0.0),
     "ink":       dict(sh=1.00, hd=0.98, bl=1.00, tilt=0.0),
     "prod":      dict(sh=0.96, hd=1.16, bl=0.98, tilt=0.0),
+    "ballpoint": dict(sh=1.02, hd=0.98, bl=1.02, tilt=0.0),
+    "sketchbook": dict(sh=1.0, hd=1.08, bl=1.04, tilt=0.0),
 }
 
 
@@ -27,7 +29,10 @@ def ground_shadow(P, cx, cy, rx, ry):
         return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="#4a2e14" opacity="0.28" style="filter:blur(9px)"/>'
     if k == "bold":
         return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="#1c1a2e" opacity="0.28"/>'
-    if k == "ink":
+    if k == "sketchbook":
+        return (f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="#6a5a4a" opacity="0.22" style="filter:blur(4px)"/>'
+                f'<ellipse cx="{cx}" cy="{cy}" rx="{rx*0.92}" ry="{ry*0.9}" fill="url(#{P.hatch_id})" opacity="0.45"/>')
+    if k in ("ink", "ballpoint"):
         hid = P.hatch_id
         return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="url(#{hid})" opacity="0.55"/>'
     return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="#2e2a35" opacity="0.22"/>'
@@ -225,7 +230,7 @@ def sword(P):
     o.append(P.shape(ell(166, 326, 13, 13), "gold", s=4))
     o.append(P.shape(ell(346, 326, 13, 13), "gold", s=4))
     o.append(P.shape(ell(256, 330, 14, 14), "gem", s=5))
-    o.append(P.spot(ell(252, 325, 4, 3), "#ffffff", 0.7 if P.k != "ink" else 0.3))
+    o.append(P.spot(ell(252, 325, 4, 3), "#ffffff", 0.7 if P.k not in ("ink", "ballpoint") else 0.3))
     o.append(P.shape(rect(243, 346, 26, 84, 8), "leather", s=6))
     o.append(P.detail("M244,356 L268,368 M244,372 L268,384 M244,388 L268,400 M244,404 L268,416", "leather", 0.7))
     o.append(P.shape(smooth([(236, 432), (256, 424), (276, 432), (282, 452), (256, 472), (230, 452)]), "gold", s=6))
@@ -286,8 +291,11 @@ def tree(P, cx=246, cy=240, r=172, seed=7, shadow=True, role="foliage", detail=T
     k = P.k
     if shadow:
         sd = blob(cx + r * 0.14, cy + r * 0.18, r * 0.98, 11, 0.06, seed)
-        if k == "ink":
+        if k in ("ink", "ballpoint"):
             o.append(f'<path d="{sd}" fill="url(#{P.hatch_id})" opacity="0.6"/>')
+        elif k == "sketchbook":
+            o.append(f'<path d="{sd}" fill="#6a5a4a" opacity="0.22" style="filter:blur(4px)"/>')
+            o.append(f'<path d="{sd}" fill="url(#{P.hatch_id})" opacity="0.4"/>')
         else:
             col = {"gothic": "#000", "storybook": "#3a2a10", "bold": "#1c1a2e", "prod": "#2e2a35"}[k]
             op = {"gothic": 0.55, "storybook": 0.3, "bold": 0.3, "prod": 0.22}[k]
@@ -312,7 +320,7 @@ def tree(P, cx=246, cy=240, r=172, seed=7, shadow=True, role="foliage", detail=T
     cl.sort(key=lambda c: (c[0] + c[1]), reverse=True)
     for (x, y, rr, i) in cl:
         o.append(P.shape(blob(x, y, rr, 9, 0.07, seed + i, rot=i), role, s=rr * 0.2, line=(k != "storybook")))
-    if detail and k in ("gothic", "ink", "bold", "storybook"):
+    if detail and k in ("gothic", "ink", "bold", "storybook", "ballpoint", "sketchbook"):
         # leaf scallops
         segs = []
         for i in range(22 if k != "bold" else 10):
@@ -322,7 +330,7 @@ def tree(P, cx=246, cy=240, r=172, seed=7, shadow=True, role="foliage", detail=T
             w = r * (0.05 if k != "bold" else 0.07)
             segs.append(f"M{x-w:.1f},{y:.1f} q{w:.1f},{w*0.9:.1f} {2*w:.1f},0")
         o.append(P.detail(" ".join(segs), role, 0.6 * max(1, r / 190), 0.7))
-    if k in ("storybook", "prod", "bold"):
+    if k in ("storybook", "prod", "bold", "sketchbook"):
         # dappled light / blossom accents
         for i in range(9 if k != "prod" else 6):
             a = rnd.uniform(3.4, 5.4)
@@ -331,3 +339,20 @@ def tree(P, cx=246, cy=240, r=172, seed=7, shadow=True, role="foliage", detail=T
             col = P.c(role, 0)
             o.append(P.spot(ell(x, y, r * 0.05, r * 0.04), col, 0.85))
     return "\n".join(o)
+
+
+# construction / guide lines drawn under standalone sprites (ballpoint style)
+GUIDES = {
+    "blacksmith": "M256,90 L256,470 M120,200 L392,200 M100,272 L412,272 " + ell(256, 192, 58) + " " + ell(256, 270, 122, 104),
+    "adventurer": "M256,60 L256,440 M150,214 L362,214 " + ell(256, 146, 76) + " " + ell(256, 240, 100, 80),
+    "sword": "M90,422 L422,90 M150,250 L262,362 " + ell(256, 256, 200),
+    "armor": "M256,80 L256,480 M90,230 L422,230 M150,350 L362,350 " + ell(256, 250, 120, 140),
+    "tree": "M60,240 L440,240 M246,50 L246,430 " + ell(246, 240, 150) + " " + ell(246, 240, 100),
+}
+
+
+def guides(P, name):
+    if P.k != "ballpoint" or name not in GUIDES:
+        return ""
+    return (f'<path d="{GUIDES[name]}" fill="none" stroke="{P.ink}" stroke-width="0.8" opacity="0.28" '
+            f'stroke-dasharray="40 6 2 6"/>')

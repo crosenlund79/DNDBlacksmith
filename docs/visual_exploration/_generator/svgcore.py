@@ -91,9 +91,9 @@ class Painter:
         self.grad_cache = {}
         self.hatch_id = uid("hatch")
         self.xhatch_id = uid("xh")
-        hcol = self.ink
-        hw = 1.6 * scale if self.k == "gothic" else 1.1 * scale
-        sp = (7 if self.k == "gothic" else 5) * scale
+        hcol = self.st.get("pencil", self.ink)
+        hw = {"gothic": 1.6, "ballpoint": 1.05, "sketchbook": 0.8}.get(self.k, 1.1) * scale
+        sp = {"gothic": 7, "ballpoint": 4.2, "sketchbook": 4.5}.get(self.k, 5) * scale
         self.defs.append(
             f'<pattern id="{self.hatch_id}" width="{sp}" height="{sp}" patternUnits="userSpaceOnUse" '
             f'patternTransform="rotate(-35)"><line x1="0" y1="0" x2="0" y2="{sp}" stroke="{hcol}" '
@@ -102,6 +102,21 @@ class Painter:
             f'<pattern id="{self.xhatch_id}" width="{sp}" height="{sp}" patternUnits="userSpaceOnUse" '
             f'patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="{sp}" stroke="{hcol}" '
             f'stroke-width="{hw*0.9}"/></pattern>')
+        if self.k == "ballpoint":
+            # third hatch direction + red-ink versions for accent roles
+            self.h3_id = uid("h3")
+            self.defs.append(
+                f'<pattern id="{self.h3_id}" width="{sp}" height="{sp}" patternUnits="userSpaceOnUse" '
+                f'patternTransform="rotate(90)"><line x1="0" y1="0" x2="0" y2="{sp}" stroke="{hcol}" '
+                f'stroke-width="{hw*0.8}"/></pattern>')
+            self.red = {}
+            for name, rot in (("h", -35), ("x", 35), ("3", 90)):
+                rid = uid("rh")
+                self.defs.append(
+                    f'<pattern id="{rid}" width="{sp}" height="{sp}" patternUnits="userSpaceOnUse" '
+                    f'patternTransform="rotate({rot})"><line x1="0" y1="0" x2="0" y2="{sp}" stroke="{self.st["accent"]}" '
+                    f'stroke-width="{hw}"/></pattern>')
+                self.red[name] = rid
 
     # -- colour helpers
     def c(self, role, i=1):
@@ -181,6 +196,48 @@ class Painter:
             if line and lw:
                 out.append(f'<path d="{d}" fill="none" stroke="{self.ink}" stroke-width="{lw:.1f}" '
                            f'stroke-linejoin="round" stroke-linecap="round"/>')
+        elif k == "ballpoint":
+            red = role in self.st["red_roles"]
+            lc = self.st["accent"] if red else self.ink
+            hid = self.red["h"] if red else self.hatch_id
+            xid = self.red["x"] if red else self.xhatch_id
+            tid = self.red["3"] if red else self.h3_id
+            tone = self.st["tone"].get(role, 0)
+            if not fill_override:
+                b = "#fdf2f0" if red else "#fcfcf9"
+            out.append(f'<path d="{d}" fill="{b}"/>')
+            if not flat:
+                if tone >= 1:
+                    out.append(f'<path d="{d}" fill="url(#{hid})" opacity="0.6"/>')
+                if tone >= 2:
+                    out.append(f'<path d="{d}" fill="url(#{xid})" opacity="0.6"/>')
+                if tone >= 3:
+                    out.append(f'<path d="{d}" fill="url(#{tid})" opacity="0.6"/>')
+                out.append(self._crescent(d, lx * s * 1.1, ly * s * 1.1, f"url(#{hid})", 0.95))
+                out.append(self._crescent(d, lx * s * 0.6, ly * s * 0.6, f"url(#{xid})", 0.85))
+            elif fill_override is None and tone >= 1:
+                out.append(f'<path d="{d}" fill="url(#{hid})" opacity="0.45"/>')
+            if line and lw:
+                out.append(f'<path d="{d}" fill="none" stroke="{lc}" stroke-width="{lw*0.55:.1f}" opacity="0.5" '
+                           f'transform="translate({1.3*self.lw_mul:.1f},{-0.9*self.lw_mul:.1f})" stroke-linejoin="round"/>')
+                out.append(f'<path d="{d}" fill="none" stroke="{lc}" stroke-width="{lw:.1f}" opacity="0.92" '
+                           f'stroke-linejoin="round" stroke-linecap="round"/>')
+        elif k == "sketchbook":
+            out.append(f'<path d="{d}" fill="{b}" opacity="0.9"/>')
+            cid = uid("c")
+            self.defs.append(f'<clipPath id="{cid}"><path d="{d}"/></clipPath>')
+            inner = [f'<path d="{d}" fill="none" stroke="{sh}" stroke-width="{7*self.scale:.1f}" opacity="0.32" style="filter:blur({1.6*self.scale:.1f}px)"/>']
+            if not flat:
+                inner.append(self._crescent(d, lx * s * 0.9, ly * s * 0.9, sh, 0.38, 'style="filter:blur(%.1fpx)"' % (2.5 * self.scale)))
+                inner.append(self._crescent(d, lx * s * 1.2, ly * s * 1.2, f"url(#{self.hatch_id})", 0.55))
+                if hl:
+                    inner.append(self._crescent(d, -lx * s * 0.5, -ly * s * 0.5, l, 0.55, 'style="filter:blur(%.1fpx)"' % (2 * self.scale)))
+            out.append(f'<g clip-path="url(#{cid})">' + "".join(inner) + "</g>")
+            if line and lw:
+                out.append(f'<path d="{d}" fill="none" stroke="{self.ink}" stroke-width="{lw*0.45:.1f}" opacity="0.55" '
+                           f'transform="translate({0.9*self.lw_mul:.1f},{0.8*self.lw_mul:.1f})" stroke-linejoin="round"/>')
+                out.append(f'<path d="{d}" fill="none" stroke="{self.ink}" stroke-width="{lw:.1f}" opacity="0.88" '
+                           f'stroke-linejoin="round" stroke-linecap="round"/>')
         else:  # prod
             out.append(f'<path d="{d}" fill="{b}"/>')
             if not flat:
@@ -201,6 +258,10 @@ class Painter:
             col, ww = self.ink, w * 2.6
         elif k == "ink":
             col, ww = self.ink, w * 1.6
+        elif k == "ballpoint":
+            col, ww = (self.st["accent"] if role in self.st["red_roles"] else self.ink), w * 1.4
+        elif k == "sketchbook":
+            col, ww, op = self.ink, w * 1.8, op * 0.85
         else:
             col, ww = (self.pal[role][2] if role else "#00000055"), w * 2.2
         return (f'<path d="{d}" fill="none" stroke="{col}" stroke-width="{ww:.1f}" '
@@ -251,6 +312,28 @@ class Painter:
   <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0.17  0 0 0 0 0.11  0 0 0 0 0.07  0 0 0 -1.2 0.7" result="g2"/>
   <feComposite in="g2" in2="d" operator="in" result="g3"/>
   <feMerge><feMergeNode in="d"/><feMergeNode in="g3"/></feMerge>
+</filter>''')
+        elif k == "ballpoint":
+            # pen wobble + uneven ink pressure (alpha speckle on strokes only)
+            self.defs.append(f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%">
+  <feTurbulence type="fractalNoise" baseFrequency="{0.06/sc:.4f}" numOctaves="2" seed="6" result="n"/>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="{self.st['rough']*sc:.1f}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+  <feTurbulence type="fractalNoise" baseFrequency="{1.1/sc:.3f}" numOctaves="1" seed="12" result="pr"/>
+  <feColorMatrix in="pr" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -0.9 0.55" result="p2"/>
+  <feComposite in="p2" in2="d" operator="in" result="p3"/>
+  <feMerge><feMergeNode in="d"/><feMergeNode in="p3"/></feMerge>
+</filter>''')
+        elif k == "sketchbook":
+            self.defs.append(f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%">
+  <feTurbulence type="fractalNoise" baseFrequency="{0.03/sc:.4f}" numOctaves="2" seed="15" result="n"/>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="{self.st['rough']*sc:.1f}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+  <feTurbulence type="fractalNoise" baseFrequency="{0.6/sc:.3f}" numOctaves="3" seed="3" result="paper"/>
+  <feColorMatrix in="paper" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.27  0 0 0 0 0.2  0 0 0 -0.8 0.45" result="p2"/>
+  <feComposite in="p2" in2="d" operator="in" result="p3"/>
+  <feTurbulence type="fractalNoise" baseFrequency="{0.045/sc:.4f}" numOctaves="3" seed="21" result="bloom"/>
+  <feColorMatrix in="bloom" type="matrix" values="0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.9  0 0 0 0.55 -0.33" result="b2"/>
+  <feComposite in="b2" in2="d" operator="in" result="b3"/>
+  <feMerge><feMergeNode in="d"/><feMergeNode in="b3"/><feMergeNode in="p3"/></feMerge>
 </filter>''')
         else:
             return ""

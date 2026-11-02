@@ -3,6 +3,9 @@ import math
 import random
 from svgcore import Painter, ell, rect, poly, smooth, blob, uid, svg_doc
 import subjects
+import os
+from styles import STYLES
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 W, H = 1920, 1080
 SHADOW = {  # dx, dy, colour, opacity, blur
@@ -11,6 +14,8 @@ SHADOW = {  # dx, dy, colour, opacity, blur
     "bold": (18, 22, "#1c1a2e", 0.30, 0),
     "ink": (18, 22, None, 0.75, 0),
     "prod": (16, 18, "#2e2a35", 0.20, 0),
+    "ballpoint": (18, 22, None, 0.8, 0),
+    "sketchbook": (20, 24, "#5a4a3a", 0.24, 3),
 }
 
 
@@ -31,6 +36,10 @@ def roof(P, x, y, w, h, role, ridge="h", chimney=None, smoke=True):
     lit = b if k in ("bold", "prod", "gothic") else l
     if k == "storybook":
         lit, dark = l, b
+    if k == "ballpoint":
+        lit = dark = "#fcfcf9"
+    if k == "sketchbook":
+        lit, dark = l, b
     if ridge == "h":
         a = rect(x, y, w, h / 2)
         c = rect(x, y + h / 2, w, h / 2)
@@ -43,8 +52,10 @@ def roof(P, x, y, w, h, role, ridge="h", chimney=None, smoke=True):
         ridge_d = f"M{x+w/2},{y} L{x+w/2},{y+h}"
     o.append(P.shape(a, role, flat=True, fill_override=lit, line=False))
     o.append(P.shape(c, role, flat=True, fill_override=dark, line=False))
-    if k in ("gothic", "ink"):
-        o.append(f'<path d="{c}" fill="url(#{P.hatch_id})" opacity="{0.5 if k=="gothic" else 0.7}"/>')
+    if k in ("gothic", "ink", "ballpoint", "sketchbook"):
+        o.append(f'<path d="{c}" fill="url(#{P.hatch_id})" opacity="{ {"gothic":0.5,"ink":0.7,"ballpoint":0.8,"sketchbook":0.5}[k]}"/>')
+    if k == "ballpoint" and role in ("roof_b", "wood"):
+        o.append(f'<path d="{c}" fill="url(#{P.xhatch_id})" opacity="0.6"/>')
     if k == "storybook":
         gid = uid("rg")
         P.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6d0" stop-opacity="0.35"/>'
@@ -53,9 +64,12 @@ def roof(P, x, y, w, h, role, ridge="h", chimney=None, smoke=True):
     if k != "prod" or True:
         o.append(P.detail(" ".join(rows), role, 0.5 if k != "prod" else 0.7, 0.55 if k != "bold" else 0.35))
     o.append(P.detail(ridge_d, role, 1.0))
-    if k in ("gothic", "bold", "ink", "storybook"):
+    if k in ("gothic", "bold", "ink", "storybook", "ballpoint", "sketchbook"):
         o.append(f'<path d="{rect(x,y,w,h)}" fill="none" stroke="{P.ink if k!="storybook" else s}" '
-                 f'stroke-width="{ {"gothic":5,"bold":4.5,"ink":2.4,"storybook":2.4}[k] * P.lw_mul}" stroke-linejoin="round"/>')
+                 f'stroke-width="{ {"gothic":5,"bold":4.5,"ink":2.4,"storybook":2.4,"ballpoint":2.4,"sketchbook":2.8}[k] * P.lw_mul}" stroke-linejoin="round"/>')
+    if k == "ballpoint":  # overshooting construction strokes at the corners
+        o.append(f'<path d="M{x-14},{y} L{x+w+14},{y} M{x},{y-12} L{x},{y+h+12} M{x+w},{y-12} L{x+w},{y+h+12} M{x-14},{y+h} L{x+w+14},{y+h}" '
+                 f'stroke="{P.ink}" stroke-width="0.8" opacity="0.45"/>')
     if chimney:
         cx, cy = chimney
         o.append(cast_shadow(P, cx - 14, cy - 14, 28, 28, 0.6))
@@ -77,8 +91,11 @@ def smoke_puffs(P, cx, cy, n=5, glow=False):
             o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#f6eee0" opacity="{0.55 - i*0.08:.2f}" style="filter:blur(4px)"/>')
         elif k == "bold":
             o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#ffffff" stroke="{P.ink}" stroke-width="3" opacity="{0.95 - i*0.12:.2f}"/>')
-        elif k == "ink":
+        elif k in ("ink", "ballpoint"):
             o.append(f'<path d="M{x-r},{y} a{r},{r} 0 1,1 {r},{r} a{r*0.5},{r*0.5} 0 1,1 {-r*0.4},{-r*0.6}" fill="none" stroke="{P.ink}" stroke-width="1.4" opacity="{0.8 - i*0.1:.2f}"/>')
+        elif k == "sketchbook":
+            o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#c8c2ba" opacity="{0.4 - i*0.06:.2f}" style="filter:blur(3px)"/>'
+                     f'<path d="M{x-r},{y} a{r},{r} 0 1,1 {r},{r}" fill="none" stroke="{P.st["pencil"]}" stroke-width="1" opacity="0.5"/>')
         else:
             o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#e8e4ec" opacity="{0.7 - i*0.1:.2f}"/>')
     return "\n".join(o)
@@ -101,10 +118,14 @@ def fence(P, pts, post=10):
     d = poly(pts, close=False)
     k = P.k
     col = P.c("wood", 2 if k != "ink" else 1)
-    lw = {"gothic": 7, "storybook": 6, "bold": 7, "ink": 4, "prod": 6}[k]
-    if k in ("bold", "gothic"):
-        o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="{lw+5}" stroke-linecap="round"/>')
-    o.append(f'<path d="{d}" fill="none" stroke="{P.c("wood",1)}" stroke-width="{lw}" stroke-linecap="round"/>')
+    lw = {"gothic": 7, "storybook": 6, "bold": 7, "ink": 4, "prod": 6, "ballpoint": 3, "sketchbook": 5}[k]
+    if k in ("bold", "gothic", "sketchbook"):
+        o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="{lw+(5 if k!="sketchbook" else 3)}" stroke-linecap="round"/>')
+    if k == "ballpoint":
+        o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1.6" stroke-linecap="round"/>'
+                 f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1" transform="translate(0,5)" opacity="0.8"/>')
+    else:
+        o.append(f'<path d="{d}" fill="none" stroke="{P.c("wood",1)}" stroke-width="{lw}" stroke-linecap="round"/>') if k != "ballpoint" else None
     for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
         L = math.hypot(x1 - x0, y1 - y0)
         n = max(1, int(L // 40))
@@ -118,7 +139,7 @@ def fence(P, pts, post=10):
 def villager(P, x, y, rot, role, hair="hair", scale=1.0):
     s = scale
     o = [f'<g transform="translate({x},{y}) rotate({rot}) scale({s})">',
-         f'<ellipse cx="4" cy="6" rx="30" ry="26" fill="#000" opacity="0.25"/>' if P.k != "ink" else
+         f'<ellipse cx="4" cy="6" rx="30" ry="26" fill="#000" opacity="0.25"/>' if P.k not in ("ink", "ballpoint") else
          f'<ellipse cx="4" cy="6" rx="30" ry="26" fill="url(#{P.hatch_id})" opacity="0.5"/>',
          P.shape(ell(-22, 4, 9, 14), role, s=2, hl=False),
          P.shape(ell(22, 4, 9, 14), role, s=2, hl=False),
@@ -131,7 +152,7 @@ def villager(P, x, y, rot, role, hair="hair", scale=1.0):
 
 def char(P, fn, x, y, rot, scale):
     old = P.lw_mul
-    P.lw_mul = {"gothic": 2.4, "storybook": 2.2, "bold": 2.6, "ink": 2.6, "prod": 1}[P.k]
+    P.lw_mul = {"gothic": 2.4, "storybook": 2.2, "bold": 2.6, "ink": 2.6, "prod": 1, "ballpoint": 2.6, "sketchbook": 2.4}[P.k] * getattr(P, "char_lw", 1.0)
     g = f'<g transform="translate({x},{y}) rotate({rot}) scale({scale}) translate(-256,-260)">{fn(P, shadow=True, detail=False)}</g>'
     P.lw_mul = old
     return g
@@ -149,6 +170,8 @@ def ground(P):
     k = P.k
     o = []
     g = P.pal["grass"]
+    if k in ("ballpoint", "sketchbook"):
+        return ground_paper(P)
     o.append(f'<rect width="{W}" height="{H}" fill="{g[1]}"/>')
     rnd = random.Random(3)
     if k in ("storybook", "gothic", "prod", "bold"):
@@ -177,6 +200,39 @@ def ground(P):
     return "\n".join(o)
 
 
+def ground_paper(P):
+    """Environment ground for the paper styles: transparent, the paper layer shows through."""
+    k = P.k
+    rnd = random.Random(3)
+    o = []
+    g = P.pal["grass"]
+    if k == "sketchbook":
+        for i in range(60):
+            x, y = rnd.uniform(0, W), rnd.uniform(0, H)
+            r = rnd.uniform(50, 150)
+            col = rnd.choice([g[1], g[0], P.c("foliage", 0), g[1]])
+            o.append(f'<path d="{blob(x, y, r, 7, 0.2, i, squash=0.6)}" fill="{col}" opacity="0.32" style="filter:blur(10px)"/>')
+    segs = []
+    for i in range(320 if k == "sketchbook" else 220):
+        x, y = rnd.uniform(0, W), rnd.uniform(0, H)
+        segs.append(f"M{x:.0f},{y:.0f} l2,-9 M{x+4:.0f},{y:.0f} l3,-7 M{x-3:.0f},{y:.0f} l-1,-6")
+    col = P.ink if k == "ballpoint" else P.st["pencil"]
+    o.append(f'<path d="{" ".join(segs)}" fill="none" stroke="{col}" stroke-width="1" opacity="{0.55 if k=="ballpoint" else 0.6}" stroke-linecap="round"/>')
+    if k == "ballpoint":
+        dots = " ".join(f"M{rnd.uniform(0,W):.0f},{rnd.uniform(0,H):.0f} h1" for _ in range(500))
+        o.append(f'<path d="{dots}" stroke="{P.ink}" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>')
+    return "\n".join(o)
+
+
+def edge_lines(P, d, w, col, ew, op=1.0, extra=""):
+    """Draw only the two edges of a thick stroke (transparent inside)."""
+    mid = uid("em")
+    P.defs.append(f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="-100" y="-100" width="{W+200}" height="{H+200}">'
+                  f'<path d="{d}" fill="none" stroke="white" stroke-width="{w+ew*2}" stroke-linecap="round"/>'
+                  f'<path d="{d}" fill="none" stroke="black" stroke-width="{w}" stroke-linecap="round"/></mask>')
+    return f'<path d="{d}" fill="none" stroke="{col}" stroke-width="{w+ew*2+2}" stroke-linecap="round" mask="url(#{mid})" opacity="{op}" {extra}/>'
+
+
 def road_paths():
     main = smooth([(-40, 568), (300, 552), (620, 572), (960, 560), (1300, 546), (1640, 560), (1960, 548)], close=False)
     north = smooth([(980, 560), (990, 380), (960, 200), (990, -40)], close=False)
@@ -190,6 +246,8 @@ def roads(P):
     o = []
     l, b, s = P.pal["road"]
     main, north, south, lane = road_paths()
+    if k in ("ballpoint", "sketchbook"):
+        return roads_paper(P)
     edge = {"gothic": P.ink, "storybook": s, "bold": P.ink, "ink": P.ink, "prod": s}[k]
     widths = [(main, 96), (north, 74), (south, 74), (lane, 50)]
     if k in ("gothic", "bold", "ink", "storybook"):
@@ -219,8 +277,39 @@ def roads(P):
     return "\n".join(o)
 
 
+def roads_paper(P):
+    k = P.k
+    o = []
+    l, b, s = P.pal["road"]
+    main, north, south, lane = road_paths()
+    widths = [(main, 96), (north, 74), (south, 74), (lane, 50)]
+    for d, w in widths:
+        if k == "sketchbook":
+            o.append(f'<path d="{d}" fill="none" stroke="{b}" stroke-width="{w}" stroke-linecap="round" opacity="0.7" style="filter:blur(2px)"/>')
+            o.append(edge_lines(P, d, w, P.ink, 1.6, 0.55))
+        else:
+            o.append(edge_lines(P, d, w, P.ink, 1.4, 0.9))
+            o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1" stroke-dasharray="18 22 6 30" opacity="0.5" transform="translate(0,{w*0.18:.0f})"/>')
+            o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1" stroke-dasharray="26 16 4 40" opacity="0.5" transform="translate(0,{-w*0.18:.0f})"/>')
+    sq = blob(960, 560, 190, 9, 0.05, 4, squash=0.78)
+    if k == "ballpoint":
+        o.append(P.shape(sq, "stone", s=6, flat=True, fill_override="none"))
+    else:
+        o.append(P.shape(sq, "stone", s=6, flat=True))
+    rnd = random.Random(8)
+    cob = []
+    for i in range(380):
+        a, r = rnd.uniform(0, math.tau), 180 * math.sqrt(rnd.random())
+        x, y = 960 + math.cos(a) * r, 560 + math.sin(a) * r * 0.76
+        cob.append(f"M{x-6:.0f},{y:.0f} q6,-6 12,0 q-6,6 -12,0")
+    o.append(f'<path d="{" ".join(cob)}" fill="none" stroke="{P.ink}" stroke-width="1" opacity="0.5"/>')
+    return "\n".join(o)
+
+
 def stream(P):
     k = P.k
+    if k in ("ballpoint", "sketchbook"):
+        return stream_paper(P)
     d = smooth([(1650, -40), (1620, 160), (1700, 360), (1690, 560), (1760, 760), (1730, 960), (1780, 1120)], close=False)
     l, b, s = P.pal["water"]
     o = []
@@ -241,11 +330,87 @@ def stream(P):
     return "\n".join(o)
 
 
+def bridge(P):
+    o = [cast_shadow(P, 1640, 520, 110, 72, 0.5)]
+    o.append(P.shape(rect(1640, 520, 110, 72, 4), "wood", s=5))
+    o.append(P.detail(" ".join(f"M{x},524 L{x},588" for x in range(1652, 1745, 12)), "wood", 0.5, 0.7))
+    o.append(P.shape(rect(1636, 512, 118, 10, 3), "wood", s=2, hl=False))
+    o.append(P.shape(rect(1636, 590, 118, 10, 3), "wood", s=2, hl=False))
+    return "\n".join(o)
+
+
+def stream_paper(P):
+    k = P.k
+    d = smooth([(1650, -40), (1620, 160), (1700, 360), (1690, 560), (1760, 760), (1730, 960), (1780, 1120)], close=False)
+    l, b, s = P.pal["water"]
+    o = []
+    if k == "sketchbook":
+        o.append(f'<path d="{d}" fill="none" stroke="{b}" stroke-width="84" stroke-linecap="round" opacity="0.75" style="filter:blur(1.5px)"/>')
+        o.append(f'<path d="{d}" fill="none" stroke="{s}" stroke-width="40" stroke-linecap="round" opacity="0.25" style="filter:blur(8px)"/>')
+        o.append(f'<path d="{d}" fill="none" stroke="#ffffff" stroke-width="5" stroke-dasharray="24 70" opacity="0.7" transform="translate(-12,0)"/>')
+        o.append(edge_lines(P, d, 84, P.ink, 1.8, 0.7))
+    else:
+        mid = uid("wm")
+        P.defs.append(f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="-100" y="-100" width="{W+200}" height="{H+200}">'
+                      f'<path d="{d}" fill="none" stroke="white" stroke-width="84" stroke-linecap="round"/></mask>')
+        o.append(f'<rect width="{W}" height="{H}" fill="url(#{P.h3_id})" opacity="0.7" mask="url(#{mid})"/>')
+        o.append(edge_lines(P, d, 84, P.ink, 1.6, 1))
+        o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1.2" stroke-dasharray="14 20" transform="translate(-20,0)"/>')
+        o.append(f'<path d="{d}" fill="none" stroke="{P.ink}" stroke-width="1.2" stroke-dasharray="10 26" transform="translate(18,6)"/>')
+    o.append(bridge(P))
+    return "\n".join(o)
+
+
+def smithy_interior(P):
+    """Smithy with the roof removed (interior view) for in-game cutaways."""
+    k = P.k
+    x, y, w, h, t = 430, 610, 330, 180, 16
+    o = [cast_shadow(P, x, y, w, h, 0.5)]
+    o.append(P.shape(rect(x, y, w, h, 3), "stone", s=6))
+    floor = rect(x + t, y + t, w - 2 * t, h - 2 * t)
+    o.append(P.shape(floor, "wood", s=8, hl=False))
+    o.append(P.detail(" ".join(f"M{xx},{y+t+2} L{xx},{y+h-t-2}" for xx in range(x + t + 18, x + w - t, 18)), "wood", 0.5, 0.7))
+    # stone joints on walls
+    o.append(P.detail(" ".join(f"M{xx},{y+2} L{xx},{y+t-2} M{xx+9},{y+h-t+2} L{xx+9},{y+h-2}" for xx in range(x + 12, x + w - 8, 22)), "stone", 0.5, 0.7))
+    # doorway (north wall, facing the road) and window gaps
+    o.append(P.shape(rect(600, y - 1, 52, t + 2), "wood", s=2, hl=False, line=False))
+    o.append(P.detail(f"M600,{y} L600,{y+t} M652,{y} L652,{y+t}", "stone", 1.0))
+    # forge hearth with hood, fire, bellows
+    o.append(P.shape(rect(x + t + 4, y + t + 4, 96, 70, 6), "stone", s=6))
+    o.append(P.shape(ell(x + t + 52, y + t + 40, 30, 20), "fire", s=6))
+    o.append(P.spot(ell(x + t + 52, y + t + 40, 13, 9), P.c("fire", 0)))
+    o.append(P.shape(smooth([(566, 640), (590, 650), (594, 690), (566, 700), (552, 670)]), "leather", s=4))
+    o.append(P.shape(rect(564, 700, 8, 22, 2), "wood", s=2, hl=False))
+    # anvil on stump
+    an = [(600, 712), (664, 712), (672, 720), (650, 726), (650, 740), (614, 740), (614, 726), (592, 720)]
+    o.append(cast_shadow(P, 596, 712, 72, 28, 0.4))
+    o.append(P.shape(ell(632, 732, 24, 16), "wood", s=3))
+    o.append(P.shape(poly(an), "metal", s=4))
+    # workbench with tools (east wall)
+    o.append(P.shape(rect(x + w - t - 50, y + t + 6, 46, 110, 4), "wood", s=5))
+    o.append(P.shape(rect(700, 650, 30, 8, 2), "metal", s=2, hl=False))
+    o.append(P.shape(rect(712, 680, 8, 30, 2), "wood", s=2, hl=False))
+    o.append(P.shape(rect(704, 676, 24, 10, 2), "metal", s=2, hl=False))
+    # weapon rack along south wall + armour stand + coal bin + barrel
+    o.append(P.shape(rect(x + t + 8, y + h - t - 18, 150, 12, 3), "wood", s=3))
+    for xx in range(458, 600, 22):
+        o.append(P.shape(poly([(xx - 3, 734), (xx + 3, 734), (xx + 3, 760), (xx, 766), (xx - 3, 760)]), "metal", s=2, hl=False))
+    o.append(P.shape(ell(700, 752, 22, 15), "metal", s=4))
+    o.append(P.shape(ell(700, 752, 8, 8), "gem", s=2, hl=False))
+    o.append(P.shape(rect(x + t + 6, 700, 40, 30, 3), "boot", s=3, fill_override=None))
+    o.append(barrel(P, 676, 640, 12))
+    # wall outline last so it reads as architecture
+    o.append(P.detail(rect(x, y, w, h), "stone", 1.6))
+    o.append(P.detail(rect(x + t, y + t, w - 2 * t, h - 2 * t), "stone", 1.0))
+    return "\n".join(o)
+
+
 def forge_yard(P):
     k = P.k
     o = []
     # yard floor (packed earth)
-    o.append(P.shape(rect(430, 800, 330, 150, 14), "road", s=6, flat=True, line=(k != "prod")))
+    o.append(P.shape(rect(430, 800, 330, 150, 14), "road", s=6, flat=True, line=(k != "prod"),
+                     fill_override="none" if k == "ballpoint" else None))
     o.append(fence(P, [(424, 806), (424, 956), (766, 956), (766, 860)]))
     # forge hearth
     o.append(cast_shadow(P, 470, 820, 90, 70, 0.4))
@@ -367,10 +532,18 @@ def forest(P):
     return "\n".join(out)
 
 
-def town_svg(st, with_overlay=True):
+def paper_layer(P, folder):
+    pid = uid("paper")
+    P.defs.append(f'<pattern id="{pid}" width="512" height="512" patternUnits="userSpaceOnUse">'
+                  f'<image href="file://{ROOT}/{folder}/{P.st["paper"]}" width="512" height="512"/></pattern>')
+    return f'<rect width="{W}" height="{H}" fill="url(#{pid})"/>'
+
+
+def town_svg(st, with_overlay=True, paper=True, interior=False, people=True, char_lw=1.0, extra_fn=None):
     P = Painter(st)
     k = P.k
-    P.lw_mul = {"gothic": 0.8, "storybook": 0.9, "bold": 0.85, "ink": 0.75, "prod": 1}[k]
+    P.char_lw = char_lw
+    P.lw_mul = {"gothic": 0.8, "storybook": 0.9, "bold": 0.85, "ink": 0.75, "prod": 1, "ballpoint": 0.8, "sketchbook": 0.85}[k]
     body = [ground(P), roads(P), stream(P)]
     # houses
     houses = [
@@ -388,8 +561,11 @@ def town_svg(st, with_overlay=True):
         body.append(roof(P, x, y, w, h, r, rd, chimney=ch))
     # smithy (slate) with big forge chimney
     body.append(forge_yard(P))
-    body.append(roof(P, 430, 610, 330, 180, {"gothic": "roof_a", "storybook": "roof_a", "bold": "roof_b", "ink": "roof_b", "prod": "roof_b"}[k], "h", chimney=(520, 650)))
-    body.append(roof(P, 430, 610, 0, 0, "roof_a", "h") if False else "")
+    if interior:
+        body.append(smithy_interior(P))
+    else:
+        body.append(roof(P, 430, 610, 330, 180, {"gothic": "roof_a", "storybook": "roof_a", "bold": "roof_b", "ink": "roof_b", "prod": "roof_b",
+                                                 "ballpoint": "roof_b", "sketchbook": "roof_b"}[k], "h", chimney=(520, 650)))
     body.append(inn(P))
     body.append(chapel(P))
     body.append(market_and_well(P))
@@ -402,9 +578,10 @@ def town_svg(st, with_overlay=True):
     body.append(fence(P, [(1520, 280), (1660, 280), (1660, 470), (1520, 470)]))
     body.append(fence(P, [(180, 820), (360, 820), (360, 860)]))
     # people
-    body.append(char(P, subjects.blacksmith, 632, 846, 180, 0.17))
-    body.append(char(P, subjects.adventurer, 840, 552, -90, 0.15))
-    vill = [(1006, 640, 30, "tunic"), (1120, 520, 160, "cloak"), (1210, 470, 0, "shirt"), (900, 470, -40, "apron"),
+    if people:
+        body.append(char(P, subjects.blacksmith, 632, 846, 180, 0.17))
+        body.append(char(P, subjects.adventurer, 840, 552, -90, 0.15))
+    vill = [] if not people else [(1006, 640, 30, "tunic"), (1120, 520, 160, "cloak"), (1210, 470, 0, "shirt"), (900, 470, -40, "apron"),
             (1290, 552, 90, "cloak"), (560, 470, 100, "tunic"), (1500, 560, -90, "shirt"), (948, 680, 200, "cloak"),
             (1245, 830, 0, "tunic"), (1580, 360, 180, "shirt")]
     for (x, y, r, role) in vill:
@@ -412,11 +589,17 @@ def town_svg(st, with_overlay=True):
     # horse in stable yard (simple)
     body.append(f'<g transform="translate(1590,400) rotate(80)">' + P.shape(ell(0, 0, 14, 36), "leather", s=4) +
                 P.shape(ell(0, -40, 9, 16), "leather", s=3) + "</g>")
+    if extra_fn:
+        body.append(extra_fn(P))
     body.append(forest(P))
     filt = P.sprite_filter()
     scene = f'<g {filt}>' + "\n".join(body) + "</g>"
     over = overlay(P) if with_overlay else ""
-    return svg_doc(W, H, scene + over, P), P
+    under = ""
+    if paper and "paper" in st:
+        folder = next(f for f, v in STYLES.items() if v is st)
+        under = paper_layer(P, folder)
+    return svg_doc(W, H, under + scene + over, P), P
 
 
 def overlay(P):
@@ -454,8 +637,71 @@ def overlay(P):
     elif k == "ink":
         o.append(lamp_glow(P, 515, 855, 70, P.st["glow"], 0.25).replace("screen", "multiply"))
         o.append(ink_map_dressing(P))
+    elif k == "ballpoint":
+        o.append(ballpoint_annotations(P))
+    elif k == "sketchbook":
+        o.append(lamp_glow(P, 515, 855, 80, P.st["glow"], 0.35).replace("screen", "multiply"))
+        o.append(sketchbook_labels(P))
     else:
         o.append(lamp_glow(P, 515, 855, 70, P.st["glow"], 0.45))
+    return "\n".join(o)
+
+
+def hand_text(x, y, t, font, size, col, anchor="middle", rot=0, extra=""):
+    tr = f' transform="rotate({rot} {x} {y})"' if rot else ""
+    return (f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-family="{font}" font-size="{size}" fill="{col}"{tr} {extra}>{t}</text>')
+
+
+def ballpoint_annotations(P):
+    ink, red = P.ink, P.st["accent"]
+    fh, fl = P.st["fonts"]["heading"], P.st["fonts"]["title"]
+    o = []
+    # red interaction ring around forge + anvil
+    o.append(f'<path d="M470,800 C430,850 470,940 600,930 C720,925 720,830 640,808 C590,795 520,790 482,812" fill="none" stroke="{red}" stroke-width="3"/>')
+    o.append(f'<path d="M700,880 Q790,930 860,920" fill="none" stroke="{red}" stroke-width="2.4"/><path d="M700,880 l14,2 M700,880 l6,12" stroke="{red}" stroke-width="2.4"/>')
+    o.append(hand_text(870, 930, "the forge — [E] work anvil", fl, 34, red, "start", -3))
+    # red ring around the inn sign
+    o.append(f'<ellipse cx="1034" cy="482" rx="46" ry="34" fill="none" stroke="{red}" stroke-width="2.6" transform="rotate(-8 1034 482)"/>')
+    o.append(hand_text(980, 540, "sign: Tipsy Wyvern", fl, 26, red, "end", -4))
+    # dimension lines on the smithy
+    o.append(f'<path d="M430,598 L760,598 M430,590 L430,606 M760,590 L760,606" stroke="{ink}" stroke-width="1.2"/>')
+    o.append(f'<path d="M430,598 l10,-4 l0,8 Z M760,598 l-10,-4 l0,8 Z" fill="{ink}"/>')
+    o.append(hand_text(595, 590, "SMITHY  12.0 m", fh, 20, ink, "middle", 0, 'stroke="#f7f6f0" stroke-width="4" paint-order="stroke"'))
+    o.append(f'<path d="M776,610 L776,790 M768,610 L784,610 M768,790 L784,790" stroke="{ink}" stroke-width="1.2"/>')
+    o.append(hand_text(796, 705, "6.5 m", fh, 18, ink, "middle", 90))
+    o.append(hand_text(1220, 236, "THE TIPSY WYVERN (inn)", fh, 22, ink, "middle", 0, 'stroke="#f7f6f0" stroke-width="4" paint-order="stroke"'))
+    o.append(hand_text(960, 668, "market sq. / well", fh, 18, ink, "middle", 0, 'stroke="#f7f6f0" stroke-width="4" paint-order="stroke"'))
+    o.append(hand_text(1365, 990, "chapel", fh, 18, ink))
+    o.append(hand_text(1820, 420, "brook", fh, 20, ink, "middle", 80))
+    # north arrow + title block (architect sheet)
+    o.append(f'<circle cx="1780" cy="110" r="34" fill="none" stroke="{ink}" stroke-width="1.4"/><path d="M1780,70 L1792,118 L1780,108 L1768,118 Z" fill="{ink}"/>')
+    o.append(hand_text(1780, 64, "N", fh, 22, ink))
+    o.append(f'<rect x="1440" y="960" width="440" height="96" fill="#f7f6f0" stroke="{ink}" stroke-width="2"/>'
+             f'<path d="M1440,996 L1880,996 M1700,996 L1700,1056" stroke="{ink}" stroke-width="1.2"/>')
+    o.append(hand_text(1660, 988, "BRINDLEWICK — site plan", fh, 22, ink))
+    o.append(hand_text(1570, 1034, "sheet 1 / 3 · scale 1:200", fh, 16, ink))
+    o.append(hand_text(1790, 1034, "B. Ironhand", fl, 26, red))
+    return "\n".join(o)
+
+
+def sketchbook_labels(P):
+    ink = P.ink
+    fh, ft = P.st["fonts"]["heading"], P.st["fonts"]["title"]
+    o = []
+    rnd = random.Random(4)
+    for (x, y, r) in [(960, 560, 70), (1230, 900, 60), (515, 855, 40)]:
+        for i in range(10):
+            a, rr = rnd.uniform(0, math.tau), rnd.uniform(0.2, 1) * r
+            col = P.st["accent"] if i % 3 else P.st["accent2"]
+            o.append(f'<path d="M{x+math.cos(a)*rr:.0f},{y+math.sin(a)*rr-5:.0f} l1.5,4 l4,1.5 l-4,1.5 l-1.5,4 l-1.5,-4 l-4,-1.5 l4,-1.5 Z" fill="{col}" opacity="0.9"/>')
+    st = 'stroke="#f6eedc" stroke-width="5" paint-order="stroke"'
+    o.append(hand_text(595, 600, "The Smithy", ft, 30, ink, "middle", -2, st))
+    o.append(hand_text(1230, 238, "The Tipsy Wyvern", ft, 30, ink, "middle", 1, st))
+    o.append(hand_text(960, 672, "MARKET SQUARE", fh, 30, ink, "middle", 0, st))
+    o.append(hand_text(1365, 995, "CHAPEL OF THE DAWN", fh, 26, ink, "middle", 0, st))
+    o.append(hand_text(300, 150, "THE OLD WOOD", fh, 38, ink, "middle", -3, st))
+    o.append(hand_text(1820, 420, "Brindle Brook", ft, 24, ink, "middle", 80, st))
+    o.append(vignette(P, "#7a5a30", 0.28))
     return "\n".join(o)
 
 

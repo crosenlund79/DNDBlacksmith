@@ -44,6 +44,7 @@ def embers(n, x0, x1, y0, y1, col, seed=1):
 def menu(st):
     k = st["key"]
     return {"gothic": menu_gothic, "storybook": menu_storybook, "bold": menu_bold,
+            "ballpoint": menu_ballpoint, "sketchbook": menu_sketchbook,
             "ink": menu_ink, "prod": menu_prod}[k](st)
 
 
@@ -280,11 +281,47 @@ FONT_THEME = {
                  tip="#1e1b24", radius="18px"),
 }
 
+FONT_THEME["ballpoint"] = dict(
+    bg="#f7f6f0", panel="rgba(252,252,249,.55)", border="2.5px solid #1f3a93;border-radius:255px 15px 225px 15px/15px 225px 15px 255px", text="#1f2a44", muted="#4a5f9e",
+    accent="#c62828", head="#1f3a93", title_css="color:#1f3a93;font-weight:700",
+    btn="background:#fcfcf9;border:2.5px solid #1f3a93;color:#1f3a93;border-radius:255px 15px 225px 15px/15px 225px 15px 255px",
+    btn_hover="background:#fcfcf9;border:3px solid #c62828;color:#c62828;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:4px 4px 0 rgba(198,40,40,.25)",
+    btn_press="background:repeating-linear-gradient(-35deg,rgba(31,58,147,.25) 0 1px,transparent 1px 5px),#fcfcf9;border:2.5px solid #1f3a93;color:#1f3a93;border-radius:255px 15px 225px 15px/15px 225px 15px 255px",
+    btn_dis="background:transparent;border:2px dashed #9aa8d0;color:#9aa8d0;border-radius:255px 15px 225px 15px/15px 225px 15px 255px",
+    tip="#16224a", radius="0")
+FONT_THEME["sketchbook"] = dict(
+    bg="#f1e6cf", panel="rgba(250,244,230,.6)", border="2.5px solid #3a2e28;border-radius:255px 15px 225px 15px/15px 225px 15px 255px", text="#3a2e28", muted="#7a6a58",
+    accent="#b8501c", head="#3a2e28", title_css="color:#3a2e28",
+    btn="background:#e8dcc0;border:2.5px solid #3a2e28;color:#3a2e28;border-radius:255px 15px 225px 15px/15px 225px 15px 255px",
+    btn_hover="background:#bfe8f0;border:2.5px solid #3a2e28;color:#0a5a74;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:0 0 14px rgba(31,181,214,.55)",
+    btn_press="background:#cdbd98;border:2.5px solid #3a2e28;color:#3a2e28;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:inset 0 3px 6px rgba(58,46,40,.35)",
+    btn_dis="background:transparent;border:2px dashed #b4a48c;color:#b4a48c;border-radius:255px 15px 225px 15px/15px 225px 15px 255px",
+    tip="#3a2e28", radius="18px")
+
+FONT_EXTRA = dict(
+    ballpoint=""".nm{font-family:'Patrick Hand';font-weight:400;font-size:32px} .h1,.h2{font-weight:400}
+.line{font-family:'Patrick Hand';font-style:normal;color:#eef1fa} .spk{color:#ff8a80;font-weight:400} .opt{color:#ffb4ad}
+.title{text-decoration:underline;text-decoration-color:#c62828;text-decoration-thickness:4px;text-underline-offset:14px}
+.bt{font-family:'Patrick Hand'} .items{background:transparent;padding:0} .st b{color:#1f3a93}""",
+    sketchbook=""".nm{font-family:'Shantell Sans';font-weight:700;font-size:27px} .h1{font-size:64px} .h2{font-size:46px;color:#2d8aa0} .h3{font-family:'Shantell Sans';font-size:26px}
+.line{font-family:'Shantell Sans';font-style:italic;font-weight:400;color:#f4ecdc;font-size:24px} .spk{color:#7fd8ea;font-family:'Fondamento';font-weight:400} .opt{color:#f2d266}
+.bt{font-family:'Shantell Sans';font-weight:600;font-size:26px} .items{background:transparent;padding:0} .title span{color:#1fb5d6}
+.lbl{font-family:'Shantell Sans'}""",
+)
+FONT_EXTRA = {k: v.replace("{{", "{").replace("}}", "}") for k, v in FONT_EXTRA.items()}
+
+
+def paper_url(st, which=None):
+    folder = next(k for k, v in __import__("styles").STYLES.items() if v is st)
+    return f"file://{ROOT}/{folder}/{which or st['paper']}"
+
 
 def fonts(st):
     k = st["key"]
     f = st["fonts"]
-    th = FONT_THEME[k]
+    th = dict(FONT_THEME[k])
+    if "paper" in st:
+        th["bg"] = f"url('{paper_url(st)}') repeat"
     rar = st["rarity"]
     title = st["title"].replace("&", "&amp;")
     tip_rar = st.get("rarity_dark", rar)
@@ -302,7 +339,7 @@ def fonts(st):
 
     main_rows = item_rows(rar, k in ("gothic", "prod", "bold"))
     second = ""
-    if k == "ink":
+    if "rarity_dark" in st:
         second = f'<div class="tip"><div class="tiph">On dark tooltips</div>{item_rows(tip_rar, True)}</div>'
     stats = [("Damage", "34 – 52"), ("Armour", "145"), ("Attack speed", "1.20 /s"), ("Fire resistance", "+18%"),
              ("Durability", "212 / 240"), ("Sale price", "1,250 gold")]
@@ -339,7 +376,7 @@ def fonts(st):
 </div>
 """
     tipcss = ""
-    if k == "ink":
+    if "rarity_dark" in st:
         tipcss = f""".tip{{background:{th['tip']};padding:12px 20px;margin-top:10px;border:1px solid #000}}
 .tiph{{font-family:'{f['heading']}';font-style:italic;color:#efe4cc;font-size:20px;margin-bottom:4px}}
 .tip .it{{height:34px}} .tip .nm{{font-size:24px}} .tip .tag,.tip .sb{{display:none}}"""
@@ -351,7 +388,7 @@ body{{background:{th['bg']}}}
 .col.a{{width:960px}} .col.b{{flex:1}}
 .lbl{{font-family:'{f['ui']}';font-weight:600;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:{th['muted']};margin:12px 0 6px;
  border-bottom:1px solid {th['muted']}55;padding-bottom:3px}}
-.title{{font-family:'{f['title']}';font-size:{dict(gothic=96,storybook=108,bold=80,ink=84,prod=108)[k]}px;line-height:1.05;{th['title_css']}}}
+.title{{font-family:'{f['title']}';font-size:{dict(gothic=96,storybook=108,bold=80,ink=84,prod=108,ballpoint=120,sketchbook=96)[k]}px;line-height:1.05;{th['title_css']}}}
 .h1{{font-family:'{f['heading']}';font-weight:700;font-size:50px;color:{th['head']};line-height:1.1}}
 .h2{{font-family:'{f['heading']}';font-weight:600;font-size:40px;color:{th['accent']};line-height:1.2}}
 .h3{{font-family:'{f['heading']}';font-style:italic;font-weight:500;font-size:30px;color:{th['text']}}}
@@ -379,4 +416,233 @@ body{{background:{th['bg']}}}
 """
     if k == "storybook":
         css += ".items .sb{color:#c8b090!important}"
+    if k in ("ballpoint", "sketchbook"):
+        css += FONT_EXTRA[k] + ".digits{white-space:nowrap;font-size:36px}"
+    return body, 1920, 1080, css
+
+
+# ======================================================================= PAPER (06 / 07)
+PAPER_TONES = {
+    # key: (base, rule colour, rule opacity, grain rgb, fibre colour)
+    "ballpoint": ("#f7f6f0", "#9db3d8", 0.75, (0.42, 0.45, 0.55), "#b9c4d8"),
+    "sketchbook": ("#f1e6cf", "#b4a084", 0.6, (0.45, 0.33, 0.2), "#cdb894"),
+}
+
+
+def paper_svg(st, grid):
+    """512x512 seamlessly tileable paper (stitched noise, rules on a 32px pitch, wrapped fibres)."""
+    k = st["key"]
+    base, rule, rop, g, fib = PAPER_TONES[k]
+    S = 512
+    rnd = random.Random(11 if grid else 13)
+    fib_paths = []
+    for _ in range(46):
+        x, y = rnd.uniform(0, S), rnd.uniform(0, S)
+        dx, dy = rnd.uniform(-26, 26), rnd.uniform(-10, 10)
+        for ox in (-S, 0, S):
+            for oy in (-S, 0, S):
+                fib_paths.append(f"M{x+ox:.1f},{y+oy:.1f} q{dx/2:.1f},{dy+rnd.uniform(-4,4):.1f} {dx:.1f},{dy:.1f}")
+    rules = ""
+    if grid:
+        lines = " ".join(f"M{p+0.5},0 V{S} M0,{p+0.5} H{S}" for p in range(0, S, 32))
+        rules = f'<path d="{lines}" stroke="{rule}" stroke-width="1" opacity="{rop}"/>'
+    mottle = "0.012" if k == "sketchbook" else "0.008"
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{S}" height="{S}" viewBox="0 0 {S} {S}">
+<defs>
+<filter id="grain" filterUnits="userSpaceOnUse" x="0" y="0" width="{S}" height="{S}">
+ <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="4" stitchTiles="stitch"/>
+ <feColorMatrix values="0 0 0 0 {g[0]}  0 0 0 0 {g[1]}  0 0 0 0 {g[2]}  0 0 0 -1.4 0.82"/>
+</filter>
+<filter id="mottle" filterUnits="userSpaceOnUse" x="0" y="0" width="{S}" height="{S}">
+ <feTurbulence type="fractalNoise" baseFrequency="{mottle}" numOctaves="3" seed="9" stitchTiles="stitch"/>
+ <feColorMatrix values="0 0 0 0 {g[0]}  0 0 0 0 {g[1]}  0 0 0 0 {g[2]}  0 0 0 1.1 -0.5"/>
+</filter>
+</defs>
+<rect width="{S}" height="{S}" fill="{base}"/>
+<rect width="{S}" height="{S}" filter="url(#mottle)" opacity="{0.5 if k=='sketchbook' else 0.25}"/>
+<rect width="{S}" height="{S}" filter="url(#grain)" opacity="{0.45 if k=='sketchbook' else 0.3}"/>
+<path d="{' '.join(fib_paths)}" fill="none" stroke="{fib}" stroke-width="0.7" opacity="0.55"/>
+{rules}
+</svg>'''
+
+
+def paper(st, grid):
+    return paper_svg(st, grid), 512, 512, ""
+
+
+# ======================================================================= MENUS (06 / 07)
+def hand_buttons(cls_hot=1):
+    return "".join(f'<div class="b{" hot" if i == cls_hot else ""}">{b}</div>' for i, b in enumerate(BUTTONS))
+
+
+def menu_ballpoint(st):
+    f = st["fonts"]
+    svg, _ = T.town_svg(st, paper=False)
+    body = f"""
+<div style="position:absolute;inset:0;background:url('{paper_url(st, 'paper_grid.png')}') repeat"></div>
+<div class="sheet"><div class="cropped">{svg}</div></div>
+<div class="tape t1"></div><div class="tape t2"></div>
+<img src="{sprite_url(st,'blacksmith')}" style="position:absolute;left:1180px;top:520px;width:500px">
+<img src="{sprite_url(st,'sword')}" style="position:absolute;left:1600px;top:640px;width:250px;transform:rotate(12deg)">
+<svg width="1920" height="1080" style="position:absolute;inset:0">
+ <path d="M150,330 C400,345 700,318 930,332" stroke="#c62828" stroke-width="5" fill="none" stroke-linecap="round"/>
+ <path d="M170,346 C420,356 640,340 880,350" stroke="#c62828" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
+ <path d="M120,60 L120,1020 M60,120 L1000,120" stroke="#1f3a93" stroke-width="1" opacity=".35" stroke-dasharray="40 6 2 6"/>
+ <ellipse cx="300" cy="512" rx="190" ry="44" fill="none" stroke="#c62828" stroke-width="3" transform="rotate(-2 300 512)"/>
+ <path d="M500,500 q60,-40 120,-10" stroke="#c62828" stroke-width="2.4" fill="none"/>
+</svg>
+<div class="t">The Inkbound Forge</div>
+<div class="sub">a sketchbook of hammer &amp; flame</div>
+<div class="note" style="left:640px;top:450px">← start here!</div>
+<div class="menu">{hand_buttons()}</div>
+<div class="v">{VERSION} · sheet 1</div>
+"""
+    hand = "border-radius:255px 15px 225px 15px/15px 225px 15px 255px"
+    css = f"""
+.sheet{{position:absolute;left:1000px;top:70px;width:820px;height:461px;transform:rotate(1.5deg);background:#fcfcf9;
+ box-shadow:3px 4px 0 rgba(31,58,147,.15);border:2px solid #1f3a93;overflow:hidden}}
+.cropped svg{{width:1920px;height:1080px;transform:scale(.4271);transform-origin:0 0}}
+.tape{{position:absolute;width:150px;height:40px;background:rgba(220,210,170,.55);border:1px solid rgba(150,140,100,.35)}}
+.t1{{left:960px;top:52px;transform:rotate(-14deg)}} .t2{{left:1720px;top:500px;transform:rotate(-10deg)}}
+.t{{position:absolute;left:130px;top:150px;font-family:'{f['title']}';font-weight:700;font-size:150px;color:#1f3a93;line-height:1;transform:rotate(-1.5deg)}}
+.sub{{position:absolute;left:150px;top:360px;font-family:'{f['heading']}';font-size:34px;color:#1f3a93}}
+.menu{{position:absolute;left:150px;top:470px;width:340px}}
+.b{{font-family:'{f['ui']}';font-size:44px;color:#1f3a93;height:70px;line-height:66px;padding-left:28px;margin-bottom:16px;
+ background:rgba(252,252,249,.9);border:2.5px solid #1f3a93;{hand}}}
+.b.hot{{color:#c62828;border-color:#c62828;background:repeating-linear-gradient(-35deg,rgba(198,40,40,.12) 0 1px,transparent 1px 6px),rgba(252,252,249,.9)}}
+.note{{position:absolute;font-family:'{f['title']}';font-size:40px;color:#c62828;transform:rotate(-4deg)}}
+.v{{position:absolute;right:50px;bottom:30px;font-family:'{f['heading']}';font-size:22px;color:#1f3a93}}
+"""
+    return body, 1920, 1080, css
+
+
+def menu_sketchbook(st):
+    f = st["fonts"]
+    svg, _ = T.town_svg(st, paper=False)
+    body = f"""
+<div style="position:absolute;inset:0;background:url('{paper_url(st, 'paper_plain.png')}') repeat"></div>
+<div class="vign">{svg}</div>
+<svg width="1920" height="1080" style="position:absolute;inset:0">
+ <defs><filter id="wc"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="3"/><feDisplacementMap in="SourceGraphic" scale="40"/><feGaussianBlur stdDeviation="3"/></filter></defs>
+ <ellipse cx="960" cy="230" rx="560" ry="120" fill="#86b0b8" opacity=".35" filter="url(#wc)"/>
+ <ellipse cx="1180" cy="210" rx="200" ry="80" fill="#1fb5d6" opacity=".25" filter="url(#wc)"/>
+ <ellipse cx="740" cy="260" rx="220" ry="70" fill="#c8a258" opacity=".3" filter="url(#wc)"/>
+ <rect x="700" y="400" width="520" height="560" rx="40" fill="#e8dcc0" opacity=".55" filter="url(#wc)"/>
+</svg>
+<img src="{sprite_url(st,'blacksmith')}" style="position:absolute;left:180px;top:470px;width:540px;filter:drop-shadow(8px 12px 8px rgba(90,70,50,.25))">
+<img src="{sprite_url(st,'adventurer')}" style="position:absolute;left:1240px;top:470px;width:500px;filter:drop-shadow(8px 12px 8px rgba(90,70,50,.25))">
+<img src="{sprite_url(st,'tree')}" style="position:absolute;left:-90px;top:-80px;width:420px">
+<img src="{sprite_url(st,'tree')}" style="position:absolute;left:1620px;top:-60px;width:400px;transform:rotate(70deg)">
+<div class="t">Tales from the <span>Anvil</span></div>
+<div class="sub">— stories hammered out in a little village —</div>
+<div class="menu">{hand_buttons()}</div>
+<div class="v">{VERSION}</div>
+"""
+    hand = "border-radius:255px 15px 225px 15px/15px 225px 15px 255px"
+    css = f"""
+.vign{{position:absolute;inset:0;opacity:.5;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 60%,#000 30%,transparent 75%)}}
+.t{{position:absolute;left:0;width:1920px;top:150px;text-align:center;font-family:'{f['title']}';font-size:128px;color:#3a2e28;
+ text-shadow:0 0 0 #3a2e28, 2px 2px 0 rgba(255,250,235,.7)}}
+.t span{{color:#1a8eaa}}
+.sub{{position:absolute;left:0;width:1920px;top:310px;text-align:center;font-family:'{f['ui']}';font-style:italic;font-size:30px;color:#6e5a48}}
+.menu{{position:absolute;left:760px;top:420px;width:400px}}
+.b{{font-family:'{f['heading']}';font-weight:700;font-size:52px;color:#3a2e28;text-align:center;height:72px;line-height:72px;margin-bottom:14px;
+ background:rgba(244,236,216,.85);border:2.5px solid #3a2e28;{hand};box-shadow:3px 4px 0 rgba(58,46,40,.18)}}
+.b.hot{{background:rgba(160,224,236,.9);color:#0a5a74;box-shadow:0 0 22px rgba(31,181,214,.55),3px 4px 0 rgba(58,46,40,.18)}}
+.v{{position:absolute;right:46px;bottom:28px;font-family:'{f['ui']}';font-size:20px;color:#6e5a48}}
+"""
+    return body, 1920, 1080, css
+
+
+# ======================================================================= SCENE COMPOSITE (06 / 07)
+def scene_composite(st):
+    import subjects
+    k = st["key"]
+    f = st["fonts"]
+    Z, OX, OY = 1.8, 330, 330
+    acc = st["accent"]
+
+    def extras(P):
+        o = []
+        if k == "ballpoint":
+            o.append(f'<ellipse cx="632" cy="726" rx="62" ry="40" fill="none" stroke="{acc}" stroke-width="2.5" stroke-dasharray="10 5"/>')
+        else:
+            o.append(f'<ellipse cx="632" cy="726" rx="60" ry="38" fill="{acc}" opacity=".25" style="filter:blur(6px)"/>'
+                     f'<ellipse cx="632" cy="726" rx="60" ry="38" fill="none" stroke="{acc}" stroke-width="2.5"/>')
+        o.append(T.char(P, subjects.blacksmith, 600, 690, 120, 0.17))
+        o.append(T.char(P, subjects.adventurer, 626, 590, 0, 0.15))
+        o.append(T.villager(P, 960, 500, 30, "tunic", scale=0.85))
+        o.append(T.villager(P, 1120, 520, 160, "cloak", scale=0.85))
+        o.append(T.villager(P, 880, 640, -60, "shirt", scale=0.85))
+        return "\n".join(o)
+
+    svg, _ = T.town_svg(st, paper=True, interior=True, people=False, with_overlay=False, extra_fn=extras)
+    sx = lambda x: (x - OX) * Z
+    sy = lambda y: (y - OY) * Z
+    ink = st["ink"]
+    panel = "#fcfcf9" if k == "ballpoint" else "#f4ecd8"
+    hand = "border-radius:255px 15px 225px 15px/15px 225px 15px 255px"
+    slots = ["sword", "armor", None, None, None, None, None, None]
+    slot_html = ""
+    for i, s in enumerate(slots):
+        inner = f'<img src="{sprite_url(st, s)}" style="width:84px">' if s else ""
+        slot_html += f'<div class="slot{" sel" if i == 0 else ""}">{inner}<span>{i+1}</span></div>'
+    body = f"""
+<div class="world">{svg}</div>
+<div class="prompt" style="left:{sx(632)+70:.0f}px;top:{sy(726)+30:.0f}px"><b>E</b> Work the anvil</div>
+<div class="bubble" style="left:{sx(626)+60:.0f}px;top:{sy(590)-150:.0f}px">"Can you mend this pauldron by dusk, old man?"</div>
+<div class="quest"><div class="qh">Commission</div><div class="qt">Wyvernscale Pauldron</div>
+ <div class="qi">☐ Hammer 3 scale plates <i>(2/3)</i></div><div class="qi">☐ Quench in the trough</div><div class="qi">☑ Fire the forge</div></div>
+<div class="gold">⚒ Day 14 · 1,250 g</div>
+<div class="bar">{slot_html}</div>
+<div class="cap">scene_composite — transparent sprite &amp; building layers over the separate tiled {st['paper'].replace('.png','')} layer (smithy shown with roof removed)</div>
+"""
+    css = f"""
+body{{background:#000}}
+.world{{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden}}
+.world svg{{width:1920px;height:1080px;transform:translate({-OX*Z}px,{-OY*Z}px) scale({Z});transform-origin:0 0}}
+.prompt{{position:absolute;font-family:'{f['ui']}';font-size:30px;color:{ink};background:{panel};border:2.5px solid {acc};padding:4px 16px;{hand}}}
+.prompt b{{display:inline-block;width:36px;height:36px;line-height:36px;text-align:center;border:2.5px solid {acc};color:{acc};margin-right:8px;border-radius:8px}}
+.bubble{{position:absolute;width:360px;font-family:'{f['ui']}';font-size:26px;line-height:1.3;color:{ink};background:{panel};border:2.5px solid {ink};padding:12px 18px;{hand}}}
+.quest{{position:absolute;left:36px;top:36px;width:420px;background:{panel};border:2.5px solid {ink};padding:14px 22px;{hand};box-shadow:4px 5px 0 rgba(0,0,0,.12)}}
+.qh{{font-family:'{f['heading']}';font-size:{24 if k=='ballpoint' else 34}px;font-weight:700;color:{acc if k=='ballpoint' else '#7a6a58'};letter-spacing:1px}}
+.qt{{font-family:'{f['title']}';font-size:{44 if k=='ballpoint' else 34}px;font-weight:700;color:{ink};line-height:1.1;margin-bottom:6px}}
+.qi{{font-family:'{f['ui']}';font-size:24px;color:{ink};line-height:1.4}}
+.gold{{position:absolute;right:36px;top:36px;font-family:'{f['numbers']}';font-weight:700;font-size:32px;color:{ink};background:{panel};border:2.5px solid {ink};padding:6px 22px;{hand}}}
+.bar{{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);display:flex;gap:12px;padding:12px;background:{panel};border:2.5px solid {ink};{hand}}}
+.slot{{position:relative;width:96px;height:96px;border:2px solid {ink};display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,.4)}}
+.slot.sel{{border:3px solid {acc};box-shadow:0 0 0 3px {acc}33}}
+.slot span{{position:absolute;left:5px;top:1px;font-family:'{f['numbers']}';font-size:18px;color:{ink}}}
+.cap{{position:absolute;left:50%;transform:translateX(-50%);top:14px;white-space:nowrap;background:{panel};padding:2px 14px;border-radius:6px;opacity:1 !important;font-family:'{f['ui']}';font-size:18px;color:{ink};opacity:.75}}
+"""
+    return body, 1920, 1080, css
+
+
+# ======================================================================= PAPER COMPARISON (06 / 07)
+def paper_comparison(st):
+    f = st["fonts"]
+    ink = st["ink"]
+    cols = [("Grid paper", f"url('{paper_url(st, 'paper_grid.png')}') repeat", "paper_grid.png"),
+            ("Plain paper", f"url('{paper_url(st, 'paper_plain.png')}') repeat", "paper_plain.png"),
+            ("No paper (transparent)", "repeating-conic-gradient(#d4d4d4 0 25%, #f4f4f4 0 50%) 0 0/32px 32px", "alpha only")]
+    panels = ""
+    for i, (name, bg, file) in enumerate(cols):
+        panels += f"""<div class="p" style="left:{20+i*633}px;background:{bg}">
+ <div class="h">{name}<span>{file}</span></div>
+ <img src="{sprite_url(st,'blacksmith')}" style="left:40px;top:120px;width:330px">
+ <img src="{sprite_url(st,'adventurer')}" style="left:330px;top:110px;width:280px">
+ <img src="{sprite_url(st,'tree')}" style="left:40px;top:470px;width:330px">
+ <img src="{sprite_url(st,'sword')}" style="left:350px;top:440px;width:220px">
+ <img src="{sprite_url(st,'armor')}" style="left:370px;top:650px;width:220px">
+</div>"""
+    body = f'<div class="title">{st["title"]} — sprites over grid paper, plain paper and no paper</div>{panels}'
+    css = f"""
+body{{background:#3a3a3a}}
+.title{{position:absolute;left:24px;top:14px;font-family:'{f['ui']}';font-size:34px;color:#f4f4f4}}
+.p{{position:absolute;top:70px;width:613px;height:990px;overflow:hidden;border-radius:6px}}
+.p img{{position:absolute}}
+.h{{position:absolute;left:0;right:0;top:0;padding:14px 22px;font-family:'{f['heading']}';font-size:36px;font-weight:700;color:{ink};
+ background:rgba(255,255,255,.75);border-bottom:2px solid {ink}}}
+.h span{{float:right;font-family:'{f['ui']}';font-size:22px;font-weight:400;margin-top:10px;opacity:.8}}
+"""
     return body, 1920, 1080, css
