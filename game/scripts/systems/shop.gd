@@ -71,6 +71,15 @@ static func pay_upkeep() -> void:
 	Game.add_gold(-cost, "upkeep", "Coal, rent and tools")
 
 
+## An adventurer's most worn piece, if anything is below 40% durability.
+static func worn_slot(a: Dictionary) -> String:
+	for slot in a.get("equipment", {}):
+		var st: Dictionary = a["equipment"][slot].get("stats", {})
+		if st.has("durability_max") and float(st["durability"]) < float(st["durability_max"]) * 0.4:
+			return slot
+	return ""
+
+
 ## Would this person deal with the smith at all?
 static func refuses(npc: String) -> bool:
 	return Social.band(npc) == "hostile"
@@ -160,7 +169,7 @@ static func customer_hour(h: int) -> void:
 	var pool := []
 	for a in Adv.in_town():
 		if not refuses(a["id"]):
-			pool.append([a["id"], "browse"])
+			pool.append([a["id"], "repair_own" if worn_slot(a) != "" else "browse"])
 	for v in ["martha", "tobin", "jory", "eda", "oswin", "wenna"]:
 		if not refuses(v):
 			pool.append([v, "goods" if randf() < 0.35 else "repair"])
@@ -184,6 +193,13 @@ static func _add_customer(npc: String, want: String) -> void:
 			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.2, 0.5))
 		c["item"] = it
 		c["pay"] = randi_range(8, 18)
+	elif want == "repair_own":
+		var a2 := Adv.get_a(npc)
+		var slot2 := worn_slot(a2)
+		c["want"] = "repair"
+		c["own_slot"] = slot2
+		c["item"] = a2["equipment"][slot2]
+		c["pay"] = 10 + int(Items.value(c["item"]) * 0.06)
 	elif want == "goods":
 		c["budget"] = randi_range(30, 80)
 		c["looking_for"] = ["potion_healing", "oil_whetstone"].pick_random()
@@ -249,6 +265,19 @@ static func sell_to(npc: String, uid: int) -> String:
 
 static func do_repair(npc: String, quality: float) -> void:
 	for c in customers():
+		if c["npc"] == npc and c["want"] == "repair" and c.has("own_slot"):
+			# an adventurer's own worn gear: restore its durability (well done = nearly as new)
+			var a := Adv.get_a(npc)
+			var it: Dictionary = a.get("equipment", {}).get(c["own_slot"], {})
+			var st: Dictionary = it.get("stats", {})
+			if st.has("durability_max"):
+				st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))
+			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
+			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
+			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "Brannoc mended my %s %s." % [it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])
+			Game.grant_player_xp("smithing", 10)
+			remove_customer(npc)
+			return
 		if c["npc"] == npc and c["want"] == "repair":
 			var pay := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]])

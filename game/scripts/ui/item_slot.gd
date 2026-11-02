@@ -51,6 +51,10 @@ func _draw() -> void:
 	var bc: Color = Items.COL_BORDER.get(rar, Color.GRAY)
 	if rar != "common":
 		draw_rect(r.grow(-3), Color(bc, 0.18))
+	if item.get("arcane_glow", false):
+		# bound magic: violet markings glow around the piece
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 400.0)
+		draw_rect(r.grow(-3), Color(0.62, 0.45, 1.0, 0.16 + 0.12 * pulse))
 	draw_texture_rect(Assets.get_tex(Items.icon_id(item)), r.grow(-6), false, Color(1, 0.86, 1.0) if item.get("arcane_glow", false) else Color.WHITE)
 	draw_rect(r, bc, false, 3.0 if rar != "common" else 2.0)
 	if selected:
@@ -67,3 +71,8 @@ func _draw() -> void:
 
 func refresh() -> void:
 	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	if not item.is_empty() and item.get("arcane_glow", false):
+		queue_redraw()

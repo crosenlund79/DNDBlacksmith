@@ -268,7 +268,33 @@ static func base_quality(j := {}) -> float:
 
 
 static func skill_bonus(recipe_id: String) -> float:
-	return float(cfg("skill").get("quality_per_level", 0.4)) * Game.player_level(recipe_skill(recipe_id))
+	return float(cfg("skill").get("quality_per_level", 0.4)) * Game.player_level(recipe_skill(recipe_id)) + hireling_assist(recipe_id)
+
+
+## A skilled hand at work in the forge steadies the smith's work: +0.25% per level of the best
+## hireling in the recipe's skill (smithing for smithing recipes, etc.) who is on shift.
+static func hireling_assist(recipe_id: String) -> float:
+	var sk := recipe_skill(recipe_id)
+	if not sk in DB.work_skills:
+		sk = "smithing" if sk == "arcane_metalwork" else ("alchemy" if sk == "enchanted_stitching" else sk)
+	var best := 0
+	var who := ""
+	for h in Hire.list():
+		if h["status"] == "working" and SkillSys.level(h["skills"], sk) > best:
+			best = SkillSys.level(h["skills"], sk)
+			who = h["name"]
+	return 0.25 * best
+
+
+static func assistant_name(recipe_id: String) -> String:
+	var sk := recipe_skill(recipe_id)
+	var best := 0
+	var who := ""
+	for h in Hire.list():
+		if h["status"] == "working" and h["skills"].has(sk) and SkillSys.level(h["skills"], sk) > best:
+			best = SkillSys.level(h["skills"], sk)
+			who = h["name"]
+	return who
 
 
 static func final_quality(j := {}) -> float:
@@ -371,6 +397,14 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	var rev := rarity_eval(q, fortune, bonus) if totals.has("fortune") else {"score": 0.0, "rarity": "common", "parts": {}, "masterwork": false}
 	if r.get("discipline", "") == "arcane":
 		it["arcane_glow"] = true
+		# arcane metalworking binds an ability into the metal itself (distinct from a socketed rune)
+		if Items.is_equipment(it):
+			var weave := _norm(totals, spec, "spellweave", 0.5)
+			var bstat := "ward" if Items.slot(it) in ["armor", "shield", "helmet"] else "magic"
+			var bval := int(round((3.0 + 6.0 * weave) * (0.6 + q / 250.0)))
+			var bname: String = {"ward": "Leyward", "magic": "Leyline Edge"}[bstat]
+			it["bound"] = {"name": bname, "stat": bstat, "value": bval}
+			it["affixes"].append({"id": "bound", "stat": bstat, "value": bval})
 	var rar: String = rev["rarity"]
 	if it["rarity"] == "common" and rar != "common":
 		if Items.is_equipment(it):

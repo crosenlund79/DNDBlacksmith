@@ -31,6 +31,7 @@ func _ready() -> void:
 	_adventurer_world()
 	_village_remembers()
 	_romance()
+	_masters()
 	_adventurers()
 	_social()
 	_loot()
@@ -447,6 +448,67 @@ func _romance() -> void:
 	check(fam1 > fam0 or el["status"] == "dead", "marriage: her spoils come home to the household")
 	check(Talk.greeting(npc).contains("Husband"), "marriage: she greets you as her husband")
 	Game.state["minute"] = m0
+
+
+## Iteration 7: all five disciplines, jewellery, the arcane chain with bound magic, a multi-discipline
+## enchanted blade that changes an adventurer's next expedition, hireling assistance and repairs.
+func _masters() -> void:
+	Game.add_gold(3000 - Game.gold(), "test", "test funds")
+	for pair in [["ore_adamantine", 4], ["gem_moonstone", 2], ["coal", 6], ["leather_cured", 6], ["ingot_steel", 6], ["runestone_ember", 1],
+			["coating_flame", 1], ["thread_ethereal", 2], ["ore_silver", 6], ["gem_garnet", 1], ["gem_sapphire", 1], ["thread_linen", 3], ["starmetal_fragment", 1]]:
+		Game.add_item(Items.make(pair[0], {"qty": pair[1]}), false)
+	if not Game.has_upgrade("arcane_foundry"):
+		Game.state["upgrades"].append("arcane_foundry")
+	# multi-discipline: smithing + runecraft + alchemy + stitching in one blade
+	var ops := Crafting.operations("emberwarden_longsword")
+	var discs := {}
+	for o in ops:
+		discs[DB.station(o["station"]).get("discipline", "")] = true
+	check(discs.size() >= 4, "masters: the Emberwarden spans %d disciplines %s" % [discs.size(), discs.keys()])
+	var ember := _craft("emberwarden_longsword", 108.0, {"edge": 14, "resonance": 8, "temper": 8, "fortune": 50})
+	check(not ember.is_empty() and Items.stat(ember, "fire") > 0, "masters: Emberwarden forged (fire %d, attack %d, %s)" % [Items.stat(ember, "fire"), Items.stat(ember, "attack"), ember.get("rarity", "")])
+	# jewellery: gems give their nature to the piece
+	var ring := _craft("garnet_ring", 100.0, {"resonance": 6, "fortune": 40})
+	check(Items.stat(ring, "fire") > 0 and Items.stat(ring, "magic") > 0, "jewellery: garnet ring (fire %d, magic %d)" % [Items.stat(ring, "fire"), Items.stat(ring, "magic")])
+	# the arcane chain: charge adamantine, then a warplate with a ward bound into the metal
+	Game.grant_player_xp("arcane_metalwork", 400)
+	var ingot := _craft("charge_adamantine", 100.0, {"purity": 4})
+	check(Game.count("ingot_adamantine") >= 2 or not ingot.is_empty(), "arcane: charged adamantine (%d ingots)" % Game.count("ingot_adamantine"))
+	if Game.count("ingot_adamantine") < 2:
+		Game.add_item(Items.make("ingot_adamantine", {"qty": 2 - Game.count("ingot_adamantine")}), false)
+	var plate := _craft("adamantine_warplate", 105.0, {"guard": 15, "spellweave": 10, "temper": 9, "fortune": 50})
+	check(plate.has("bound") and plate.get("arcane_glow", false) and Items.stat(plate, "ward") > int(DB.item("warplate_adamantine")["stats"]["ward"]), "arcane: warplate with %s bound into the metal (ward %d)" % [plate.get("bound", {}).get("name", "?"), Items.stat(plate, "ward")])
+	# the forgotten recipe, now known
+	var star := _craft("starsteel_blade", 100.0, {"edge": 12, "temper": 8, "fortune": 40})
+	check(star.get("def", "") == "sword_starsteel", "masters: Starsteel Blade from the forgotten recipe")
+	# hireling assistance: a smith on shift steadies the work
+	var borin := Hire.get_h("borin")
+	var st0: String = borin["status"]
+	borin["status"] = "away"
+	var alone := Crafting.skill_bonus("iron_longsword")
+	borin["status"] = "working"
+	var helped := Crafting.skill_bonus("iron_longsword")
+	borin["status"] = st0
+	check(helped > alone, "assist: Borin at the bench adds %.2f%% craftsmanship" % (helped - alone))
+	# repairs of an adventurer's own worn gear
+	var gar := Adv.get_a("garrick")
+	Adv.ensure(gar)
+	gar["status"] = "in_town"
+	var arm: Dictionary = gar["equipment"]["armor"]
+	arm["stats"]["durability"] = int(int(arm["stats"]["durability_max"]) * 0.2)
+	Shop.customers().clear()
+	Shop._add_customer("garrick", "repair_own")
+	Shop.mark_arrived("garrick", false)
+	Shop.do_repair("garrick", 100.0)
+	check(int(arm["stats"]["durability"]) > int(arm["stats"]["durability_max"]) * 0.8, "repairs: Garrick's own armour restored (%d/%d)" % [int(arm["stats"]["durability"]), int(arm["stats"]["durability_max"])])
+	# milestone: the enchanted blade goes on an adventurer and shapes the next expedition
+	gar["equipment"]["weapon"] = ember
+	var res := Adv.run_encounters(gar, "barrow_fields")
+	var credited := false
+	for uid in res["credits"]:
+		if str(uid) == str(ember["uid"]):
+			credited = true
+	check(credited, "milestone: the Emberwarden decided Garrick's barrow fights %s" % [res["lines"]])
 
 
 func _adventurers() -> void:
