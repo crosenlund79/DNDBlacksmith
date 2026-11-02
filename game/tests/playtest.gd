@@ -356,12 +356,14 @@ func phase_full() -> void:
 	await wait(0.4)
 	expect(Game.gold() > gold0 or Adv.get_a("varn")["equipment"].get("weapon", {}).get("uid", -1) == axe["uid"], "shop: Varn bought the hand axe (gold %d → %d)" % [gold0, Game.gold()])
 	await press("cancel")
-	# --- notice board & hiring
+	# --- notice board & hiring (some weeks nobody applies; make sure this one has applicants)
+	while Game.state["applicants"].is_empty():
+		Hire.refresh_applicants()
 	await use("notice", "board")
 	expect(panel() is NoticePanel, "notice board opens")
 	await shot("notice_board")
 	var hired_before := Hire.list().size()
-	Game.add_gold(200, "test", "playtest purse")
+	Game.add_gold(maxi(200, 200 - Game.gold()), "test", "playtest purse")
 	await click("Hire")
 	await wait(0.5)
 	expect(Hire.list().size() == hired_before + 1, "recruitment: hired an applicant")
