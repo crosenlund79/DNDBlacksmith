@@ -284,3 +284,17 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 - Villagers use simple hourly schedules, and NPCs don't collide with each other.
 - Hireling equipment exists in the model (Borin carries an axe and jerkin) but has no management screen yet.
 - All art and audio are procedurally generated first-pass assets.
+
+## Iteration 1 screenshots
+
+`docs/screenshots/iteration1/` holds 32 screenshots, all captured by the rendered play-test (`tests/playtest.tscn`, phases `interiors`, `craft` and `craft_reload`). They show:
+
+- **Workshop:** the plan, the discipline rooms, the locked-but-inspectable Arcane Foundry and the shopfront
+- **Private quarters:** living room, study and bedroom
+- **Other interiors:** the inn's common room, the Velvet Lantern upstairs, the grocer and a home
+- **Crafting flow:**
+  - station recipes
+  - precision checks at the forge, anvil, quench, rune stand and cauldron
+  - digital and physical dice
+  - results for the iron sword, steel sword, armour, runestone, alchemy, leather and a legendary
+- **Persistence:** the same legendary reopened from the stores after a restart
