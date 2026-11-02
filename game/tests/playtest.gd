@@ -244,7 +244,10 @@ func phase_full() -> void:
 	await wait(0.6)
 	expect(panel() is HirelingsPanel, "hirelings panel opens with H")
 	await shot("hirelings_panel")
-	await click("Ironroot Mine")
+	for b in _buttons(panel()):
+		if b.text == "Send" and _row_text(b).begins_with("Ironroot Mine"):
+			b.pressed.emit()
+			break
 	await wait(0.5)
 	expect(Hire.get_h("borin")["status"] == "away", "expedition: Borin sent to Ironroot Mine")
 	await wait(2.0)
