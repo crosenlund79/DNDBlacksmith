@@ -365,6 +365,9 @@ func phase_full() -> void:
 			var n: NPCActor = W().npcs.get(a["id"])
 			if n and n.visible and n.path.is_empty() and W().brect(DB.building("inn")).has_point(n.position):
 				adv_id = a["id"]
+	if adv_id == "":
+		note("  clock %s, in town: %s" % [Game.state["minute"], Adv.in_town().map(func(a): return "%s@%s→%s path%d vis%s" % [a["id"], W().npcs[a["id"]].position.round(), W().spot_for(a["id"]), W().npcs[a["id"]].path.size(), W().npcs[a["id"]].visible])])
+		note("  all: %s" % [Adv.all().map(func(a): return "%s:%s" % [a["id"], a.get("status", "")])])
 	expect(adv_id != "", "inn: an adventurer is in the common room")
 	if adv_id != "":
 		await tp(W().npcs[adv_id].position + Vector2(0, -60))
