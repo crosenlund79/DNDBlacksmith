@@ -721,7 +721,7 @@ def noir_seasoning(P):
     o = []
     gid = uid("dusk")
     P.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3420" stop-opacity="0.06"/>'
-                  f'<stop offset="1" stop-color="#2a1a10" stop-opacity="0.26"/></linearGradient>')
+                  f'<stop offset="1" stop-color="#2a1a10" stop-opacity="0.15"/></linearGradient>')
     o.append(f'<rect width="{W}" height="{H}" fill="url(#{gid})" style="mix-blend-mode:multiply"/>')
     # soot plume from the forge chimney
     for i in range(6):
@@ -746,7 +746,7 @@ def ink_map_dressing(P):
     P.defs.append(f'<filter id="{fid}"><feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="7"/>'
                   f'<feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.12  0 0 0 1.4 -0.55"/></filter>')
     o.append(f'<rect width="{W}" height="{H}" filter="url(#{fid})" opacity="0.45" style="mix-blend-mode:multiply"/>')
-    o.append(vignette(P, "#3a2410" if P.st.get("noir") else "#6a4a20", 0.6 if P.st.get("noir") else 0.45))
+    o.append(vignette(P, "#3a2410" if P.st.get("noir") else "#6a4a20", 0.5 if P.st.get("noir") else 0.45))
     o.append(f'<rect x="22" y="22" width="{W-44}" height="{H-44}" fill="none" stroke="{ink}" stroke-width="5"/>')
     o.append(f'<rect x="36" y="36" width="{W-72}" height="{H-72}" fill="none" stroke="{ink}" stroke-width="1.6"/>')
     segs = " ".join(f"M{x},22 L{x+20},36" for x in range(40, W - 40, 40))
