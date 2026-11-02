@@ -719,20 +719,33 @@ def noir_seasoning(P):
     """The ~15% Gothic Noir layer for the hybrid town: late-afternoon dimming,
     soot over the smithy, warm forge/inn glows and a few embers. Daytime readability stays."""
     o = []
+    t = P.st["noir"] / 0.15          # 1.0 = 85:15, 1.33 = 80:20
+    g = 1 + 0.6 * (t - 1)            # glow multiplier
     gid = uid("dusk")
     P.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3420" stop-opacity="0.06"/>'
-                  f'<stop offset="1" stop-color="#2a1a10" stop-opacity="0.15"/></linearGradient>')
+                  f'<stop offset="1" stop-color="#2a1a10" stop-opacity="{0.15 + 0.12 * (t - 1):.2f}"/></linearGradient>')
     o.append(f'<rect width="{W}" height="{H}" fill="url(#{gid})" style="mix-blend-mode:multiply"/>')
     # soot plume from the forge chimney
     for i in range(6):
         x, y, r = 540 + i * 26, 630 - i * 22, 14 + i * 7
-        o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{P.st["soot"]}" opacity="{0.28 - i*0.04:.2f}" style="filter:blur(6px)"/>')
+        o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{P.st["soot"]}" opacity="{(0.28 - i*0.04) * t:.2f}" style="filter:blur(6px)"/>')
+    if t > 1.1:
+        # 80:20: soot streaks below every chimney, darker street edges, extra candle/lantern light, a faint rune glow at the well
+        for (cx, cy) in [(250, 320), (600, 260), (1250, 720), (1420, 800), (320, 700), (1210, 100), (1110, 300), (1450, 420)]:
+            o.append(f'<ellipse cx="{cx+18}" cy="{cy+16}" rx="22" ry="10" fill="{P.st["soot"]}" opacity="0.22" transform="rotate(35 {cx+18} {cy+16})" style="filter:blur(4px)"/>')
+        main, north, south, lane = road_paths()
+        for d in (main, north, south):
+            o.append(f'<path d="{d}" fill="none" stroke="{P.st["soot"]}" stroke-width="110" opacity="0.07" style="filter:blur(10px)"/>')
+        for (x, y, r, op) in [(760, 560, 60, 0.3), (1300, 540, 60, 0.3), (980, 300, 50, 0.25), (1240, 470, 40, 0.35), (1120, 430, 34, 0.35)]:
+            o.append(lamp_glow(P, x, y, r, P.st["glow"], op))
+        o.append(f'<circle cx="960" cy="560" r="48" fill="none" stroke="#c9a04a" stroke-width="2" opacity="0.55" stroke-dasharray="6 5"/>')
+        o.append(lamp_glow(P, 960, 560, 70, "#e8c070", 0.25))
     for (x, y, r, op) in [(515, 860, 240, 0.55), (515, 856, 90, 0.75), (1036, 492, 130, 0.38), (1180, 470, 110, 0.3),
                           (520, 650, 70, 0.4), (1700, 548, 60, 0.18)]:
-        o.append(lamp_glow(P, x, y, r, P.st["glow"], op))
+        o.append(lamp_glow(P, x, y, r, P.st["glow"], min(op * g, 0.9)))
     o.append(lamp_glow(P, 515, 856, 40, P.st["glow2"], 0.8))
     rnd = random.Random(9)
-    for i in range(22):
+    for i in range(int(22 * t)):
         x, y = 515 + rnd.gauss(20, 40), 830 - abs(rnd.gauss(40, 50))
         o.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{rnd.uniform(1,2.4):.1f}" fill="{P.st["glow2"]}" opacity="{rnd.uniform(.5,1):.2f}"/>')
     return "\n".join(o)
@@ -746,7 +759,7 @@ def ink_map_dressing(P):
     P.defs.append(f'<filter id="{fid}"><feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="7"/>'
                   f'<feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.12  0 0 0 1.4 -0.55"/></filter>')
     o.append(f'<rect width="{W}" height="{H}" filter="url(#{fid})" opacity="0.45" style="mix-blend-mode:multiply"/>')
-    o.append(vignette(P, "#3a2410" if P.st.get("noir") else "#6a4a20", 0.5 if P.st.get("noir") else 0.45))
+    o.append(vignette(P, "#3a2410" if P.st.get("noir") else "#6a4a20", round(0.5 + 0.15 * (P.st["noir"] / 0.15 - 1), 3) if P.st.get("noir") else 0.45))
     o.append(f'<rect x="22" y="22" width="{W-44}" height="{H-44}" fill="none" stroke="{ink}" stroke-width="5"/>')
     o.append(f'<rect x="36" y="36" width="{W-72}" height="{H-72}" fill="none" stroke="{ink}" stroke-width="1.6"/>')
     segs = " ".join(f"M{x},22 L{x+20},36" for x in range(40, W - 40, 40))

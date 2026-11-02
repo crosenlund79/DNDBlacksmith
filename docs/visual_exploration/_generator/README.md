@@ -11,6 +11,7 @@ These scripts produced every example PNG in `docs/visual_exploration/`. No AI im
 | `compositions.py` | Town view, main menu and typography sheet for each direction |
 | `build.py` | Builds the HTML pages and calls `render.js` |
 | `render.js` | Playwright screenshot renderer (transparent background for sprites) |
+| `compare_hybrids.py` | 85:15 vs 80:20 side-by-side sheet in `../ink_parchment_gothic_80_20/` |
 | `comparison.py` | Side-by-side sheets in `../comparison/` (all seven styles) |
 | `fetch_fonts.sh` | Downloads the SIL OFL fonts from the `@fontsource` npm packages into `fonts/` (git-ignored) |
 

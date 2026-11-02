@@ -362,8 +362,60 @@ STYLES = {
         fonts=dict(title="IM Fell English SC", heading="IM Fell English", ui="EB Garamond",
                    numbers="EB Garamond", initial="Grenze Gotisch"),
     ),
+    # ------------------------------------------------------------------
+    # Hybrid 80:20 ("Ember & Ash"): same construction as 08, Gothic share raised
+    # from ~15% to ~20% (noir=0.20 scales every noir parameter by 1.33).
+    "ink_parchment_gothic_80_20": dict(
+        key="ink",
+        noir=0.20,
+        name="Ink & Parchment — Gothic-Tempered 80:20",
+        title="Ember & Ash",
+        ink="#20140c",
+        line_w=3.2,
+        outer_w=1.5,
+        rough=2.1,
+        bg="#dcc79a",
+        glow="#e6702a", glow2="#ffc070",
+        rubric="#7e2418",      # muted burgundy
+        soot="#16100b",
+        gilt="#b8923e",        # restrained gold accents
+        ledger_header="Ledger of Ember &amp; Ash · the Forge at Brindlewick",
+        plate_caption="Plate I. — Brindlewick as the light fails; the forge, the inn and the old well still burning.",
+        pal=dict(
+            skin=("#f0dcc0", "#dcb890", "#866b4b"),
+            beard=("#f4ecdc", "#ddd2b8", "#867b63"),
+            hair=("#e0d4bc", "#b8a888", "#6b5e48"),
+            shirt=("#ece0c4", "#d8c8a2", "#867656"),
+            apron=("#d0a880", "#aa7c52", "#614329"),
+            leather=("#c8a47c", "#a07a54", "#584129"),
+            strap=("#9a7650", "#6d5134", "#433321"),
+            metal=("#e6e2d8", "#bcb8aa", "#6b6858"),
+            gold=("#e6c674", "#c69c44", "#6e541e"),
+            cloak=("#b46e66", "#8e3e3c", "#4a1a1a"),
+            tunic=("#94a2b4", "#6a7a92", "#3b4454"),
+            boot=("#a88a68", "#6f543b", "#433323"),
+            wood=("#d0b088", "#aa8a64", "#614b33"),
+            foliage=("#bcc49a", "#909c6c", "#50593b"),
+            foliage2=("#c8c08a", "#a49c62", "#5c5633"),
+            grass=("#e8d9b2", "#dccb9e", "#9b8b66"),
+            road=("#efe0bc", "#ddc99e", "#958463"),
+            roof_a=("#d09a7a", "#ae6e50", "#633b29"),
+            roof_b=("#aab0ac", "#848c88", "#494e4c"),
+            stone=("#e2d6bc", "#c6b698", "#786951"),
+            water=("#b4c8c0", "#8eaaa6", "#546b68"),
+            gem=("#f08a50", "#b02e10", "#4e1004"),
+            fire=("#ffd488", "#e8762a", "#8e2808"),
+        ),
+        rarity=dict(Common="#20140c", Magic="#24409a", Rare="#735800",
+                    Legendary="#9e3a0c", Unique="#5e421c", Set="#26622f"),
+        rarity_dark=dict(Common="#efe4cc", Magic="#8aa6f2", Rare="#f0d060",
+                         Legendary="#ffa050", Unique="#dab470", Set="#7ccc80"),
+        fonts=dict(title="IM Fell English SC", heading="IM Fell English", ui="EB Garamond",
+                   numbers="EB Garamond", initial="Grenze Gotisch"),
+    ),
 }
 
 ORDER = ["01_gothic_noir", "02_warm_storybook", "03_bold_adventure",
          "04_ink_parchment", "05_production_light",
-         "06_ballpoint_sketch", "07_illustrated_sketchbook", "08_ink_parchment_gothic"]
+         "06_ballpoint_sketch", "07_illustrated_sketchbook", "08_ink_parchment_gothic",
+         "ink_parchment_gothic_80_20"]

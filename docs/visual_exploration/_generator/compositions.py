@@ -335,15 +335,35 @@ def menu_inkgothic(st):
         f'<div class="b{" hot" if i == 1 else ""}{" dim" if i == 0 else ""}"><span class="n">{["I","II","III","IV","V","VI"][i]}.</span>{b}'
         f'<span class="lead"></span><span class="pg">fol. {folios[i]}</span></div>' for i, b in enumerate(BUTTONS))
     svg, _ = T.town_svg(st)
+    t = st["noir"] / 0.15
+    title = st["title"].replace("&", "&amp;")
+    if title.startswith("The Smith"):
+        tblock = '<span class="ini">T</span>he Smith\'s<br>Chronicle'
+    else:
+        first, rest = title.split(" ", 1)
+        tblock = f'<span class="ini">{first[0]}</span>{first[1:]}<br>{rest}'
+    header = st.get("ledger_header", "Ledger of the Forge at Brindlewick · Anno XXXI")
+    caption = st.get("plate_caption", "Plate I. — Brindlewick at the turning of the day, the forge yet burning.")
+    gilt = st.get("gilt")
+    orn = ""
+    if gilt:
+        # restrained gold + dark iron corner ornaments on both pages
+        def corner(x, y, sx, sy):
+            return (f'<g transform="translate({x},{y}) scale({sx},{sy})"><path d="M0,0 h70 M0,0 v70 M8,8 h40 M8,8 v40" stroke="{ink}" stroke-width="3" fill="none"/>'
+                    f'<path d="M14,14 q20,0 26,20 q-20,-4 -26,-20 Z M14,14 q0,20 20,26 q-4,-20 -20,-26 Z" fill="{gilt}" opacity=".85"/>'
+                    f'<circle cx="8" cy="8" r="5" fill="{gilt}"/></g>')
+        cs = "".join(corner(x, y, sx, sy) for (x, y, sx, sy) in
+                     [(92, 64, 1, 1), (1838, 64, -1, 1), (92, 1016, 1, -1), (1838, 1016, -1, -1), (952, 64, -1, 1), (988, 64, 1, 1), (952, 1016, -1, -1), (988, 1016, 1, -1)])
+        orn = f'<svg width="1920" height="1080" style="position:absolute;inset:0;pointer-events:none">{cs}</svg>'
     body = f"""
-<div style="position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 8% 100%,rgba(224,120,42,.55),transparent 60%),
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 8% 100%,rgba(224,120,42,{0.55 + 0.15 * (t - 1):.2f}),transparent 60%),
  radial-gradient(ellipse 30% 30% at 96% 4%,rgba(255,192,112,.28),transparent 70%),
  repeating-linear-gradient(90deg,#24160c 0 180px,#2a1a0e 180px 360px),#1e120a"></div>
-<svg width="1920" height="1080" style="position:absolute;inset:0">{embers(70, 0, 520, 600, 1080, st["glow2"], 7)}{embers(40, 0, 700, 400, 1080, st["glow"], 8)}</svg>
+<svg width="1920" height="1080" style="position:absolute;inset:0">{embers(int(70 * t), 0, 520, 600, 1080, st["glow2"], 7)}{embers(int(40 * t), 0, 700, 400, 1080, st["glow"], 8)}</svg>
 <div class="book">
  <div class="page l">
-  <div class="hdr">Ledger of the Forge at Brindlewick · Anno XXXI</div>
-  <div class="t"><span class="ini">T</span>he Smith's<br>Chronicle</div>
+  <div class="hdr">{header}</div>
+  <div class="t">{tblock}</div>
   <div class="rule">— ⁂ —</div>
   <div class="colh"><span>Entry</span><span>Folio</span></div>
   <div class="menu">{rows}</div>
@@ -352,14 +372,15 @@ def menu_inkgothic(st):
  </div>
  <div class="page r">
   <div class="map">{svg}</div>
-  <div class="cap">Plate I. — Brindlewick at the turning of the day, the forge yet burning.</div>
+  <div class="cap">{caption}</div>
   <img src="{sprite_url(st,'blacksmith')}" style="position:absolute;left:110px;top:590px;width:340px">
   <img src="{sprite_url(st,'sword')}" style="position:absolute;left:430px;top:600px;width:200px">
   <img src="{sprite_url(st,'armor')}" style="position:absolute;left:600px;top:610px;width:220px">
   <div class="plate" style="left:150px">Fig. 1 — The Smith</div><div class="plate" style="left:520px">Fig. 2 &amp; 3 — Commissions</div>
  </div>
 </div>
-<div style="position:absolute;inset:0;box-shadow:inset 0 0 200px 40px rgba(10,6,3,.75);pointer-events:none"></div>
+{orn}
+<div style="position:absolute;inset:0;box-shadow:inset 0 0 200px 40px rgba(10,6,3,{0.75 + 0.1 * (t - 1):.2f});pointer-events:none"></div>
 """
     pg = "radial-gradient(ellipse at 50% 40%,#f0e0b8,#dcc290 68%,#b08c5c)"
     css = f"""
@@ -386,6 +407,7 @@ def menu_inkgothic(st):
 .seal{{position:absolute;right:46px;bottom:30px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#b2401e,#7a1e0c 70%);
  color:#e8b48a;font-family:'{f['initial']}';font-size:58px;font-weight:800;text-align:center;line-height:92px;box-shadow:0 3px 6px rgba(0,0,0,.45);transform:rotate(-12deg)}}
 .foot{{position:absolute;bottom:38px;width:100%;text-align:center;font-family:'{f['ui']}';font-style:italic;font-size:20px;color:#5a4028}}
+{".rule{color:" + gilt + "!important;text-shadow:0 0 6px rgba(230,112,42,.35)} .colh{border-bottom-color:" + gilt + "!important} .ini{border-color:" + gilt + "!important} .map{border-color:" + ink + ";outline-color:" + gilt + "!important}" if gilt else ""}
 .map{{position:absolute;left:50px;top:56px;width:780px;height:439px;overflow:hidden;border:3px solid {ink};outline:1px solid {ink};outline-offset:6px}}
 .map svg{{width:1920px;height:1080px;transform:scale(.40625);transform-origin:0 0}}
 .cap{{position:absolute;left:60px;top:524px;width:760px;text-align:center;font-family:'{f['heading']}';font-style:italic;font-size:25px;color:#3e2a18}}
@@ -506,6 +528,10 @@ body{{background:{th['bg']}}}
         css += ".items .sb{color:#c8b090!important}"
     if st.get("noir"):
         css += NOIR_FONT_CSS
+        if st.get("gilt"):
+            css += (f".title .ini{{color:{st['rubric']};text-shadow:0 0 14px rgba(230,112,42,.6)}} .h2{{color:{st['rubric']}!important}}"
+                    f" .col{{outline:1px solid {st['gilt']};outline-offset:-8px}} .lbl{{border-bottom-color:{st['gilt']}88!important}}"
+                    ".dlg{box-shadow:inset 0 0 40px rgba(230,112,42,.22)!important}")
     if k in ("ballpoint", "sketchbook"):
         css += FONT_EXTRA[k] + ".digits{white-space:nowrap;font-size:36px}"
     return body, 1920, 1080, css

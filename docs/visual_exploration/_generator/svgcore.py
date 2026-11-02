@@ -190,13 +190,14 @@ class Painter:
         elif k == "ink":
             out.append(f'<path d="{d}" fill="{b}" opacity="0.92"/>')
             noir = self.st.get("noir")
+            t = (noir or 0) / 0.15   # 1.0 = the 85:15 hybrid, 1.33 = 80:20
             if not flat:
-                out.append(self._crescent(d, lx * s * 0.9, ly * s * 0.9, sh, 0.62 if noir else 0.55))
+                out.append(self._crescent(d, lx * s * 0.9, ly * s * 0.9, sh, 0.55 + 0.07 * t if noir else 0.55))
                 out.append(self._crescent(d, lx * s * 1.4, ly * s * 1.4, f"url(#{self.hatch_id})", 0.9))
-                out.append(self._crescent(d, lx * s * 0.6, ly * s * 0.6, f"url(#{self.xhatch_id})", 0.7 if noir else 0.6))
+                out.append(self._crescent(d, lx * s * 0.6, ly * s * 0.6, f"url(#{self.xhatch_id})", 0.6 + 0.1 * t if noir else 0.6))
                 if noir and role in ("metal", "gold", "gem", "fire"):
                     # Gothic Noir seasoning: thin ember rim-light on metal, gems and fire only
-                    out.append(self._crescent(d, 0, -s * 0.4, self.st["glow"], 0.4))
+                    out.append(self._crescent(d, 0, -s * 0.4, self.st["glow"], 0.4 * t))
             if line and lw:
                 out.append(f'<path d="{d}" fill="none" stroke="{self.ink}" stroke-width="{lw:.1f}" '
                            f'stroke-linejoin="round" stroke-linecap="round"/>')
@@ -319,6 +320,8 @@ class Painter:
 </filter>''')
             if self.st.get("noir"):
                 # hybrid: heavier silhouette line + soot grain (measured Gothic Noir weight)
+                t = self.st["noir"] / 0.15
+                sa, so = 1.0 + 0.45 * (t - 1), -0.72 - 0.18 * (t - 1)
                 self.defs[-1] = f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%">
   <feTurbulence type="fractalNoise" baseFrequency="{0.05/sc:.4f}" numOctaves="2" seed="4" result="n"/>
   <feDisplacementMap in="SourceGraphic" in2="n" scale="{self.st['rough']*sc:.1f}" xChannelSelector="R" yChannelSelector="G" result="d"/>
@@ -328,7 +331,7 @@ class Painter:
   <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 -1.3 0.8" result="g2"/>
   <feComposite in="g2" in2="d" operator="in" result="g3"/>
   <feTurbulence type="fractalNoise" baseFrequency="{0.035/sc:.4f}" numOctaves="3" seed="19" result="soot"/>
-  <feColorMatrix in="soot" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 1.0 -0.72" result="s2"/>
+  <feColorMatrix in="soot" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 {sa:.2f} {so:.2f}" result="s2"/>
   <feComposite in="s2" in2="d" operator="in" result="s3"/>
   <feMerge><feMergeNode in="ol"/><feMergeNode in="d"/><feMergeNode in="s3"/><feMergeNode in="g3"/></feMerge>
 </filter>'''

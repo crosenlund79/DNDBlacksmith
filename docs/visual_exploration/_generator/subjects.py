@@ -140,9 +140,15 @@ def blacksmith(P, shadow=True, detail=True):
     if P.st.get("noir"):
         # soot smudges and wear: forearms, apron hem, scalp, hammer head
         soot = P.st["soot"]
+        t = P.st["noir"] / 0.15
+        if t > 1.1:
+            # 80:20: extra scratches, cracked apron leather, scorched hammer face
+            o.append(P.detail("M196,300 l10,8 M206,322 l14,4 M300,318 l-12,10 M318,292 l-6,12", "apron", 0.6, 0.8))
+            o.append(P.detail(f"M{256-112*sh-30},432 l12,10 M{256-112*sh+8},430 l10,14", "metal", 0.6, 0.9))
+            o.append(P.detail(f"M{256+92*sh-22},206 l18,-6 M{256+92*sh},214 l14,6", "metal", 0.6, 0.9))
         for (x, y, rx, ry, op) in [(152, 326, 10, 6, .35), (364, 330, 12, 7, .35), (230, 336, 18, 8, .3), (290, 340, 14, 6, .3),
                                    (270, 178, 9, 5, .22), (256 - 112 * sh, 444, 30, 10, .25), (240, 290, 8, 5, .25)]:
-            o.append(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{soot}" opacity="{op}" style="filter:blur(2px)"/>')
+            o.append(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{soot}" opacity="{min(op * t, 0.5):.2f}" style="filter:blur(2px)"/>')
     return "\n".join(o)
 
 
@@ -232,6 +238,12 @@ def sword(P):
         o.append(P.detail(f"M250,{y} l6,-8 l6,8 M253,{y-14} l6,0", "gold", 0.5, 0.8))
     guard = [(170, 326), (186, 310), (226, 318), (256, 312), (286, 318), (326, 310), (342, 326),
              (326, 344), (286, 336), (256, 346), (226, 336), (186, 344)]
+    if P.st.get("noir") and P.st["noir"] / 0.15 > 1.1:
+        # 80:20: ember-lit runes along the fuller (magical equipment emphasis) + nicks in the edge
+        runes = " ".join(f"M250,{y} l6,-8 l6,8 M253,{y-14} l6,0" for y in (280, 250, 220, 190, 160))
+        o.append(f'<path d="{runes}" fill="none" stroke="{P.st["glow"]}" stroke-width="5" opacity="0.45" style="filter:blur(3px)"/>')
+        o.append(f'<path d="{runes}" fill="none" stroke="{P.st["glow2"]}" stroke-width="1.6"/>')
+        o.append(P.detail("M273,150 l-5,3 M239,210 l5,2 M274,240 l-4,4", "metal", 0.6))
     o.append(P.shape(smooth(guard), "gold", s=6))
     o.append(P.shape(ell(166, 326, 13, 13), "gold", s=4))
     o.append(P.shape(ell(346, 326, 13, 13), "gold", s=4))
@@ -288,6 +300,10 @@ def armor(P):
     # rivets
     for (x, y) in [(196, 168), (316, 168), (178, 294), (334, 294), (256, 176)]:
         o.append(P.spot(ell(x, y, 4.5, 4.5), P.c("gold", 1)))
+    if P.st.get("noir") and P.st["noir"] / 0.15 > 1.1:
+        # 80:20: scratches, a dent and a faint ember-lit rune on the emblem
+        o.append(P.detail("M300,170 l22,18 M206,240 l18,10 M318,300 l-14,12 M236,372 l16,6 M282,398 l-12,8", "metal", 0.5, 0.9))
+        o.append(f'<path d="M248,282 l8,-14 l8,14 M252,276 h8" fill="none" stroke="{P.st["glow"]}" stroke-width="2.2" opacity="0.8" style="filter:drop-shadow(0 0 4px {P.st["glow"]})"/>')
     if P.st.get("noir"):
         o.append(P.detail("M200,200 q8,30 4,60 M312,200 q-8,30 -4,60 M232,300 l10,24 M286,296 l-6,20", "metal", 0.8, 0.8))
         for (x, y) in [(214, 330), (300, 186), (330, 260)]:

@@ -14,7 +14,8 @@ COMPS = ["town_view", "menu_screen", "font_reference"]
 
 def label(d, x, y, sk):
     st = STYLES[sk]
-    d.text((x, y), f"{sk[:2]}  {st['name']}"[:34], fill=(30, 26, 22), font=F)
+    tag = sk[:2] if sk[0].isdigit() else "80:20"
+    d.text((x, y), f"{tag}  {st['name']}"[:34], fill=(30, 26, 22), font=F)
     d.text((x, y + 26), st["title"], fill=(100, 90, 80), font=F2)
 
 
