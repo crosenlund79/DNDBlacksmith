@@ -634,6 +634,9 @@ def overlay(P):
         o.append(vignette(P, "#3a2410", 0.5))
     elif k == "bold":
         o.append(lamp_glow(P, 515, 855, 90, P.st["glow"], 0.6))
+    elif k == "ink" and P.st.get("noir"):
+        o.append(noir_seasoning(P))
+        o.append(ink_map_dressing(P))
     elif k == "ink":
         o.append(lamp_glow(P, 515, 855, 70, P.st["glow"], 0.25).replace("screen", "multiply"))
         o.append(ink_map_dressing(P))
@@ -712,6 +715,29 @@ def vignette(P, col, op):
     return f'<rect width="{W}" height="{H}" fill="url(#{gid})"/>'
 
 
+def noir_seasoning(P):
+    """The ~15% Gothic Noir layer for the hybrid town: late-afternoon dimming,
+    soot over the smithy, warm forge/inn glows and a few embers. Daytime readability stays."""
+    o = []
+    gid = uid("dusk")
+    P.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3420" stop-opacity="0.06"/>'
+                  f'<stop offset="1" stop-color="#2a1a10" stop-opacity="0.26"/></linearGradient>')
+    o.append(f'<rect width="{W}" height="{H}" fill="url(#{gid})" style="mix-blend-mode:multiply"/>')
+    # soot plume from the forge chimney
+    for i in range(6):
+        x, y, r = 540 + i * 26, 630 - i * 22, 14 + i * 7
+        o.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{P.st["soot"]}" opacity="{0.28 - i*0.04:.2f}" style="filter:blur(6px)"/>')
+    for (x, y, r, op) in [(515, 860, 240, 0.55), (515, 856, 90, 0.75), (1036, 492, 130, 0.38), (1180, 470, 110, 0.3),
+                          (520, 650, 70, 0.4), (1700, 548, 60, 0.18)]:
+        o.append(lamp_glow(P, x, y, r, P.st["glow"], op))
+    o.append(lamp_glow(P, 515, 856, 40, P.st["glow2"], 0.8))
+    rnd = random.Random(9)
+    for i in range(22):
+        x, y = 515 + rnd.gauss(20, 40), 830 - abs(rnd.gauss(40, 50))
+        o.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{rnd.uniform(1,2.4):.1f}" fill="{P.st["glow2"]}" opacity="{rnd.uniform(.5,1):.2f}"/>')
+    return "\n".join(o)
+
+
 def ink_map_dressing(P):
     ink, rub = P.ink, P.st["rubric"]
     o = []
@@ -720,7 +746,7 @@ def ink_map_dressing(P):
     P.defs.append(f'<filter id="{fid}"><feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="7"/>'
                   f'<feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.12  0 0 0 1.4 -0.55"/></filter>')
     o.append(f'<rect width="{W}" height="{H}" filter="url(#{fid})" opacity="0.45" style="mix-blend-mode:multiply"/>')
-    o.append(vignette(P, "#6a4a20", 0.45))
+    o.append(vignette(P, "#3a2410" if P.st.get("noir") else "#6a4a20", 0.6 if P.st.get("noir") else 0.45))
     o.append(f'<rect x="22" y="22" width="{W-44}" height="{H-44}" fill="none" stroke="{ink}" stroke-width="5"/>')
     o.append(f'<rect x="36" y="36" width="{W-72}" height="{H-72}" fill="none" stroke="{ink}" stroke-width="1.6"/>')
     segs = " ".join(f"M{x},22 L{x+20},36" for x in range(40, W - 40, 40))

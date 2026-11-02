@@ -189,10 +189,14 @@ class Painter:
                            f'stroke-linejoin="round"/>')
         elif k == "ink":
             out.append(f'<path d="{d}" fill="{b}" opacity="0.92"/>')
+            noir = self.st.get("noir")
             if not flat:
-                out.append(self._crescent(d, lx * s * 0.9, ly * s * 0.9, sh, 0.55))
+                out.append(self._crescent(d, lx * s * 0.9, ly * s * 0.9, sh, 0.68 if noir else 0.55))
                 out.append(self._crescent(d, lx * s * 1.4, ly * s * 1.4, f"url(#{self.hatch_id})", 0.9))
-                out.append(self._crescent(d, lx * s * 0.6, ly * s * 0.6, f"url(#{self.xhatch_id})", 0.6))
+                out.append(self._crescent(d, lx * s * 0.6, ly * s * 0.6, f"url(#{self.xhatch_id})", 0.75 if noir else 0.6))
+                if noir and role in ("metal", "gold", "gem", "fire"):
+                    # Gothic Noir seasoning: thin ember rim-light on metal, gems and fire only
+                    out.append(self._crescent(d, 0, -s * 0.4, self.st["glow"], 0.4))
             if line and lw:
                 out.append(f'<path d="{d}" fill="none" stroke="{self.ink}" stroke-width="{lw:.1f}" '
                            f'stroke-linejoin="round" stroke-linecap="round"/>')
@@ -313,6 +317,21 @@ class Painter:
   <feComposite in="g2" in2="d" operator="in" result="g3"/>
   <feMerge><feMergeNode in="d"/><feMergeNode in="g3"/></feMerge>
 </filter>''')
+            if self.st.get("noir"):
+                # hybrid: heavier silhouette line + soot grain (measured Gothic Noir weight)
+                self.defs[-1] = f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%">
+  <feTurbulence type="fractalNoise" baseFrequency="{0.05/sc:.4f}" numOctaves="2" seed="4" result="n"/>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="{self.st['rough']*sc:.1f}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+  <feMorphology in="d" operator="dilate" radius="{self.st['outer_w']*sc:.1f}" result="dil"/>
+  <feFlood flood-color="{self.ink}"/><feComposite in2="dil" operator="in" result="ol"/>
+  <feTurbulence type="fractalNoise" baseFrequency="{0.7/sc:.3f}" numOctaves="2" seed="11" result="grain"/>
+  <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 -1.3 0.8" result="g2"/>
+  <feComposite in="g2" in2="d" operator="in" result="g3"/>
+  <feTurbulence type="fractalNoise" baseFrequency="{0.035/sc:.4f}" numOctaves="3" seed="19" result="soot"/>
+  <feColorMatrix in="soot" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 1.25 -0.82" result="s2"/>
+  <feComposite in="s2" in2="d" operator="in" result="s3"/>
+  <feMerge><feMergeNode in="ol"/><feMergeNode in="d"/><feMergeNode in="s3"/><feMergeNode in="g3"/></feMerge>
+</filter>'''
         elif k == "ballpoint":
             # pen wobble + uneven ink pressure (alpha speckle on strokes only)
             self.defs.append(f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%">

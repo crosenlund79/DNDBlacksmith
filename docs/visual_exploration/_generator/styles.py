@@ -1,4 +1,4 @@
-"""Style definitions for the seven visual directions.
+"""Style definitions for the eight visual directions (07 + one hybrid).
 
 Every role maps to (light, base, shadow).  The same subject geometry is
 rendered through each style so the directions stay directly comparable.
@@ -312,8 +312,58 @@ STYLES = {
         fonts=dict(title="Fondamento", heading="Amatic SC", ui="Shantell Sans",
                    numbers="Shantell Sans"),
     ),
+    # ------------------------------------------------------------------
+    # Hybrid: ~85% Ink & Parchment + ~15% Gothic Noir.  Uses the "ink" painter
+    # (key="ink") so every Ink & Parchment rule is inherited; `noir` switches on
+    # the measured Gothic Noir seasoning (heavier line, deeper hatch, soot grain,
+    # ember rim-light on metal/fire/gems, warmer glows, firmer vignette).
+    "08_ink_parchment_gothic": dict(
+        key="ink",
+        noir=0.15,
+        name="Ink & Parchment — Gothic-Tempered",
+        title="The Smith's Chronicle",
+        ink="#24170e",
+        line_w=3.0,
+        outer_w=1.2,
+        rough=2.0,
+        bg="#e2cea2",
+        glow="#e0782a", glow2="#ffc070",
+        rubric="#8e2a16",
+        soot="#1a120c",
+        pal=dict(
+            skin=("#ecd4b4", "#d4ac80", "#8e6a48"),
+            beard=("#efe6d2", "#d2c6aa", "#8e8064"),
+            hair=("#d8cab0", "#ac9a78", "#6e5e44"),
+            shirt=("#e6d8b8", "#cdba92", "#8e7a56"),
+            apron=("#c49c74", "#9a6e48", "#5e3e24"),
+            leather=("#bc966e", "#926c48", "#56402a"),
+            strap=("#8e6a46", "#6a4c30", "#3e2c1a"),
+            metal=("#dcd8cc", "#a8a496", "#5e5a4e"),
+            gold=("#dcbc6c", "#b88e3a", "#6e521c"),
+            cloak=("#b06854", "#8a3e2c", "#52221a"),
+            tunic=("#8a96a6", "#5e6c80", "#3a4454"),
+            boot=("#9a7c5a", "#6e523a", "#3e2e1e"),
+            wood=("#c8a67c", "#9e7e58", "#64492e"),
+            foliage=("#b2ba8e", "#849064", "#525e3c"),
+            foliage2=("#c0b680", "#989058", "#625c34"),
+            grass=("#e2d1a6", "#d4c193", "#b29e72"),
+            road=("#e8d6ae", "#d4bf92", "#ae9870"),
+            roof_a=("#c48c6c", "#9e5e44", "#663a28"),
+            roof_b=("#9ca29e", "#767e7a", "#4c5250"),
+            stone=("#d8caae", "#b8a688", "#84725a"),
+            water=("#a6bab4", "#7e9a96", "#56706c"),
+            gem=("#f08a50", "#b8360f", "#5a1406"),
+            fire=("#ffcf80", "#e0782a", "#962e0a"),
+        ),
+        rarity=dict(Common="#24170e", Magic="#26449a", Rare="#7a5e00",
+                    Legendary="#a8400e", Unique="#664820", Set="#2a6a34"),
+        rarity_dark=dict(Common="#efe4cc", Magic="#8aa6f2", Rare="#f0d060",
+                         Legendary="#ff9a48", Unique="#d8ae6a", Set="#7ccc80"),
+        fonts=dict(title="IM Fell English SC", heading="IM Fell English", ui="EB Garamond",
+                   numbers="EB Garamond", initial="Grenze Gotisch"),
+    ),
 }
 
 ORDER = ["01_gothic_noir", "02_warm_storybook", "03_bold_adventure",
          "04_ink_parchment", "05_production_light",
-         "06_ballpoint_sketch", "07_illustrated_sketchbook"]
+         "06_ballpoint_sketch", "07_illustrated_sketchbook", "08_ink_parchment_gothic"]

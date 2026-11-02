@@ -43,6 +43,8 @@ def embers(n, x0, x1, y0, y1, col, seed=1):
 # ======================================================================= MENUS
 def menu(st):
     k = st["key"]
+    if st.get("noir"):
+        return menu_inkgothic(st)
     return {"gothic": menu_gothic, "storybook": menu_storybook, "bold": menu_bold,
             "ballpoint": menu_ballpoint, "sketchbook": menu_sketchbook,
             "ink": menu_ink, "prod": menu_prod}[k](st)
@@ -311,6 +313,87 @@ FONT_EXTRA = dict(
 FONT_EXTRA = {k: v.replace("{{", "{").replace("}}", "}") for k, v in FONT_EXTRA.items()}
 
 
+NOIR_FONT_CSS = """
+body{background:radial-gradient(ellipse at 18% 100%,rgba(224,120,42,.35),transparent 45%),radial-gradient(ellipse at 50% 40%,#e8d6ac,#d2b886 70%,#a8875a)!important}
+.col{border:3px solid #24170e!important;box-shadow:inset 0 0 60px rgba(60,36,16,.35),0 6px 18px rgba(20,12,6,.35);background:rgba(236,222,186,.7)!important}
+.title .ini{font-family:'Grenze Gotisch';font-weight:800;color:#8e2a16;font-size:1.25em;line-height:.8;text-shadow:0 0 10px rgba(224,120,42,.45)}
+.h2{color:#8e2a16!important}
+.dlg{background:linear-gradient(180deg,#2a1c12,#1a120c)!important;border:2px solid #6e4a2a!important;box-shadow:inset 0 0 30px rgba(224,120,42,.15)}
+.dlg .line{color:#efe4cc!important} .dlg .spk{color:#ff9a48!important} .dlg .opt{color:#f0d060!important}
+.tip{background:linear-gradient(180deg,#2a1c12,#140e08)!important;border:1px solid #6e4a2a!important}
+.bt.h{box-shadow:0 0 14px rgba(224,120,42,.45)}
+.digits{text-shadow:0 1px 0 rgba(255,255,255,.3)}
+"""
+
+
+def menu_inkgothic(st):
+    """Hybrid menu: a smith's ledger on a forge-lit workbench (~15% Gothic Noir in lighting and contrast)."""
+    f = st["fonts"]
+    rub, ink = st["rubric"], st["ink"]
+    folios = ["xii", "xiv", "xxi", "xxx", "xli", "l"]
+    rows = "".join(
+        f'<div class="b{" hot" if i == 1 else ""}{" dim" if i == 0 else ""}"><span class="n">{["I","II","III","IV","V","VI"][i]}.</span>{b}'
+        f'<span class="lead"></span><span class="pg">fol. {folios[i]}</span></div>' for i, b in enumerate(BUTTONS))
+    svg, _ = T.town_svg(st)
+    body = f"""
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 8% 100%,rgba(224,120,42,.55),transparent 60%),
+ radial-gradient(ellipse 30% 30% at 96% 4%,rgba(255,192,112,.28),transparent 70%),
+ repeating-linear-gradient(90deg,#24160c 0 180px,#2a1a0e 180px 360px),#1e120a"></div>
+<svg width="1920" height="1080" style="position:absolute;inset:0">{embers(70, 0, 520, 600, 1080, st["glow2"], 7)}{embers(40, 0, 700, 400, 1080, st["glow"], 8)}</svg>
+<div class="book">
+ <div class="page l">
+  <div class="hdr">Ledger of the Forge at Brindlewick · Anno XXXI</div>
+  <div class="t"><span class="ini">T</span>he Smith's<br>Chronicle</div>
+  <div class="rule">— ⁂ —</div>
+  <div class="colh"><span>Entry</span><span>Folio</span></div>
+  <div class="menu">{rows}</div>
+  <div class="seal">B</div>
+  <div class="foot">{VERSION}</div>
+ </div>
+ <div class="page r">
+  <div class="map">{svg}</div>
+  <div class="cap">Plate I. — Brindlewick at the turning of the day, the forge yet burning.</div>
+  <img src="{sprite_url(st,'blacksmith')}" style="position:absolute;left:110px;top:590px;width:340px">
+  <img src="{sprite_url(st,'sword')}" style="position:absolute;left:430px;top:600px;width:200px">
+  <img src="{sprite_url(st,'armor')}" style="position:absolute;left:600px;top:610px;width:220px">
+  <div class="plate" style="left:150px">Fig. 1 — The Smith</div><div class="plate" style="left:520px">Fig. 2 &amp; 3 — Commissions</div>
+ </div>
+</div>
+<div style="position:absolute;inset:0;box-shadow:inset 0 0 200px 40px rgba(10,6,3,.75);pointer-events:none"></div>
+"""
+    pg = "radial-gradient(ellipse at 50% 40%,#f0e0b8,#dcc290 68%,#b08c5c)"
+    css = f"""
+.book{{position:absolute;left:70px;top:46px;width:1780px;height:988px}}
+.page{{position:absolute;top:0;width:880px;height:988px;background:{pg}}}
+.page.l{{left:0;border-radius:10px 0 0 10px;box-shadow:0 24px 60px rgba(0,0,0,.75),inset -70px 0 70px -30px rgba(70,40,14,.6),inset 0 0 110px rgba(70,40,14,.45)}}
+.page.r{{left:900px;border-radius:0 10px 10px 0;box-shadow:0 24px 60px rgba(0,0,0,.75),inset 70px 0 70px -30px rgba(70,40,14,.6),inset 0 0 110px rgba(70,40,14,.45)}}
+.page.l::after{{content:"";position:absolute;left:30px;bottom:60px;width:170px;height:90px;border-radius:50%;background:rgba(26,18,12,.12);filter:blur(10px)}}
+.hdr{{text-align:center;margin-top:48px;font-family:'{f['heading']}';font-style:italic;font-size:24px;color:#4a3420;letter-spacing:1px}}
+.t{{margin:34px 0 0 104px;font-family:'{f['title']}';font-size:104px;line-height:1.0;color:{ink}}}
+.ini{{float:left;font-family:'{f['initial']}';font-weight:800;font-size:236px;line-height:.8;color:{rub};margin:8px 20px 0 -12px;padding:4px 16px 12px;
+ border:3px double {ink};background:radial-gradient(circle at 50% 60%,rgba(224,120,42,.18),transparent 70%),repeating-linear-gradient(45deg,rgba(36,23,14,.14) 0 2px,transparent 2px 6px);
+ text-shadow:0 0 14px rgba(224,120,42,.45),2px 2px 0 #e2cea2}}
+.rule{{clear:both;text-align:center;font-family:'{f['heading']}';font-size:34px;color:{rub};margin-top:24px}}
+.colh{{display:flex;justify-content:space-between;margin:10px 110px 0 120px;font-family:'{f['ui']}';font-style:italic;font-size:20px;color:#5a4028;border-bottom:2px solid {ink};padding-bottom:2px}}
+.menu{{margin:8px 110px 0 120px}}
+.b{{display:flex;align-items:baseline;font-family:'{f['heading']}';font-size:42px;color:{ink};height:66px;border-bottom:1px solid rgba(36,23,14,.25)}}
+.b .n{{font-family:'{f['title']}';color:{rub};width:76px;font-size:32px}}
+.b .lead{{flex:1;border-bottom:2px dotted rgba(36,23,14,.45);margin:0 14px;transform:translateY(-10px)}}
+.b .pg{{font-family:'{f['ui']}';font-style:italic;font-size:26px}}
+.b.hot{{color:{rub};font-style:italic;text-shadow:0 0 12px rgba(224,120,42,.35);background:linear-gradient(90deg,rgba(224,120,42,.16),transparent 80%)}}
+.b.hot .lead{{border-color:{rub}}}
+.b.dim{{color:rgba(36,23,14,.42)}} .b.dim .n{{color:rgba(142,42,22,.45)}}
+.seal{{position:absolute;right:46px;bottom:30px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#b2401e,#7a1e0c 70%);
+ color:#e8b48a;font-family:'{f['initial']}';font-size:58px;font-weight:800;text-align:center;line-height:92px;box-shadow:0 3px 6px rgba(0,0,0,.45);transform:rotate(-12deg)}}
+.foot{{position:absolute;bottom:38px;width:100%;text-align:center;font-family:'{f['ui']}';font-style:italic;font-size:20px;color:#5a4028}}
+.map{{position:absolute;left:50px;top:56px;width:780px;height:439px;overflow:hidden;border:3px solid {ink};outline:1px solid {ink};outline-offset:6px}}
+.map svg{{width:1920px;height:1080px;transform:scale(.40625);transform-origin:0 0}}
+.cap{{position:absolute;left:60px;top:524px;width:760px;text-align:center;font-family:'{f['heading']}';font-style:italic;font-size:25px;color:#3e2a18}}
+.plate{{position:absolute;top:930px;font-family:'{f['heading']}';font-style:italic;font-size:20px;color:#4a3420}}
+"""
+    return body, 1920, 1080, css
+
+
 def paper_url(st, which=None):
     folder = next(k for k, v in __import__("styles").STYLES.items() if v is st)
     return f"file://{ROOT}/{folder}/{which or st['paper']}"
@@ -324,6 +407,8 @@ def fonts(st):
         th["bg"] = f"url('{paper_url(st)}') repeat"
     rar = st["rarity"]
     title = st["title"].replace("&", "&amp;")
+    if st.get("noir"):
+        title = f'<span class="ini">{title[0]}</span>{title[1:]}'
     tip_rar = st.get("rarity_dark", rar)
 
     def item_rows(rset, on_dark):
@@ -332,6 +417,9 @@ def fonts(st):
             outline = ""
             if k == "bold":
                 outline = "-webkit-text-stroke:3px #1c1a2e;paint-order:stroke fill;"
+            if st.get("noir") and r == "Legendary":
+                outline = ("text-shadow:0 0 8px rgba(224,120,42,.75),0 0 2px rgba(255,192,112,.9);" if on_dark
+                           else "text-shadow:0 0 6px rgba(224,120,42,.45);")
             rows += (f'<div class="it"><span class="tag" style="color:{rset[r]};border-color:{rset[r]}">{r}</span>'
                      f'<span class="nm" style="color:{rset[r]};{outline}">{name}</span>'
                      f'<span class="sb" style="color:{"#a8a090" if on_dark else th["muted"]}">{sub}</span></div>')
@@ -416,6 +504,8 @@ body{{background:{th['bg']}}}
 """
     if k == "storybook":
         css += ".items .sb{color:#c8b090!important}"
+    if st.get("noir"):
+        css += NOIR_FONT_CSS
     if k in ("ballpoint", "sketchbook"):
         css += FONT_EXTRA[k] + ".digits{white-space:nowrap;font-size:36px}"
     return body, 1920, 1080, css

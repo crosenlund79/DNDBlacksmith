@@ -137,6 +137,12 @@ def blacksmith(P, shadow=True, detail=True):
     o.append(P.shape(ell(238, 240, 20, 10), "beard", s=4, hl=False))
     o.append(P.shape(ell(274, 240, 20, 10), "beard", s=4, hl=False))
     o.append(P.shape(ell(256, 238, 8, 7), "skin", s=3, hl=False))  # nose tip
+    if P.st.get("noir"):
+        # soot smudges and wear: forearms, apron hem, scalp, hammer head
+        soot = P.st["soot"]
+        for (x, y, rx, ry, op) in [(152, 326, 10, 6, .35), (364, 330, 12, 7, .35), (230, 336, 18, 8, .3), (290, 340, 14, 6, .3),
+                                   (270, 178, 9, 5, .22), (256 - 112 * sh, 444, 30, 10, .25), (240, 290, 8, 5, .25)]:
+            o.append(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{soot}" opacity="{op}" style="filter:blur(2px)"/>')
     return "\n".join(o)
 
 
@@ -282,6 +288,10 @@ def armor(P):
     # rivets
     for (x, y) in [(196, 168), (316, 168), (178, 294), (334, 294), (256, 176)]:
         o.append(P.spot(ell(x, y, 4.5, 4.5), P.c("gold", 1)))
+    if P.st.get("noir"):
+        o.append(P.detail("M200,200 q8,30 4,60 M312,200 q-8,30 -4,60 M232,300 l10,24 M286,296 l-6,20", "metal", 0.8, 0.8))
+        for (x, y) in [(214, 330), (300, 186), (330, 260)]:
+            o.append(f'<ellipse cx="{x}" cy="{y}" rx="16" ry="9" fill="{P.st["soot"]}" opacity="0.25" style="filter:blur(3px)"/>')
     return "\n".join(o)
 
 
