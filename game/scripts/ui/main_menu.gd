@@ -7,7 +7,7 @@ var main: Node
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = Assets.theme
 	var bg := TextureRect.new()
 	bg.texture = Assets.get_tex("ui/menu_background", Vector2i(1920, 1080))

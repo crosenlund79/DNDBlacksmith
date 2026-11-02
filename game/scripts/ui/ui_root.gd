@@ -193,9 +193,13 @@ func toast(text: String, kind := "info") -> void:
 	r.custom_minimum_size = Vector2(480, 0)
 	p.add_child(r)
 	toast_box.add_child(p)
+	# remove_child first: queue_free() alone keeps the node counted until the frame ends,
+	# which made this loop spin forever (and exhaust memory) once more than 5 toasts stacked up
 	while toast_box.get_child_count() > 5:
-		toast_box.get_child(0).queue_free()
-	var tw2 := create_tween()
+		var old := toast_box.get_child(0)
+		toast_box.remove_child(old)
+		old.queue_free()
+	var tw2 := p.create_tween()
 	p.modulate.a = 0.0
 	tw2.tween_property(p, "modulate:a", 1.0, 0.25)
 	tw2.tween_interval(5.5)

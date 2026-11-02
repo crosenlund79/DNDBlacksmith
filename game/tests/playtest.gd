@@ -453,3 +453,9 @@ func _row_text(b: Button) -> String:
 			if cc is RichTextLabel:
 				t += (cc as RichTextLabel).get_parsed_text()
 	return t
+
+
+func phase_diag() -> void:
+	var menu: Control = main.get("menu")
+	note("menu size %s anchors %s %s %s %s" % [menu.size, menu.anchor_left, menu.anchor_top, menu.anchor_right, menu.anchor_bottom])
+	await shot("diag_menu")

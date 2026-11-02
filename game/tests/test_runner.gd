@@ -30,6 +30,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_saves()
+	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
 	var txt := "\n".join(report)
 	print(txt)
@@ -155,3 +156,27 @@ func _saves() -> void:
 	check(Game.state["day"] is int and Game.state["minute"] % 60 >= 0, "saves: clock restored as ints")
 	check(Hire.get_h("borin") != {} or true, "saves: hirelings restored")
 	Saves.delete("test_slot")
+
+
+## Regressions for the failures found when first launching in Godot 4.3.
+func _startup_regressions() -> void:
+	# sim.gd:86 used ':=' on a Variant expression (parse error) — the script must load and run
+	var sim: GDScript = load("res://scripts/systems/sim.gd")
+	check(sim != null and sim.can_instantiate(), "regression: sim.gd compiles")
+	Sim.on_mira_equipped({"quality": 90.0, "rarity": "common", "name": "Test Blade"}, 10)
+	check(true, "regression: Sim.on_mira_equipped runs")
+	# toast overflow used to loop forever (queue_free does not remove children immediately)
+	var ui := UIRoot.new()
+	add_child(ui)
+	for i in 12:
+		ui.toast("Toast %d" % i, "info")
+	check(ui.toast_box.get_child_count() <= 5, "regression: toast stack is capped (%d)" % ui.toast_box.get_child_count())
+	# the main menu must fill the screen (it used to collapse to 0x0 under a plain Node)
+	var main: Node = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	for i in 3:
+		await get_tree().process_frame
+	var menu: Control = main.get("menu")
+	check(menu != null and menu.size.x > 100.0 and menu.size.y > 100.0, "regression: main menu has full-screen size %s" % [menu.size if menu else Vector2.ZERO])
+	main.queue_free()
+	ui.queue_free()
