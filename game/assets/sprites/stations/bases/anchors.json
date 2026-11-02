@@ -1,0 +1,158 @@
+{
+ "anvil": {
+  "w": 157,
+  "h": 81,
+  "cx": 78.5,
+  "cy": 35.2
+ },
+ "forge": {
+  "w": 211,
+  "h": 106,
+  "cx": 105.5,
+  "cy": 46.7
+ },
+ "crucible": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "quench_trough": {
+  "w": 175,
+  "h": 82,
+  "cx": 87.5,
+  "cy": 35.4
+ },
+ "bellows": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "grinding_wheel": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "rune_cutting_bench": {
+  "w": 175,
+  "h": 82,
+  "cx": 87.5,
+  "cy": 35.4
+ },
+ "rune_engraving_stand": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "rune_cleansing_basin": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "resonance_pedestal": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "rune_polishing_wheel": {
+  "w": 140,
+  "h": 88,
+  "cx": 70.0,
+  "cy": 39.0
+ },
+ "mortar_station": {
+  "w": 140,
+  "h": 80,
+  "cx": 70.0,
+  "cy": 35.2
+ },
+ "alembic": {
+  "w": 157,
+  "h": 89,
+  "cx": 78.5,
+  "cy": 39.0
+ },
+ "cauldron": {
+  "w": 157,
+  "h": 96,
+  "cx": 78.5,
+  "cy": 42.9
+ },
+ "reagent_table": {
+  "w": 175,
+  "h": 82,
+  "cx": 87.5,
+  "cy": 35.4
+ },
+ "infusion_rack": {
+  "w": 175,
+  "h": 82,
+  "cx": 87.5,
+  "cy": 35.4
+ },
+ "arcane_crucible": {
+  "w": 175,
+  "h": 105,
+  "cx": 87.5,
+  "cy": 46.7
+ },
+ "spellbinding_array": {
+  "w": 211,
+  "h": 121,
+  "cx": 105.5,
+  "cy": 54.4
+ },
+ "leyline_conductor": {
+  "w": 140,
+  "h": 103,
+  "cx": 70.0,
+  "cy": 46.7
+ },
+ "aetheric_stabilizer": {
+  "w": 157,
+  "h": 96,
+  "cx": 78.5,
+  "cy": 42.9
+ },
+ "arcane_anvil": {
+  "w": 175,
+  "h": 89,
+  "cx": 87.5,
+  "cy": 39.0
+ },
+ "stitching_table": {
+  "w": 175,
+  "h": 82,
+  "cx": 87.5,
+  "cy": 35.4
+ },
+ "thread_spinner": {
+  "w": 157,
+  "h": 89,
+  "cx": 78.5,
+  "cy": 39.0
+ },
+ "leather_vat": {
+  "w": 157,
+  "h": 96,
+  "cx": 78.5,
+  "cy": 42.9
+ },
+ "embroidery_frame": {
+  "w": 157,
+  "h": 96,
+  "cx": 78.5,
+  "cy": 42.9
+ },
+ "fitting_mannequin": {
+  "w": 122,
+  "h": 88,
+  "cx": 61.0,
+  "cy": 39.0
+ }
+}

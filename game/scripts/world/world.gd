@@ -561,6 +561,7 @@ func _build_stations() -> void:
 		var pos := bpos("smithy", float(p[0]), float(p[1]))
 		var size := Vector2(float(st["size"][0]), float(st["size"][1]))
 		var tex := Assets.get_tex("stations/" + st["id"], Vector2i(int(size.x), int(size.y)))
+		_station_base(st["id"], pos, size)
 		var node: Node2D
 		if st.get("solid", true):
 			node = Node2D.new()
@@ -590,6 +591,31 @@ func _build_stations() -> void:
 	_update_marker()
 	Events.world_flag_changed.connect(func(_f): _refresh_station_locks())
 	Events.skill_level_up.connect(func(_a, _b, _c): _refresh_station_locks())
+
+
+var _base_anchors := {}
+
+
+## A painted tabletop base under each station, matching the characters' miniature bases (purely
+## visual: on the floor layer, no collision, interaction points unchanged). The station's lower edge
+## stands on the base's top face; geometry mirrors tools/art/make_station_bases.py.
+func _station_base(id: String, pos: Vector2, size: Vector2) -> void:
+	if not Assets.has_tex("stations/bases/" + id):
+		return
+	if _base_anchors.is_empty():
+		var txt := FileAccess.get_file_as_string("res://assets/sprites/stations/bases/anchors.json")
+		var parsed: Variant = JSON.parse_string(txt) if txt != "" else null
+		_base_anchors = parsed if parsed is Dictionary else {"_": {}}
+	var a: Dictionary = _base_anchors.get(id, {})
+	if a.is_empty():
+		return
+	var rx := size.x * 0.56
+	var ry := maxf(rx * 0.27, size.y * 0.24)
+	var top := pos + Vector2(0, size.y * 0.5 - ry * 0.55)
+	var b := Sprite2D.new()
+	b.texture = Assets.get_tex("stations/bases/" + id)
+	b.position = top + Vector2(float(a["w"]) * 0.5 - float(a["cx"]), float(a["h"]) * 0.5 - float(a["cy"]))
+	floor_layer.add_child(b)   # added after the floor textures, so it sits on the floor and under every station
 
 
 func _station_fx(fx: String, pos: Vector2, size: Vector2) -> void:

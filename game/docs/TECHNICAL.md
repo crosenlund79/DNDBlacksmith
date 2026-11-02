@@ -120,6 +120,15 @@ Adding a room is a data change: add a rect and a door to `make_layout.py`, then 
 - `Shop.dismiss_customer()` frees the seat.
 - `Shop.waiting()` lists only the seated customers; the shop panel and dialogue use it.
 
+## Station display bases
+
+Every crafting station stands on a painted tabletop base, the same miniature base the characters use, scaled to the station.
+
+- **Generator:** `tools/art/make_station_bases.py` writes `assets/sprites/stations/bases/<id>.png` plus `anchors.json` (where each base's top-face centre sits in its PNG).
+- **Tint and surface follow the discipline:** smithing sooty flagstones, runecraft slate, alchemy moss, stitching leather, arcane plum with a gilt ring.
+- **Placement:** `world.gd` `_station_base()` puts each base on the floor layer, so the station's lower edge stands on its top face. The geometry mirrors the generator.
+- **Visual only:** no collision; station collision and interaction points are unchanged.
+
 ## Figures, animals and atmosphere
 
 - **Character sheets:** `tools/art/make_minis.py` + `miniature.py` write them in the existing 6×4 layout:
