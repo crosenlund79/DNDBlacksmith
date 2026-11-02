@@ -27,6 +27,7 @@ func _ready() -> void:
 	_crafting()
 	_hirelings()
 	_expedition_risk()
+	_materials_cycle()
 	_adventurers()
 	_social()
 	_loot()
@@ -189,6 +190,80 @@ func _expedition_risk() -> void:
 	Saves.delete("risk_slot")
 	if st == "":
 		pass
+
+
+## Iteration 3: the material cycle — expedition → haul → processing → crafting — plus trade runs,
+## scouting, suppliers, relic study, forgotten recipes and hirelings processing stored materials.
+func _materials_cycle() -> void:
+	# a skilled miner's haul from Ironroot: ores and, often, gems
+	var finds := {}
+	for i in 30:
+		for it in Loot.roll_table("mine", 10.0, 5):
+			finds[it["def"]] = true
+	check(finds.has("ore_iron") and (finds.has("gem_garnet") or finds.has("gem_sapphire") or finds.has("gem_moonstone")), "materials: Ironroot yields ores and gemstones %s" % [finds.keys()])
+	var deep := {}
+	for i in 40:
+		for it in Loot.roll_table("deep_mine", 0.0, 6):
+			deep[it["def"]] = true
+	check(deep.has("gem_starstone") or deep.has("starmetal_fragment") or deep.has("ore_adamantine"), "materials: Deep Ironroot yields rare minerals")
+	# scouting lowers danger for everyone and finds suppliers
+	var d0 := Regions.danger("highmarsh_road")
+	for i in 4:
+		Regions.on_trip("highmarsh_road", 4, true)
+	check(Regions.danger("highmarsh_road") < d0 and Game.has_flag("supplier_highmarsh"), "travelling: scouting Highmarsh lowers its danger (%.2f → %.2f) and finds a supplier" % [d0, Regions.danger("highmarsh_road")])
+	# a trade run: a purse buys materials, trade goods are sold
+	Game.add_item(Items.make("oil_whetstone", {"qty": 2}), false)
+	for x in Game.inventory():
+		if x["def"] == "oil_whetstone":
+			x["trade"] = true
+	var gold0 := Game.gold()
+	var h := Hire._new_entry("trader", "Test Trader", "applicant_1", "Human", "", {"travelling": 5}, 3)
+	h["traits"] = []
+	Hire.list().append(h)
+	Game.add_gold(1000 - Game.gold(), "test", "test funds")   # earlier tests paid many days of wages
+	check(Hire.send("trader", "highmarsh_road", {"budget": 100}) == "" and int(h["expedition"].get("budget", 0)) == 100, "travelling: a trade run sets out with a 100 g purse")
+	h["expedition"]["days_left"] = 1
+	var bags: int = Game.state["returns"].size()
+	Hire.on_day()
+	var haul: Array = Game.state["returns"][-1]["contents"] if Game.state["returns"].size() > bags else []
+	var left := Game.inventory().filter(func(x): return x.get("trade", false))
+	var sold_ok := left.is_empty()
+	check(h["status"] != "away" and haul.size() > 0 and sold_ok, "travelling: the trade run brought back %d lots and sold the trade goods" % haul.size())
+	Hire.list().erase(h)
+	# relic study turns unidentified relics into ancient arms, components or recipes
+	var kinds := {}
+	for i in 20:
+		var r := Items.make(["relic_unknown_arms", "relic_unknown_tablet", "relic_unknown_reliquary"][i % 3])
+		Game.add_item(r, false)
+		var res := Regions.identify(int(r["uid"]), 100.0)
+		kinds[DB.item(res.get("def", "")).get("type", "?") if not Items.is_equipment(res) else "equipment"] = true
+		if res.get("def", "") == "recipe_scroll":
+			kinds["recipe"] = true
+	check(kinds.has("equipment") and kinds.size() >= 2, "relics: study reveals ancient arms and other finds %s" % [kinds.keys()])
+	check(Crafting.recipe_locked_reason("starsteel_blade") != "", "relics: the Starsteel Blade is a forgotten recipe until learned")
+	var scroll := Items.make("recipe_scroll")
+	Game.add_item(scroll, false)
+	var msg := Regions.read_recipe(int(scroll["uid"]))
+	check(Game.has_flag("recipe_starsteel"), "relics: reading the notes teaches the Starsteel Blade (%s)" % msg)
+	# hirelings process stored materials into finished goods
+	var al := Hire._new_entry("alch", "Test Alchemist", "applicant_2", "Human", "", {"alchemy": 4, "runecraft": 4}, 3)
+	al["traits"] = []
+	al["alloc"] = {"mining": 0, "smithing": 0, "alchemy": 50, "runecraft": 50, "travelling": 0, "relic_hunting": 0}
+	Hire.list().append(al)
+	Game.add_item(Items.make("herb_moonwort", {"qty": 6}), false)
+	Game.add_item(Items.make("runestone_blank", {"qty": 3}), false)
+	Game.add_item(Items.make("reagent_salt", {"qty": 3}), false)
+	var pots := Game.count("potion_healing") + Game.count("oil_whetstone")
+	var runes := Game.count("runestone_ward") + Game.count("runestone_ember")
+	var m0: int = Game.state["minute"]
+	Game.state["minute"] = 10 * 60
+	for i in 24:
+		Hire.work_hour(10)
+	Game.state["minute"] = m0
+	check(Game.count("potion_healing") + Game.count("oil_whetstone") > pots and Game.count("runestone_ward") + Game.count("runestone_ember") > runes,
+		"processing: a hireling brewed potions/oils and prepared runestones from stored materials")
+	Hire.list().erase(al)
+	Game.add_gold(gold0 - Game.gold(), "test", "reset")
 
 
 func _adventurers() -> void:

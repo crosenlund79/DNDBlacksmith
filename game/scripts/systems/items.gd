@@ -209,6 +209,18 @@ static func tooltip(it: Dictionary) -> String:
 		var cr: Dictionary = it["craft"]
 		lines.append("[color=#a89a80][i]%s · %d operations · %s dice%s[/i][/color]" % [cr.get("material", ""), cr.get("ops", []).size(),
 			cr.get("dice_mode", "digital"), " · Masterwork" if cr.get("masterwork", false) else ""])
+	if it.get("ancient", false):
+		lines.append("[color=#dab470][i]Ancient work, recovered from the barrows.[/i][/color]")
+	if it.has("bound"):
+		var bd: Dictionary = it["bound"]
+		lines.append("[color=#b89cff]Bound into the metal: %s (+%d %s)[/color]" % [bd.get("name", ""), int(bd.get("value", 0)), str(bd.get("stat", "")).capitalize()])
+	if it.has("coating"):
+		var co: Dictionary = it["coating"]
+		lines.append("[color=#ffc070]Treated with %s: +%d %s for %d more expedition%s[/color]" % [co.get("name", ""), int(co.get("value", 0)), str(co.get("stat", "")).capitalize(), int(co.get("uses", 0)), "" if int(co.get("uses", 0)) == 1 else "s"])
+	if Regions.is_unidentified(it):
+		lines.append("[color=#c09070][i]Unidentified — study it to learn what it is.[/i][/color]")
+	if it.get("trade", false):
+		lines.append("[color=#a89a80][i]Set aside for the next trade run.[/i][/color]")
 	if it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])
 	var desc: String = def(it).get("desc", "")

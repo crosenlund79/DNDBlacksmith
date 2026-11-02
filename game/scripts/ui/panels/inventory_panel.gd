@@ -90,6 +90,17 @@ func _detail() -> void:
 	detail.add_child(p)
 	if it.has("craft"):
 		detail.add_child(UIKit.button("Read the record of the work", func(): Events.open_panel.emit("craft_result", {"item": it, "fresh": false}), 0))
+	if Regions.is_unidentified(it):
+		detail.add_child(UIKit.button("Study the relic (at the cleansing basin)", func(): _study(int(it["uid"])), 0))
+	if it["def"] == "recipe_scroll":
+		detail.add_child(UIKit.button("Read the notes", func():
+			Events.toast.emit(Regions.read_recipe(int(it["uid"])), "good")
+			selected = {}, 0))
+	if not Items.is_equipment(it) and DB.item(it["def"]).get("type", "") in ["potion", "material", "relic"] and not Regions.is_unidentified(it):
+		var tr: bool = it.get("trade", false)
+		detail.add_child(UIKit.button("Keep it at home" if tr else "Send with the next trade run", func():
+			it["trade"] = not tr
+			Events.inventory_changed.emit(), 0))
 	if Items.is_equipment(it):
 		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])); selected = {}, 0))
 		var sale: bool = it.get("for_sale", false)
@@ -108,3 +119,13 @@ func _detail() -> void:
 			detail.add_child(ph)
 	if it["def"] == "potion_healing":
 		detail.add_child(UIKit.label("Healing draughts make thoughtful gifts.", 18, "body_italic"))
+
+
+func _study(uid: int) -> void:
+	var c := Crafting.check_params("rune_cleansing_basin")
+	Events.open_panel.emit("skillcheck", {"station": "rune_cleansing_basin", "count": 1, "speed": c["speed"], "zone": c["zone"],
+		"title": "Studying the relic", "subtitle": "Wash away the grave-earth without damaging what lies beneath",
+		"on_done": func(qs: Array):
+			var res := Regions.identify(uid, float(qs[0]))
+			if not res.is_empty():
+				Events.open_panel.emit("reveal", {"item": res})})

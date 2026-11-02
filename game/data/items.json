@@ -798,6 +798,301 @@
   "tags": []
  },
  {
+  "id": "gem_garnet",
+  "name": "Garnet",
+  "type": "material",
+  "slot": null,
+  "value": 35,
+  "stats": {
+   "fire": 3
+  },
+  "icon": "gem_garnet",
+  "stack": true,
+  "desc": "A deep red stone. Smiths say it holds a little of the forge's heat.",
+  "tags": [
+   "gem"
+  ]
+ },
+ {
+  "id": "gem_sapphire",
+  "name": "Sapphire",
+  "type": "material",
+  "slot": null,
+  "value": 45,
+  "stats": {
+   "frost": 3
+  },
+  "icon": "gem_sapphire",
+  "stack": true,
+  "desc": "Cold blue, clear as a winter sky.",
+  "tags": [
+   "gem"
+  ]
+ },
+ {
+  "id": "gem_moonstone",
+  "name": "Moonstone",
+  "type": "material",
+  "slot": null,
+  "value": 40,
+  "stats": {
+   "magic": 3
+  },
+  "icon": "gem_moonstone",
+  "stack": true,
+  "desc": "Milky and pale; it seems to drink in lamplight.",
+  "tags": [
+   "gem"
+  ]
+ },
+ {
+  "id": "gem_starstone",
+  "name": "Starstone",
+  "type": "material",
+  "slot": null,
+  "value": 160,
+  "stats": {
+   "magic": 5
+  },
+  "icon": "gem_starstone",
+  "stack": true,
+  "desc": "A rare dark mineral flecked with silver. Found only in the deep places.",
+  "tags": [
+   "gem",
+   "rare"
+  ]
+ },
+ {
+  "id": "ingot_adamantine",
+  "name": "Charged Adamantine Ingot",
+  "type": "material",
+  "slot": null,
+  "value": 260,
+  "stats": {},
+  "icon": "ingot_adamantine",
+  "stack": true,
+  "desc": "Near-unbreakable metal with a ward bound into its grain.",
+  "tags": [
+   "arcane"
+  ]
+ },
+ {
+  "id": "starmetal_fragment",
+  "name": "Starmetal Fragment",
+  "type": "material",
+  "slot": null,
+  "value": 120,
+  "stats": {},
+  "icon": "starmetal_fragment",
+  "stack": true,
+  "desc": "A shard of something that fell from the sky long ago.",
+  "tags": [
+   "rare"
+  ]
+ },
+ {
+  "id": "relic_unknown_arms",
+  "name": "Corroded Ancient Arms",
+  "type": "relic",
+  "slot": null,
+  "value": 40,
+  "stats": {},
+  "icon": "relic_unknown_arms",
+  "stack": false,
+  "desc": "Crusted with centuries of grave-earth. Study it to learn what it was.",
+  "tags": [
+   "unidentified"
+  ]
+ },
+ {
+  "id": "relic_unknown_tablet",
+  "name": "Weathered Rune Tablet",
+  "type": "relic",
+  "slot": null,
+  "value": 40,
+  "stats": {},
+  "icon": "relic_unknown_tablet",
+  "stack": false,
+  "desc": "Carved marks too worn to read at a glance.",
+  "tags": [
+   "unidentified"
+  ]
+ },
+ {
+  "id": "relic_unknown_reliquary",
+  "name": "Sealed Reliquary",
+  "type": "relic",
+  "slot": null,
+  "value": 60,
+  "stats": {},
+  "icon": "relic_unknown_reliquary",
+  "stack": false,
+  "desc": "Bronze gone green. Something rattles inside.",
+  "tags": [
+   "unidentified"
+  ]
+ },
+ {
+  "id": "recipe_scroll",
+  "name": "Forgotten Recipe",
+  "type": "relic",
+  "slot": null,
+  "value": 80,
+  "stats": {},
+  "icon": "recipe_scroll",
+  "stack": false,
+  "desc": "A smith's working notes from another age. Read it to learn the recipe.",
+  "tags": [
+   "recipe"
+  ]
+ },
+ {
+  "id": "coating_frost",
+  "name": "Frost Coating",
+  "type": "potion",
+  "slot": null,
+  "value": 70,
+  "stats": {
+   "frost": 2
+  },
+  "icon": "coating_frost",
+  "stack": true,
+  "desc": "Brushed onto a blade: rime spreads along the edge on the strike.",
+  "tags": []
+ },
+ {
+  "id": "ring_garnet",
+  "name": "Garnet Ring",
+  "type": "ring",
+  "slot": "ring",
+  "value": 160,
+  "stats": {
+   "fire": 4,
+   "magic": 2
+  },
+  "icon": "ring_garnet",
+  "stack": false,
+  "desc": "Warm to the touch.",
+  "tags": []
+ },
+ {
+  "id": "amulet_sapphire",
+  "name": "Sapphire Amulet",
+  "type": "amulet",
+  "slot": "amulet",
+  "value": 190,
+  "stats": {
+   "frost": 3,
+   "ward": 3,
+   "magic": 3
+  },
+  "icon": "amulet_sapphire",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "sword_emberwarden",
+  "name": "Emberwarden Longsword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 420,
+  "stats": {
+   "attack": [
+    14,
+    19
+   ],
+   "durability": 110,
+   "fire": 5
+  },
+  "icon": "sword_emberwarden",
+  "stack": false,
+  "desc": "Steel, an ember rune in the guard, a flame-quenched edge and a ghost-thread grip.",
+  "tags": [
+   "enchanted"
+  ]
+ },
+ {
+  "id": "sword_starsteel",
+  "name": "Starsteel Blade",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 480,
+  "stats": {
+   "attack": [
+    17,
+    23
+   ],
+   "durability": 160
+  },
+  "icon": "sword_starsteel",
+  "stack": false,
+  "desc": "Forged to a recipe older than the village.",
+  "tags": []
+ },
+ {
+  "id": "warplate_adamantine",
+  "name": "Adamantine Warplate",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 700,
+  "stats": {
+   "protection": [
+    16,
+    22
+   ],
+   "durability": 190,
+   "ward": 6,
+   "magic": 4
+  },
+  "icon": "warplate_adamantine",
+  "stack": false,
+  "desc": "Ward-magic bound into the metal itself; violet seams glow under strain.",
+  "tags": [
+   "arcane"
+  ]
+ },
+ {
+  "id": "boots_ranger",
+  "name": "Ranger's Soft Boots",
+  "type": "boots",
+  "slot": "boots",
+  "value": 70,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 60,
+   "speed": 6
+  },
+  "icon": "boots_ranger",
+  "stack": false,
+  "desc": "Silent on leaf-litter. Light enough to run in.",
+  "tags": []
+ },
+ {
+  "id": "hood_embroidered",
+  "name": "Embroidered Hood",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 140,
+  "stats": {
+   "protection": [
+    2,
+    3
+   ],
+   "durability": 50,
+   "ward": 4
+  },
+  "icon": "hood_embroidered",
+  "stack": false,
+  "desc": "Gold sigils stitched with ethereal thread turn aside curses.",
+  "tags": [
+   "enchanted"
+  ]
+ },
+ {
   "id": "grimhold",
   "name": "Grimhold, the Last Hammer",
   "type": "weapon",

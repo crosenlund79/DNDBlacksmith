@@ -1,0 +1,65 @@
+{
+ "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",
+ "village": [
+  [
+   "ore_iron",
+   6
+  ],
+  [
+   "coal",
+   3
+  ],
+  [
+   "leather_hide",
+   7
+  ],
+  [
+   "thread_linen",
+   4
+  ],
+  [
+   "reagent_salt",
+   7
+  ]
+ ],
+ "supplier_herbalist": [
+  [
+   "herb_emberleaf",
+   8
+  ],
+  [
+   "herb_moonwort",
+   8
+  ],
+  [
+   "reagent_salt",
+   6
+  ]
+ ],
+ "supplier_highmarsh": [
+  [
+   "ingot_steel",
+   30
+  ],
+  [
+   "ore_silver",
+   18
+  ],
+  [
+   "thread_ethereal",
+   48
+  ],
+  [
+   "gem_garnet",
+   40
+  ],
+  [
+   "gem_sapphire",
+   52
+  ],
+  [
+   "ore_mithril",
+   110
+  ]
+ ]
+}

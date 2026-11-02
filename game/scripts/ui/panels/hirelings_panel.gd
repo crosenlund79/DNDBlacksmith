@@ -143,14 +143,24 @@ func _card(h: Dictionary) -> Control:
 			var locked: bool = d.has("requires_flag") and not Game.has_flag(d["requires_flag"])
 			var o := Hire.odds(h, d["id"])
 			var line := UIKit.hbox(8)
-			var info := UIKit.rich("[b]%s[/b] · %s, %d–%d days\n[color=%s]%s[/color] · success ~%d%% · injury ~%d%%%s" % [d["name"], d["kind"], int(d["days"][0]), int(d["days"][1]),
+			var info := UIKit.rich("[b]%s[/b] · %s, %d–%d days · [i]%s[/i]\n[color=%s]%s[/color] · success ~%d%% · injury ~%d%%%s" % [d["name"], d["kind"], int(d["days"][0]), int(d["days"][1]), Regions.knowledge_word(Regions.scouted(d["id"])),
 				{"safe": "#26622f", "risky": "#735800", "dangerous": "#9e3a0c", "deadly": "#7e2418"}.get(Hire.risk_word(o), "#20140c"), Hire.risk_word(o).capitalize(),
 				int(float(o["success"]) * 100.0), int(float(o["injury"]) * 100.0), " · could die" if float(o["death"]) > 0.0 else ""], 17)
 			info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			line.add_child(info)
 			var did: String = d["id"]
+			var purse: OptionButton = null
+			if d.get("kind", "") == "trade":
+				purse = OptionButton.new()
+				for amt in [0, 50, 100, 200]:
+					purse.add_item("no purse" if amt == 0 else "%d g purse" % amt, amt)
+				purse.tooltip_text = "Gold to spend with the suppliers you know; trade goods you have marked are sold on the way."
+				line.add_child(purse)
 			var b := UIKit.button("Send", func():
-				var err := Hire.send(hid, did)
+				var opts := {}
+				if purse != null:
+					opts["budget"] = purse.get_item_id(purse.selected)
+				var err := Hire.send(hid, did, opts)
 				if err != "":
 					Events.toast.emit(err, "bad")
 				else:

@@ -47,6 +47,22 @@
     ]
    ],
    [
+    "gem_garnet",
+    5,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "gem_moonstone",
+    3,
+    [
+     1,
+     1
+    ]
+   ],
+   [
     "ore_mithril",
     2,
     [
@@ -62,7 +78,29 @@
      1
     ]
    ]
-  ]
+  ],
+  "skill_entries": {
+   "3": [
+    [
+     "gem_sapphire",
+     4,
+     [
+      1,
+      1
+     ]
+    ]
+   ],
+   "5": [
+    [
+     "ore_mithril",
+     4,
+     [
+      1,
+      2
+     ]
+    ]
+   ]
+  }
  },
  "deep_mine": {
   "rolls": [
@@ -96,7 +134,31 @@
    ],
    [
     "ore_adamantine",
-    6,
+    8,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "gem_sapphire",
+    8,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "gem_starstone",
+    3,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "starmetal_fragment",
+    3,
     [
      1,
      1
@@ -111,6 +173,14 @@
     ]
    ],
    [
+    "relic_unknown_arms",
+    4,
+    [
+     1,
+     1
+    ]
+   ],
+   [
     "relic_crown_shard",
     2,
     [
@@ -119,7 +189,19 @@
     ]
    ]
   ],
-  "rarity_bias": 25
+  "rarity_bias": 25,
+  "skill_entries": {
+   "6": [
+    [
+     "gem_starstone",
+     6,
+     [
+      1,
+      1
+     ]
+    ]
+   ]
+  }
  },
  "forest": {
   "rolls": [
@@ -241,7 +323,7 @@
    ],
    [
     "relic_idol",
-    12,
+    10,
     [
      1,
      1
@@ -249,7 +331,7 @@
    ],
    [
     "runestone_blank",
-    15,
+    12,
     [
      1,
      2
@@ -257,7 +339,31 @@
    ],
    [
     "equip:any",
-    30,
+    24,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_unknown_arms",
+    9,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_unknown_tablet",
+    8,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_unknown_reliquary",
+    6,
     [
      1,
      1
@@ -273,14 +379,115 @@
    ],
    [
     "ore_silver",
-    15,
+    12,
     [
      1,
      2
     ]
    ]
   ],
-  "rarity_bias": 15
+  "rarity_bias": 15,
+  "skill_entries": {
+   "4": [
+    [
+     "relic_unknown_reliquary",
+     6,
+     [
+      1,
+      1
+     ]
+    ]
+   ]
+  }
+ },
+ "relic_reveal": {
+  "rolls": [
+   1,
+   1
+  ],
+  "entries": [
+   [
+    "equip:ancient",
+    40,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "starmetal_fragment",
+    18,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "gem_starstone",
+    10,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "gem_moonstone",
+    12,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "recipe_scroll",
+    20,
+    [
+     1,
+     1
+    ]
+   ]
+  ],
+  "rarity_bias": 30
+ },
+ "gratitude": {
+  "rolls": [
+   1,
+   1
+  ],
+  "entries": [
+   [
+    "relic_unknown_reliquary",
+    40,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_unknown_arms",
+    30,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "gem_starstone",
+    15,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "recipe_scroll",
+    15,
+    [
+     1,
+     1
+    ]
+   ]
+  ]
  },
  "gift": {
   "rolls": [

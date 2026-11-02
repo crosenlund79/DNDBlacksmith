@@ -22,6 +22,7 @@ var layout := {}
 var dialogue := {}
 var names := {}
 var crafting := {}
+var suppliers := {}
 
 
 func _ready() -> void:
@@ -73,6 +74,8 @@ func reload() -> void:
 	names = nm if nm is Dictionary else {}
 	var cf: Variant = _read("crafting.json")
 	crafting = cf if cf is Dictionary else {}
+	var sp: Variant = _read("suppliers.json")
+	suppliers = sp if sp is Dictionary else {}
 	Log.info("Data loaded: %d items, %d stations, %d recipes, %d characters" % [items.size(), stations.size(), recipes.size(), characters.size()])
 
 

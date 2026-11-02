@@ -88,6 +88,9 @@ static func station_locked_reason(station_id: String) -> String:
 
 static func recipe_locked_reason(recipe_id: String) -> String:
 	var r := DB.recipe(recipe_id)
+	var rf := str(r.get("requires_flag", ""))
+	if rf != "" and not Game.has_flag(rf):
+		return "A forgotten recipe — find its notes among the relics"
 	var req: Dictionary = r.get("requires", {})
 	for sk in req:
 		if Game.player_level(sk) < int(req[sk]):

@@ -11,7 +11,33 @@
   "danger": 1,
   "skill": "mining",
   "loot": "mine",
-  "desc": "Old dwarf-cut galleries north of the village. Iron, coal and the odd vein of silver."
+  "desc": "Old dwarf-cut galleries north of the village. Iron, coal, gems and the odd vein of silver.",
+  "threats": [
+   {
+    "name": "cave spiders",
+    "kind": "beast",
+    "power": 8,
+    "dmg": 4,
+    "weak": "fire",
+    "resist": ""
+   },
+   {
+    "name": "a rockfall",
+    "kind": "hazard",
+    "power": 6,
+    "dmg": 6,
+    "weak": "",
+    "resist": ""
+   },
+   {
+    "name": "tunnel goblins",
+    "kind": "bandit",
+    "power": 10,
+    "dmg": 5,
+    "weak": "",
+    "resist": ""
+   }
+  ]
  },
  {
   "id": "whisperwood",
@@ -25,7 +51,34 @@
   "danger": 2,
   "skill": "travelling",
   "loot": "forest",
-  "desc": "Herbs, hides and wolves."
+  "desc": "Herbs, hides and wolves. Scouting here finds the herb-wives who sell to smiths.",
+  "threats": [
+   {
+    "name": "a wolf pack",
+    "kind": "beast",
+    "power": 14,
+    "dmg": 6,
+    "weak": "fire",
+    "resist": ""
+   },
+   {
+    "name": "a wild boar",
+    "kind": "beast",
+    "power": 16,
+    "dmg": 8,
+    "weak": "",
+    "resist": ""
+   },
+   {
+    "name": "bandit scouts",
+    "kind": "bandit",
+    "power": 14,
+    "dmg": 6,
+    "weak": "",
+    "resist": ""
+   }
+  ],
+  "discovers": "supplier_herbalist"
  },
  {
   "id": "highmarsh_road",
@@ -39,7 +92,34 @@
   "danger": 2,
   "skill": "travelling",
   "loot": "trade",
-  "desc": "The trade road to Highmarsh. Bandits on the bad stretches."
+  "desc": "The trade road to Highmarsh. Buy materials, sell your goods — bandits on the bad stretches.",
+  "threats": [
+   {
+    "name": "road bandits",
+    "kind": "bandit",
+    "power": 16,
+    "dmg": 7,
+    "weak": "",
+    "resist": ""
+   },
+   {
+    "name": "a bog wraith",
+    "kind": "spirit",
+    "power": 18,
+    "dmg": 6,
+    "weak": "magic",
+    "resist": "physical"
+   },
+   {
+    "name": "marsh hounds",
+    "kind": "beast",
+    "power": 12,
+    "dmg": 6,
+    "weak": "fire",
+    "resist": ""
+   }
+  ],
+  "discovers": "supplier_highmarsh"
  },
  {
   "id": "barrow_fields",
@@ -53,7 +133,33 @@
   "danger": 4,
   "skill": "relic_hunting",
   "loot": "barrow",
-  "desc": "Burial mounds full of grave-goods and things that guard them."
+  "desc": "Burial mounds full of grave-goods, sealed relics — and the things that guard them.",
+  "threats": [
+   {
+    "name": "barrow wights",
+    "kind": "undead",
+    "power": 26,
+    "dmg": 10,
+    "weak": "fire",
+    "resist": "frost"
+   },
+   {
+    "name": "a grave guardian",
+    "kind": "construct",
+    "power": 30,
+    "dmg": 12,
+    "weak": "frost",
+    "resist": ""
+   },
+   {
+    "name": "restless dead",
+    "kind": "undead",
+    "power": 22,
+    "dmg": 9,
+    "weak": "fire",
+    "resist": ""
+   }
+  ]
  },
  {
   "id": "deep_ironroot",
@@ -67,7 +173,33 @@
   "danger": 6,
   "skill": "mining",
   "loot": "deep_mine",
-  "desc": "Below the old workings. Mithril — and whatever drove the dwarves out.",
-  "requires_flag": "delve_map"
+  "desc": "Below the old workings. Mithril, adamantine, starstone — and whatever drove the dwarves out.",
+  "requires_flag": "delve_map",
+  "threats": [
+   {
+    "name": "a stone golem",
+    "kind": "construct",
+    "power": 40,
+    "dmg": 16,
+    "weak": "frost",
+    "resist": "fire"
+   },
+   {
+    "name": "shadow crawlers",
+    "kind": "spirit",
+    "power": 34,
+    "dmg": 12,
+    "weak": "fire",
+    "resist": "physical"
+   },
+   {
+    "name": "a dwarf-king's revenant",
+    "kind": "undead",
+    "power": 44,
+    "dmg": 16,
+    "weak": "fire",
+    "resist": "frost"
+   }
+  ]
  }
 ]

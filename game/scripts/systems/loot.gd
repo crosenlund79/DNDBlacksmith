@@ -5,12 +5,18 @@ class_name Loot
 extends RefCounted
 
 
-static func roll_table(table_id: String, bias := 0.0) -> Array:
+## skill: the finder's relevant skill level; "skill_entries" in a table add finds that only
+## experienced hands recognise (a sapphire vein, a reliquary under the mound).
+static func roll_table(table_id: String, bias := 0.0, skill := 0) -> Array:
 	var t: Dictionary = DB.loot.get(table_id, {})
 	if t.is_empty():
 		return []
 	bias += float(t.get("rarity_bias", 0))
-	var entries: Array = t["entries"]
+	var entries: Array = t["entries"].duplicate()
+	var se: Dictionary = t.get("skill_entries", {})
+	for k in se:
+		if skill >= int(k):
+			entries.append_array(se[k])
 	var total := 0.0
 	for e in entries:
 		total += float(e[1])
@@ -49,6 +55,17 @@ static func _equip_defs(category: String) -> Array:
 
 
 static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
+	if category == "ancient":
+		# grave-goods of an older age: well made, often magical, never common junk
+		var adefs := _equip_defs("any")
+		var aid: String = adefs.pick_random()
+		var aq := randf_range(85.0, 118.0)
+		var ait := Items.make(aid, {"quality": aq, "dice": {"edge": randi_range(8, 20), "guard": randi_range(8, 20), "temper": randi_range(4, 12)}})
+		var ar := Items.rarity_from(aq, randi_range(30, 100), 10.0 + bias * 0.2)
+		Items.apply_rarity(ait, "rare" if ar in ["common", "magic"] else ar)
+		ait["crafted_by"] = "a smith of the barrow-kings' age"
+		ait["ancient"] = true
+		return ait
 	if category == "legendary_demo":
 		var it := Items.make("sword_steel", {"quality": 112.0, "dice": {"edge": 18, "temper": 10}})
 		Items.apply_rarity(it, "legendary")

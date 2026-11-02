@@ -1187,5 +1187,537 @@
    "arcane_metalwork": 1
   },
   "desc": "The magic lives in the metal; the markings glow when the blade is drawn."
+ },
+ {
+  "id": "garnet_ring",
+  "name": "Garnet Ring",
+  "discipline": "classic",
+  "category": "jewellery",
+  "material": "jewel",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Melt the silver",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw and close the band",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Seat the garnet",
+    "checks": 1,
+    "weight": 1.4
+   },
+   {
+    "station": "rune_polishing_wheel",
+    "op": "Polish band and stone",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "crucible",
+   "anvil",
+   "rune_engraving_stand",
+   "rune_polishing_wheel"
+  ],
+  "inputs": {
+   "ore_silver": 2,
+   "gem_garnet": 1
+  },
+  "output": "ring_garnet",
+  "qty": 1,
+  "dice": {
+   "resonance": "1d10",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 25,
+   "runecraft": 15
+  },
+  "requires": {
+   "smithing": 3
+  },
+  "desc": "Silver set with a garnet; the stone keeps a little of the forge's heat."
+ },
+ {
+  "id": "sapphire_amulet",
+  "name": "Sapphire Amulet",
+  "discipline": "runecraft",
+  "category": "jewellery",
+  "material": "jewel",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Melt the silver",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Hammer the setting",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Cleanse the sapphire",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Bind the stone into the setting",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "stitching_table",
+    "op": "Braid the cord",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "crucible",
+   "anvil",
+   "rune_cleansing_basin",
+   "rune_engraving_stand",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ore_silver": 2,
+   "gem_sapphire": 1,
+   "thread_linen": 1
+  },
+  "output": "amulet_sapphire",
+  "qty": 1,
+  "dice": {
+   "resonance": "1d10",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "runecraft": 35,
+   "smithing": 10
+  },
+  "requires": {
+   "runecraft": 2
+  },
+  "desc": ""
+ },
+ {
+  "id": "frost_coating",
+  "name": "Frost Coating",
+  "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Grind moonwort with quicksalt",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "alembic",
+    "op": "Distil the cold essence",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "cauldron",
+    "op": "Thicken to a coating",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "mortar_station",
+   "alembic",
+   "cauldron"
+  ],
+  "inputs": {
+   "herb_moonwort": 2,
+   "reagent_salt": 1
+  },
+  "output": "coating_frost",
+  "qty": 1,
+  "dice": {
+   "potency": "1d8",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "alchemy": 26
+  },
+  "requires": {},
+  "desc": "Brushed onto a blade: rime spreads along the edge on the strike. Apply it at the infusion rack."
+ },
+ {
+  "id": "ranger_boots",
+  "name": "Ranger's Soft Boots",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Soften the uppers",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "stitching_table",
+    "op": "Turn-shoe the soles",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 2,
+   "thread_linen": 1
+  },
+  "output": "boots_ranger",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 22
+  },
+  "requires": {},
+  "desc": "Light and silent: speed matters more than plate for a scout."
+ },
+ {
+  "id": "embroidered_hood",
+  "name": "Embroidered Hood",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "ethereal",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "thread_spinner",
+    "op": "Spin gold-ethereal thread",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Cut and stitch the hood",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider warding sigils",
+    "checks": 2,
+    "weight": 1.4
+   }
+  ],
+  "steps": [
+   "thread_spinner",
+   "stitching_table",
+   "embroidery_frame"
+  ],
+  "inputs": {
+   "leather_cured": 1,
+   "thread_ethereal": 1
+  },
+  "output": "hood_embroidered",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 45
+  },
+  "requires": {
+   "enchanted_stitching": 3
+  },
+  "desc": ""
+ },
+ {
+  "id": "emberwarden_longsword",
+  "name": "Emberwarden Longsword",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Bring the steel to yellow heat",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Forge a blade with a socketed guard",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Seat the ember rune in the guard",
+    "checks": 1,
+    "weight": 1.3
+   },
+   {
+    "station": "cauldron",
+    "op": "Quench the edge in flame coating",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Hone the burning edge",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "stitching_table",
+    "op": "Wrap the grip in ghost-thread",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "rune_engraving_stand",
+   "cauldron",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "runestone_ember": 1,
+   "coating_flame": 1,
+   "thread_ethereal": 1
+  },
+  "output": "sword_emberwarden",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "resonance": "1d10",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 60,
+   "runecraft": 25,
+   "alchemy": 15,
+   "enchanted_stitching": 10
+  },
+  "requires": {
+   "smithing": 4,
+   "runecraft": 1
+  },
+  "desc": "Four crafts in one blade: steel, an ember rune, a flame-quenched edge and a ghost-thread grip."
+ },
+ {
+  "id": "starsteel_blade",
+  "name": "Starsteel Blade",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "starmetal",
+  "difficulty": 6,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Fuse starmetal into the steel",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "forge",
+    "op": "Hold the strange heat",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Fold the star-steel",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Quench in still water",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the pale edge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "crucible",
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "starmetal_fragment": 1
+  },
+  "output": "sword_starsteel",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 70
+  },
+  "requires": {
+   "smithing": 4
+  },
+  "desc": "From a forgotten recipe found among the barrow-relics.",
+  "requires_flag": "recipe_starsteel"
+ },
+ {
+  "id": "charge_adamantine",
+  "name": "Charge Adamantine",
+  "discipline": "arcane",
+  "category": "material",
+  "material": "ore",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "arcane_crucible",
+    "op": "Melt adamantine in warded fire",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "leyline_conductor",
+    "op": "Draw the leyline",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "aetheric_stabilizer",
+    "op": "Stabilise the bound ward",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "arcane_crucible",
+   "leyline_conductor",
+   "aetheric_stabilizer"
+  ],
+  "inputs": {
+   "ore_adamantine": 2,
+   "gem_moonstone": 1,
+   "coal": 2
+  },
+  "output": "ingot_adamantine",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "arcane_metalwork": 50
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "adamantine_warplate",
+  "name": "Adamantine Warplate",
+  "discipline": "arcane",
+  "category": "armour",
+  "material": "adamantine",
+  "difficulty": 7,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the charged plates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "arcane_crucible",
+    "op": "Re-melt the ward seams",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "arcane_anvil",
+    "op": "Imprint the ward into the plate",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "spellbinding_array",
+    "op": "Bind the ward pattern",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "aetheric_stabilizer",
+    "op": "Settle the bound magic",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet the straps",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "forge",
+   "arcane_crucible",
+   "arcane_anvil",
+   "spellbinding_array",
+   "aetheric_stabilizer",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_adamantine": 2,
+   "leather_cured": 1
+  },
+  "output": "warplate_adamantine",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "arcane_metalwork": 90,
+   "smithing": 30
+  },
+  "requires": {
+   "arcane_metalwork": 1
+  },
+  "desc": "The ward is in the metal itself — not a rune set into it."
  }
 ]

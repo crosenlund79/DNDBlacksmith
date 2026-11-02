@@ -478,6 +478,10 @@
    64,
    64
   ],
+  "icons/amulet_sapphire.png": [
+   64,
+   64
+  ],
   "icons/amulet_silver.png": [
    64,
    64
@@ -495,6 +499,10 @@
    64
   ],
   "icons/boots_leather.png": [
+   64,
+   64
+  ],
+  "icons/boots_ranger.png": [
    64,
    64
   ],
@@ -518,11 +526,31 @@
    64,
    64
   ],
+  "icons/coating_frost.png": [
+   64,
+   64
+  ],
   "icons/cuirass_iron.png": [
    64,
    64
   ],
   "icons/dagger.png": [
+   64,
+   64
+  ],
+  "icons/gem_garnet.png": [
+   64,
+   64
+  ],
+  "icons/gem_moonstone.png": [
+   64,
+   64
+  ],
+  "icons/gem_sapphire.png": [
+   64,
+   64
+  ],
+  "icons/gem_starstone.png": [
    64,
    64
   ],
@@ -554,7 +582,15 @@
    64,
    64
   ],
+  "icons/hood_embroidered.png": [
+   64,
+   64
+  ],
   "icons/hood_leather.png": [
+   64,
+   64
+  ],
+  "icons/ingot_adamantine.png": [
    64,
    64
   ],
@@ -630,6 +666,10 @@
    64,
    64
   ],
+  "icons/recipe_scroll.png": [
+   64,
+   64
+  ],
   "icons/relic_coin.png": [
    64,
    64
@@ -643,6 +683,22 @@
    64
   ],
   "icons/relic_map.png": [
+   64,
+   64
+  ],
+  "icons/relic_unknown_arms.png": [
+   64,
+   64
+  ],
+  "icons/relic_unknown_reliquary.png": [
+   64,
+   64
+  ],
+  "icons/relic_unknown_tablet.png": [
+   64,
+   64
+  ],
+  "icons/ring_garnet.png": [
    64,
    64
   ],
@@ -686,11 +742,23 @@
    32,
    32
   ],
+  "icons/starmetal_fragment.png": [
+   64,
+   64
+  ],
+  "icons/sword_emberwarden.png": [
+   64,
+   64
+  ],
   "icons/sword_iron.png": [
    64,
    64
   ],
   "icons/sword_mithril.png": [
+   64,
+   64
+  ],
+  "icons/sword_starsteel.png": [
    64,
    64
   ],
@@ -703,6 +771,10 @@
    64
   ],
   "icons/thread_linen.png": [
+   64,
+   64
+  ],
+  "icons/warplate_adamantine.png": [
    64,
    64
   ],

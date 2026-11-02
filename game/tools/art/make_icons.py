@@ -20,7 +20,8 @@ def rot(d_svg, ang, cx=64, cy=64):
 
 
 # ------------------------------------------------------------- weapons
-def blade_sword(P, role="metal", guard="bronze", grip="leather", L=1.0, runes=None, pommel_gem=False, nicks=False):
+def blade_sword(P, role="metal", guard="bronze", grip="leather", L=1.0, runes=None, pommel_gem=False, nicks=False,
+                guard_gem=None, guard_shape="std"):
     """Vertical sword (tip up) centred on x=64, rotated 45deg by caller."""
     b, e = [], []
     top, gy = 8 + (1 - L) * 60, 86
@@ -29,7 +30,13 @@ def blade_sword(P, role="metal", guard="bronze", grip="leather", L=1.0, runes=No
     b.append(fill(poly([(59.5, gy - 4), (62.5, gy - 4), (62.5, top + 16), (60, top + 18)]), "#ffffff", 0.35))
     if nicks:
         b.append(P.detail(f"M70.5,{top+30} l-2,1.5 M57.5,{top+44} l2,1", role, 0.6))
-    b.append(P.shape(smooth([(38, gy + 2), (50, gy - 3), (64, gy - 1), (78, gy - 3), (90, gy + 2), (78, gy + 7), (64, gy + 6), (50, gy + 7)]), guard, s=2))
+    if guard_shape == "down":   # ancient down-swept quillons
+        b.append(P.shape(smooth([(40, gy + 12), (46, gy + 1), (64, gy - 2), (82, gy + 1), (88, gy + 12), (80, gy + 7), (64, gy + 6), (48, gy + 7)]), guard, s=2))
+    else:
+        b.append(P.shape(smooth([(38, gy + 2), (50, gy - 3), (64, gy - 1), (78, gy - 3), (90, gy + 2), (78, gy + 7), (64, gy + 6), (50, gy + 7)]), guard, s=2))
+    if guard_gem:
+        b.append(P.shape(ell(64, gy + 2.5, 5, 4.5), guard_gem, s=1.2, lw=1.4))
+        b.append(fill(ell(62.5, gy + 1, 1.6, 1.1), "#ffffff", 0.75))
     b.append(P.shape(rect(59.5, gy + 6, 9, 22, 3), grip, s=2))
     b.append(P.detail(" ".join(f"M60,{gy+10+i*4} L68,{gy+13+i*4}" for i in range(4)), grip, 0.6))
     b.append(P.shape(ell(64, gy + 32, 6.5), guard, s=1.5))
@@ -164,12 +171,12 @@ def hood_leather(P):
     return J(b), ""
 
 
-def boot(P, x, y, flip=1):
+def boot(P, x, y, flip=1, role="boot", cuff="leather"):
     s = smooth([(x, y), (x + 22 * flip, y), (x + 22 * flip, y + 46), (x + 30 * flip, y + 58), (x + 34 * flip, y + 68), (x + 30 * flip, y + 74),
                 (x - 2 * flip, y + 74), (x - 3 * flip, y + 40)])
-    return J([P.shape(s, "boot", s=4), P.shape(rect(min(x, x + 24 * flip) - 1, y - 4, 26, 10, 3), "leather", s=1.5),
-              P.detail(f"M{x+2*flip},{y+70} L{x+30*flip},{y+70}", "boot", 0.8),
-              P.detail(f"M{x+6*flip},{y+20} l{10*flip},3 M{x+6*flip},{y+30} l{10*flip},3", "boot", 0.6)])
+    return J([P.shape(s, role, s=4), P.shape(rect(min(x, x + 24 * flip) - 1, y - 4, 26, 10, 3), cuff, s=1.5),
+              P.detail(f"M{x+2*flip},{y+70} L{x+30*flip},{y+70}", role, 0.8),
+              P.detail(f"M{x+6*flip},{y+20} l{10*flip},3 M{x+6*flip},{y+30} l{10*flip},3", role, 0.6)])
 
 
 def boots_leather(P):
@@ -664,6 +671,311 @@ def wyvernscale_pauldron(P):
     return J(b), ""
 
 
+# ------------------------------------------------------------- gems, rare metals, unidentified relics (expansion)
+PAL.setdefault("garnet", ("#e87a6a", "#9c1e1e", "#3e0608"))
+PAL.setdefault("sapphire", ("#8ab4ec", "#2a54a8", "#0e1a48"))
+PAL.setdefault("moonstone", ("#fbfaff", "#dcdcec", "#8a86a8"))
+PAL.setdefault("starstone", ("#6a6a8c", "#2c2a44", "#100e1c"))
+PAL.setdefault("starmetal", ("#9a9cac", "#4c4e60", "#1c1c28"))
+PAL.setdefault("adamant_dark", ("#6c8276", "#34463c", "#121c16"))
+PAL.setdefault("rust", ("#c8946a", "#8a4e2a", "#43200e"))
+PAL.setdefault("ranger", ("#b4ae7c", "#76704a", "#3a3620"))
+PAL.setdefault("ranger_cuff", ("#a8b48a", "#6a7a4e", "#34401e"))
+VERDIGRIS = "#6aa088"
+STARLIGHT = "#dfe6ff"
+
+
+def ngon(cx, cy, rx, ry, n=8, a0=-math.pi / 8):
+    return [(cx + math.cos(a0 + i * math.tau / n) * rx, cy + math.sin(a0 + i * math.tau / n) * ry) for i in range(n)]
+
+
+def sparkle(x, y, r, k=0.22):
+    """4-point star (path data)."""
+    return poly([(x, y - r), (x + r * k, y - r * k), (x + r, y), (x + r * k, y + r * k), (x, y + r), (x - r * k, y + r * k),
+                 (x - r, y), (x - r * k, y - r * k)])
+
+
+def cut_gem(P, role, cx=64, cy=66, rx=40, ry=34, n=8, table=0.52, glint=EMBER_HOT, glow_c=None):
+    """Faceted gem seen from above: girdle outline, table, star facets, lit glint (emit)."""
+    l, b_, s = PAL[role]
+    out = ngon(cx, cy, rx, ry, n)
+    tab = ngon(cx - rx * 0.04, cy - ry * 0.06, rx * table, ry * table, n)
+    b = [P.shape(poly(out), role, s=6, lw=3.6)]
+    for i in range(n):
+        j = (i + 1) % n
+        tri = poly([out[i], out[j], tab[j], tab[i]])
+        ang = math.atan2((out[i][1] + out[j][1]) / 2 - cy, (out[i][0] + out[j][0]) / 2 - cx)
+        lite = -math.cos(ang + math.pi * 0.75)          # light from top-left
+        col = l if lite > 0.35 else (s if lite < -0.35 else b_)
+        b.append(fill(tri, col, 0.55))
+    b.append(fill(poly(tab), l, 0.45))
+    facets = " ".join(f"M{out[i][0]:.1f},{out[i][1]:.1f} L{tab[i][0]:.1f},{tab[i][1]:.1f}" for i in range(n))
+    b.append(lin(facets + " " + poly(tab), INK, 1.3, 0.8))
+    b.append(fill(poly([tab[n - 3], tab[n - 2], ((tab[n - 2][0] + tab[0][0]) / 2, (tab[n - 2][1] + tab[0][1]) / 2 + 6)]), "#ffffff", 0.5))
+    gx, gy = cx - rx * 0.32, cy - ry * 0.34
+    e = [glow(P, cx, cy, max(rx, ry) * 1.15, glow_c or PAL[role][1], 0.28),
+         glow(P, gx, gy, 12, glint, 0.8), fill(sparkle(gx, gy, 9), "#ffffff", 0.95)]
+    return J(b), J(e)
+
+
+def gem_garnet(P):
+    return cut_gem(P, "garnet", rx=40, ry=36, n=8, glint=EMBER_HOT, glow_c=EMBER)
+
+
+def gem_sapphire(P):
+    return cut_gem(P, "sapphire", rx=32, ry=44, n=10, table=0.5, glint="#cfe4ff", glow_c="#5a8ad8")
+
+
+def gem_moonstone(P):
+    d = wobbly_ell(64, 68, 40, 34, 3, 0.02)
+    b = [P.shape(ell(66, 82, 40, 12), "slate", s=1, fill_override=PAL["moonstone"][2], hl=False),
+         P.shape(d, "moonstone", s=5, lw=3.6)]
+    b.append(fill(smooth([(40, 80), (58, 70), (82, 72), (98, 66), (94, 84), (70, 94), (46, 92)]), "#b8a8e8", 0.55))
+    b.append(fill(ell(56, 58, 20, 12), "#ffffff", 0.6))
+    b.append(lin("M36,62 Q46,42 70,40", "#ffffff", 3, 0.8))
+    e = [glow(P, 70, 80, 32, VIOLET, 0.6, rx=34, ry=18), glow(P, 84, 62, 16, "#9cc4ff", 0.5),
+         fill(smooth([(50, 84), (68, 78), (90, 76), (78, 88), (60, 90)]), VIOLET_HOT, 0.45), glow(P, 64, 68, 52, "#d8d0ff", 0.25)]
+    return J(b), J(e)
+
+
+def gem_starstone(P):
+    d = poly(ngon(64, 66, 42, 38, 7, -0.3))
+    b = [P.shape(d, "starstone", s=6, lw=3.6)]
+    b.append(P.detail("M40,52 L58,60 L86,50 M58,60 L62,92 M58,60 L34,78", "starstone", 0.8, 0.8))
+    b.append(fill(ell(50, 48, 12, 5), "#c8ccff", 0.25))
+    rnd = random.Random(7)
+    pts = [(rnd.uniform(36, 92), rnd.uniform(40, 92)) for _ in range(11)]
+    e = [glow(P, 64, 66, 52, "#6a70c8", 0.35), glow(P, 64, 66, 24, STARLIGHT, 0.3)]
+    e.append(fill(" ".join(ell(x, y, rnd.uniform(1.1, 1.8)) for x, y in pts), "#f4f6ff", 0.95))
+    for x, y, r in [(70, 62, 12), (48, 78, 7), (84, 80, 6)]:
+        e.append(glow(P, x, y, r * 1.4, STARLIGHT, 0.7) + fill(sparkle(x, y, r, 0.18), "#ffffff", 1.0))
+    return J(b), J(e)
+
+
+def ingot_adamantine(P):
+    b, e = ingot(P, "adamant_dark")
+    veins = "M34,52 l10,3 l6,-4 l10,4 M52,62 l12,-6 l8,3 M72,48 l8,4 l10,-3 M50,74 l10,-3 l6,4 l12,-5 l8,2 M90,66 l10,-4"
+    b += lin(veins, INK, 2.2, 0.7)
+    e = (glow(P, 66, 62, 44, VIOLET, 0.32) + lit_marks(P, veins, VIOLET, VIOLET_HOT, w=1.1, glow_w=4, op=0.95, blur=1.8))
+    return b, e
+
+
+def starmetal_fragment(P):
+    sh = poly([(30, 84), (24, 62), (40, 46), (52, 22), (64, 38), (84, 28), (100, 50), (94, 66), (106, 84), (78, 100), (58, 94), (42, 104)])
+    b = [P.shape(sh, "starmetal", s=7, lw=3.6)]
+    b.append(P.detail("M40,46 L60,62 L84,28 M60,62 L58,94 M60,62 L94,66 M30,84 L60,62", "starmetal", 0.9, 0.85))
+    b.append(fill(poly([(52, 24), (60, 58), (42, 48)]) + " " + poly([(84, 30), (96, 50), (64, 58)]), PAL["starmetal"][0], 0.55))
+    rnd = random.Random(4)
+    b.append(fill(" ".join(ell(rnd.uniform(40, 92), rnd.uniform(60, 92), rnd.uniform(1.4, 2.6)) for _ in range(8)), INK, 0.55))
+    e = [glow(P, 64, 64, 46, "#8a9ccc", 0.25)]
+    for x, y, r in [(56, 34, 9), (88, 44, 6), (74, 80, 5), (40, 70, 4)]:
+        e.append(glow(P, x, y, r * 1.3, STARLIGHT, 0.6) + fill(sparkle(x, y, r, 0.18), "#ffffff", 0.95))
+    return J(b), J(e)
+
+
+def unknown_tag(P, x, y, ang=-12, sx=None, sy=None):
+    """Parchment tag with a rubric '?' tied by a cord: the 'unidentified' cue shared by relic_unknown_*."""
+    o = []
+    if sx is not None:
+        o.append(lin(f"M{sx},{sy} Q{(sx + x) / 2},{max(sy, y) + 6} {x - 9},{y}", INK, 2.4))
+        o.append(lin(f"M{sx},{sy} Q{(sx + x) / 2},{max(sy, y) + 6} {x - 9},{y}", "#efe2c0", 1.1))
+    t = poly([(x - 12, y - 4), (x - 6, y - 12), (x + 14, y - 12), (x + 14, y + 12), (x - 6, y + 12), (x - 12, y + 4)])
+    g = [P.shape(t, "paper", s=2, lw=2.6), fill(ell(x - 6, y, 2), INK, 0.9)]
+    q = f"M{x-1},{y-4.5} q0,-4.5 4.5,-4.5 q4.5,0 4.5,4 q0,3 -4.5,4.5 l0,3"
+    g.append(lin(q, RUB, 2.8))
+    g.append(fill(ell(x + 3.5, y + 8, 1.7), RUB))
+    o.append(f'<g transform="rotate({ang} {x} {y})">' + J(g) + "</g>")
+    return J(o)
+
+
+def crust(rnd, n, x0, x1, y0, y1, r0, r1, seed):
+    return " ".join(blob(rnd.uniform(x0, x1), rnd.uniform(y0, y1), rnd.uniform(r0, r1), 5, 0.3, seed + i) for i in range(n))
+
+
+def relic_unknown_arms(P):
+    # a second, broken blade behind, crossed
+    back = [P.shape(poly([(58, 24), (70, 22), (72, 92), (56, 94)]), "rust", s=3),
+            P.shape(rect(52, 88, 24, 8, 3), "rust", s=1.5)]
+    b, _ = blade_sword(P, "rust", "rust", "rust", nicks=True)
+    rnd = random.Random(9)
+    cr = crust(rnd, 6, 54, 74, 22, 80, 3, 6, 20)
+    vg = crust(rnd, 5, 52, 76, 30, 96, 3, 6, 40)
+    b += fill(cr, PAL["rust"][2], 0.75) + fill(vg, VERDIGRIS, 0.85) + lin(vg, INK, 0.8, 0.6)
+    b += P.detail("M58,40 l6,3 l4,-2 M60,62 l5,2 M57,30 l3,4", "rust", 0.7)
+    back_s = rot(J(back) + fill(crust(rnd, 4, 56, 72, 30, 80, 3, 5, 60), VERDIGRIS, 0.8), -40)
+    wrap = P.shape(poly([(46, 70), (82, 58), (86, 70), (50, 82)]), "burlap", s=2, lw=2.4)
+    wrap += P.detail("M54,68 L58,79 M66,64 L70,75 M76,61 L80,72", "burlap", 0.7)
+    body = back_s + rot(b, 45) + wrap + unknown_tag(P, 98, 98, -10, 82, 68)
+    return body, ""
+
+
+def relic_unknown_tablet(P):
+    front = poly([(26, 30), (52, 18), (96, 24), (104, 46), (100, 96), (90, 108), (40, 112), (28, 98), (24, 60)])
+    side = poly([(96, 24), (106, 30), (112, 52), (108, 100), (98, 114), (90, 108), (100, 96), (104, 46)])
+    b = [P.shape(side, "slate", s=2, fill_override=PAL["slate"][2]), P.shape(front, "slate", s=7, lw=3.6)]
+    rnd = random.Random(14)
+    runes = " ".join(rune_glyphs(rnd, x, y, 5.5) for y in (42, 62, 82) for x in (42, 58, 74, 88) if not (x == 88 and y == 82))
+    b.append(lin(runes, "#e4e4dc", 2.6, 0.45, extra='transform="translate(0.9,1.1)"'))
+    b.append(lin(runes, INK, 2.2, 0.7))
+    b.append(lin("M52,18 L56,34 L48,50 L54,66 M96,58 L84,68 L88,84 L78,98 M24,60 L36,66", INK, 2.0, 0.95))
+    b.append(fill(crust(rnd, 6, 28, 98, 24, 108, 3, 6, 70), "#7a8a5a", 0.55))
+    b.append(P.detail("M30,96 l8,4 M70,104 l10,-2", "slate", 0.6))
+    e = glow(P, 64, 62, 34, RUNE_GOLD, 0.18) + lin(runes, RUNE_GOLD, 0.8, 0.35)
+    return J(b) + unknown_tag(P, 100, 100, 8, 92, 86), e
+
+
+def relic_unknown_reliquary(P):
+    """Small gabled shrine-box of bronze, crusted with verdigris, sealed with wax."""
+    side = poly([(94, 58), (106, 52), (106, 96), (94, 104)])
+    roof_side = poly([(64, 26), (76, 22), (110, 50), (98, 58)])
+    box = rect(30, 58, 64, 46, 3)
+    roof = poly([(24, 62), (64, 26), (100, 60)])
+    b = [P.shape(side, "bronze", s=2, fill_override=PAL["bronze"][2]), P.shape(roof_side, "bronze", s=2, fill_override=PAL["bronze"][1]),
+         P.shape(box, "bronze", s=5, lw=3.4), P.shape(roof, "bronze", s=3, fill_override=PAL["bronze"][0], lw=3.4)]
+    for x in (28, 96):                       # feet
+        b.append(P.shape(rect(x, 102, 10, 8, 2), "bronze", s=1, fill_override=PAL["bronze"][2]))
+    b.append(P.shape(rect(26, 58, 72, 6, 2), "gold", s=1))           # lid seam band
+    b.append(lin("M64,26 L64,10", INK, 5))                           # finial: spike + orb
+    b.append(lin("M64,26 L64,10", PAL["gold"][1], 2.6))
+    b.append(P.shape(ell(64, 18, 5), "gold", s=1, lw=2))
+    b.append(lin("M40,72 L84,72 L84,98 L40,98 Z", INK, 1.4, 0.6))   # engraved panel
+    b.append(lin("M62,76 L72,85 L62,94 L52,85 Z M62,81 L62,89", INK, 1.6, 0.5))
+    pins = [(36, 68), (88, 68), (36, 98), (88, 98)]
+    b.append(fill(" ".join(ell(x, y, 2.4) for x, y in pins), PAL["gold"][0]))
+    b.append(lin(" ".join(ell(x, y, 2.4) for x, y in pins), INK, 0.8))
+    rnd = random.Random(21)
+    vg = crust(rnd, 8, 30, 96, 36, 104, 3.5, 6.5, 80)
+    b.append(fill(vg, VERDIGRIS, 0.85))
+    b.append(lin(vg, INK, 0.8, 0.5))
+    b.append(fill(poly([(34, 58), (64, 30), (64, 38), (42, 58)]), "#ffffff", 0.2))
+    # wax seal across the lid seam
+    b.append(P.shape(wobbly_ell(64, 62, 10, 9, 2, 0.12), "garnet", s=1.5, lw=2.4))
+    b.append(lin("M60,62 l4,-4 l4,4 l-4,4 Z", "#e87a6a", 1.1, 0.9))
+    b.append(lin("M58,70 l-2,8 M70,70 l2,7", "#9c1e1e", 2.4, 0.9))
+    return J(b) + unknown_tag(P, 100, 104, -8, 104, 90), ""
+
+
+def recipe_scroll(P):
+    body = rect(24, 50, 78, 30, 4)
+    b = [P.shape(body, "paper", s=5, lw=3.4)]
+    b.append(P.shape(ell(102, 65, 9, 15), "paper", s=2, fill_override=PAL["paper"][0]))
+    b.append(lin("M102,65 m-1,0 a2,3 0 1,1 3,1 a4,6 0 1,1 -6,-3 a6,10 0 1,1 9,6", INK, 1.2, 0.8))
+    b.append(P.detail("M30,58 L96,58 M30,72 L96,72", "paper", 0.5, 0.6))
+    # loose curl of the unrolled end
+    b.append(P.shape(smooth([(24, 50), (14, 54), (12, 66), (18, 78), (24, 80)], close=False) + " Z", "paper", s=2, fill_override=PAL["paper"][2]))
+    # faded ink lines peeking on the flap
+    b.append(lin("M40,62 l18,0 M62,62 l14,0 M40,68 l26,0", RUB, 1.0, 0.5))
+    # cord + wax seal with ribbon tails
+    b.append(lin("M60,48 L60,82", INK, 4.4))
+    b.append(lin("M60,48 L60,82", "#b89060", 2.2))
+    b.append(P.shape(smooth([(56, 82), (52, 108), (58, 104), (60, 94)]) + " " + smooth([(64, 82), (72, 106), (66, 104), (62, 94)]), "cloth", s=1.5, lw=2.4))
+    b.append(P.shape(wobbly_ell(60, 84, 12, 11, 4, 0.1), "garnet", s=3, lw=2.8))
+    b.append(lin(wobbly_ell(60, 84, 7.5, 7, 4, 0.06), "#3e0608", 1.4, 0.8))
+    b.append(lin("M56,86 l4,-6 l4,6 M57,84 l6,0", "#3e0608", 1.4, 0.9))
+    b.append(fill(ell(56, 79, 2.6, 1.6), "#ffffff", 0.55))
+    return rot(J(b), -18), ""
+
+
+def coating_frost(P):
+    b, e = potion(P, "ice", FROST, "tall")
+    flake = "M64,78 L64,104 M53,84 L75,98 M75,84 L53,98 M60,80 l4,3 l4,-3 M60,102 l4,-3 l4,3"
+    e += lit_marks(P, flake, "#7cc8ec", "#f4fcff", w=1.4, glow_w=4, op=0.95)
+    b += fill(" ".join(ell(x, y, 2) for x, y in [(52, 30), (76, 32), (50, 46)]), "#f4fcff", 0.9)
+    return b, e
+
+
+def ring_garnet(P):
+    b = [P.shape(ell(64, 74, 38, 30) + " " + ell(64, 70, 27, 20), "gold", s=4).replace('<path d="', '<path fill-rule="evenodd" d="')]
+    b.append(lin(ell(64, 72, 32, 25), "#fff2c0", 1.2, 0.6))
+    b.append(P.shape(smooth([(46, 46), (54, 36), (74, 36), (82, 46), (74, 52), (54, 52)]), "gold", s=2))
+    for x, y in [(50, 30), (78, 30), (52, 48), (76, 48)]:
+        b.append(P.shape(ell(x, y, 3.2), "gold", s=0.6, lw=1.6))
+    gb, ge = cut_gem(P, "garnet", 64, 38, 15, 13, 8, 0.5, EMBER_HOT, EMBER)
+    b.append(gb)
+    b.append(fill(ell(44, 58, 6, 3), "#ffffff", 0.6))
+    return J(b), ge
+
+
+def amulet_sapphire(P):
+    beads = []
+    for i in range(26):
+        t = i / 25
+        x = (1 - t) ** 2 * 26 + 2 * (1 - t) * t * 64 + t * t * 102
+        y = (1 - t) ** 2 * 14 + 2 * (1 - t) * t * 104 + t * t * 14
+        beads.append(ell(x, y, 2.6, 2.0))
+    chain = " ".join(beads)
+    b = [lin(chain, INK, 1.4), lin(chain, PAL["gold"][1], 0.8)]
+    drop = smooth([(64, 58), (82, 74), (86, 94), (76, 110), (64, 114), (52, 110), (42, 94), (46, 74)])
+    b.append(P.shape(drop, "gold", s=4))
+    b.append(lin(" ".join(ell(64 + 19 * math.cos(a), 92 + 19 * math.sin(a), 1.2) for a in [i * math.tau / 12 for i in range(1, 12)]), INK, 0.8))
+    b.append(P.shape(rect(59, 54, 10, 9, 2), "gold", s=1))
+    gb, ge = cut_gem(P, "sapphire", 64, 92, 13, 16, 8, 0.5, "#cfe4ff", "#5a8ad8")
+    b.append(gb)
+    return J(b), ge
+
+
+def sword_emberwarden(P):
+    b, e = blade_sword(P, "metal", "darkiron", "leather", runes=(EMBER, EMBER_HOT), guard_gem="garnet")
+    e += glow(P, 64, 88, 10, EMBER, 0.7)
+    return rot(b, 45), rot(e, 45)
+
+
+def sword_starsteel(P):
+    b, e = blade_sword(P, "starmetal", "bronze", "cloth", guard_shape="down", pommel_gem=False)
+    g = [glow(P, 64, 50, 40, "#8a9ccc", 0.18, rx=12, ry=44)]
+    for x, y, r in [(62, 30, 5), (66, 52, 4), (61, 70, 3.5)]:
+        g.append(glow(P, x, y, r * 1.6, STARLIGHT, 0.6) + fill(sparkle(x, y, r, 0.18), "#ffffff", 0.95))
+    rnd = random.Random(5)
+    b += fill(" ".join(ell(rnd.uniform(60, 68), rnd.uniform(26, 82), rnd.uniform(0.6, 1.1)) for _ in range(10)), "#e8ecff", 0.8)
+    b += P.detail("M64,118 m-4,0 l4,-4 l4,4 l-4,4 Z", "bronze", 0.8)
+    return rot(b, 45), rot(e + J(g), 45)
+
+
+def warplate_adamantine(P):
+    b = []
+    for sg in (-1, 1):
+        b.append(P.shape(smooth([(64 + sg * 20, 20), (64 + sg * 46, 22), (64 + sg * 54, 42), (64 + sg * 40, 52), (64 + sg * 24, 40)]), "adamant_dark", s=3))
+        b.append(P.detail(f"M{64 + sg * 30},{26} Q{64 + sg * 46},{30} {64 + sg * 50},{42}", "adamant_dark", 0.7))
+    bp = smooth([(38, 24), (64, 30), (90, 24), (100, 56), (92, 96), (64, 112), (36, 96), (28, 56)])
+    b.append(P.shape(bp, "adamant_dark", s=8, lw=3.6))
+    b.append(P.detail("M64,32 L64,108 M40,84 Q64,96 88,84 M36,98 Q64,110 92,98", "adamant_dark", 0.9))
+    b.append(P.shape(smooth([(44, 16), (64, 10), (84, 16), (82, 30), (64, 34), (46, 30)]), "adamant_dark", s=2))
+    riv = [(40, 34), (88, 34), (36, 74), (92, 74), (46, 92), (82, 92)]
+    b.append(fill(" ".join(ell(x, y, 2.6) for x, y in riv), PAL["adamant_dark"][0]))
+    b.append(lin(" ".join(ell(x, y, 2.6) for x, y in riv), INK, 0.8))
+    b.append(fill(smooth([(42, 36), (52, 34), (54, 60), (46, 78), (40, 60)]), "#ffffff", 0.14))
+    marks = "M48,46 L56,54 L64,46 L72,54 L80,46 M50,62 L64,72 L78,62 M64,72 L64,84 M56,80 l8,4 l8,-4"
+    b.append(lin(marks, INK, 3.2, 0.8))
+    e = glow(P, 64, 62, 46, VIOLET, 0.3) + lit_marks(P, marks, VIOLET, VIOLET_HOT, w=1.2, glow_w=4.4, op=0.95, blur=1.8)
+    return J(b), e
+
+
+def boots_ranger(P):
+    o = []
+    for x, y in ((54, 24), (30, 30)):
+        o.append(boot(P, x, y, 1, "ranger", "ranger_cuff"))
+        o.append(P.shape(smooth([(x - 3, y - 6), (x + 12, y - 9), (x + 26, y - 6), (x + 27, y + 10), (x + 12, y + 14), (x - 3, y + 12)]), "ranger_cuff", s=2))
+        o.append(lin(" ".join(f"M{x+4},{y+20+i*7} L{x+18},{y+25+i*7} M{x+18},{y+20+i*7} L{x+4},{y+25+i*7}" for i in range(3)), "#e8d8b0", 1.0, 0.85))
+    return J(o), ""
+
+
+def hood_embroidered(P):
+    b = [P.shape(smooth([(22, 116), (24, 64), (36, 30), (64, 12), (92, 30), (104, 64), (106, 116), (82, 108), (64, 112), (46, 108)]), "strap", s=8)]
+    b.append(fill(smooth([(40, 104), (40, 66), (52, 44), (64, 38), (76, 44), (88, 66), (88, 104), (64, 96)]), "#2a1c12", 0.95))
+    b.append(fill(smooth([(46, 98), (48, 70), (58, 52), (64, 50), (70, 52), (80, 70), (82, 98), (64, 92)]), "#16100b", 0.6))
+    trim = smooth([(36, 108), (38, 64), (50, 40), (64, 34), (78, 40), (90, 64), (92, 108)], close=False)
+    b.append(lin(trim, INK, 4.2))
+    b.append(lin(trim, PAL["gold"][1], 2.4))
+    b.append(f'<path d="{trim}" fill="none" stroke="#f4dc90" stroke-width="1.0" stroke-dasharray="2.5 2.5" opacity="0.9"/>')
+    rnd = random.Random(11)
+    sig = rune_glyphs(rnd, 64, 22, 5) + " " + ell(64, 22, 8.5) + " " + rune_glyphs(rnd, 28, 92, 4.5) + " " + rune_glyphs(rnd, 100, 92, 4.5)
+    sig += " M24,74 l4,-4 l4,4 l-4,4 Z M104,74 l-4,-4 l-4,4 l4,4 Z"
+    b.append(lin(sig, INK, 3.2, 0.9))
+    b.append(lin(sig, "#e8c874", 1.5))
+    e = glow(P, 64, 22, 12, GILT, 0.3)
+    return J(b), e
+
+
 # ------------------------------------------------------------- small UI icons (32x32, 128 design)
 def star(P):
     pts = []
@@ -700,8 +1012,14 @@ def lock(P):
 ICONS = {k: v for k, v in globals().items() if callable(v)}
 
 
-SCALE = dict(ring_silver=1.3, mace_flanged=1.12, dagger=1.15, herb_emberleaf=1.12, herb_moonwort=1.12, axe_hand=1.08,
+SCALE = dict(gem_garnet=1.08, gem_moonstone=1.06, relic_unknown_arms=1.06,
+             ring_silver=1.3, mace_flanged=1.12, dagger=1.15, herb_emberleaf=1.12, herb_moonwort=1.12, axe_hand=1.08,
              amulet_silver=1.08, runestone_blank=1.1, runestone_ember=1.1, runestone_ward=1.1, runestone_frost=1.1)
+
+
+EXTRA = ["gem_garnet", "gem_sapphire", "gem_moonstone", "gem_starstone", "ingot_adamantine", "starmetal_fragment",
+         "relic_unknown_arms", "relic_unknown_tablet", "relic_unknown_reliquary", "recipe_scroll", "coating_frost", "ring_garnet",
+         "amulet_sapphire", "sword_emberwarden", "sword_starsteel", "warplate_adamantine", "boots_ranger", "hood_embroidered"]
 
 
 def build(name, fn, size, lw_mul):
@@ -723,6 +1041,12 @@ def jobs():
     seen = set()
     for it in load("items.json"):
         ic = it["icon"]
+        if ic in seen or (only and ic not in only):
+            continue
+        seen.add(ic)
+        svg, ss = build(ic, ICONS[ic], 64, 0.95)
+        js.append(dict(name=f"ic_{ic}", svg=svg, w=64, h=64, ss=ss, out=os.path.join(SPR, "icons", ic + ".png")))
+    for ic in EXTRA:                       # expansion icons (rendered even before items.json lists them)
         if ic in seen or (only and ic not in only):
             continue
         seen.add(ic)

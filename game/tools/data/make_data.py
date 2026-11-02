@@ -104,6 +104,25 @@ items = [
  it("purse_gift", "Gift Purse", "container", None, 0),
  it("chest_recovered", "Recovered Chest", "container", None, 0),
  it("package_reward", "Reward Package", "container", None, 0),
+ # ---- iteration 3: gemstones, rare minerals, components and relics that need study
+ it("gem_garnet", "Garnet", "material", None, 35, {"fire": 3}, stack=True, desc="A deep red stone. Smiths say it holds a little of the forge's heat.", tags=["gem"]),
+ it("gem_sapphire", "Sapphire", "material", None, 45, {"frost": 3}, stack=True, desc="Cold blue, clear as a winter sky.", tags=["gem"]),
+ it("gem_moonstone", "Moonstone", "material", None, 40, {"magic": 3}, stack=True, desc="Milky and pale; it seems to drink in lamplight.", tags=["gem"]),
+ it("gem_starstone", "Starstone", "material", None, 160, {"magic": 5}, stack=True, desc="A rare dark mineral flecked with silver. Found only in the deep places.", tags=["gem", "rare"]),
+ it("ingot_adamantine", "Charged Adamantine Ingot", "material", None, 260, stack=True, desc="Near-unbreakable metal with a ward bound into its grain.", tags=["arcane"]),
+ it("starmetal_fragment", "Starmetal Fragment", "material", None, 120, stack=True, desc="A shard of something that fell from the sky long ago.", tags=["rare"]),
+ it("relic_unknown_arms", "Corroded Ancient Arms", "relic", None, 40, desc="Crusted with centuries of grave-earth. Study it to learn what it was.", tags=["unidentified"]),
+ it("relic_unknown_tablet", "Weathered Rune Tablet", "relic", None, 40, desc="Carved marks too worn to read at a glance.", tags=["unidentified"]),
+ it("relic_unknown_reliquary", "Sealed Reliquary", "relic", None, 60, desc="Bronze gone green. Something rattles inside.", tags=["unidentified"]),
+ it("recipe_scroll", "Forgotten Recipe", "relic", None, 80, desc="A smith's working notes from another age. Read it to learn the recipe.", tags=["recipe"]),
+ it("coating_frost", "Frost Coating", "potion", None, 70, {"frost": 2}, stack=True, desc="Brushed onto a blade: rime spreads along the edge on the strike."),
+ it("ring_garnet", "Garnet Ring", "ring", "ring", 160, {"fire": 4, "magic": 2}, desc="Warm to the touch."),
+ it("amulet_sapphire", "Sapphire Amulet", "amulet", "amulet", 190, {"frost": 3, "ward": 3, "magic": 3}),
+ it("sword_emberwarden", "Emberwarden Longsword", "weapon", "weapon", 420, {"attack": [14, 19], "durability": 110, "fire": 5}, desc="Steel, an ember rune in the guard, a flame-quenched edge and a ghost-thread grip.", tags=["enchanted"]),
+ it("sword_starsteel", "Starsteel Blade", "weapon", "weapon", 480, {"attack": [17, 23], "durability": 160}, desc="Forged to a recipe older than the village."),
+ it("warplate_adamantine", "Adamantine Warplate", "armor_metal", "armor", 700, {"protection": [16, 22], "durability": 190, "ward": 6, "magic": 4}, desc="Ward-magic bound into the metal itself; violet seams glow under strain.", tags=["arcane"]),
+ it("boots_ranger", "Ranger's Soft Boots", "boots", "boots", 70, {"protection": [1, 3], "durability": 60, "speed": 6}, desc="Silent on leaf-litter. Light enough to run in."),
+ it("hood_embroidered", "Embroidered Hood", "helmet", "helmet", 140, {"protection": [2, 3], "durability": 50, "ward": 4}, desc="Gold sigils stitched with ethereal thread turn aside curses.", tags=["enchanted"]),
  # named unique / set
  it("grimhold", "Grimhold, the Last Hammer", "weapon", "weapon", 900, {"attack": [24, 34], "durability": 200, "smithing": 2}, tags=["unique"]),
  it("wyvernscale_pauldron", "Wyvernscale Pauldron", "armor_metal", "armor", 400, {"protection": [14, 20], "durability": 150}, tags=["set"]),
@@ -140,20 +159,37 @@ W("upgrades.json", [
 ])
 
 # ---------------------------------------------------------------- destinations / loot
+# threats: what an expedition meets. kind decides which gear helps: weak = damage type that hurts
+# it most (fire/frost/magic), resist = damage type it shrugs off. power/dmg scale the danger.
+def T(name, kind, power, dmg, weak="", resist=""):
+    return dict(name=name, kind=kind, power=power, dmg=dmg, weak=weak, resist=resist)
 W("destinations.json", [
- {"id": "ironroot_mine", "name": "Ironroot Mine", "exit": "north", "kind": "mining", "days": [1, 2], "danger": 1, "skill": "mining", "loot": "mine", "desc": "Old dwarf-cut galleries north of the village. Iron, coal and the odd vein of silver."},
- {"id": "whisperwood", "name": "Whisperwood", "exit": "west", "kind": "scouting", "days": [1, 2], "danger": 2, "skill": "travelling", "loot": "forest", "desc": "Herbs, hides and wolves."},
- {"id": "highmarsh_road", "name": "Highmarsh Road", "exit": "east", "kind": "trade", "days": [2, 3], "danger": 2, "skill": "travelling", "loot": "trade", "desc": "The trade road to Highmarsh. Bandits on the bad stretches."},
- {"id": "barrow_fields", "name": "Barrow Fields", "exit": "south", "kind": "relics", "days": [2, 3], "danger": 4, "skill": "relic_hunting", "loot": "barrow", "desc": "Burial mounds full of grave-goods and things that guard them."},
- {"id": "deep_ironroot", "name": "Deep Ironroot", "exit": "north", "kind": "mining", "days": [3, 4], "danger": 6, "skill": "mining", "loot": "deep_mine", "desc": "Below the old workings. Mithril — and whatever drove the dwarves out.", "requires_flag": "delve_map"}
+ {"id": "ironroot_mine", "name": "Ironroot Mine", "exit": "north", "kind": "mining", "days": [1, 2], "danger": 1, "skill": "mining", "loot": "mine", "desc": "Old dwarf-cut galleries north of the village. Iron, coal, gems and the odd vein of silver.",
+  "threats": [T("cave spiders", "beast", 8, 4, "fire"), T("a rockfall", "hazard", 6, 6), T("tunnel goblins", "bandit", 10, 5)]},
+ {"id": "whisperwood", "name": "Whisperwood", "exit": "west", "kind": "scouting", "days": [1, 2], "danger": 2, "skill": "travelling", "loot": "forest", "desc": "Herbs, hides and wolves. Scouting here finds the herb-wives who sell to smiths.",
+  "threats": [T("a wolf pack", "beast", 14, 6, "fire"), T("a wild boar", "beast", 16, 8), T("bandit scouts", "bandit", 14, 6)], "discovers": "supplier_herbalist"},
+ {"id": "highmarsh_road", "name": "Highmarsh Road", "exit": "east", "kind": "trade", "days": [2, 3], "danger": 2, "skill": "travelling", "loot": "trade", "desc": "The trade road to Highmarsh. Buy materials, sell your goods — bandits on the bad stretches.",
+  "threats": [T("road bandits", "bandit", 16, 7), T("a bog wraith", "spirit", 18, 6, "magic", "physical"), T("marsh hounds", "beast", 12, 6, "fire")], "discovers": "supplier_highmarsh"},
+ {"id": "barrow_fields", "name": "Barrow Fields", "exit": "south", "kind": "relics", "days": [2, 3], "danger": 4, "skill": "relic_hunting", "loot": "barrow", "desc": "Burial mounds full of grave-goods, sealed relics — and the things that guard them.",
+  "threats": [T("barrow wights", "undead", 26, 10, "fire", "frost"), T("a grave guardian", "construct", 30, 12, "frost"), T("restless dead", "undead", 22, 9, "fire")]},
+ {"id": "deep_ironroot", "name": "Deep Ironroot", "exit": "north", "kind": "mining", "days": [3, 4], "danger": 6, "skill": "mining", "loot": "deep_mine", "desc": "Below the old workings. Mithril, adamantine, starstone — and whatever drove the dwarves out.", "requires_flag": "delve_map",
+  "threats": [T("a stone golem", "construct", 40, 16, "frost", "fire"), T("shadow crawlers", "spirit", 34, 12, "fire", "physical"), T("a dwarf-king's revenant", "undead", 44, 16, "fire", "frost")]}
 ])
+W("suppliers.json", {
+ "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",
+ "village": [["ore_iron", 6], ["coal", 3], ["leather_hide", 7], ["thread_linen", 4], ["reagent_salt", 7]],
+ "supplier_herbalist": [["herb_emberleaf", 8], ["herb_moonwort", 8], ["reagent_salt", 6]],
+ "supplier_highmarsh": [["ingot_steel", 30], ["ore_silver", 18], ["thread_ethereal", 48], ["gem_garnet", 40], ["gem_sapphire", 52], ["ore_mithril", 110]]
+})
 W("loot_tables.json", {
  "_doc": "rolls: number of items; entries: [item_id, weight, [min,max] qty]; rarity_bias raises chances of rare/legendary equipment rolls.",
- "mine": {"rolls": [3, 5], "entries": [["ore_iron", 40, [2, 5]], ["coal", 30, [2, 5]], ["ore_copper", 12, [1, 3]], ["ore_silver", 8, [1, 2]], ["runestone_blank", 7, [1, 1]], ["ore_mithril", 2, [1, 1]], ["relic_map", 1, [1, 1]]]},
- "deep_mine": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_silver", 20, [1, 3]], ["runestone_blank", 18, [1, 2]], ["ore_adamantine", 6, [1, 1]], ["equip:weapon", 6, [1, 1]], ["relic_crown_shard", 2, [1, 1]]], "rarity_bias": 25},
+ "mine": {"rolls": [3, 5], "entries": [["ore_iron", 40, [2, 5]], ["coal", 30, [2, 5]], ["ore_copper", 12, [1, 3]], ["ore_silver", 8, [1, 2]], ["runestone_blank", 7, [1, 1]], ["gem_garnet", 5, [1, 1]], ["gem_moonstone", 3, [1, 1]], ["ore_mithril", 2, [1, 1]], ["relic_map", 1, [1, 1]]], "skill_entries": {"3": [["gem_sapphire", 4, [1, 1]]], "5": [["ore_mithril", 4, [1, 2]]]}},
+ "deep_mine": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_silver", 20, [1, 3]], ["runestone_blank", 18, [1, 2]], ["ore_adamantine", 8, [1, 2]], ["gem_sapphire", 8, [1, 1]], ["gem_starstone", 3, [1, 1]], ["starmetal_fragment", 3, [1, 1]], ["equip:weapon", 6, [1, 1]], ["relic_unknown_arms", 4, [1, 1]], ["relic_crown_shard", 2, [1, 1]]], "rarity_bias": 25, "skill_entries": {"6": [["gem_starstone", 6, [1, 1]]]}},
  "forest": {"rolls": [3, 4], "entries": [["herb_emberleaf", 30, [1, 3]], ["herb_moonwort", 30, [1, 3]], ["leather_hide", 25, [1, 2]], ["thread_linen", 10, [1, 2]], ["equip:any", 5, [1, 1]]]},
  "trade": {"rolls": [2, 4], "entries": [["reagent_salt", 25, [1, 3]], ["thread_linen", 20, [2, 4]], ["thread_ethereal", 8, [1, 1]], ["leather_cured", 20, [1, 2]], ["coal", 20, [2, 4]], ["equip:any", 7, [1, 1]]]},
- "barrow": {"rolls": [3, 5], "entries": [["relic_coin", 20, [1, 2]], ["relic_idol", 12, [1, 1]], ["runestone_blank", 15, [1, 2]], ["equip:any", 30, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["ore_silver", 15, [1, 2]]], "rarity_bias": 15},
+ "barrow": {"rolls": [3, 5], "entries": [["relic_coin", 20, [1, 2]], ["relic_idol", 10, [1, 1]], ["runestone_blank", 12, [1, 2]], ["equip:any", 24, [1, 1]], ["relic_unknown_arms", 9, [1, 1]], ["relic_unknown_tablet", 8, [1, 1]], ["relic_unknown_reliquary", 6, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["ore_silver", 12, [1, 2]]], "rarity_bias": 15, "skill_entries": {"4": [["relic_unknown_reliquary", 6, [1, 1]]]}},
+ "relic_reveal": {"rolls": [1, 1], "entries": [["equip:ancient", 40, [1, 1]], ["starmetal_fragment", 18, [1, 2]], ["gem_starstone", 10, [1, 1]], ["gem_moonstone", 12, [1, 2]], ["recipe_scroll", 20, [1, 1]]], "rarity_bias": 30},
+ "gratitude": {"rolls": [1, 1], "entries": [["relic_unknown_reliquary", 40, [1, 1]], ["relic_unknown_arms", 30, [1, 1]], ["gem_starstone", 15, [1, 1]], ["recipe_scroll", 15, [1, 1]]]},
  "gift": {"rolls": [1, 2], "entries": [["potion_healing", 30, [1, 2]], ["runestone_ember", 10, [1, 1]], ["relic_coin", 15, [1, 1]], ["herb_moonwort", 25, [2, 3]], ["equip:jewel", 12, [1, 1]], ["ore_silver", 15, [1, 2]]], "rarity_bias": 10},
  "reward": {"rolls": [2, 3], "entries": [["equip:any", 35, [1, 1]], ["runestone_ward", 15, [1, 1]], ["relic_idol", 10, [1, 1]], ["ore_mithril", 10, [1, 1]], ["ingot_steel", 25, [1, 2]]], "rarity_bias": 30},
  "start_bag": {"rolls": [5, 5], "entries": [["ore_iron", 30, [4, 4]], ["coal", 30, [3, 3]], ["leather_hide", 20, [2, 2]], ["ore_silver", 10, [2, 2]], ["equip:legendary_demo", 10, [1, 1]]]}

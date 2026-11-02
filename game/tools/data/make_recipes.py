@@ -78,6 +78,9 @@ crafting = {
   "runestone": {"name": "Runestone", "stat": 1.0, "durability": 1.0, "difficulty": 1, "rarity_bonus": 4},
   "herbal": {"name": "Herbs & Reagents", "stat": 1.0, "durability": 1.0, "difficulty": 0, "rarity_bonus": 0},
   "ore": {"name": "Ore", "stat": 1.0, "durability": 1.0, "difficulty": 0, "rarity_bonus": 0},
+  "jewel": {"name": "Silver & Gemstone", "stat": 1.15, "durability": 0.8, "difficulty": 1, "rarity_bonus": 8},
+  "adamantine": {"name": "Charged Adamantine", "stat": 1.45, "durability": 1.8, "difficulty": 4, "rarity_bonus": 12},
+  "starmetal": {"name": "Steel & Starmetal", "stat": 1.3, "durability": 1.5, "difficulty": 2, "rarity_bonus": 10},
  },
 }
 
@@ -88,6 +91,9 @@ DM = {"purity": "1d6"}
 DP = {"potency": "1d8", "fortune": "1d100"}
 DR = {"resonance": "1d10", "fortune": "1d100"}
 DX = {"edge": "1d20", "spellweave": "1d12", "temper": "1d12", "fortune": "1d100"}
+DXA = {"guard": "1d20", "spellweave": "1d12", "temper": "1d12", "fortune": "1d100"}
+DJ = {"resonance": "1d10", "fortune": "1d100"}
+DE = {"edge": "1d20", "resonance": "1d10", "temper": "1d12", "fortune": "1d100"}
 
 
 def op(station, name, checks=1, weight=1.0):
@@ -95,11 +101,14 @@ def op(station, name, checks=1, weight=1.0):
 
 
 def rc(id, name, disc, category, material, difficulty, ops, inputs, out, qty=1, dice=None, xp=None,
-       requires=None, desc=""):
-    return dict(id=id, name=name, discipline=disc, category=category, material=material,
-                difficulty=difficulty, operations=ops, steps=[o["station"] for o in ops],
-                inputs=inputs, output=out, qty=qty, dice=dice or {}, xp=xp or {},
-                requires=requires or {}, desc=desc)
+       requires=None, desc="", flag=""):
+    r = dict(id=id, name=name, discipline=disc, category=category, material=material,
+             difficulty=difficulty, operations=ops, steps=[o["station"] for o in ops],
+             inputs=inputs, output=out, qty=qty, dice=dice or {}, xp=xp or {},
+             requires=requires or {}, desc=desc)
+    if flag:
+        r["requires_flag"] = flag   # learned from a forgotten recipe found among relics
+    return r
 
 
 recipes = [
@@ -209,6 +218,53 @@ recipes = [
      op("quench_trough", "Quench in still water", 1), op("grinding_wheel", "Hone", 1)],
     {"ingot_mithril": 2, "leather_cured": 1}, "sword_mithril", 1, DX, {"arcane_metalwork": 80, "smithing": 30},
     requires={"arcane_metalwork": 1}, desc="The magic lives in the metal; the markings glow when the blade is drawn."),
+ # ---- iteration 7: jewellery, treatments, leather, the adamantine chain, forgotten and multi-discipline work
+ rc("garnet_ring", "Garnet Ring", "classic", "jewellery", "jewel", 3,
+    [op("crucible", "Melt the silver", 1), op("anvil", "Draw and close the band", 1, 1.1),
+     op("rune_engraving_stand", "Seat the garnet", 1, 1.4), op("rune_polishing_wheel", "Polish band and stone", 1)],
+    {"ore_silver": 2, "gem_garnet": 1}, "ring_garnet", 1, DJ, {"smithing": 25, "runecraft": 15}, requires={"smithing": 3},
+    desc="Silver set with a garnet; the stone keeps a little of the forge's heat."),
+ rc("sapphire_amulet", "Sapphire Amulet", "runecraft", "jewellery", "jewel", 4,
+    [op("crucible", "Melt the silver", 1), op("anvil", "Hammer the setting", 1),
+     op("rune_cleansing_basin", "Cleanse the sapphire", 1, 0.8), op("rune_engraving_stand", "Bind the stone into the setting", 2, 1.4),
+     op("stitching_table", "Braid the cord", 1, 0.5)],
+    {"ore_silver": 2, "gem_sapphire": 1, "thread_linen": 1}, "amulet_sapphire", 1, DJ, {"runecraft": 35, "smithing": 10}, requires={"runecraft": 2}),
+ rc("frost_coating", "Frost Coating", "alchemy", "alchemy", "herbal", 3,
+    [op("mortar_station", "Grind moonwort with quicksalt", 1), op("alembic", "Distil the cold essence", 1, 1.1),
+     op("cauldron", "Thicken to a coating", 1, 1.2)],
+    {"herb_moonwort": 2, "reagent_salt": 1}, "coating_frost", 1, DP, {"alchemy": 26},
+    desc="Brushed onto a blade: rime spreads along the edge on the strike. Apply it at the infusion rack."),
+ rc("ranger_boots", "Ranger's Soft Boots", "stitching", "armour", "leather", 2,
+    [op("leather_vat", "Soften the uppers", 1, 0.8), op("stitching_table", "Turn-shoe the soles", 2, 1.3)],
+    {"leather_cured": 2, "thread_linen": 1}, "boots_ranger", 1, DA, {"enchanted_stitching": 22},
+    desc="Light and silent: speed matters more than plate for a scout."),
+ rc("embroidered_hood", "Embroidered Hood", "stitching", "armour", "ethereal", 4,
+    [op("thread_spinner", "Spin gold-ethereal thread", 1), op("stitching_table", "Cut and stitch the hood", 1),
+     op("embroidery_frame", "Embroider warding sigils", 2, 1.4)],
+    {"leather_cured": 1, "thread_ethereal": 1}, "hood_embroidered", 1, DA, {"enchanted_stitching": 45}, requires={"enchanted_stitching": 3}),
+ rc("emberwarden_longsword", "Emberwarden Longsword", "classic", "weapon", "steel", 5,
+    [op("forge", "Bring the steel to yellow heat", 1), op("anvil", "Forge a blade with a socketed guard", 3, 1.4),
+     op("rune_engraving_stand", "Seat the ember rune in the guard", 1, 1.3), op("cauldron", "Quench the edge in flame coating", 1, 1.2),
+     op("grinding_wheel", "Hone the burning edge", 1, 1.1), op("stitching_table", "Wrap the grip in ghost-thread", 1, 0.6)],
+    {"ingot_steel": 2, "runestone_ember": 1, "coating_flame": 1, "thread_ethereal": 1}, "sword_emberwarden", 1, DE,
+    {"smithing": 60, "runecraft": 25, "alchemy": 15, "enchanted_stitching": 10}, requires={"smithing": 4, "runecraft": 1},
+    desc="Four crafts in one blade: steel, an ember rune, a flame-quenched edge and a ghost-thread grip."),
+ rc("starsteel_blade", "Starsteel Blade", "classic", "weapon", "starmetal", 6,
+    [op("crucible", "Fuse starmetal into the steel", 2, 1.2), op("forge", "Hold the strange heat", 1),
+     op("anvil", "Fold the star-steel", 3, 1.5), op("quench_trough", "Quench in still water", 1, 1.1),
+     op("grinding_wheel", "Grind the pale edge", 1)],
+    {"ingot_steel": 2, "starmetal_fragment": 1}, "sword_starsteel", 1, DW, {"smithing": 70}, requires={"smithing": 4},
+    desc="From a forgotten recipe found among the barrow-relics.", flag="recipe_starsteel"),
+ rc("charge_adamantine", "Charge Adamantine", "arcane", "material", "ore", 5,
+    [op("arcane_crucible", "Melt adamantine in warded fire", 2), op("leyline_conductor", "Draw the leyline", 1),
+     op("aetheric_stabilizer", "Stabilise the bound ward", 1, 1.2)],
+    {"ore_adamantine": 2, "gem_moonstone": 1, "coal": 2}, "ingot_adamantine", 1, DM, {"arcane_metalwork": 50}),
+ rc("adamantine_warplate", "Adamantine Warplate", "arcane", "armour", "adamantine", 7,
+    [op("forge", "Heat the charged plates", 1), op("arcane_crucible", "Re-melt the ward seams", 1),
+     op("arcane_anvil", "Imprint the ward into the plate", 3, 1.5), op("spellbinding_array", "Bind the ward pattern", 2, 1.3),
+     op("aetheric_stabilizer", "Settle the bound magic", 1), op("stitching_table", "Rivet the straps", 1, 0.5)],
+    {"ingot_adamantine": 2, "leather_cured": 1}, "warplate_adamantine", 1, DXA, {"arcane_metalwork": 90, "smithing": 30},
+    requires={"arcane_metalwork": 1}, desc="The ward is in the metal itself — not a rune set into it."),
 ]
 
 if __name__ == "__main__":

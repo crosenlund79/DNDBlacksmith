@@ -303,6 +303,31 @@ static func work_hour(_h: int) -> void:
 
 
 static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
+	# skilled hands process stored materials into finished goods instead of gathering raw ones
+	if skill == "relic_hunting":
+		for it in Game.inventory():
+			if Regions.is_unidentified(it):
+				var res := Regions.identify(int(it["uid"]), 70.0 + lvl * 6.0, h["name"])
+				if not res.is_empty():
+					Events.toast.emit("%s identified a relic: %s." % [h["name"], Items.display_name(res)], "good")
+					return "studied a relic: %s" % Items.display_name(res)
+	if skill == "alchemy" and lvl >= 2:
+		if Game.count("herb_moonwort") >= 2 and randf() < 0.5:
+			Game.remove_def("herb_moonwort", 2)
+			Game.add_item(Items.make("potion_healing", {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
+			return "brewed a Healing Draught from stored moonwort"
+		if Game.count("herb_emberleaf") >= 1 and Game.count("reagent_salt") >= 1:
+			Game.remove_def("herb_emberleaf", 1)
+			Game.remove_def("reagent_salt", 1)
+			Game.add_item(Items.make("oil_whetstone", {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
+			return "pressed Whetstone Oil from stored emberleaf"
+	if skill == "runecraft" and lvl >= 2 and Game.count("runestone_blank") >= 1 and randf() < 0.35 + lvl * 0.05:
+		var kind := "runestone_ward" if Game.count("reagent_salt") >= 1 else ("runestone_ember" if Game.count("herb_emberleaf") >= 1 else "")
+		if kind != "":
+			Game.remove_def("runestone_blank", 1)
+			Game.remove_def("reagent_salt" if kind == "runestone_ward" else "herb_emberleaf", 1)
+			Game.add_item(Items.make(kind, {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
+			return "prepared a %s" % DB.item(kind)["name"]
 	if skill == "travelling":
 		var g := int(round((4 + lvl * 2 + randi_range(0, 4)) * trait_mult(h, "mult", "travelling")))
 		Game.add_gold(g, "trade", "%s traded small goods" % h["name"])
@@ -335,7 +360,7 @@ static func gear_score(h: Dictionary) -> float:
 	return s
 
 
-static func send(id: String, dest_id: String) -> String:
+static func send(id: String, dest_id: String, opts := {}) -> String:
 	var h := get_h(id)
 	var d: Dictionary = DB.destinations.get(dest_id, {})
 	if h.is_empty() or d.is_empty():
@@ -348,6 +373,14 @@ static func send(id: String, dest_id: String) -> String:
 	var days: int = maxi(1, randi_range(int(d["days"][0]), int(d["days"][1])) - (1 if trav >= 5 else 0))
 	h["status"] = "away"
 	h["expedition"] = {"dest": dest_id, "days_left": days, "total": days, "exit": d["exit"], "left_day": Game.day()}
+	# a trade run carries a purse for buying materials (and takes the trade goods along to sell)
+	var budget := int(opts.get("budget", 0))
+	if budget > 0 and d.get("kind", "") == "trade":
+		budget = mini(budget, Game.gold())
+		if budget > 0:
+			Game.add_gold(-budget, "materials", "Trade purse for %s" % h["name"])
+			h["expedition"]["budget"] = budget
+			h["expedition"]["want"] = opts.get("want", [])
 	Game.journal("%s set out for %s (%d days)." % [h["name"], d["name"], days])
 	Events.hireling_departed.emit(id, d["exit"])
 	Events.hirelings_changed.emit()
@@ -382,7 +415,7 @@ static func on_day() -> void:
 static func odds(h: Dictionary, dest_id: String) -> Dictionary:
 	var d: Dictionary = DB.destinations.get(dest_id, {})
 	var lvl := SkillSys.level(h["skills"], str(d.get("skill", "mining")))
-	var danger := float(d.get("danger", 1)) * trait_mult(h, "danger")
+	var danger := Regions.danger(dest_id) * trait_mult(h, "danger")
 	var power := lvl * 1.0 + SkillSys.level(h["skills"], "travelling") * 0.4 + gear_score(h) * 0.05
 	var success := clampf(0.5 + (power - danger) * 0.09, 0.1, 0.97)
 	var injury := clampf((0.08 + (danger - power) * 0.06) * trait_mult(h, "injury"), 0.02, 0.6)
@@ -431,12 +464,23 @@ static func _resolve(h: Dictionary) -> void:
 		contents.append(Loot.random_equipment("legendary_demo"))
 		contents.append(Items.make("ore_mithril", {"qty": 2}))
 	else:
-		contents = Loot.roll_table(d["loot"], lvl * 2.0 + trait_mult(h, "haul") + (0.0 if success else -25.0))
+		contents = Loot.roll_table(d["loot"], lvl * 2.0 + trait_mult(h, "haul") + (0.0 if success else -25.0), lvl)
 		if not success:
 			contents = contents.slice(0, max(1, contents.size() / 2))
 	var bag_def := "shipment_miner" if d["kind"] == "mining" else ("satchel_relic" if d["kind"] == "relics" else "bag_traveller")
 	Game.state["returns"].append(Loot.make_container(bag_def, contents, h["name"],
 		"%s's haul from %s." % [h["name"], d["name"]]))
+	# a trade run: spend the purse with the region's suppliers, sell the trade goods
+	if e.has("budget"):
+		var tr := Regions.run_trade(int(e["budget"]), SkillSys.level(h["skills"], "travelling"), e.get("want", []))
+		contents.append_array(tr["bought"])
+		var back := int(tr["change"]) + int(tr["sold_gold"])
+		if back > 0:
+			Game.add_gold(back, "trade", "%s's trade run: change and sales" % h["name"])
+		for ln in tr["lines"]:
+			log_line(h, ln)
+		log_line(h, "bought %d lots with a %d g purse" % [tr["bought"].size(), int(e["budget"])])
+	Regions.on_trip(e["dest"], SkillSys.level(h["skills"], "travelling"), success)
 	add_xp(h, skill, (40 + int(danger) * 15) if success else (20 + int(danger) * 8))
 	add_xp(h, "travelling", 15)
 	if injury:
