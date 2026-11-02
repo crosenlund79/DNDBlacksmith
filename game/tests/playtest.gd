@@ -82,6 +82,13 @@ func press(action: String) -> void:
 	await get_tree().process_frame
 
 
+## Closes the open panel (Esc) without opening the pause menu when nothing is open.
+func close_panel() -> void:
+	if panel() != null:
+		await press("cancel")
+		await wait(0.2)
+
+
 func hold(action: String, secs: float) -> void:
 	Input.action_press(action)
 	await wait(secs)
@@ -282,7 +289,7 @@ func phase_full() -> void:
 	# --- every station interface
 	var opened := 0
 	for sid in DB.stations:
-		await press("cancel")
+		await close_panel()
 		if await use("station", sid) and panel() is StationPanel:
 			opened += 1
 		if sid in ["forge", "arcane_crucible", "cauldron", "resonance_pedestal", "thread_spinner"]:
@@ -465,7 +472,7 @@ func phase_stations() -> void:
 	await click("New Game")
 	await wait(2.5)
 	for sid in DB.stations:
-		await press("cancel")
+		await close_panel()
 		await use("station", sid)
 		var ok: bool = panel() is StationPanel and (panel() as StationPanel).station_id == sid
 		var focus: Dictionary = W()._focus
