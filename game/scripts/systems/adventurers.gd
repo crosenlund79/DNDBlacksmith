@@ -374,6 +374,7 @@ static func _resolve(a: Dictionary) -> void:
 			credited.append(it)
 			it["deeds"] = int(it.get("deeds", 0)) + 1
 	if success and not credited.is_empty():
+		Shop.rep_change(2.0, "%s swears by the smith's work." % a["name"])
 		var ci: Dictionary = credited[0]
 		Social.change(a["id"], 8.0, 5.0, "gear_held_" + str(Game.day()), "Your %s saved me at %s (%s)." % [ci["name"], d["name"], enc["credits"][str(ci["uid"])]])
 	elif success and not mine.is_empty():
@@ -384,6 +385,8 @@ static func _resolve(a: Dictionary) -> void:
 			worst = minf(worst, float(it.get("quality", 70)))
 		if worst < 60.0:
 			Social.change(a["id"], -12.0, 2.0, "gear_failed_" + str(Game.day()), "Your work failed me at %s." % d["name"])
+			if injured:
+				Shop.raise_dispute(a["id"], mine[0])
 	# spouse shares the spoils
 	if spouse:
 		var share := gold / 2
@@ -413,6 +416,8 @@ static func _die(a: Dictionary, d: Dictionary, mine: Array) -> void:
 	for it in mine:
 		if float(it.get("quality", 70)) < 60.0:
 			bad = true
+	if bad:
+		Shop.rep_change(-10.0, "%s died carrying the smith's shoddy work." % a["name"])
 	for r in Social.relatives(a["id"]):
 		if bad:
 			Social.change(r, -35.0, 5.0, "blame_" + a["id"], "%s died carrying your shoddy work." % a["name"], false)
@@ -443,9 +448,11 @@ static func purchase_check(a: Dictionary, it: Dictionary, price: int) -> String:
 	if Items.score(it) <= Items.score(a["equipment"].get(s, {})) + 1.0:
 		return "already has better"
 	var married: bool = Social.spouse() == a["id"]
+	if Shop.refuses(a["id"]):
+		return "won't buy from you"
 	if not married and int(a["gold"]) < price:
 		return "can't afford it"
-	var fair := Items.value(it) * (1.15 + Social.aff(a["id"]) / 200.0)
+	var fair := Items.value(it) * (1.15 + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
 	if not married and price > fair:
 		return "thinks it's overpriced"
 	return ""

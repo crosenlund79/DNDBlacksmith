@@ -27,6 +27,107 @@ static func customers() -> Array:
 
 
 const SEATS := 4
+const UPKEEP := 4
+
+
+# ------------------------------------------------------------------ reputation
+## The workshop's standing in Brindlewick: how people regard the smith, plus what they have heard
+## (good sales, disputes settled or refused, adventurers saved or lost by the smith's work).
+static func reputation() -> float:
+	var tot := 0.0
+	var n := 0
+	for npc in Game.state["social"]:
+		var k: String = DB.character(npc).get("kind", "")
+		if k in ["adventurer", "villager"]:
+			tot += float(Game.state["social"][npc]["aff"])
+			n += 1
+	var base := tot / maxf(1.0, n)
+	return clampf(base * 0.8 + float(Game.state["world"].get("rep", 0.0)), -100.0, 100.0)
+
+
+static func rep_change(delta: float, why := "") -> void:
+	var w: Dictionary = Game.state["world"]
+	w["rep"] = clampf(float(w.get("rep", 0.0)) + delta, -60.0, 60.0)
+	if why != "" and absf(delta) >= 3.0:
+		Game.journal(("Word gets around: " if delta > 0 else "Tongues wag: ") + why)
+
+
+static func reputation_word() -> String:
+	var r := reputation()
+	if r <= -25.0:
+		return "notorious"
+	if r <= -8.0:
+		return "poorly thought of"
+	if r < 8.0:
+		return "a modest name"
+	if r < 25.0:
+		return "well respected"
+	return "renowned"
+
+
+## Daily running costs: coal, rent to the reeve, the odd broken tool.
+static func pay_upkeep() -> void:
+	var cost: int = UPKEEP + Game.state.get("upgrades", []).size()
+	Game.add_gold(-cost, "upkeep", "Coal, rent and tools")
+
+
+## Would this person deal with the smith at all?
+static func refuses(npc: String) -> bool:
+	return Social.band(npc) == "hostile"
+
+
+static func sell_goods(npc: String, uid: int) -> String:
+	var it := Game.find_uid(uid)
+	var c := {}
+	for x in customers():
+		if x["npc"] == npc:
+			c = x
+	if it.is_empty() or c.is_empty():
+		return "Nothing to sell."
+	var price := price_of(it) / maxi(1, int(it.get("qty", 1)))
+	if price > int(c.get("budget", 0)):
+		return "%s can't afford that." % Talk.npc_name(npc)
+	if int(it.get("qty", 1)) > 1:
+		it["qty"] = int(it["qty"]) - 1
+	else:
+		Game.inventory().erase(it)
+	Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], Talk.npc_name(npc)])
+	Social.change(npc, 3.0, 3.0)
+	rep_change(0.5)
+	remove_customer(npc)
+	Events.inventory_changed.emit()
+	return ""
+
+
+## A customer whose gear failed them comes back. Refund (costly, but people remember fairness)
+## or refuse (cheap now, dear later).
+static func settle_dispute(npc: String, refund: bool) -> String:
+	var c := {}
+	for x in customers():
+		if x["npc"] == npc and x["want"] == "dispute":
+			c = x
+	if c.is_empty():
+		return ""
+	var amount := int(c.get("refund", 20))
+	remove_customer(npc)
+	if refund:
+		Game.add_gold(-amount, "refunds", "Refund to %s" % Talk.npc_name(npc))
+		Social.change(npc, 8.0, 4.0, "refund_" + str(Game.day()), "The smith refunded me without argument when his work failed.")
+		rep_change(4.0, "the smith stands by his work.")
+		return "You count out %d g. \"That's... fair of you, smith.\"" % amount
+	Social.change(npc, -18.0, 4.0, "refused_" + str(Game.day()), "The smith refused to make good on gear that failed me.")
+	rep_change(-6.0, "the smith won't stand by his work.")
+	return "\"Then everyone will hear how the Ironhand forge treats its customers.\""
+
+
+## Called when an adventurer comes home hurt with the smith's poor work: a dispute at the shop.
+static func raise_dispute(npc: String, it: Dictionary) -> void:
+	if customers().any(func(c): return c["npc"] == npc) or free_seat() < 0:
+		return
+	var seat := free_seat()
+	customers().append({"npc": npc, "want": "dispute", "arrived": Game.day() * 24 + Game.hour(), "seat": seat, "present": false,
+		"item_name": it.get("name", "gear"), "refund": maxi(15, int(Items.value(it) * 0.5))})
+	Events.customers_changed.emit()
 
 
 ## Customers who have physically arrived and sat down in the waiting area.
@@ -54,13 +155,15 @@ static func customer_hour(h: int) -> void:
 				Events.toast.emit("%s gave up waiting outside the shop." % DB.character(c["npc"]).get("name", c["npc"]), "bad")
 		elif now - int(c["arrived"]) >= 3:
 			customers().erase(c)          # never made it here; nobody noticed
-	if free_seat() < 0 or randf() > 0.45:
+	if free_seat() < 0 or randf() > clampf(0.45 * (1.0 + reputation() / 120.0), 0.15, 0.75):
 		return
 	var pool := []
 	for a in Adv.in_town():
-		pool.append([a["id"], "browse"])
+		if not refuses(a["id"]):
+			pool.append([a["id"], "browse"])
 	for v in ["martha", "tobin", "jory", "eda", "oswin", "wenna"]:
-		pool.append([v, "repair"])
+		if not refuses(v):
+			pool.append([v, "goods" if randf() < 0.35 else "repair"])
 	pool.shuffle()
 	for p in pool:
 		if customers().any(func(c): return c["npc"] == p[0]):
@@ -81,6 +184,13 @@ static func _add_customer(npc: String, want: String) -> void:
 			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.2, 0.5))
 		c["item"] = it
 		c["pay"] = randi_range(8, 18)
+	elif want == "goods":
+		c["budget"] = randi_range(30, 80)
+		c["looking_for"] = ["potion_healing", "oil_whetstone"].pick_random()
+	else:
+		var a := Adv.get_a(npc)
+		c["budget"] = int(a.get("gold", 0))
+		c["looking_for"] = a.get("needs", "")
 	customers().append(c)
 	Events.customers_changed.emit()
 
@@ -129,6 +239,7 @@ static func sell_to(npc: String, uid: int) -> String:
 	if not married:
 		Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], a["name"]])
 	Game.state["stats"]["sold"] += 1
+	rep_change(1.0 if float(it.get("quality", 70)) >= 85.0 else 0.3)
 	remove_customer(npc)
 	Objectives.on_sold(npc, it)
 	if npc == "mira":
@@ -160,7 +271,7 @@ static func open_orders() -> Array:
 ## Creates a commission from an adventurer for their weakest slot.
 static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 	var a := Adv.get_a(npc)
-	if a.is_empty():
+	if a.is_empty() or refuses(npc):
 		return {}
 	if slot == "":
 		slot = Adv._weakest_slot(a)

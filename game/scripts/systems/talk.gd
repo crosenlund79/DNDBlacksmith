@@ -26,6 +26,18 @@ static func greeting(npc: String) -> String:
 	var a := Adv.get_a(npc)
 	if not a.is_empty() and a.get("status") == "injured":
 		t += "\n[i](%s is nursing fresh wounds.)[/i]" % a["name"]
+	for cu in Shop.waiting():
+		if cu["npc"] == npc:
+			match str(cu["want"]):
+				"dispute":
+					t = "\"Your %s failed me out there. I want my money back.\" They hold out the battered piece." % cu.get("item_name", "gear")
+				"goods":
+					t = "\"Have you a %s? I can spend about %d.\"" % [DB.item(cu.get("looking_for", "potion_healing")).get("name", "draught").to_lower(), int(cu.get("budget", 40))]
+				"browse":
+					if cu.get("looking_for", "") != "":
+						t += "\n[i]They are looking for a better %s.[/i]" % cu["looking_for"]
+	if Shop.refuses(npc) and not married:
+		t += "\n[i]They make it plain they would rather not deal with you.[/i]"
 	return t
 
 
@@ -40,6 +52,10 @@ static func options(npc: String, area: String) -> Array:
 		out.insert(0, {"id": "delivery", "label": "Take the weekly delivery"})
 	for cu in Shop.waiting():
 		if cu["npc"] == npc:
+			if cu["want"] == "dispute":
+				out.insert(0, {"id": "refund", "label": "Refund them for the %s (%d g)" % [cu.get("item_name", "gear"), int(cu.get("refund", 20))]})
+				out.insert(1, {"id": "refuse", "label": "Refuse — the work was sound"})
+				continue
 			out.insert(0, {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Show them the wares"})
 			out.insert(1, {"id": "send_away", "label": "Ask them to come back another time"})
 	var a := Adv.get_a(npc)
@@ -88,6 +104,10 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": Sim.take_delivery()}
 		"serve":
 			return {"text": "", "action": "shop"}
+		"refund":
+			return {"text": Shop.settle_dispute(npc, true), "action": "close_later"}
+		"refuse":
+			return {"text": Shop.settle_dispute(npc, false), "action": "close_later"}
 		"send_away":
 			Shop.dismiss_customer(npc)
 			return {"text": "\"Another day, then.\" %s gets up from the bench and heads off." % npc_name(npc), "action": "close_later"}

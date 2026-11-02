@@ -58,6 +58,23 @@ func _customers() -> void:
 		if cu.get("want", "") == "repair":
 			v.add_child(UIKit.rich("[b]%s[/b] wants their [b]%s[/b] repaired (pays about %d g)." % [Talk.npc_name(npc), cu["item"]["name"], cu["pay"]], 22))
 			v.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
+		elif cu.get("want", "") == "goods":
+			v.add_child(UIKit.rich("[b]%s[/b] wants a [b]%s[/b] (can spend about %d g)." % [Talk.npc_name(npc), DB.item(cu["looking_for"]).get("name", "draught"), int(cu["budget"])], 22))
+			var gh := UIKit.hbox(8)
+			var anyg := false
+			for it in Game.inventory():
+				if DB.item(it["def"]).get("type", "") == "potion" and it["def"] != "ale_mug":
+					var b2 := UIKit.button("%s — %d g" % [Items.display_name(it), Shop.price_of(it) / maxi(1, int(it.get("qty", 1)))], func():
+						var err2 := Shop.sell_goods(npc, int(it["uid"]))
+						Events.toast.emit(err2 if err2 != "" else "%s pays and leaves happy." % Talk.npc_name(npc), "bad" if err2 != "" else "good")
+						_build(), 0)
+					gh.add_child(b2)
+					anyg = true
+			if not anyg:
+				gh.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
+			v.add_child(gh)
+		elif cu.get("want", "") == "dispute":
+			v.add_child(UIKit.rich("[b]%s[/b] is disputing your %s — talk to them outside to settle it." % [Talk.npc_name(npc), cu.get("item_name", "work")], 22))
 		elif not a.is_empty():
 			var married: bool = Social.spouse() == npc
 			v.add_child(UIKit.rich("[b]%s[/b], %s %s (level %d) · %d gold%s\nNeeds: [i]%s[/i]" % [a["name"], Adv.rating_text(a), a["cls"], a["level"], a["gold"],
@@ -119,7 +136,7 @@ func _ledger() -> void:
 			continue
 		by_cat[e["cat"]] = int(by_cat.get(e["cat"], 0)) + int(e["amount"])
 		days[e["day"]] = int(days.get(e["day"], 0)) + int(e["amount"])
-	var txt := "[b]Purse:[/b] %d gold    [b]Crafted:[/b] %d    [b]Sold:[/b] %d    [b]Legendaries found:[/b] %d\n\n[b]Last seven days by category[/b]\n" % [Game.gold(), Game.state["stats"]["crafted"], Game.state["stats"]["sold"], Game.state["stats"]["legendaries"]]
+	var txt := "[b]Purse:[/b] %d gold    [b]Crafted:[/b] %d    [b]Sold:[/b] %d    [b]Legendaries found:[/b] %d\n[b]Standing in Brindlewick:[/b] [i]%s[/i] — it brings customers in (or keeps them away) and shapes what prices people accept.    [b]Daily upkeep:[/b] %d g plus wages\n\n[b]Last seven days by category[/b]\n" % [Game.gold(), Game.state["stats"]["crafted"], Game.state["stats"]["sold"], Game.state["stats"]["legendaries"], Shop.reputation_word(), Shop.UPKEEP + Game.state.get("upgrades", []).size()]
 	for k in by_cat:
 		txt += "%s: [color=%s]%+d[/color]   " % [str(k).capitalize(), "#26622f" if by_cat[k] >= 0 else "#9e3a0c", by_cat[k]]
 	txt += "\n\n[b]Net per day[/b]\n"

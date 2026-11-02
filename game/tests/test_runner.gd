@@ -29,6 +29,7 @@ func _ready() -> void:
 	_expedition_risk()
 	_materials_cycle()
 	_adventurer_world()
+	_village_remembers()
 	_adventurers()
 	_social()
 	_loot()
@@ -331,6 +332,57 @@ func _adventurer_world() -> void:
 	Game.add_item(Items.make("coating_flame", {"qty": 1}), false)
 	var msg := Crafting.treat(int(sw["uid"]), "coating_flame")
 	check(sw.has("coating") and int(sw["coating"]["value"]) > 0, "alchemy: %s" % msg)
+
+
+## Iteration 5: helping or mistreating an adventurer ripples through family, trade and reputation.
+func _village_remembers() -> void:
+	var rep0 := Shop.reputation()
+	# --- help: Mira gets fine gear for free; her father the grocer remembers
+	var mira := Adv.get_a("mira")
+	var fine := Items.make("sword_steel", {"quality": 110.0, "crafted_by": "Brannoc Ironhand"})
+	Game.add_item(fine, false)
+	var aldric0 := Social.aff("aldric")
+	Adv.give_item(mira, Game.take_uid(int(fine["uid"])), 0)
+	Sim.on_mira_equipped(fine, 0)
+	check(Social.aff("aldric") > aldric0 and Social.has_memory("aldric", "kin_equipped_" + str(fine["uid"])), "village: Aldric remembers what you did for his daughter")
+	Social.change("aldric", 30.0, 10.0)
+	Game.state["world"]["delivery_pending"] = true
+	var deliv := Sim.take_delivery()
+	check(deliv.contains("good bread") or deliv.contains("best"), "grocer: a warm grocer brings the good provisions")
+	# --- mistreat: Kestra's shoddy blade fails her; she disputes it and you refuse
+	var kes := Adv.get_a("kestra")
+	Adv.ensure(kes)
+	kes["status"] = "in_town"
+	var junk := Items.make("dagger", {"quality": 40.0, "crafted_by": "Brannoc Ironhand"})
+	Shop.raise_dispute("kestra", junk)
+	Shop.mark_arrived("kestra", false)
+	check(Shop.waiting().any(func(c): return c["npc"] == "kestra" and c["want"] == "dispute"), "disputes: Kestra comes back about the failed blade")
+	var tobin0 := Social.aff("tobin")
+	var msg := Shop.settle_dispute("kestra", false)
+	Social.change("kestra", -30.0, 2.0, "egged", "Still furious about the dagger.")
+	check(Social.band("kestra") == "hostile" and Social.aff("tobin") < tobin0, "village: refusing her sours Kestra and her brother Tobin (%s)" % msg)
+	var stock_it := Items.make("sword_steel", {"quality": 100.0})
+	stock_it["for_sale"] = true
+	Game.add_item(stock_it, false)
+	kes["gold"] = 999
+	check(Adv.purchase_check(kes, stock_it, Shop.price_of(stock_it)) == "won't buy from you", "commerce: a hostile customer won't buy from you")
+	check(Shop.create_order("kestra", "weapon").is_empty(), "commerce: …or commission anything")
+	check(Shop.reputation() != rep0, "reputation moved with what you did (%.1f → %.1f, %s)" % [rep0, Shop.reputation(), Shop.reputation_word()])
+	# a furious villager may egg the shop
+	Game.state["world"]["eggs"] = false
+	var egged := false
+	for i in 20:
+		Sim._social_events()
+		if Game.state["world"].get("eggs", false):
+			egged = true
+			break
+	check(egged, "consequences: someone eggs the storefront (%s)" % Game.state["world"].get("eggs_by", ""))
+	# and the memories survive a save and load
+	check(Saves.save("village_slot") and Saves.load_slot("village_slot"), "village: save/load")
+	check(Social.band("kestra") == "hostile" and Social.has_memory("aldric", "kin_equipped_" + str(fine["uid"])), "village: grudges and gratitude persist")
+	Saves.delete("village_slot")
+	Social.change("kestra", 60.0, 0.0)
+	Sim.clean_eggs()
 
 
 func _adventurers() -> void:

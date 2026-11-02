@@ -73,6 +73,7 @@ func _ready() -> void:
 	_spawn_npcs()
 	_spawn_animals()
 	_refresh_bags()
+	_refresh_display()
 	_refresh_eggs()
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
 	Events.adventurer_departed.connect(_on_departed)
@@ -81,6 +82,7 @@ func _ready() -> void:
 	Events.hireling_returned.connect(_on_returned)
 	Events.world_flag_changed.connect(_on_flag)
 	Events.inventory_changed.connect(_refresh_bags)
+	Events.inventory_changed.connect(_refresh_display)
 	Events.day_started.connect(func(_d): _refresh_bags())
 	_update_schedules(true)
 	_update_light(true)
@@ -802,6 +804,36 @@ func _dust(at: Vector2, extents: Vector2, amount: int, col: Color) -> CPUParticl
 	p.color_ramp = g
 	p.z_index = 20
 	return p
+
+
+# the shop's display table: what is for sale is visibly laid out for customers
+const DISPLAY_SLOTS := [[16.85, 2.4], [17.4, 2.4], [17.95, 2.4], [16.85, 2.85], [17.4, 2.85], [17.95, 2.85]]
+var _display_nodes: Array = []
+
+
+func _refresh_display() -> void:
+	for n in _display_nodes:
+		if is_instance_valid(n):
+			n.queue_free()
+	_display_nodes.clear()
+	var stock := Shop.stock()
+	stock.sort_custom(func(a, b): return Items.value(a) > Items.value(b))
+	for i in mini(stock.size(), DISPLAY_SLOTS.size()):
+		var it: Dictionary = stock[i]
+		var sp := Sprite2D.new()
+		sp.texture = Assets.get_tex(Items.icon_id(it), Vector2i(64, 64))
+		sp.scale = Vector2(0.5, 0.5)
+		sp.position = bpos("smithy", float(DISPLAY_SLOTS[i][0]), float(DISPLAY_SLOTS[i][1]))
+		sp.z_index = 1   # on top of the display table
+		if it.get("rarity", "common") != "common":
+			var halo := Sprite2D.new()
+			halo.texture = FX.light_texture()
+			halo.modulate = Color(Items.COL_BORDER.get(it["rarity"], Color.WHITE), 0.45)
+			halo.scale = Vector2(0.14, 0.14)
+			sp.add_child(halo)
+			halo.show_behind_parent = true
+		ysort.add_child(sp)
+		_display_nodes.append(sp)
 
 
 const WAIT_SEATS := [[25.4, 33.0], [26.6, 33.0], [27.8, 33.0], [29.0, 33.0]]

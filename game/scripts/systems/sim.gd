@@ -25,6 +25,7 @@ static func on_day(day: int) -> void:
 	Hire.on_day()
 	Adv.on_day()
 	Shop.expire_orders()
+	Shop.pay_upkeep()
 	if day % 7 == 1:
 		Hire.refresh_applicants()
 	_social_events()
@@ -123,6 +124,26 @@ static func _social_events() -> void:
 				"%s left this at your door with a note: \"For your kindness.\"" % c["name"]))
 			Events.toast.emit("%s left a gift at your door." % c["name"], "good")
 			Social.remember(npc, "gave_gift_" + str(Game.day()), "Left the smith a gift", 2.0)
+			break
+	# a friend back from the road shares what they learned (scouting knowledge for everyone)
+	for a in Adv.in_town():
+		if Social.band(a["id"]) in ["friendly", "devoted"] and not a.get("history", []).is_empty() and randf() < 0.25:
+			var dest: String = a["history"][-1]["dest"]
+			if Regions.scouted(dest) < Regions.SCOUT_MAX - 5.0:
+				Regions.add_scouting(dest, 6.0, "told by " + a["name"])
+				Events.toast.emit("%s told you the safe paths through %s." % [a["name"], DB.destinations[dest]["name"]], "good")
+				break
+	# deep gratitude: a devoted friend brings something old and strange from the barrows
+	for npc in Game.state["social"]:
+		if Social.band(npc) == "devoted" and not Social.has_memory(npc, "gave_relic") and randf() < 0.35:
+			var c2 := DB.character(npc)
+			if c2.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
+				continue
+			Social.remember(npc, "gave_relic", "Gave the smith a relic out of gratitude", 4.0)
+			Game.state["returns"].append(Loot.make_container("satchel_relic", Loot.roll_table("gratitude"), c2["name"],
+				"%s left this with a note: \"Found it in the barrows. I trust you more than any collector.\"" % c2["name"]))
+			Events.toast.emit("%s left you a relic in gratitude." % c2["name"], "good")
+			Events.inventory_changed.emit()
 			break
 	# a dissatisfied villager pelts the storefront with eggs
 	if not w.get("eggs", false):
