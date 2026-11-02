@@ -529,7 +529,7 @@ body{{background:{th['bg']}}}
     if st.get("noir"):
         css += NOIR_FONT_CSS
         if st.get("gilt"):
-            css += (f".title .ini{{color:{st['rubric']};text-shadow:0 0 14px rgba(230,112,42,.6)}} .h2{{color:{st['rubric']}!important}}"
+            css += (f".title .ini{{font-family:'{st['fonts']['initial']}';color:{st['rubric']};text-shadow:0 0 14px rgba(230,112,42,.6)}} .h2{{color:{st['rubric']}!important}}"
                     f" .col{{outline:1px solid {st['gilt']};outline-offset:-8px}} .lbl{{border-bottom-color:{st['gilt']}88!important}}"
                     ".dlg{box-shadow:inset 0 0 40px rgba(230,112,42,.22)!important}")
     if k in ("ballpoint", "sketchbook"):

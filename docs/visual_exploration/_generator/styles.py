@@ -411,7 +411,7 @@ STYLES = {
         rarity_dark=dict(Common="#efe4cc", Magic="#8aa6f2", Rare="#f0d060",
                          Legendary="#ffa050", Unique="#dab470", Set="#7ccc80"),
         fonts=dict(title="IM Fell English SC", heading="IM Fell English", ui="EB Garamond",
-                   numbers="EB Garamond", initial="Grenze Gotisch"),
+                   numbers="EB Garamond", initial="Grenze"),
     ),
 }
 
