@@ -320,6 +320,12 @@ props = {
  "trophy_wall": P(128, 40, desc="mounted old adventuring trophies: crossed swords, battered shield, horn"),
  "nightstand": P(48, 48, desc="nightstand with candle and book"),
  "bar_shelf": P(192, 40, desc="behind-the-bar shelf of bottles and mugs"),
+ # ---- shop-front waiting area / decor (drawn by tools/art/make_props.py)
+ "waiting_seat": P(64, 64, desc="single outdoor wooden seat with a burgundy cushion"),
+ "waiting_awning": P(192, 64, desc="small striped awning on two poles with a hanging hourglass sign (waiting area)"),
+ "craft_display": P(192, 96, desc="display stand of example crafted equipment: swords in a rack, cuirass, helm and shield"),
+ "flower_patch_a": P(48, 48, solid=False, desc="small flower clump rooted on the bottom edge (sway shader)"),
+ "flower_patch_b": P(48, 48, solid=False, desc="small flower clump rooted on the bottom edge (sway shader)"),
 }
 W("props.json", props)
 print("props ok", len(props))

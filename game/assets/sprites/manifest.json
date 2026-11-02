@@ -194,6 +194,10 @@
    80,
    64
   ],
+  "props/craft_display.png": [
+   192,
+   96
+  ],
   "props/crate.png": [
    56,
    56
@@ -241,6 +245,14 @@
   "props/fireplace.png": [
    128,
    72
+  ],
+  "props/flower_patch_a.png": [
+   48,
+   48
+  ],
+  "props/flower_patch_b.png": [
+   48,
+   48
   ],
   "props/flowers.png": [
    64,
@@ -429,6 +441,14 @@
   "props/trophy_wall.png": [
    128,
    40
+  ],
+  "props/waiting_awning.png": [
+   192,
+   64
+  ],
+  "props/waiting_seat.png": [
+   64,
+   64
   ],
   "props/wardrobe.png": [
    112,

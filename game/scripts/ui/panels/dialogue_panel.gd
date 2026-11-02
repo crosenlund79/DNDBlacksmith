@@ -57,6 +57,11 @@ func _choose(oid: String) -> void:
 	if action == "close":
 		close()
 		return
+	if action == "close_later":
+		text.text = r.get("text", "")
+		UIKit.clear(opts)
+		opts.add_child(UIKit.button("❧ Farewell", close, 0))
+		return
 	if action != "":
 		var who := npc
 		match action:

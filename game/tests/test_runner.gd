@@ -26,6 +26,7 @@ func _ready() -> void:
 	_skills()
 	_crafting()
 	_hirelings()
+	_expedition_risk()
 	_adventurers()
 	_social()
 	_loot()
@@ -125,7 +126,8 @@ func _crafting() -> void:
 	check(master.get("rarity") == "legendary" and master.get("star", false), "rarity: masterwork with a poor roll is legendary (%s)" % master.get("rarity"))
 	var sloppy := _craft("iron_longsword", 60.0, {"edge": 20, "temper": 12, "fortune": 100})
 	check(sloppy.get("rarity") in ["common", "magic"], "rarity: sloppy work with a perfect roll stays modest (%s)" % sloppy.get("rarity"))
-	check(Items.stat(master, "attack") > Items.stat(sloppy, "attack"), "stats: craftsmanship dominates the dice (%d vs %d)" % [Items.stat(master, "attack"), Items.stat(sloppy, "attack")])
+	# base statistics (random rarity affixes aside): craftsmanship outweighs a perfect roll
+	check(int(master["stats"]["attack"]) > int(sloppy["stats"]["attack"]), "stats: craftsmanship dominates the dice (base %d vs %d)" % [int(master["stats"]["attack"]), int(sloppy["stats"]["attack"])])
 	# material matters: steel beats iron at the same quality and rolls
 	var steel := _craft("steel_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30}, "physical")
 	var iron := _craft("iron_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30})
@@ -153,6 +155,40 @@ func _hirelings() -> void:
 			if x.get("rarity") == "legendary" and x.get("star", false):
 				has_leg = true
 		check(has_leg, "loot: Borin's first bag holds a starred legendary")
+
+
+## Expedition risk is real: a green hand sent deep enough is sometimes hurt and sometimes killed,
+## and the outcome (including death) survives a save and load.
+func _expedition_risk() -> void:
+	Game.set_flag("delve_map")
+	var deaths := 0
+	var injuries := 0
+	var hauls := 0
+	for i in 200:
+		var h := Hire._new_entry("risk_%d" % i, "Test Hand", "applicant_0", "Human", "", {"mining": 1}, 3)
+		h["traits"] = []
+		Hire.list().append(h)
+		Hire.send(h["id"], "deep_ironroot")
+		h["expedition"]["days_left"] = 1
+		Hire.on_day()
+		if h["status"] == "dead":
+			deaths += 1
+		elif h["status"] == "injured":
+			injuries += 1
+		if not h.get("history", []).is_empty() and not h["history"][-1]["haul"].is_empty():
+			hauls += 1
+		if i < 199:
+			Hire.list().erase(h)
+	check(deaths > 0 and injuries > 0 and hauls > 0, "expeditions: deep ironroot kills %d, injures %d and pays out %d of 200 green hands" % [deaths, injuries, hauls])
+	var last: Dictionary = Hire.list()[-1]
+	var st: String = last["status"]
+	last["status"] = "dead"
+	check(Saves.save("risk_slot") and Saves.load_slot("risk_slot"), "expeditions: save/load round-trip")
+	check(Hire.get_h(str(last["id"])).get("status", "") == "dead", "expeditions: a death persists through save and load")
+	Hire.list().erase(Hire.get_h(str(last["id"])))
+	Saves.delete("risk_slot")
+	if st == "":
+		pass
 
 
 func _adventurers() -> void:

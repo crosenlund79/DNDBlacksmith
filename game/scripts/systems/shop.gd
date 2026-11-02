@@ -26,17 +26,35 @@ static func customers() -> Array:
 	return Game.state["customers"]
 
 
-## Hourly: maybe spawn a customer.
+const SEATS := 4
+
+
+## Customers who have physically arrived and sat down in the waiting area.
+static func waiting() -> Array:
+	return customers().filter(func(c): return c.get("present", true))
+
+
+static func free_seat() -> int:
+	for i in SEATS:
+		if not customers().any(func(c): return int(c.get("seat", -1)) == i):
+			return i
+	return -1
+
+
+## Hourly: maybe a customer sets out for the smithy (they are only announced once they sit down).
 static func customer_hour(h: int) -> void:
 	if h < 9 or h >= 18:
 		return
-	# expire old customers
+	var now := Game.day() * 24 + h
 	for c in customers().duplicate():
-		if Game.day() * 24 + h - int(c["arrived"]) >= 3:
-			customers().erase(c)
-			Social.change(c["npc"], -3.0, 1.0, "", "", false)
-			Events.toast.emit("%s gave up waiting at the counter." % DB.character(c["npc"]).get("name", c["npc"]), "bad")
-	if customers().size() >= 2 or randf() > 0.38:
+		if c.get("present", true):
+			if now - int(c.get("seated", c["arrived"])) >= 3:
+				customers().erase(c)
+				Social.change(c["npc"], -3.0, 1.0, "", "", false)
+				Events.toast.emit("%s gave up waiting outside the shop." % DB.character(c["npc"]).get("name", c["npc"]), "bad")
+		elif now - int(c["arrived"]) >= 3:
+			customers().erase(c)          # never made it here; nobody noticed
+	if free_seat() < 0 or randf() > 0.45:
 		return
 	var pool := []
 	for a in Adv.in_town():
@@ -52,7 +70,10 @@ static func customer_hour(h: int) -> void:
 
 
 static func _add_customer(npc: String, want: String) -> void:
-	var c := {"npc": npc, "want": want, "arrived": Game.day() * 24 + Game.hour()}
+	var seat := free_seat()
+	if seat < 0:
+		return
+	var c := {"npc": npc, "want": want, "arrived": Game.day() * 24 + Game.hour(), "seat": seat, "present": false}
 	if want == "repair":
 		var defs := ["sword_iron", "axe_hand", "dagger", "helm_iron", "shield_round"]
 		var it := Items.make(defs.pick_random(), {"quality": randf_range(50, 75)})
@@ -61,14 +82,35 @@ static func _add_customer(npc: String, want: String) -> void:
 		c["item"] = it
 		c["pay"] = randi_range(8, 18)
 	customers().append(c)
-	Audio.play("sfx/door_bell", -4.0)
-	Events.toast.emit("%s is waiting at the counter." % DB.character(npc).get("name", npc), "info")
+	Events.customers_changed.emit()
+
+
+## Called by the world when the customer's figure reaches its seat. Announces them once.
+static func mark_arrived(npc: String, notify := true) -> void:
+	for c in customers():
+		if c["npc"] == npc and not c.get("present", false):
+			c["present"] = true
+			c["seated"] = Game.day() * 24 + Game.hour()
+			if notify:
+				Audio.play("sfx/door_bell", -4.0)
+				Events.toast.emit("%s is waiting outside the shop." % DB.character(npc).get("name", npc), "info")
+			Events.customers_changed.emit()
+
+
+## Politely sends a waiting customer away; their seat is freed.
+static func dismiss_customer(npc: String) -> void:
+	for c in customers().duplicate():
+		if c["npc"] == npc:
+			customers().erase(c)
+			Social.change(npc, -1.0, 0.5, "", "", false)
+			Events.customers_changed.emit()
 
 
 static func remove_customer(npc: String) -> void:
 	for c in customers().duplicate():
 		if c["npc"] == npc:
 			customers().erase(c)
+	Events.customers_changed.emit()
 
 
 static func sell_to(npc: String, uid: int) -> String:

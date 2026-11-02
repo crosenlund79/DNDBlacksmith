@@ -9,6 +9,9 @@ Sheets: assets/sprites/chars/<id>.png, 6x4 cells of 128x128 (768x512), transpare
   rows: 0 south, 1 east, 2 north, 3 west; cols 0-1 idle (breathing), 2-5 walk.
 Portraits: assets/sprites/portraits/<id>.png, 256x256 front-view bust, transparent.
 Contact sheet (review only): tools/art/out/characters_contact.png
+
+NOTE: the in-game sheets are now tabletop miniatures built by make_minis.py.  This script only writes the
+old straight-top-down sheets when run with --style=topdown; otherwise it regenerates portraits only.
 """
 import json
 import math
@@ -154,6 +157,9 @@ def contact(chars):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = [a for a in sys.argv[1:] if a.startswith("--")]
+    if "--style=topdown" not in flags and "--no-sheets" not in flags:
+        print("sheets: skipped (miniature sheets come from make_minis.py; pass --style=topdown for the old ones)")
+        flags.append("--no-sheets")
     chars = json.load(open(os.path.join(GAME, "data", "characters.json")))
     todo = [c for c in chars if not args or c["id"] in args]
     for d in (OUT_CHARS, OUT_PORT, OUT_REV, TMP):

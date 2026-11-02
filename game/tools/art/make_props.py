@@ -881,6 +881,138 @@ def dummy_target(P, W, H):
     return sh, J(b), ""
 
 
+# ---------------------------------------------------------------- waiting area / shop front decor
+def waiting_seat(P, W, H):
+    """Single outdoor wooden seat with a burgundy cushion (backrest to the north)."""
+    sh = sh_(P, rect(12, 10, 40, 44, 4), 3, 4)
+    b = [P.shape(rect(9, 12, 6, 40, 2), "wood", s=1.2, lw=1.5), P.shape(rect(49, 12, 6, 40, 2), "wood", s=1.2, lw=1.5),
+         planks(P, 13, 18, 38, 34, "wood", n=3, dirn="h", s=2.5, seed=6),
+         P.shape(rect(11, 8, 42, 9, 3), "wood", s=1.6, lw=1.7),
+         P.detail("M16,12.5 L48,12.5", "wood", 0.4, 0.7)]
+    cush = smooth([(19, 23), (32, 21.5), (45, 23), (46.5, 35), (45, 47), (32, 48.5), (19, 47), (17.5, 35)], t=0.4)
+    b.append(P.shape(cush, "cloth", s=3))
+    b.append(P.detail("M21,35 Q32,33 43,35 M32,25 Q30.5,35 32,46", "cloth", 0.45, 0.6))
+    b.append(P.shape(ell(32, 35, 2.2), "gold", s=0.5, lw=1))
+    for x, y in ((19, 23), (45, 23), (19, 47), (45, 47)):
+        b.append(lin(f"M{x},{y} l{-2 if x < 32 else 2},{-2 if y < 32 else 2}", PAL["straw"][1], 1.2))
+    return sh, J(b), ""
+
+
+def waiting_awning(P, W, H):
+    """Small striped awning on two poles with a hanging hourglass sign (waiting area)."""
+    sh = sh_(P, rect(8, 6, 176, 42, 3), 5, 6)
+    b = []
+    n = 8
+    w = 176 / n
+    for i in range(n):
+        role = "cloth" if i % 2 == 0 else "linen"
+        x = 8 + i * w
+        b.append(P.shape(rect(x, 6, w, 22), role, flat=True, line=False,
+                         fill_override=PAL[role][0] if role == "linen" else PAL[role][1]))
+        b.append(P.shape(rect(x, 28, w, 16), role, flat=True, line=False,
+                         fill_override=PAL[role][1] if role == "linen" else PAL[role][2]))
+    b.append(fill(rect(8, 28, 176, 16), hatch(P, -35), 0.4))
+    scallop = "M8,44 " + " ".join(f"q{w/4:.2f},7 {w/2:.2f},0" for _ in range(2 * n))
+    b.append(f'<path d="{scallop} L184,44 Z" fill="{PAL["cloth"][2]}" stroke="{INK}" stroke-width="1.3"/>')
+    b.append(lin(rect(8, 6, 176, 38), INK, 2.0))
+    b.append(lin("M8,28 L184,28", INK, 1.4))
+    for x in (12, 180):
+        b.append(P.shape(rect(x - 3, 40, 6, 20, 1.5), "wood", s=1, lw=1.4))
+        b.append(P.shape(ell(x, 41, 4.2), "darkiron", s=0.6, lw=1.2))
+    # hanging sign under the valance
+    b.append(lin("M86,46 L86,50 M106,46 L106,50", INK, 1.0))
+    b.append(P.shape(rect(80, 49, 32, 13, 2), "wood", s=1.5, lw=1.4))
+    b.append(lin(rect(82, 51, 28, 9, 1), GILT, 0.6, 0.8))
+    b.append(lin("M92,52.5 h8 l-8,6 h8 Z", INK, 0.9))
+    b.append(fill("M93.5,57.5 h5 l-2.5,-1.8 Z", PAL["straw"][1]))
+    return sh, J(b), ""
+
+
+def craft_display(P, W, H):
+    """Display stand of example smithing work: two swords in a rack, cuirass on a stand, helm on a post, shield."""
+    sh = sh_(P, rect(6, 54, 180, 36, 4) + " " + rect(60, 10, 44, 46, 10) + " " + ell(162, 46, 22), 4, 5)
+    b = [planks(P, 6, 56, 180, 34, "wood", n=3, dirn="h", s=3, seed=9),
+         P.shape(rect(6, 84, 180, 6, 2), "brown", s=1, lw=1.5)]
+    # sword rack (left): rail + two swords standing point up
+    b.append(P.shape(rect(10, 30, 36, 5, 1.5), "wood", s=1, lw=1.4))
+    b.append(sword_top(P, 20, 82, 64, -math.pi / 2 + 0.06))
+    b.append(sword_top(P, 36, 82, 58, -math.pi / 2 - 0.06, "metal"))
+    b.append(P.shape(rect(10, 70, 36, 6, 1.5), "wood", s=1, lw=1.4))
+    # cuirass on a stand (centre)
+    cx = 82
+    b.append(P.shape(rect(cx - 2.5, 50, 5, 30, 1.5), "wood", s=1, lw=1.3))
+    b.append(P.shape(ell(cx, 80, 12, 4), "wood", s=1, lw=1.3))
+    b.append(P.shape(rect(cx - 26, 14, 52, 5, 2), "wood", s=1, lw=1.4))
+    for sg in (-1, 1):
+        b.append(P.shape(ell(cx + sg * 19, 18, 9, 7), "metal", s=2, lw=1.6))
+    bp = smooth([(cx - 16, 14), (cx, 18), (cx + 16, 14), (cx + 18, 32), (cx + 11, 48), (cx, 52), (cx - 11, 48), (cx - 18, 32)])
+    b.append(P.shape(bp, "metal", s=4))
+    b.append(P.detail(f"M{cx},20 L{cx},50 M{cx-11},44 Q{cx},50 {cx+11},44", "metal", 0.6))
+    b.append(fill(" ".join(ell(x, y, 1.1) for x, y in [(cx - 12, 20), (cx + 12, 20), (cx - 13, 36), (cx + 13, 36)]), PAL["gold"][1]))
+    b.append(P.shape(ell(cx, 9, 5, 4), "wood", s=1, lw=1.3))
+    # helm on a post
+    hx = 124
+    b.append(P.shape(rect(hx - 2.5, 40, 5, 40, 1.5), "wood", s=1, lw=1.3))
+    b.append(P.shape(ell(hx, 80, 9, 3.4), "wood", s=1, lw=1.2))
+    b.append(P.shape(smooth([(hx - 14, 44), (hx - 14, 30), (hx - 8, 20), (hx, 18), (hx + 8, 20), (hx + 14, 30), (hx + 14, 44), (hx + 6, 46),
+                             (hx + 5, 34), (hx - 5, 34), (hx - 6, 46)], t=0.4), "metal", s=3))
+    b.append(P.shape(rect(hx - 1.6, 33, 3.2, 12, 1), "metal", s=0.5, lw=1.0))
+    b.append(P.detail(f"M{hx},19 L{hx},33 M{hx-13},31 Q{hx},27 {hx+13},31", "metal", 0.5))
+    b.append(P.shape(smooth([(hx - 3, 18), (hx, 6), (hx + 3, 18)], t=0.3), "cloth", s=0.6, lw=1.0))
+    # round shield leaning at the right
+    sx, sy = 162, 46
+    b.append(P.shape(ell(sx, sy, 22, 24), "wood", s=3))
+    ri = 17
+    b.append(P.shape(f"M{sx},{sy-ri} A{ri},{ri} 0 0 1 {sx+ri},{sy} L{sx},{sy} Z", "cloth", s=1, hl=False))
+    b.append(P.shape(f"M{sx},{sy+ri} A{ri},{ri} 0 0 1 {sx-ri},{sy} L{sx},{sy} Z", "cloth", s=1, hl=False))
+    b.append(lin(ell(sx, sy, 20, 22), PAL["darkiron"][1], 2.2))
+    b.append(P.shape(ell(sx, sy, 6), "metal", s=1.5, lw=1.4))
+    # parchment price tag on the plinth
+    b.append(P.shape(rect(92, 72, 18, 11, 1.5), "paper", s=0.8, lw=1.1))
+    b.append(lin("M95,76 h12 M95,79 h8", INK, 0.5, 0.7))
+    emit = glow(P, sx - 8, sy - 10, 6, EMBER_HOT, 0.25)
+    return sh, J(b), emit
+
+
+def flower_patch(P, W, H, seed, cols):
+    """Small flower clump; stems rooted on the bottom edge so a sway shader can pivot there."""
+    rnd = random.Random(seed)
+    b = []
+    leaves = []
+    base_y = H - 1.5
+    stems = []
+    heads = []
+    for i in range(7):
+        x0 = 10 + i * 4.6 + rnd.uniform(-1.5, 1.5)
+        top = (x0 + rnd.uniform(-6, 6), rnd.uniform(9, 22))
+        stems.append(f"M{x0:.1f},{base_y} Q{(x0+top[0])/2+rnd.uniform(-3,3):.1f},{(base_y+top[1])/2:.1f} {top[0]:.1f},{top[1]:.1f}")
+        heads.append(top)
+    for i in range(6):
+        x0 = 9 + i * 6 + rnd.uniform(-2, 2)
+        lx, ly = x0 + rnd.choice((-1, 1)) * rnd.uniform(5, 9), base_y - rnd.uniform(9, 16)
+        leaves.append(smooth([(x0 - 1.5, base_y), (lx, ly), (x0 + 1.5, base_y)], t=0.5))
+    b.append(lin(" ".join(stems), INK, 2.0))
+    b.append(lin(" ".join(stems), PAL["green"][1], 1.0))
+    for d in leaves:
+        b.append(P.shape(d, "foliage", s=0.6, lw=1.0))
+    for j, (x, y) in enumerate(heads):
+        col = cols[j % len(cols)]
+        petals = " ".join(ell(x + math.cos(a) * 2.6, y + math.sin(a) * 2.2, 2.2, 1.9) for a in [k * math.tau / 5 + j for k in range(5)])
+        b.append(fill(petals, col))
+        b.append(lin(petals, INK, 0.5, 0.75))
+        b.append(fill(ell(x, y, 1.2), PAL["gold"][1]))
+    sh = f'<ellipse cx="{W/2+2:.1f}" cy="{H-2:.1f}" rx="{W*0.38:.1f}" ry="3" fill="{INK}" opacity="0.18" {blur_filter(P, 1.5)}/>'
+    return sh, J(b), ""
+
+
+def flower_patch_a(P, W, H):
+    return flower_patch(P, W, H, 11, [PAL["cloth"][0], "#f2ead6", PAL["straw"][0]])
+
+
+def flower_patch_b(P, W, H):
+    return flower_patch(P, W, H, 23, ["#c8b4e0", "#f2ead6", PAL["apple"][0], "#a8b8d8"])
+
+
 PROPS = {k: v for k, v in globals().items() if callable(v)}
 
 

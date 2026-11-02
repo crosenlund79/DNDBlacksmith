@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	UIKit.clear(body)
-	body.add_child(UIKit.label("Seeking work (new faces each week; you cannot choose who turns up)", 26, "heading"))
+	body.add_child(UIKit.label("Seeking work (new faces each week; you cannot choose who turns up) — you employ %d of %d" % [Hire.alive_count(), Hire.MAX_HIRELINGS], 26, "heading"))
 	var apps: Array = Game.state["applicants"]
 	if apps.is_empty():
 		body.add_child(UIKit.label("No new notices pinned this week.", 20, "body_italic"))
@@ -32,7 +32,11 @@ func _build() -> void:
 		for s in DB.work_skills:
 			var lv := int(a["levels"].get(s, 0))
 			skills.append("%s %s" % [SkillSys.skill_name(s), "●".repeat(lv) + "○".repeat(maxi(0, 5 - lv))])
-		var lab := UIKit.rich("[b]%s[/b] · %s\n[i]%s[/i]\n%s\nWage %d g/day · signing fee %d g" % [a["name"], a["race"], a["personality"], "   ".join(skills), a["wage"], a["fee"]], 20)
+		var tl := []
+		for tid in a.get("traits", []):
+			var tr: Dictionary = Hire.TRAITS.get(tid, {})
+			tl.append("[color=%s]%s %s[/color]" % ["#26622f" if tr.get("good", false) else "#9e3a0c", "▲" if tr.get("good", false) else "▼", tr.get("name", tid)])
+		var lab := UIKit.rich("[b]%s[/b] · %s · %s\n[i]%s[/i]\n%s\nWage %d g/day · signing fee %d g" % [a["name"], a["race"], "  ".join(tl), a["personality"], "   ".join(skills), a["wage"], a["fee"]], 20)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lab)
 		var idx: int = i
@@ -44,6 +48,25 @@ func _build() -> void:
 				get_tree().call_group("world", "spawn_new_hirelings")
 				Events.toast.emit("Welcome aboard, " + a["name"] + ".", "good"), 120)
 		row.add_child(b)
+		if Hire.alive_count() >= Hire.MAX_HIRELINGS:
+			# all three places are taken: offer to replace someone who is at home
+			b.disabled = true
+			var ob := OptionButton.new()
+			for h in Hire.list():
+				if h["status"] != "away":
+					ob.add_item(("in place of " if h["status"] != "dead" else "for the late ") + str(h["name"]))
+					ob.set_item_metadata(ob.item_count - 1, h["id"])
+			if ob.item_count > 0:
+				var rv := UIKit.vbox(4)
+				rv.add_child(ob)
+				rv.add_child(UIKit.button("Replace", func():
+					var err := Hire.replace(idx, str(ob.get_item_metadata(ob.selected)))
+					if err != "":
+						Events.toast.emit(err, "bad")
+					else:
+						get_tree().call_group("world", "spawn_new_hirelings")
+						Events.toast.emit("Welcome aboard, " + a["name"] + ".", "good"), 160))
+				row.add_child(rv)
 		body.add_child(row)
 	body.add_child(UIKit.divider())
 	body.add_child(UIKit.label("Commissions pinned by adventurers", 26, "heading"))

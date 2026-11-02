@@ -38,9 +38,10 @@ static func options(npc: String, area: String) -> Array:
 		out.append({"id": "manage", "label": "Discuss work and expeditions"})
 	if npc == "aldric" and Game.state["world"].get("delivery_pending", false):
 		out.insert(0, {"id": "delivery", "label": "Take the weekly delivery"})
-	for cu in Shop.customers():
+	for cu in Shop.waiting():
 		if cu["npc"] == npc:
-			out.insert(0, {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Serve at the counter"})
+			out.insert(0, {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Show them the wares"})
+			out.insert(1, {"id": "send_away", "label": "Ask them to come back another time"})
 	var a := Adv.get_a(npc)
 	if not a.is_empty() and a["status"] in ["in_town", "injured"]:
 		out.append({"id": "travels", "label": "Ask about their travels"})
@@ -87,6 +88,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": Sim.take_delivery()}
 		"serve":
 			return {"text": "", "action": "shop"}
+		"send_away":
+			Shop.dismiss_customer(npc)
+			return {"text": "\"Another day, then.\" %s gets up from the bench and heads off." % npc_name(npc), "action": "close_later"}
 		"serve_repair":
 			return {"text": "You turn the damaged piece over in your hands. Grinding wheel it is.", "action": "repair"}
 		"travels":

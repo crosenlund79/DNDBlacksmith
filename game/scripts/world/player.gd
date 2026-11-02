@@ -21,7 +21,7 @@ func _ready() -> void:
 	add_child(col)
 	sprite = AnimatedSprite2D.new()
 	sprite.sprite_frames = Assets.char_frames("chars/player")
-	sprite.offset = Vector2(0, -12)
+	sprite.offset = Vector2(0, -32)
 	sprite.scale = Vector2(1.1, 1.1)
 	sprite.play("idle_s")
 	add_child(sprite)

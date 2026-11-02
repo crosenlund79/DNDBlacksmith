@@ -12,6 +12,7 @@ signal day_started(day: int)
 signal skill_level_up(who: String, skill: String, level: int)
 signal crafting_changed
 signal station_worked(station_id: String, quality: float)   # one resolved skill check at a station
+signal customers_changed   # a customer set out, sat down, was served or left
 signal item_crafted(item: Dictionary)
 signal legendary_found(item: Dictionary)
 signal hirelings_changed

@@ -67,9 +67,11 @@ func _ready() -> void:
 	_furnish()
 	_build_stations()
 	_build_outdoors()
+	_build_atmosphere()
 	_build_nav()
 	_spawn_player()
 	_spawn_npcs()
+	_spawn_animals()
 	_refresh_bags()
 	_refresh_eggs()
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
@@ -468,12 +470,31 @@ func _sprite(id: String, pos: Vector2, parent: Node) -> Sprite2D:
 
 ## Places a prop: floor props go flat on the floor layer, others are Y-sorted with collision.
 ## `rot` is in radians; quarter turns swap the footprint so collisions match the drawn sprite.
+const SWAY := {"flowers": 2.6, "flower_patch_a": 2.8, "flower_patch_b": 2.8, "bush_flower": 1.8, "bush": 1.4,
+	"tree_oak_a": 1.3, "tree_oak_b": 1.3, "tree_pine": 1.0, "tree_small": 1.6}
+var _sway_mats := {}
+
+
+## Shared breeze material for a plant prop (one per strength).
+func _sway_material(id: String) -> ShaderMaterial:
+	var k := float(SWAY[id])
+	if not _sway_mats.has(k):
+		var m := ShaderMaterial.new()
+		m.shader = load("res://shaders/sway.gdshader")
+		m.set_shader_parameter("strength", k)
+		m.set_shader_parameter("speed", 1.6 if k > 2.0 else 1.1)
+		_sway_mats[k] = m
+	return _sway_mats[k]
+
+
 func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 	var info: Dictionary = DB.props.get(id, {"size": [64, 64], "solid": true})
 	var size := Vector2(float(info["size"][0]), float(info["size"][1]))
 	if not info.get("solid", true):
 		var fs := _sprite("props/" + id, pos, floor_layer)
 		fs.rotation = rot
+		if SWAY.has(id):
+			fs.material = _sway_material(id)
 		return fs
 	var quarter := int(round(rot / (PI / 2))) % 2 != 0
 	var ext := Vector2(size.y, size.x) if quarter else size
@@ -483,6 +504,8 @@ func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 	s.texture = Assets.get_tex("props/" + id, Vector2i(int(size.x), int(size.y)))
 	s.position = Vector2(0, -ext.y * 0.3)
 	s.rotation = rot
+	if SWAY.has(id):
+		s.material = _sway_material(id)
 	holder.add_child(s)
 	ysort.add_child(holder)
 	var foot := ext * Vector2(0.75, 0.55)
@@ -693,6 +716,107 @@ func _refresh_station_locks() -> void:
 
 
 # ======================================================================= outdoors
+# ======================================================================= atmosphere & animals
+var animals: Array = []
+const ANIMALS := [["animal_cat_1", [57.0, 33.5], 260.0], ["animal_cat_2", [30.5, 31.6], 160.0],
+	["animal_dog_1", [48.0, 30.2], 300.0], ["animal_dog_2", [64.5, 25.6], 240.0]]
+
+
+func _spawn_animals() -> void:
+	for a in ANIMALS:
+		var an := AnimalActor.new()
+		an.setup(a[0], tp(a[1]), float(a[2]))
+		ysort.add_child(an)
+		animals.append(an)
+
+
+## Restrained dust in the air, and a darker, smokier, warmer forge corner.
+func _build_atmosphere() -> void:
+	# street dust drifting over the square and the main roads
+	for p in [[59, 31], [40, 29.5], [26, 31], [70, 31]]:
+		add_child(_dust(tp(p), Vector2(420, 220), 14, Color("#e8d8b0")))
+	# interiors: workshop air, inn haze
+	for rm in [["smithy", "forge_room"], ["smithy", "stock_hall"], ["smithy", "shop"], ["inn", "common"]]:
+		var r := _room_rect_by_id(rm[0], rm[1])
+		if r.size != Vector2.ZERO:
+			add_child(_dust(r.get_center(), r.size * 0.45, 10 if rm[1] != "forge_room" else 22, Color("#f0d8a8") if rm[1] != "forge_room" else Color("#ffb070")))
+	# the forge corner: shadowed, sooty, with a strong warm hearth glow and rising smoke
+	var fr := _room_rect_by_id("smithy", "forge_room")
+	if fr.size != Vector2.ZERO:
+		var shade := Polygon2D.new()
+		shade.polygon = PackedVector2Array([fr.position, Vector2(fr.end.x, fr.position.y), fr.end, Vector2(fr.position.x, fr.end.y)])
+		var g := Gradient.new()
+		g.set_color(0, Color(0, 0, 0, 0.0))
+		g.set_color(1, Color(0.05, 0.02, 0.0, 0.42))
+		var gt := GradientTexture2D.new()
+		gt.gradient = g
+		gt.fill = GradientTexture2D.FILL_RADIAL
+		gt.fill_from = Vector2(0.24, 0.24)
+		gt.fill_to = Vector2(1.05, 1.05)
+		gt.width = 256
+		gt.height = 256
+		shade.texture = gt
+		shade.uv = PackedVector2Array([Vector2(0, 0), Vector2(256, 0), Vector2(256, 256), Vector2(0, 256)])
+		shade.z_index = 1
+		floor_layer.add_child(shade)
+		var fp := station_pos("forge")
+		var glow := FX.light(Color("#ff7a20"), 760.0, 1.1, true)
+		glow.position = fp + Vector2(0, 30)
+		add_child(glow)
+		var sm := FX.smoke(8)
+		sm.position = fp + Vector2(0, -50)
+		sm.modulate = Color(0.55, 0.5, 0.45, 0.55)
+		add_child(sm)
+		var em := FX.embers(14)
+		em.position = fp + Vector2(40, 20)
+		add_child(em)
+
+
+func _room_rect_by_id(bid: String, rid: String) -> Rect2:
+	for rm in buildings.get(bid, {}).get("rooms", []):
+		if str(rm["id"]) == rid:
+			return rm["rect"]
+	return Rect2()
+
+
+func _dust(at: Vector2, extents: Vector2, amount: int, col: Color) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.position = at
+	p.amount = amount
+	p.lifetime = 7.0
+	p.preprocess = 7.0
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = extents
+	p.direction = Vector2(1, -0.3)
+	p.spread = 60.0
+	p.gravity = Vector2(0, -2)
+	p.initial_velocity_min = 3.0
+	p.initial_velocity_max = 10.0
+	p.scale_amount_min = 1.2
+	p.scale_amount_max = 2.6
+	var g := Gradient.new()
+	g.set_color(0, Color(col, 0.0))
+	g.add_point(0.3, Color(col, 0.38))
+	g.add_point(0.7, Color(col, 0.3))
+	g.set_color(g.get_point_count() - 1, Color(col, 0.0))
+	p.color_ramp = g
+	p.z_index = 20
+	return p
+
+
+const WAIT_SEATS := [[25.4, 33.0], [26.6, 33.0], [27.8, 33.0], [29.0, 33.0]]
+
+
+func _build_waiting_area() -> void:
+	for i in WAIT_SEATS.size():
+		var p := tp(WAIT_SEATS[i])
+		_prop("waiting_seat", p)
+		# the customer stands on the seat's front edge so the figure reads in front of it
+		spots["wait_seat_%d" % i] = p + Vector2(0, 24)
+	_prop("waiting_awning", tp([22.6, 32.7]))
+	_prop("craft_display", tp([36.8, 32.9]))
+
+
 func _build_outdoors() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
@@ -709,6 +833,8 @@ func _build_outdoors() -> void:
 	for i in 6:
 		var a := TAU * i / 6.0 + 0.4
 		spots["square_%d" % i] = Vector2(59 * T + cos(a) * 4.6 * T, 31 * T + sin(a) * 3.2 * T)
+	# the customer waiting area outside the shop's street door: four seats, a sign and a display
+	_build_waiting_area()
 	# lantern posts along the roads
 	var lp := [[50, 29.2], [68, 32.8], [40, 29.5], [26, 32.6], [12, 29.4], [80, 32.6], [57.2, 20], [60.8, 42], [57.4, 52], [33.4, 33.4]]
 	for p in lp:
@@ -741,7 +867,8 @@ func _build_outdoors() -> void:
 	var sq_c := tp(DB.layout["square"]["center"])
 	var placed: Array[Vector2] = []
 	var size: Array = DB.layout["size"]
-	var want := {"tree_oak_a": 70, "tree_oak_b": 55, "tree_pine": 45, "tree_small": 40, "bush": 50, "bush_flower": 30, "rock_a": 22, "rock_b": 16, "flowers": 60}
+	var want := {"tree_oak_a": 70, "tree_oak_b": 55, "tree_pine": 45, "tree_small": 40, "bush": 50, "bush_flower": 30, "rock_a": 22, "rock_b": 16, "flowers": 60,
+		"flower_patch_a": 45, "flower_patch_b": 45}
 	for kind in want:
 		var n: int = want[kind]
 		var tries := 0
@@ -853,7 +980,7 @@ func _build_nav() -> void:
 	var outdoor_ids: Array[int] = road_ids.duplicate()
 	# outdoor spots
 	for name in spots.keys():
-		if name.begins_with("square_") or name in ["notice", "well", "inn_garden"] or name.begins_with("exit_"):
+		if name.begins_with("square_") or name in ["notice", "well", "inn_garden"] or name.begins_with("exit_") or name.begins_with("wait_seat_"):
 			var id := _pt(spots[name])
 			spot_ids[name] = id
 			_link_nearest(id, 1400.0, 2)
@@ -994,7 +1121,7 @@ func spot_for(id: String) -> String:
 	var h := Game.hour()
 	for cu in Shop.customers():
 		if cu["npc"] == id:
-			return "smithy_counter_front"
+			return "wait_seat_%d" % int(cu.get("seat", 0))
 	var hire := Hire.get_h(id)
 	if not hire.is_empty():
 		match hire["status"]:
@@ -1080,6 +1207,8 @@ func _update_schedules(instant := false) -> void:
 			n.hidden_after_arrival = false
 			if instant:
 				n.position = spots.get(spot, n.position)
+				if spot.begins_with("wait_seat_"):
+					Shop.mark_arrived(id, false)
 			else:
 				n.go(path_to(n.position, spot))
 
@@ -1098,6 +1227,8 @@ func _home_spot(id: String) -> String:
 
 func _on_npc_arrived(id: String) -> void:
 	var n: NPCActor = npcs[id]
+	if n.target_spot.begins_with("wait_seat_"):
+		Shop.mark_arrived(id)
 	if n.hidden_after_arrival:
 		n.visible = false
 		n.hidden_after_arrival = false

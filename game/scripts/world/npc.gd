@@ -27,7 +27,7 @@ func setup(id: String, sprite_id: String, name: String) -> void:
 	display_name = name
 	sprite = AnimatedSprite2D.new()
 	sprite.sprite_frames = Assets.char_frames(sprite_id)
-	sprite.offset = Vector2(0, -12)
+	sprite.offset = Vector2(0, -32)
 	sprite.scale = Vector2(1.15, 1.15)
 	sprite.play("idle_s")
 	sprite.frame = randi() % 2
@@ -39,7 +39,7 @@ func setup(id: String, sprite_id: String, name: String) -> void:
 	label.add_theme_color_override("font_color", Color("#efe4cc"))
 	label.add_theme_color_override("font_outline_color", Color("#20140c"))
 	label.add_theme_constant_override("outline_size", 6)
-	label.position = Vector2(-80, -92)
+	label.position = Vector2(-80, -126)
 	label.size = Vector2(160, 24)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.visible = false
@@ -55,7 +55,7 @@ func setup(id: String, sprite_id: String, name: String) -> void:
 	sb.set_corner_radius_all(6)
 	sb.set_content_margin_all(6)
 	bubble.add_theme_stylebox_override("normal", sb)
-	bubble.position = Vector2(-110, -128)
+	bubble.position = Vector2(-110, -164)
 	bubble.custom_minimum_size = Vector2(220, 0)
 	bubble.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bubble.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

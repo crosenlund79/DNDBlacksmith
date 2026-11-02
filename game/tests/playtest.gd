@@ -275,6 +275,8 @@ func phase_full() -> void:
 		await wait(0.4)
 		if guard == 1:
 			await shot("skillcheck_" + st)
+		if _minigame() != null:
+			await play_minigame(true)
 		var n := await play_checks(true)
 		note("  step %s: %d checks played, samples so far %d" % [st, n, Crafting.job().get("samples", []).size()])
 	expect(Crafting.job().get("awaiting_dice", false), "crafting: all %d stations worked" % steps.size())
@@ -481,6 +483,8 @@ func _row_text(b: Button) -> String:
 	var row := b.get_parent()
 	var t := ""
 	for c in row.get_children():
+		if c is RichTextLabel:
+			t += (c as RichTextLabel).get_parsed_text()
 		for cc in c.get_children():
 			if cc is RichTextLabel:
 				t += (cc as RichTextLabel).get_parsed_text()
@@ -611,10 +615,14 @@ func craft_ui(rid: String, frac: float, dice_mode: String, phys := {}, tag := ""
 				await use("station", st)
 			await click(str(Crafting.current_op().get("op", "")))
 		await wait(0.35)
-		if tag != "" and not shot_stations.has(st):
+		if tag != "" and not shot_stations.has(st) and _minigame() == null:
 			shot_stations[st] = true
 			await shot("check_" + st)
-		await play_checks(true, frac)
+		if _minigame() != null:
+			check_log.append_array(await play_minigame(frac < 0.3, ("mg_" + st) if tag != "" and not shot_stations.has(st) else ""))
+			shot_stations[st] = true
+		else:
+			await play_checks(true, frac)
 	expect(Crafting.job().get("awaiting_dice", false), "%s: all %d operations performed at their stations" % [rid, ops.size()])
 	await wait(0.5)
 	if not (panel() is DicePanel):
@@ -884,3 +892,229 @@ func phase_minigames() -> void:
 		expect(not good.is_empty() and not poor.is_empty() and g > p, "%s (%s): skilful play %.0f%% beats careless play %.0f%%" % [st, Minigames.type_for({"station": st}), g, p])
 	# the default ring is kept where no specialised check is defined
 	expect(Minigames.type_for({"station": "anvil"}) == "ring", "anvil keeps the circular precision ring")
+
+
+
+# ======================================================================= iteration 2
+var toasts: Array = []
+
+
+func _on_toast(text: String, _kind: String) -> void:
+	toasts.append([Time.get_ticks_msec(), text])
+
+
+func phase_iter2() -> void:
+	Events.toast.connect(_on_toast)
+	await click("New Game")
+	await wait(2.5)
+	# --- figures: no sprite rotation, directional poses instead
+	var rotated := 0
+	for id in W().npcs:
+		if absf((W().npcs[id] as NPCActor).sprite.rotation) > 0.001 or absf((W().npcs[id] as NPCActor).rotation) > 0.001:
+			rotated += 1
+	Input.action_press("move_right")
+	await wait(0.5)
+	var pr := W().player.sprite.rotation
+	var anim_walk := W().player.sprite.animation
+	await shot("figures_player_walking")
+	Input.action_release("move_right")
+	Input.action_press("move_up")
+	await wait(0.4)
+	var anim_n := W().player.sprite.animation
+	var pr2 := W().player.sprite.rotation
+	Input.action_release("move_up")
+	await wait(0.2)
+	expect(rotated == 0 and absf(pr) < 0.001 and absf(pr2) < 0.001 and anim_walk == "walk_e" and anim_n == "walk_n", "figures: miniatures never rotate — directional poses instead (%s, %s; %d rotated npcs)" % [anim_walk, anim_n, rotated])
+	expect(W().animals.size() == 4, "animals: two cats and two dogs in the village")
+	# --- waiting area: four seats, announced only on arrival
+	await advance_to(9, 10)
+	Game.state["customers"].clear()
+	toasts.clear()
+	var tried := ["martha", "tobin", "jory", "eda", "oswin"]
+	for npc in tried:
+		Shop._add_customer(npc, "repair")
+	expect(Shop.customers().size() == 4, "waiting: at most four customers (%d of 5 accepted)" % Shop.customers().size())
+	var early := toasts.filter(func(t): return str(t[1]).contains("waiting outside"))
+	expect(early.is_empty() and Shop.waiting().is_empty(), "waiting: nobody announced before they arrive")
+	W()._update_schedules()
+	var waited := 0.0
+	while Shop.waiting().size() < 4 and waited < 60.0:
+		await wait(1.0)
+		waited += 1.0
+	var ann := toasts.filter(func(t): return str(t[1]).contains("waiting outside"))
+	expect(Shop.waiting().size() == 4 and ann.size() == 4, "waiting: %d seated after %.0fs, %d announcements (one each, on arrival)" % [Shop.waiting().size(), waited, ann.size()])
+	await tp(W().spots["wait_seat_1"] + Vector2(0, -150))
+	W().camera.zoom = Vector2(1.25, 1.25)
+	await wait(0.6)
+	await shot("waiting_area_four_seated")
+	W().camera.zoom = Vector2.ONE
+	# --- dismiss one customer
+	var first: String = Shop.waiting()[0]["npc"]
+	var seat := int(Shop.waiting()[0]["seat"])
+	if await talk_to(first):
+		await shot("waiting_customer_dialogue")
+		expect(await click("Ask them to come back"), "waiting: 'ask to leave' offered")
+		await wait(0.4)
+		await click("Farewell")
+	expect(Shop.customers().size() == 3 and Shop.free_seat() == seat, "waiting: dismissed customer freed seat %d" % seat)
+	await wait(3.0)
+	await shot("waiting_after_dismiss")
+	# --- display, forge, animals, flowers
+	await tp(W().bpos("smithy", 18.5, -1.5))
+	await wait(0.5)
+	await shot("craft_display_and_seats")
+	await tp(W().station_pos("anvil"))
+	await wait(1.0)
+	await shot("forge_atmosphere")
+	var cat: AnimalActor = W().animals[0]
+	await tp(cat.position + Vector2(0, -60))
+	W().camera.zoom = Vector2(1.4, 1.4)
+	await wait(1.5)
+	await shot("animal_cat_and_flowers")
+	var dog: AnimalActor = W().animals[2]
+	await tp(dog.position + Vector2(0, -60))
+	await wait(1.5)
+	await shot("animal_dog")
+	W().camera.zoom = Vector2.ONE
+	var moved := false
+	var start_pos := dog.position
+	for i in 20:
+		await wait(1.0)
+		if dog.position.distance_to(start_pos) > 20.0:
+			moved = true
+			break
+	expect(moved, "animals: the dog wanders now and then")
+	await tp(W().spots["square_0"])
+	await wait(0.6)
+	await shot("village_square_life")
+	# --- hirelings: recruitment within the three-hand limit
+	Game.add_gold(2000, "test", "test funds")
+	Hire.refresh_applicants()
+	while Game.state["applicants"].size() < 3:
+		Hire.refresh_applicants()
+	await use("notice", "board")
+	expect(panel() is NoticePanel, "notice board opens")
+	await shot("notice_board_applicants")
+	await click("Hire")
+	await wait(0.3)
+	await click("Hire")
+	await wait(0.3)
+	expect(Hire.alive_count() == 3, "recruitment: Borin plus two hires = 3")
+	var err := Hire.hire_applicant(0)
+	expect(err != "" and Hire.alive_count() == 3, "recruitment: a fourth hand is refused ('%s')" % err)
+	await close_panel()
+	await use("notice", "board")
+	await shot("notice_board_full_replace")
+	await close_panel()
+	# --- the ledger of hands
+	await press("panel_hirelings")
+	await wait(0.6)
+	expect(panel() is HirelingsPanel, "hirelings ledger opens")
+	await shot("hirelings_ledger")
+	var hid: String = Hire.list()[1]["id"]
+	await close_panel()
+	Hire.apply_preset(hid, "two")
+	var a2: Dictionary = Hire.get_h(hid)["alloc"]
+	var tot := 0
+	for k in a2:
+		tot += int(a2[k])
+	expect(tot == 100, "allocation preset totals 100%")
+	# workshop work: hours pass, experience and output accrue
+	var main_sk: String = a2.keys().filter(func(k): return int(a2[k]) == 60)[0]
+	var before_xp := _xpv(Hire.get_h(hid), main_sk)
+	for hr in range(9, 17):
+		Hire.work_hour(hr)
+	var after_xp := _xpv(Hire.get_h(hid), main_sk)
+	expect(after_xp > before_xp and not Hire.get_h(hid).get("log", []).is_empty(), "work: a day at the workshop gives experience and results (%s)" % str(Hire.get_h(hid).get("log", []).slice(-1)))
+	# --- Borin's mining expedition through the ledger
+	await press("panel_hirelings")
+	await wait(0.6)
+	var send_btn: Button = null
+	for b in _buttons(panel()):
+		if b.text == "Send" and _row_text(b).begins_with("Ironroot Mine") and send_btn == null:
+			send_btn = b
+	expect(send_btn != null, "ledger: Ironroot Mine can be chosen with odds shown")
+	var borin_xp := _xpv(Hire.get_h("borin"), "mining")
+	if send_btn:
+		send_btn.pressed.emit()
+	await wait(0.5)
+	expect(Hire.get_h("borin")["status"] == "away", "expedition: Borin sets out for Ironroot Mine")
+	var bags_before: int = Game.state["returns"].size()
+	for d in 4:
+		Hire.on_day()
+	var bh := Hire.get_h("borin")
+	var bag: Dictionary = Game.state["returns"][-1] if Game.state["returns"].size() > bags_before else {}
+	var ores := 0
+	for it in bag.get("contents", []):
+		if str(it["def"]).begins_with("ore_") or it["def"] == "coal":
+			ores += 1
+	var borin_xp2 := _xpv(bh, "mining")
+	expect(bh["status"] != "away" and ores > 0 and borin_xp2 > borin_xp, "expedition: Borin back (%s) with %d ore stacks, mining XP gained" % [bh["status"], ores])
+	expect(not bh.get("history", []).is_empty(), "expedition: history recorded (%s)" % str(bh.get("history", [])))
+	# --- genuine risk: a green hand sent repeatedly to the Barrow Fields until hurt or killed
+	Game.set_flag("delve_map")
+	var green: String = Hire.list()[1]["id"]
+	if SkillSys.level(Hire.list()[2]["skills"], "mining") < SkillSys.level(Hire.list()[1]["skills"], "mining"):
+		green = Hire.list()[2]["id"]
+	var gh: Dictionary = Hire.get_h(green)
+	gh["equipment"] = {}
+	var o := Hire.odds(gh, "deep_ironroot")
+	note("  deep ironroot odds for %s: success %.0f%%, injury %.0f%%, death %.1f%%" % [gh["name"], float(o["success"]) * 100, float(o["injury"]) * 100, float(o["death"]) * 100])
+	var tries := 0
+	while gh["status"] not in ["injured", "dead"] and tries < 40:
+		tries += 1
+		if gh["status"] == "working":
+			Hire.send(green, "deep_ironroot")
+		for d in 4:
+			Hire.on_day()
+			if gh["status"] in ["injured", "dead"]:
+				break
+	note("  trips: %s" % str(gh.get("history", []).map(func(x): return x["outcome"])))
+	expect(gh["status"] in ["injured", "dead"], "expedition risk: %s ended %s after %d trips" % [gh["name"], gh["status"], tries])
+	# the test's many bags would crowd the workshop floor; clear them so the stations stay reachable
+	Game.state["returns"].clear()
+	Events.inventory_changed.emit()
+	await press("panel_hirelings")
+	await wait(0.6)
+	await shot("hirelings_after_expeditions")
+	await close_panel()
+	# --- a real craft that runs through specialised checks (bellows, mortar, cauldron, infusion)
+	var steel := await craft_ui("smelt_steel", 0.2, "auto", {}, "steel_ingot")
+	expect(not steel.is_empty() and steel.get("craft", {}).get("ops", []).size() == 3, "crafting: steel ingot made through the bellows minigame (%s)" % str(steel.get("craft", {}).get("ops", []).map(func(x): return int(x["q"]))))
+	var draught := await craft_ui("healing_draught", 0.2, "auto", {}, "draught")
+	expect(not draught.is_empty(), "crafting: healing draught through ring and multi-hit checks (q %.0f%%)" % float(draught.get("quality", 0)))
+	# --- save for the reload phase
+	await close_panel()
+	await press("cancel")
+	await wait(0.4)
+	await click("Save game")
+	await wait(0.5)
+	await click("Save")
+	await wait(0.5)
+	var keep := {"green": green, "green_status": gh["status"], "green_injured": int(gh.get("injured_days", 0)), "green_hist": gh.get("history", []).size(),
+		"borin_hist": bh.get("history", []).size(), "hires": Hire.list().size(), "customers": Shop.customers().size(), "draught": str(draught.get("uid", ""))}
+	var f := FileAccess.open("user://playtest/expect_iter2.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(keep))
+	note("saved " + JSON.stringify(keep))
+
+
+func phase_iter2_reload() -> void:
+	expect(await click("Continue"), "restart: Continue")
+	await wait(3.0)
+	var e: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("user://playtest/expect_iter2.json"))
+	var g := Hire.get_h(str(e["green"]))
+	expect(not g.is_empty() and g["status"] == e["green_status"] and int(g.get("injured_days", 0)) == int(e["green_injured"]), "persist: %s is still %s" % [g.get("name", "?"), g.get("status", "?")])
+	expect(g.get("history", []).size() == int(e["green_hist"]) and Hire.get_h("borin").get("history", []).size() == int(e["borin_hist"]), "persist: expedition histories restored")
+	expect(Hire.list().size() == int(e["hires"]) and not Hire.traits_of(Hire.get_h("borin")).is_empty(), "persist: roster and traits restored")
+	expect(not Game.find_uid(int(e["draught"])).is_empty(), "persist: crafted draught still in the stores")
+	await press("panel_hirelings")
+	await wait(0.6)
+	await shot("reload_hirelings_ledger")
+
+
+func _xpv(h: Dictionary, sk: String) -> int:
+	var lv := SkillSys.level(h["skills"], sk)
+	var tot := int(h["skills"][sk]["xp"])
+	for l in range(1, lv + 1):
+		tot += SkillSys.xp_needed(l)
+	return tot

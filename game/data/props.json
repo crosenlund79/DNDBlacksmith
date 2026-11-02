@@ -694,5 +694,45 @@
   ],
   "solid": true,
   "desc": "behind-the-bar shelf of bottles and mugs"
+ },
+ "waiting_seat": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": true,
+  "desc": "single outdoor wooden seat with a burgundy cushion"
+ },
+ "waiting_awning": {
+  "size": [
+   192,
+   64
+  ],
+  "solid": true,
+  "desc": "small striped awning on two poles with a hanging hourglass sign (waiting area)"
+ },
+ "craft_display": {
+  "size": [
+   192,
+   96
+  ],
+  "solid": true,
+  "desc": "display stand of example crafted equipment: swords in a rack, cuirass, helm and shield"
+ },
+ "flower_patch_a": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": false,
+  "desc": "small flower clump rooted on the bottom edge (sway shader)"
+ },
+ "flower_patch_b": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": false,
+  "desc": "small flower clump rooted on the bottom edge (sway shader)"
  }
 }

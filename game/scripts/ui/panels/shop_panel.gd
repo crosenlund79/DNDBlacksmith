@@ -38,12 +38,12 @@ func _build() -> void:
 
 func _customers() -> void:
 	var people := []
-	for c in Shop.customers():
+	for c in Shop.waiting():
 		people.append(c["npc"])
 	if npc_focus != "" and not people.has(npc_focus):
 		people.push_front(npc_focus)
 	if people.is_empty():
-		body.add_child(UIKit.label("Nobody is waiting. Customers come during opening hours (9:00–18:00); adventurers in town often drop by.", 22, "body_italic"))
+		body.add_child(UIKit.label("Nobody is waiting outside. Customers come during opening hours (9:00–18:00) and take a seat by the door; adventurers in town often drop by.", 22, "body_italic"))
 		return
 	for npc in people:
 		var row := UIKit.hbox(16)
