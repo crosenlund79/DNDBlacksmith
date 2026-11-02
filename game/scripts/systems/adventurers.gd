@@ -409,6 +409,7 @@ static func _resolve(a: Dictionary) -> void:
 
 static func _die(a: Dictionary, d: Dictionary, mine: Array) -> void:
 	a["status"] = "dead"
+	a["died_day"] = Game.day()
 	a["last_report"] = "%s fell at %s." % [a["name"], d["name"]]
 	Game.journal(a["last_report"])
 	Events.toast.emit(a["last_report"], "bad")

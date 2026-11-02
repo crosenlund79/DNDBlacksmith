@@ -20,7 +20,7 @@ static func greeting(npc: String) -> String:
 	var t: String = lines.pick_random()
 	var married := Social.spouse() == npc
 	if married:
-		t = "\"Husband.\" She smiles despite herself."
+		t = "\"Husband.\" She smiles despite herself. " + InnLife.married_line(npc)
 	if npc == "aldric" and Game.state["world"].get("delivery_pending", false):
 		t = "\"Provisions for the forge! Where do you want them?\""
 	var a := Adv.get_a(npc)
@@ -68,12 +68,18 @@ static func options(npc: String, area: String) -> Array:
 			var stage := Social.romance(npc)
 			if stage in ["none", "dating"] and Game.hour() >= 17 and area == "inn":
 				out.append({"id": "drink", "label": "Share a drink by the fire (4 g)"})
-			if stage == "dating":
+			if InnLife.can_walk(npc):
+				out.append({"id": "walk", "label": "Walk her home along the stream"})
+			if stage == "dating" and Game.has_flag("walked_" + npc):
 				out.append({"id": "court", "label": "Ask to court her"})
 			if stage == "courting":
 				out.append({"id": "propose", "label": "Propose (offer a silver band)"})
 	if npc == "hilde":
 		out.append({"id": "ale", "label": "Buy a round for the room (6 g)"})
+	if area == "inn" and (npc == "hilde" or (not a.is_empty() and a["status"] in ["in_town", "injured"])):
+		out.append({"id": "tabletalk", "label": "Sit in on the table talk"})
+		if npc != "hilde":
+			out.append({"id": "dice", "label": "Play knucklebones (5 g a throw)"})
 	if kind == "companion":
 		out.append({"id": "evening", "label": "Spend the evening (25 g)"})
 		out.append({"id": "rumour", "label": "Ask what the adventurers are saying (5 g)"})
@@ -139,7 +145,15 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			Social.change(npc, 7.0, 6.0, "date_" + str(Game.day()), "Shared a quiet drink with Brannoc.")
 			if int(e["dates"]) >= 2 and Social.romance(npc) == "none":
 				Social.set_romance(npc, "dating")
-			return {"text": DB.dialogue["romance"]["drink_ok"], "fade": "An hour by the fire…", "minutes": 60}
+				Game.journal("You and %s have been seeing each other." % c["name"])
+			return {"text": DB.dialogue["romance"]["drink_ok"] + InnLife.maybe_keepsake(npc), "fade": "An hour by the fire…", "minutes": 60}
+		"walk":
+			return {"text": InnLife.walk(npc), "fade": "The long way home, by the water…", "minutes": 60}
+		"tabletalk":
+			Social.change(npc, 1.0, 2.0)
+			return {"text": InnLife.table_talk()}
+		"dice":
+			return {"text": InnLife.knucklebones(npc)}
 		"court":
 			if Social.aff(npc) >= 55.0:
 				Social.set_romance(npc, "courting")
@@ -154,7 +168,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 					break
 			if ring == "":
 				return {"text": "You'll need a ring. A silver band from your own anvil would be fitting."}
-			if Social.aff(npc) < 80.0:
+			if Social.aff(npc) < 80.0 or not Game.has_flag("keepsake_" + npc):
 				return {"text": DB.dialogue["romance"]["propose_no"]}
 			var r := Game.take_uid(int(ring))
 			a["equipment"]["ring"] = r
@@ -162,7 +176,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			Social.change(npc, 15.0, 10.0, "married", "Married Brannoc Ironhand.")
 			Game.journal("You married %s. She will keep adventuring — and you will keep her armed." % c["name"])
 			Audio.play("sfx/level_up")
-			return {"text": DB.dialogue["romance"]["propose_ok"], "fade": "A small ceremony at the Chapel of the Dawn…", "minutes": 120}
+			return {"text": DB.dialogue["romance"]["propose_ok"] + "\n\n" + InnLife.wedding(npc), "fade": "A small ceremony at the Chapel of the Dawn…", "minutes": 120}
 		"ale":
 			if not Game.can_afford(6):
 				return {"text": "Your purse is too light."}

@@ -238,7 +238,7 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append("[color=#a89a80][i]Set aside for the next trade run.[/i][/color]")
 	if it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])
-	var desc: String = def(it).get("desc", "")
+	var desc: String = it.get("desc", def(it).get("desc", ""))
 	if desc != "":
 		lines.append("[i][color=#c8b898]%s[/color][/i]" % desc)
 	lines.append("[color=#dab470]Value %d g[/color]" % value(it))

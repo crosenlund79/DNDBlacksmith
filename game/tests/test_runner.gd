@@ -30,6 +30,7 @@ func _ready() -> void:
 	_materials_cycle()
 	_adventurer_world()
 	_village_remembers()
+	_romance()
 	_adventurers()
 	_social()
 	_loot()
@@ -383,6 +384,69 @@ func _village_remembers() -> void:
 	Saves.delete("village_slot")
 	Social.change("kestra", 60.0, 0.0)
 	Sim.clean_eggs()
+
+
+## Iteration 6: acquaintance → dating → walk → courting → keepsake → marriage, then married life.
+func _romance() -> void:
+	var npc := "elowen"
+	var el := Adv.get_a(npc)
+	Adv.ensure(el)
+	el["status"] = "in_town"
+	var m0: int = Game.state["minute"]
+	Game.state["minute"] = int(Game.state["minute"] / 1440) * 1440 + 19 * 60   # an evening at the inn
+	Game.add_gold(1000 - Game.gold(), "test", "test funds")
+	var stages := []
+	Game.add_item(Items.make("potion_healing", {"qty": 6}), false)
+	for i in 3:
+		Talk.choose(npc, "gift", "inn")
+	check(Talk.options(npc, "inn").any(func(o): return o["id"] == "tabletalk") and Talk.choose(npc, "tabletalk", "inn")["text"] != "", "inn: table talk drawn from recent events")
+	check(Talk.choose(npc, "dice", "inn")["text"].contains("throw"), "inn: a game of knucklebones with real dice")
+	Talk.choose(npc, "drink", "inn")
+	Talk.choose(npc, "drink", "inn")
+	stages.append(Social.romance(npc))
+	check(Social.romance(npc) == "dating", "romance: two evenings by the fire — dating")
+	check(not Talk.options(npc, "inn").any(func(o): return o["id"] == "court"), "romance: no courting before a personal moment")
+	Social.change(npc, 40.0 - Social.aff(npc), 0.0)
+	check(Talk.options(npc, "inn").any(func(o): return o["id"] == "walk"), "romance: she'll walk home with you along the stream")
+	var walk_txt: String = Talk.choose(npc, "walk", "inn")["text"]
+	check(walk_txt.contains("college"), "romance: the walk is her own story")
+	Social.change(npc, 60.0 - Social.aff(npc), 0.0)
+	Talk.choose(npc, "court", "inn")
+	stages.append(Social.romance(npc))
+	var dt: String = Talk.choose(npc, "drink", "inn")["text"]
+	check(Social.romance(npc) == "courting" and dt.contains("Ember Charm") and Game.has_flag("keepsake_elowen"), "romance: courting — she gives you her keepsake")
+	Social.change(npc, 85.0 - Social.aff(npc), 0.0)
+	var no_ring := true
+	for it in Game.inventory():
+		if Items.slot(it) == "ring":
+			no_ring = false
+	if no_ring:
+		Game.add_item(Items.make("ring_silver", {"quality": 95.0, "crafted_by": "Brannoc Ironhand"}), false)
+	var r: Dictionary = Talk.choose(npc, "propose", "inn")
+	stages.append(Social.romance(npc))
+	check(Social.spouse() == npc and str(r["text"]).contains("candle"), "marriage: she says yes, and the wedding is hers (%s)" % [stages])
+	# married life: free gear, shared spoils, new words
+	var blade := Items.make("sword_steel", {"quality": 100.0, "crafted_by": "Brannoc Ironhand"})
+	blade["for_sale"] = true
+	Game.add_item(blade, false)
+	var g0 := Game.gold()
+	check(Shop.sell_to(npc, int(blade["uid"])) == "" and Game.gold() == g0 and el["equipment"]["weapon"]["uid"] == blade["uid"], "marriage: your gear is hers, free")
+	el["status"] = "away"
+	el["dest"] = "whisperwood"
+	el["days_left"] = 1
+	el["equipment"]["armor"] = Items.make("cuirass_iron", {"quality": 110.0})
+	var fam0 := 0
+	for e in Game.state["ledger"]:
+		if e["cat"] == "family":
+			fam0 += 1
+	Adv.on_day()
+	var fam1 := 0
+	for e in Game.state["ledger"]:
+		if e["cat"] == "family":
+			fam1 += 1
+	check(fam1 > fam0 or el["status"] == "dead", "marriage: her spoils come home to the household")
+	check(Talk.greeting(npc).contains("Husband"), "marriage: she greets you as her husband")
+	Game.state["minute"] = m0
 
 
 func _adventurers() -> void:
