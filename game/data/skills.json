@@ -1,0 +1,59 @@
+{
+ "curve": {
+  "base": 60,
+  "exp": 1.45,
+  "max_level": 20
+ },
+ "skills": [
+  {
+   "id": "smithing",
+   "name": "Smithing",
+   "desc": "Forging weapons and armour. Widens skill-check zones at smithing stations."
+  },
+  {
+   "id": "mining",
+   "name": "Mining",
+   "desc": "Extracting ore. Improves expedition yields at mines."
+  },
+  {
+   "id": "alchemy",
+   "name": "Alchemy",
+   "desc": "Oils, potions, reagents and coatings."
+  },
+  {
+   "id": "runecraft",
+   "name": "Runecraft",
+   "desc": "Cutting, engraving and tuning runestones."
+  },
+  {
+   "id": "travelling",
+   "name": "Travelling",
+   "desc": "Scouting, trading and transport. Shortens and secures expeditions."
+  },
+  {
+   "id": "relic_hunting",
+   "name": "Relic Hunting",
+   "desc": "Salvage and ancient discoveries."
+  },
+  {
+   "id": "arcane_metalwork",
+   "name": "Arcane Metalworking",
+   "desc": "Binding magic into mithril and adamantine.",
+   "advanced": true
+  },
+  {
+   "id": "enchanted_stitching",
+   "name": "Enchanted Stitching",
+   "desc": "Leatherwork and enchanted textiles.",
+   "advanced": true
+  }
+ ],
+ "work_skills": [
+  "mining",
+  "alchemy",
+  "runecraft",
+  "smithing",
+  "travelling",
+  "relic_hunting"
+ ]
+}

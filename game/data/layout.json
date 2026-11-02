@@ -1,0 +1,553 @@
+{
+ "_doc": "Village layout in tiles (TILE = 64 px). Origin top-left. Buildings: rect in tiles, door = wall side + offset (tiles from left/top of that wall) + width. Interiors are drawn when the player is inside (roof fades). 'upstairs' areas live outside the village bounds and are reached by stairs.",
+ "tile": 64,
+ "size": [
+  96,
+  64
+ ],
+ "roads": [
+  {
+   "id": "main_ew",
+   "width": 2.4,
+   "points": [
+    [
+     -1,
+     31
+    ],
+    [
+     20,
+     30.6
+    ],
+    [
+     40,
+     31.4
+    ],
+    [
+     59,
+     31
+    ],
+    [
+     76,
+     30.5
+    ],
+    [
+     97,
+     31
+    ]
+   ]
+  },
+  {
+   "id": "main_ns",
+   "width": 2.2,
+   "points": [
+    [
+     59,
+     -1
+    ],
+    [
+     58.5,
+     12
+    ],
+    [
+     59.5,
+     22
+    ],
+    [
+     59,
+     31
+    ],
+    [
+     58.6,
+     44
+    ],
+    [
+     59.4,
+     56
+    ],
+    [
+     59,
+     65
+    ]
+   ]
+  },
+  {
+   "id": "lane_inn",
+   "width": 1.4,
+   "points": [
+    [
+     34,
+     30.8
+    ],
+    [
+     34,
+     28.2
+    ]
+   ]
+  },
+  {
+   "id": "lane_smithy",
+   "width": 1.6,
+   "points": [
+    [
+     33,
+     31.2
+    ],
+    [
+     33,
+     34.2
+    ]
+   ]
+  },
+  {
+   "id": "lane_west",
+   "width": 1.2,
+   "points": [
+    [
+     20,
+     30.6
+    ],
+    [
+     12,
+     26
+    ],
+    [
+     8,
+     22.4
+    ]
+   ]
+  },
+  {
+   "id": "lane_east",
+   "width": 1.2,
+   "points": [
+    [
+     76,
+     30.5
+    ],
+    [
+     80,
+     26.4
+    ]
+   ]
+  },
+  {
+   "id": "lane_se",
+   "width": 1.2,
+   "points": [
+    [
+     59,
+     40
+    ],
+    [
+     68,
+     40
+    ],
+    [
+     68,
+     36.3
+    ]
+   ]
+  },
+  {
+   "id": "lane_chapel",
+   "width": 1.2,
+   "points": [
+    [
+     59.2,
+     52
+    ],
+    [
+     66,
+     52
+    ]
+   ]
+  }
+ ],
+ "square": {
+  "center": [
+   59,
+   31
+  ],
+  "radius": [
+   7.5,
+   5.5
+  ]
+ },
+ "stream": {
+  "width": 1.6,
+  "points": [
+   [
+    90,
+    -1
+   ],
+   [
+    88.5,
+    14
+   ],
+   [
+    90.5,
+    31
+   ],
+   [
+    89,
+    46
+   ],
+   [
+    91,
+    65
+   ]
+  ],
+  "bridge": [
+   [
+    87.5,
+    29.6
+   ],
+   [
+    92,
+    32.4
+   ]
+  ]
+ },
+ "exits": [
+  {
+   "id": "west",
+   "pos": [
+    0,
+    31
+   ],
+   "region": "whisperwood",
+   "label": "Whisperwood"
+  },
+  {
+   "id": "east",
+   "pos": [
+    95,
+    31
+   ],
+   "region": "highmarsh_road",
+   "label": "Highmarsh Road"
+  },
+  {
+   "id": "north",
+   "pos": [
+    59,
+    0
+   ],
+   "region": "ironroot_mine",
+   "label": "Ironroot Mine"
+  },
+  {
+   "id": "south",
+   "pos": [
+    59,
+    63
+   ],
+   "region": "barrow_fields",
+   "label": "Barrow Fields"
+  }
+ ],
+ "buildings": [
+  {
+   "id": "smithy",
+   "name": "Ironhand Forge",
+   "rect": [
+    18,
+    34,
+    30,
+    19
+   ],
+   "roof": "slate",
+   "ridge": "h",
+   "floor": "floor_stone",
+   "doors": [
+    {
+     "side": "n",
+     "at": 14,
+     "w": 2
+    }
+   ],
+   "chimneys": [
+    [
+     3,
+     9
+    ],
+    [
+     26,
+     4
+    ]
+   ],
+   "rooms": [
+    {
+     "id": "quarters",
+     "rect": [
+      24,
+      0,
+      6,
+      10
+     ],
+     "floor": "floor_wood",
+     "door": {
+      "side": "w",
+      "at": 6,
+      "w": 2
+     }
+    }
+   ],
+   "sign": "sign_smithy"
+  },
+  {
+   "id": "inn",
+   "name": "The Tipsy Wyvern",
+   "rect": [
+    24,
+    14,
+    20,
+    14
+   ],
+   "roof": "clay",
+   "ridge": "h",
+   "floor": "floor_tavern",
+   "doors": [
+    {
+     "side": "s",
+     "at": 9,
+     "w": 2
+    }
+   ],
+   "chimneys": [
+    [
+     2,
+     3
+    ],
+    [
+     17,
+     10
+    ]
+   ],
+   "sign": "sign_inn",
+   "stairs": {
+    "pos": [
+     17,
+     2
+    ],
+    "to": "inn_upstairs"
+   }
+  },
+  {
+   "id": "grocery",
+   "name": "Pell's Provisions",
+   "rect": [
+    63,
+    19,
+    11,
+    9
+   ],
+   "roof": "clay",
+   "ridge": "h",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "s",
+     "at": 4,
+     "w": 2
+    }
+   ],
+   "chimneys": [
+    [
+     9,
+     2
+    ]
+   ],
+   "sign": "sign_grocer"
+  },
+  {
+   "id": "house_martha",
+   "name": "Martha's Cottage",
+   "rect": [
+    4,
+    15,
+    9,
+    8
+   ],
+   "roof": "thatch",
+   "ridge": "h",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "s",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": [
+    [
+     7,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "house_tobin",
+   "name": "Tobin's Workshop",
+   "rect": [
+    76,
+    18,
+    9,
+    8
+   ],
+   "roof": "clay",
+   "ridge": "v",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "s",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": [
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "house_oswin",
+   "name": "Chapel of the Dawn",
+   "rect": [
+    66,
+    47,
+    10,
+    9
+   ],
+   "roof": "slate",
+   "ridge": "h",
+   "floor": "floor_stone",
+   "doors": [
+    {
+     "side": "w",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": []
+  },
+  {
+   "id": "house_jory",
+   "name": "Jory's Farmhouse",
+   "rect": [
+    4,
+    40,
+    10,
+    8
+   ],
+   "roof": "thatch",
+   "ridge": "h",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "n",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": [
+    [
+     8,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "house_eda",
+   "name": "Eda's House",
+   "rect": [
+    64,
+    36,
+    8,
+    7
+   ],
+   "roof": "thatch",
+   "ridge": "v",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "s",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": [
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "house_wenna",
+   "name": "Cooper's Row",
+   "rect": [
+    78,
+    38,
+    9,
+    7
+   ],
+   "roof": "slate",
+   "ridge": "h",
+   "floor": "floor_wood",
+   "doors": [
+    {
+     "side": "n",
+     "at": 4,
+     "w": 1
+    }
+   ],
+   "chimneys": [
+    [
+     7,
+     2
+    ]
+   ]
+  }
+ ],
+ "areas": [
+  {
+   "id": "inn_upstairs",
+   "name": "The Tipsy Wyvern \u2014 Upstairs",
+   "rect": [
+    104,
+    10,
+    20,
+    14
+   ],
+   "floor": "floor_wood",
+   "rooms": [
+    {
+     "id": "velvet_lantern",
+     "name": "The Velvet Lantern",
+     "rect": [
+      10,
+      0,
+      10,
+      14
+     ],
+     "floor": "floor_tavern",
+     "door": {
+      "side": "w",
+      "at": 6,
+      "w": 2
+     }
+    }
+   ],
+   "stairs": {
+    "pos": [
+     2,
+     2
+    ],
+    "to": "inn"
+   }
+  }
+ ]
+}

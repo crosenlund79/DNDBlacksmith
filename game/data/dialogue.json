@@ -1,0 +1,266 @@
+{
+ "_doc": "Lines by attitude band (hostile/cool/neutral/warm/friendly/devoted). {name} = player name. Per-character 'stories' unlock with familiarity.",
+ "greet": {
+  "hostile": [
+   "\"You. I've nothing to say to you.\"",
+   "\"Keep walking, smith.\"",
+   "They turn away pointedly."
+  ],
+  "cool": [
+   "\"Smith.\" A curt nod.",
+   "\"Busy. What is it?\"",
+   "\"Hm. You again.\""
+  ],
+  "neutral": [
+   "\"Morning, smith.\"",
+   "\"Fine weather for hammering, eh?\"",
+   "\"Brannoc. What can I do for you?\""
+  ],
+  "warm": [
+   "\"Brannoc! Good to see you.\"",
+   "\"There's the man who makes the good steel.\"",
+   "\"Pull up a stool, smith.\""
+  ],
+  "friendly": [
+   "\"My favourite smith! Sit, sit.\"",
+   "\"I was hoping you'd come by.\"",
+   "\"You look tired. Ale? My treat.\""
+  ],
+  "devoted": [
+   "Their face lights up. \"There you are.\"",
+   "\"I'd trust you with my life, old man. I already do.\"",
+   "\"Brannoc. Stay a while.\""
+  ]
+ },
+ "stories": {
+  "borin": [
+   [
+    0,
+    "\"The deep galleries sing when there's mithril about. Folk laugh, but I heard it as a boy and I hear it now under Ironroot.\""
+   ],
+   [
+    20,
+    "\"My clan worked the Deep Ironroot until something in the dark took the night shift. Nobody went down after. I mean to.\""
+   ],
+   [
+    45,
+    "\"You paid me fair when no one else would hire a dwarf with a reputation. I won't forget it, smith.\""
+   ]
+  ],
+  "mira": [
+   [
+    0,
+    "\"Father wants me selling turnips. I want to see what's under the barrows.\""
+   ],
+   [
+    20,
+    "\"I can split an arrow at sixty paces. Can't split a decent blade's cost on my purse, though.\""
+   ],
+   [
+    45,
+    "\"When I come back from the Barrow Fields, I'll buy you a drink. Don't tell Father.\""
+   ]
+  ],
+  "sigrun": [
+   [
+    0,
+    "\"Shield-walls, cold mornings and bad ale. That's the trade.\""
+   ],
+   [
+    20,
+    "\"I lost my first company to cheap rivets. I check every buckle now. Yours hold.\""
+   ],
+   [
+    45,
+    "\"You're the only man in this village who talks to me like a soldier and not a curiosity.\""
+   ]
+  ],
+  "elowen": [
+   [
+    0,
+    "\"Your forge hums at a frequency most smiths never notice. Curious.\""
+   ],
+   [
+    20,
+    "\"Mithril remembers magic the way iron remembers heat. Bind it right and it never forgets.\""
+   ],
+   [
+    45,
+    "\"I came to Brindlewick for the leyline. I stayed for... other reasons.\""
+   ]
+  ],
+  "kestra": [
+   [
+    0,
+    "\"Don't look at my purse, smith, there's nothing in it.\""
+   ],
+   [
+    20,
+    "\"Tobin pays my debts and pretends he doesn't. I hate it.\""
+   ],
+   [
+    45,
+    "\"You never once asked what I'd done. Thank you for that.\""
+   ]
+  ],
+  "garrick": [
+   [
+    0,
+    "\"The Dawn keeps me; my mother keeps me honest.\""
+   ],
+   [
+    20,
+    "\"I write to Mother every week, even from the Barrow Fields. Especially from there.\""
+   ],
+   [
+    45,
+    "\"If I fall, see that Mother isn't alone. Promise me.\""
+   ]
+  ],
+  "tomas": [
+   [
+    0,
+    "\"Healing is easy. Paying off a dice debt — now that takes faith.\""
+   ],
+   [
+    20,
+    "\"I've buried more friends than I've healed. The odds are improving, though.\""
+   ]
+  ],
+  "varn": [
+   [
+    0,
+    "\"Axe broke. Again. You fix? You fix!\""
+   ],
+   [
+    20,
+    "\"My father said orcs and smiths are brothers. Both like hitting things hard.\""
+   ]
+  ],
+  "pip": [
+   [
+    0,
+    "\"Every story has a smith in it somewhere, did you know? Usually off-stage.\""
+   ],
+   [
+    15,
+    "\"Kestra owes money to the Highmarsh Cobb brothers. You didn't hear it from me.\""
+   ],
+   [
+    30,
+    "\"Want to know who's angry with you? Buy me two ales and I'll tell you three names.\""
+   ]
+  ],
+  "aldric": [
+   [
+    0,
+    "\"Bread's up a copper. Blame the Highmarsh tolls.\""
+   ],
+   [
+    20,
+    "\"My Mira's all I have since her mother passed. Look after her, smith.\""
+   ]
+  ],
+  "hilde": [
+   [
+    0,
+    "\"Ale's cold, stew's hot, and nobody fights in my house.\""
+   ],
+   [
+    20,
+    "\"Adventurers come and go, smith. Mostly go. The ones you arm come back more often — I keep count.\""
+   ]
+  ],
+  "martha": [
+   [
+    0,
+    "\"My Garrick says you're a decent sort. I'll decide that myself.\""
+   ],
+   [
+    20,
+    "\"Mind that boy of mine when he's out there. He takes after his father: brave and stupid.\""
+   ]
+  ],
+  "tobin": [
+   [
+    0,
+    "\"Need shelves? Hinges? A coffin? I do all three.\""
+   ],
+   [
+    20,
+    "\"My sister is clever, which is the problem.\""
+   ]
+  ],
+  "wenna": [
+   [
+    0,
+    "\"I hear everything at the Wyvern, smith. Everything.\""
+   ],
+   [
+    20,
+    "\"Pip tells tales, but half of them are true.\""
+   ]
+  ],
+  "oswin": [
+   [
+    0,
+    "\"The Dawn blesses honest work.\""
+   ],
+   [
+    20,
+    "\"I'd rather bless your blades than bury their bearers.\""
+   ]
+  ],
+  "jory": [
+   [
+    0,
+    "\"Rain's coming. Knee says so.\""
+   ]
+  ],
+  "eda": [
+   [
+    0,
+    "\"Your shirts could use a scrub, smith. Soot everywhere.\""
+   ]
+  ],
+  "rosalind": [
+   [
+    0,
+    "\"Welcome to the Velvet Lantern. Discretion is the house rule.\""
+   ],
+   [
+    20,
+    "\"Adventurers tell us what they'd never tell a priest. Some of it is useful to a smith.\""
+   ]
+  ],
+  "lysa": [
+   [
+    0,
+    "\"You're the smith? You have kind hands for a man who hits things all day.\""
+   ]
+  ],
+  "celeste": [
+   [
+    0,
+    "\"Every name that sleeps here, I remember. Some of them never come back.\""
+   ]
+  ]
+ },
+ "rumours": [
+  "\"{adv} is heading to {dest} soon — with gear that won't last the week, if you ask me.\"",
+  "\"{adv} boasted that {dest} would make their fortune. They were drinking to forget the last trip.\"",
+  "\"{adv} has more gold than sense since the last haul. Sell them something shiny.\"",
+  "\"{adv} limps when they think nobody's looking. Their armour took the blow badly.\""
+ ],
+ "romance": {
+  "drink_ok": "You share a jug by the fire. The noise of the inn fades; for an hour it's just the two of you.",
+  "drink_no": "\"Another time, Brannoc.\"",
+  "court_ok": "She takes your arm on the walk back. \"Yes,\" she says, before you finish asking.",
+  "propose_ok": "She turns the silver band over in her fingers for a long moment. \"I'm not giving up the road.\" — \"I'd never ask you to.\" — \"Then yes. Yes, you old fool.\"",
+  "propose_no": "\"Not yet, Brannoc. Ask me again when you're sure — and when I am.\""
+ },
+ "lantern": {
+  "evening": "The door closes. Candlelight, laughter, a cup of something warm and spiced... The night passes discreetly.",
+  "closed": "\"Come back after dusk, smith.\""
+ }
+}

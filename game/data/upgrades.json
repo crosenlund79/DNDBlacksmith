@@ -1,0 +1,43 @@
+[
+ {
+  "id": "alchemy_kit",
+  "name": "Alchemist's Kit",
+  "cost": 120,
+  "desc": "Glassware, mortar and cauldron. Unlocks the Alchemy stations.",
+  "requires": {}
+ },
+ {
+  "id": "runewright_tools",
+  "name": "Runewright's Tools",
+  "cost": 160,
+  "desc": "Chisels, basin and pedestal. Unlocks the Runecrafting stations.",
+  "requires": {}
+ },
+ {
+  "id": "arcane_foundry",
+  "name": "Arcane Foundry",
+  "cost": 600,
+  "desc": "Leyline tap and warded crucible. Unlocks Arcane Metalworking.",
+  "requires": {
+   "skill": [
+    "runecraft",
+    3
+   ],
+   "flag": "found_mithril"
+  }
+ },
+ {
+  "id": "display_cases",
+  "name": "Glass Display Cases",
+  "cost": 90,
+  "desc": "Customers pay a little more for well-presented stock (+10% prices).",
+  "requires": {}
+ },
+ {
+  "id": "second_anvil_hook",
+  "name": "Apprentice Hooks",
+  "cost": 60,
+  "desc": "Hirelings produce 15% more workshop output.",
+  "requires": {}
+ }
+]

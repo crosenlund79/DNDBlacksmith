@@ -1,0 +1,69 @@
+## ItemSlot — an inventory slot with rarity border, legendary star and quantity.
+## DA: En inventarplads med sjældenhedsramme, legendarisk stjerne og antal.
+class_name ItemSlot
+extends Control
+
+signal clicked(item: Dictionary)
+
+var item: Dictionary = {}
+var selected := false
+var hidden_item := false   # used by the loot reveal ("?")
+var size_px := 72.0
+
+
+func _init(it := {}, px := 72.0) -> void:
+	item = it
+	size_px = px
+	custom_minimum_size = Vector2(px, px)
+	mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+func _ready() -> void:
+	mouse_entered.connect(_on_hover)
+	mouse_exited.connect(func(): UIRoot.hide_tooltip())
+
+
+func _on_hover() -> void:
+	if not item.is_empty() and not hidden_item:
+		UIRoot.show_tooltip(Items.tooltip(item))
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		clicked.emit(item)
+		accept_event()
+
+
+func _draw() -> void:
+	var r := Rect2(Vector2.ZERO, Vector2(size_px, size_px))
+	draw_rect(r, Color(0.13, 0.08, 0.05, 0.18))
+	if Assets.has_tex("ui/slot"):
+		draw_texture_rect(Assets.get_tex("ui/slot"), r, false)
+	if item.is_empty():
+		draw_rect(r, Color(0.13, 0.08, 0.05, 0.6), false, 2.0)
+		return
+	if hidden_item:
+		draw_rect(r, Color(0.13, 0.08, 0.05, 0.85), false, 2.0)
+		var f := Assets.font("title")
+		draw_string(f, Vector2(0, size_px * 0.66), "?", HORIZONTAL_ALIGNMENT_CENTER, size_px, int(size_px * 0.5), Color(0.13, 0.08, 0.05, 0.6))
+		return
+	var rar: String = item.get("rarity", "common")
+	var bc: Color = Items.COL_BORDER.get(rar, Color.GRAY)
+	if rar != "common":
+		draw_rect(r.grow(-3), Color(bc, 0.18))
+	draw_texture_rect(Assets.get_tex(Items.icon_id(item)), r.grow(-6), false, Color(1, 0.86, 1.0) if item.get("arcane_glow", false) else Color.WHITE)
+	draw_rect(r, bc, false, 3.0 if rar != "common" else 2.0)
+	if selected:
+		draw_rect(r.grow(2), Color("#e6702a"), false, 3.0)
+	if item.get("star", false):
+		draw_texture_rect(Assets.get_tex("icons/star", Vector2i(32, 32)), Rect2(size_px - 26, 2, 24, 24), false)
+	if int(item.get("qty", 1)) > 1:
+		var f2 := Assets.font("body_bold")
+		draw_string_outline(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color("#efe4cc"))
+		draw_string(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#20140c"))
+	if item.get("for_sale", false):
+		draw_texture_rect(Assets.get_tex("icons/gold", Vector2i(32, 32)), Rect2(2, 2, 20, 20), false)
+
+
+func refresh() -> void:
+	queue_redraw()

@@ -1,0 +1,20 @@
+{
+ "applicant_looks": [
+  {"look": "applicant_0", "race": "Human", "female": false},
+  {"look": "applicant_1", "race": "Human", "female": true},
+  {"look": "applicant_2", "race": "Elf", "female": true},
+  {"look": "applicant_3", "race": "Halfling", "female": false},
+  {"look": "applicant_4", "race": "Half-orc", "female": false},
+  {"look": "applicant_5", "race": "Dwarf", "female": true}
+ ],
+ "first": {
+  "Human": {"m": ["Aldo", "Bram", "Cedric", "Doran", "Edric", "Fenn", "Gerrit", "Hob", "Ivo", "Jory", "Lucan", "Merek"],
+            "f": ["Ada", "Brienne", "Cara", "Della", "Elsa", "Freya", "Greta", "Ilsa", "Jessa", "Liesl", "Marta", "Nell"]},
+  "Elf": {"m": ["Aelar", "Faelan", "Theren"], "f": ["Aerin", "Lirael", "Sylvara", "Naeris", "Ithil"]},
+  "Halfling": {"m": ["Bungo", "Milo", "Perrin", "Tobold", "Wendel"], "f": ["Lavender", "Poppy", "Rosie"]},
+  "Half-orc": {"m": ["Grask", "Durgo", "Krag", "Thokk"], "f": ["Ushna", "Volga"]},
+  "Dwarf": {"m": ["Balin", "Dain", "Thrain", "Gloin"], "f": ["Hilda", "Dagna", "Ragna", "Vistra", "Eldeth"]}
+ },
+ "last": ["Ashdown", "Barrow", "Cobb", "Drummond", "Fairweather", "Greaves", "Hollow", "Kettle", "Marsh", "Oakes", "Penhallow", "Quill", "Rook", "Stonebrook", "Thistle", "Underhill", "Wick", "Yarrow"],
+ "personality": ["Cheerful and tireless", "Quiet, careful and precise", "Ambitious; asks about wages a lot", "Superstitious but brave", "Lazy in the mornings, brilliant by noon", "Hot-tempered, fiercely loyal", "Curious about everything arcane", "Former soldier; hates waste", "Talks to the ore; the ore seems to answer", "Homesick but hard-working"]
+}

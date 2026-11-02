@@ -1,0 +1,823 @@
+[
+ {
+  "id": "sword_iron",
+  "name": "Iron Longsword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 60,
+  "stats": {
+   "attack": [
+    8,
+    12
+   ],
+   "durability": 60
+  },
+  "icon": "sword_iron",
+  "stack": false,
+  "desc": "A plain, honest blade.",
+  "tags": []
+ },
+ {
+  "id": "sword_steel",
+  "name": "Steel Longsword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 140,
+  "stats": {
+   "attack": [
+    12,
+    17
+   ],
+   "durability": 90
+  },
+  "icon": "sword_steel",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "sword_mithril",
+  "name": "Mithril Runeblade",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 520,
+  "stats": {
+   "attack": [
+    18,
+    26
+   ],
+   "durability": 140,
+   "magic": 10
+  },
+  "icon": "sword_mithril",
+  "stack": false,
+  "desc": "",
+  "tags": [
+   "arcane"
+  ]
+ },
+ {
+  "id": "axe_hand",
+  "name": "Hand Axe",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 55,
+  "stats": {
+   "attack": [
+    9,
+    13
+   ],
+   "durability": 55
+  },
+  "icon": "axe_hand",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "mace_flanged",
+  "name": "Flanged Mace",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 90,
+  "stats": {
+   "attack": [
+    10,
+    15
+   ],
+   "durability": 85
+  },
+  "icon": "mace_flanged",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "dagger",
+  "name": "Dagger",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 35,
+  "stats": {
+   "attack": [
+    5,
+    8
+   ],
+   "durability": 40
+  },
+  "icon": "dagger",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "shield_round",
+  "name": "Round Shield",
+  "type": "shield",
+  "slot": "shield",
+  "value": 45,
+  "stats": {
+   "protection": [
+    4,
+    7
+   ],
+   "durability": 70
+  },
+  "icon": "shield_round",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "shield_kite",
+  "name": "Kite Shield",
+  "type": "shield",
+  "slot": "shield",
+  "value": 95,
+  "stats": {
+   "protection": [
+    6,
+    10
+   ],
+   "durability": 90
+  },
+  "icon": "shield_kite",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "cuirass_iron",
+  "name": "Iron Cuirass",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 120,
+  "stats": {
+   "protection": [
+    10,
+    15
+   ],
+   "durability": 110
+  },
+  "icon": "cuirass_iron",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "chainmail",
+  "name": "Chain Hauberk",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 100,
+  "stats": {
+   "protection": [
+    8,
+    12
+   ],
+   "durability": 90
+  },
+  "icon": "chainmail",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "jerkin_leather",
+  "name": "Leather Jerkin",
+  "type": "armor_leather",
+  "slot": "armor",
+  "value": 50,
+  "stats": {
+   "protection": [
+    5,
+    8
+   ],
+   "durability": 60
+  },
+  "icon": "jerkin_leather",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "helm_iron",
+  "name": "Iron Helm",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 45,
+  "stats": {
+   "protection": [
+    3,
+    5
+   ],
+   "durability": 70
+  },
+  "icon": "helm_iron",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "hood_leather",
+  "name": "Leather Hood",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 20,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 40
+  },
+  "icon": "hood_leather",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "boots_leather",
+  "name": "Leather Boots",
+  "type": "boots",
+  "slot": "boots",
+  "value": 25,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 50
+  },
+  "icon": "boots_leather",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "gloves_leather",
+  "name": "Leather Gloves",
+  "type": "gloves",
+  "slot": "gloves",
+  "value": 20,
+  "stats": {
+   "protection": [
+    1,
+    2
+   ],
+   "durability": 40
+  },
+  "icon": "gloves_leather",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "gloves_warded",
+  "name": "Warded Gloves",
+  "type": "gloves",
+  "slot": "gloves",
+  "value": 160,
+  "stats": {
+   "protection": [
+    3,
+    5
+   ],
+   "durability": 60,
+   "magic": 6
+  },
+  "icon": "gloves_warded",
+  "stack": false,
+  "desc": "",
+  "tags": [
+   "enchanted"
+  ]
+ },
+ {
+  "id": "belt_leather",
+  "name": "Leather Belt",
+  "type": "belt",
+  "slot": "belt",
+  "value": 15,
+  "stats": {
+   "protection": [
+    0,
+    1
+   ],
+   "durability": 50
+  },
+  "icon": "belt_leather",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ring_silver",
+  "name": "Silver Band",
+  "type": "ring",
+  "slot": "ring",
+  "value": 80,
+  "stats": {
+   "magic": 3
+  },
+  "icon": "ring_silver",
+  "stack": false,
+  "desc": "Plain silver. Fit for a promise.",
+  "tags": []
+ },
+ {
+  "id": "amulet_silver",
+  "name": "Silver Amulet",
+  "type": "amulet",
+  "slot": "amulet",
+  "value": 110,
+  "stats": {
+   "magic": 5
+  },
+  "icon": "amulet_silver",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "runestone_blank",
+  "name": "Raw Runestone",
+  "type": "runestone",
+  "slot": null,
+  "value": 25,
+  "stats": {},
+  "icon": "runestone_blank",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "runestone_ember",
+  "name": "Ember Runestone",
+  "type": "runestone",
+  "slot": null,
+  "value": 90,
+  "stats": {
+   "fire": 4
+  },
+  "icon": "runestone_ember",
+  "stack": true,
+  "desc": "Set into a weapon for burning strikes.",
+  "tags": []
+ },
+ {
+  "id": "runestone_ward",
+  "name": "Ward Runestone",
+  "type": "runestone",
+  "slot": null,
+  "value": 90,
+  "stats": {
+   "ward": 4
+  },
+  "icon": "runestone_ward",
+  "stack": true,
+  "desc": "Set into armour to turn aside harm.",
+  "tags": []
+ },
+ {
+  "id": "runestone_frost",
+  "name": "Frost Runestone",
+  "type": "runestone",
+  "slot": null,
+  "value": 110,
+  "stats": {
+   "frost": 4
+  },
+  "icon": "runestone_frost",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ore_iron",
+  "name": "Iron Ore",
+  "type": "material",
+  "slot": null,
+  "value": 4,
+  "stats": {},
+  "icon": "ore_iron",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ore_copper",
+  "name": "Copper Ore",
+  "type": "material",
+  "slot": null,
+  "value": 4,
+  "stats": {},
+  "icon": "ore_copper",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ore_silver",
+  "name": "Silver Ore",
+  "type": "material",
+  "slot": null,
+  "value": 15,
+  "stats": {},
+  "icon": "ore_silver",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ore_mithril",
+  "name": "Mithril Ore",
+  "type": "material",
+  "slot": null,
+  "value": 80,
+  "stats": {},
+  "icon": "ore_mithril",
+  "stack": true,
+  "desc": "",
+  "tags": [
+   "rare"
+  ]
+ },
+ {
+  "id": "ore_adamantine",
+  "name": "Adamantine Ore",
+  "type": "material",
+  "slot": null,
+  "value": 140,
+  "stats": {},
+  "icon": "ore_adamantine",
+  "stack": true,
+  "desc": "",
+  "tags": [
+   "rare"
+  ]
+ },
+ {
+  "id": "coal",
+  "name": "Coal",
+  "type": "material",
+  "slot": null,
+  "value": 2,
+  "stats": {},
+  "icon": "coal",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ingot_iron",
+  "name": "Iron Ingot",
+  "type": "material",
+  "slot": null,
+  "value": 10,
+  "stats": {},
+  "icon": "ingot_iron",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ingot_steel",
+  "name": "Steel Ingot",
+  "type": "material",
+  "slot": null,
+  "value": 24,
+  "stats": {},
+  "icon": "ingot_steel",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "ingot_mithril",
+  "name": "Charged Mithril Ingot",
+  "type": "material",
+  "slot": null,
+  "value": 180,
+  "stats": {},
+  "icon": "ingot_mithril",
+  "stack": true,
+  "desc": "",
+  "tags": [
+   "arcane"
+  ]
+ },
+ {
+  "id": "leather_hide",
+  "name": "Raw Hide",
+  "type": "material",
+  "slot": null,
+  "value": 5,
+  "stats": {},
+  "icon": "leather_hide",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "leather_cured",
+  "name": "Cured Leather",
+  "type": "material",
+  "slot": null,
+  "value": 12,
+  "stats": {},
+  "icon": "leather_cured",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "thread_linen",
+  "name": "Linen Thread",
+  "type": "material",
+  "slot": null,
+  "value": 3,
+  "stats": {},
+  "icon": "thread_linen",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "thread_ethereal",
+  "name": "Ethereal Thread",
+  "type": "material",
+  "slot": null,
+  "value": 40,
+  "stats": {},
+  "icon": "thread_ethereal",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "herb_emberleaf",
+  "name": "Emberleaf",
+  "type": "material",
+  "slot": null,
+  "value": 6,
+  "stats": {},
+  "icon": "herb_emberleaf",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "herb_moonwort",
+  "name": "Moonwort",
+  "type": "material",
+  "slot": null,
+  "value": 6,
+  "stats": {},
+  "icon": "herb_moonwort",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "reagent_salt",
+  "name": "Quicksalt",
+  "type": "material",
+  "slot": null,
+  "value": 5,
+  "stats": {},
+  "icon": "reagent_salt",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "oil_whetstone",
+  "name": "Whetstone Oil",
+  "type": "potion",
+  "slot": null,
+  "value": 30,
+  "stats": {
+   "edge": 2
+  },
+  "icon": "oil_whetstone",
+  "stack": true,
+  "desc": "Applied before a hunt; keeps edges keen.",
+  "tags": []
+ },
+ {
+  "id": "potion_healing",
+  "name": "Healing Draught",
+  "type": "potion",
+  "slot": null,
+  "value": 45,
+  "stats": {
+   "heal": 20
+  },
+  "icon": "potion_healing",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "coating_flame",
+  "name": "Flame Coating",
+  "type": "potion",
+  "slot": null,
+  "value": 70,
+  "stats": {
+   "fire": 2
+  },
+  "icon": "coating_flame",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "relic_idol",
+  "name": "Barrow Idol",
+  "type": "relic",
+  "slot": null,
+  "value": 120,
+  "stats": {},
+  "icon": "relic_idol",
+  "stack": false,
+  "desc": "A squat stone figure, warm to the touch.",
+  "tags": []
+ },
+ {
+  "id": "relic_coin",
+  "name": "Drowned King's Coin",
+  "type": "relic",
+  "slot": null,
+  "value": 90,
+  "stats": {},
+  "icon": "relic_coin",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "relic_map",
+  "name": "Faded Delve Map",
+  "type": "relic",
+  "slot": null,
+  "value": 150,
+  "stats": {},
+  "icon": "relic_map",
+  "stack": false,
+  "desc": "Marks a passage beneath Ironroot no one remembers.",
+  "tags": []
+ },
+ {
+  "id": "relic_crown_shard",
+  "name": "Crown Shard",
+  "type": "relic",
+  "slot": null,
+  "value": 300,
+  "stats": {},
+  "icon": "relic_crown_shard",
+  "stack": false,
+  "desc": "",
+  "tags": [
+   "rare"
+  ]
+ },
+ {
+  "id": "ale_mug",
+  "name": "Tankard of Ale",
+  "type": "potion",
+  "slot": null,
+  "value": 2,
+  "stats": {},
+  "icon": "ale_mug",
+  "stack": true,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "bread_cheese",
+  "name": "Bread & Cheese",
+  "type": "material",
+  "slot": null,
+  "value": 1,
+  "stats": {},
+  "icon": "bread_cheese",
+  "stack": true,
+  "desc": "Grocer's weekly provisions.",
+  "tags": []
+ },
+ {
+  "id": "bag_traveller",
+  "name": "Traveller's Bag",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "bag_traveller",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "shipment_miner",
+  "name": "Miner's Shipment",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "shipment_miner",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "satchel_relic",
+  "name": "Relic Hunter's Satchel",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "satchel_relic",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "purse_gift",
+  "name": "Gift Purse",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "purse_gift",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "chest_recovered",
+  "name": "Recovered Chest",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "chest_recovered",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "package_reward",
+  "name": "Reward Package",
+  "type": "container",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "package_reward",
+  "stack": false,
+  "desc": "",
+  "tags": []
+ },
+ {
+  "id": "grimhold",
+  "name": "Grimhold, the Last Hammer",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 900,
+  "stats": {
+   "attack": [
+    24,
+    34
+   ],
+   "durability": 200,
+   "smithing": 2
+  },
+  "icon": "grimhold",
+  "stack": false,
+  "desc": "",
+  "tags": [
+   "unique"
+  ]
+ },
+ {
+  "id": "wyvernscale_pauldron",
+  "name": "Wyvernscale Pauldron",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 400,
+  "stats": {
+   "protection": [
+    14,
+    20
+   ],
+   "durability": 150
+  },
+  "icon": "wyvernscale_pauldron",
+  "stack": false,
+  "desc": "",
+  "tags": [
+   "set"
+  ]
+ }
+]

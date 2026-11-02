@@ -1,0 +1,587 @@
+[
+ {
+  "id": "smelt_iron",
+  "name": "Smelt Iron Ingots",
+  "discipline": "classic",
+  "steps": [
+   "crucible",
+   "forge"
+  ],
+  "inputs": {
+   "ore_iron": 2,
+   "coal": 1
+  },
+  "output": "ingot_iron",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "smithing": 12
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "smelt_steel",
+  "name": "Fold Steel Ingot",
+  "discipline": "classic",
+  "steps": [
+   "crucible",
+   "bellows",
+   "forge"
+  ],
+  "inputs": {
+   "ingot_iron": 2,
+   "coal": 2
+  },
+  "output": "ingot_steel",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "smithing": 18
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "iron_longsword",
+  "name": "Iron Longsword",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 2,
+   "leather_cured": 1
+  },
+  "output": "sword_iron",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 30
+  },
+  "unlock": {},
+  "desc": "The first sword every apprentice learns."
+ },
+ {
+  "id": "steel_longsword",
+  "name": "Steel Longsword",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "bellows",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "leather_cured": 1
+  },
+  "output": "sword_steel",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 45
+  },
+  "unlock": {
+   "skill": [
+    "smithing",
+    3
+   ]
+  },
+  "desc": ""
+ },
+ {
+  "id": "hand_axe",
+  "name": "Hand Axe",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough"
+  ],
+  "inputs": {
+   "ingot_iron": 1,
+   "coal": 1
+  },
+  "output": "axe_hand",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 22
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "flanged_mace",
+  "name": "Flanged Mace",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough"
+  ],
+  "inputs": {
+   "ingot_iron": 2,
+   "coal": 1
+  },
+  "output": "mace_flanged",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 28
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "iron_cuirass",
+  "name": "Iron Cuirass",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 3,
+   "leather_cured": 1
+  },
+  "output": "cuirass_iron",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 40
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "iron_helm",
+  "name": "Iron Helm",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 1,
+   "leather_cured": 1
+  },
+  "output": "helm_iron",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 20
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "round_shield",
+  "name": "Round Shield",
+  "discipline": "classic",
+  "steps": [
+   "forge",
+   "anvil"
+  ],
+  "inputs": {
+   "ingot_iron": 1,
+   "leather_cured": 1
+  },
+  "output": "shield_round",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 18
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "silver_band",
+  "name": "Silver Band",
+  "discipline": "classic",
+  "steps": [
+   "crucible",
+   "anvil",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ore_silver": 2
+  },
+  "output": "ring_silver",
+  "qty": 1,
+  "dice": {
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 20
+  },
+  "unlock": {},
+  "desc": "A ring fit for a proposal."
+ },
+ {
+  "id": "cure_leather",
+  "name": "Cure Leather",
+  "discipline": "stitching",
+  "steps": [
+   "leather_vat"
+  ],
+  "inputs": {
+   "leather_hide": 2
+  },
+  "output": "leather_cured",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 10
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "leather_jerkin",
+  "name": "Leather Jerkin",
+  "discipline": "stitching",
+  "steps": [
+   "leather_vat",
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 3,
+   "thread_linen": 1
+  },
+  "output": "jerkin_leather",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 28
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "leather_boots",
+  "name": "Leather Boots",
+  "discipline": "stitching",
+  "steps": [
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 2,
+   "thread_linen": 1
+  },
+  "output": "boots_leather",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 18
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "leather_gloves",
+  "name": "Leather Gloves",
+  "discipline": "stitching",
+  "steps": [
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 1,
+   "thread_linen": 1
+  },
+  "output": "gloves_leather",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "leather_belt",
+  "name": "Leather Belt",
+  "discipline": "stitching",
+  "steps": [
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 1
+  },
+  "output": "belt_leather",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 10
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "warded_gloves",
+  "name": "Warded Gloves",
+  "discipline": "stitching",
+  "steps": [
+   "thread_spinner",
+   "stitching_table",
+   "embroidery_frame",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "leather_cured": 2,
+   "thread_ethereal": 1,
+   "runestone_ward": 1
+  },
+  "output": "gloves_warded",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 60
+  },
+  "unlock": {
+   "skill": [
+    "enchanted_stitching",
+    3
+   ]
+  },
+  "desc": ""
+ },
+ {
+  "id": "whetstone_oil",
+  "name": "Whetstone Oil",
+  "discipline": "alchemy",
+  "steps": [
+   "mortar_station",
+   "alembic"
+  ],
+  "inputs": {
+   "herb_emberleaf": 1,
+   "reagent_salt": 1
+  },
+  "output": "oil_whetstone",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "alchemy": 15
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "healing_draught",
+  "name": "Healing Draught",
+  "discipline": "alchemy",
+  "steps": [
+   "mortar_station",
+   "cauldron",
+   "infusion_rack"
+  ],
+  "inputs": {
+   "herb_moonwort": 2
+  },
+  "output": "potion_healing",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "alchemy": 20
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "flame_coating",
+  "name": "Flame Coating",
+  "discipline": "alchemy",
+  "steps": [
+   "mortar_station",
+   "reagent_table",
+   "cauldron"
+  ],
+  "inputs": {
+   "herb_emberleaf": 2,
+   "coal": 1
+  },
+  "output": "coating_flame",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "alchemy": 26
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "ember_runestone",
+  "name": "Ember Runestone",
+  "discipline": "runecraft",
+  "steps": [
+   "rune_cutting_bench",
+   "rune_engraving_stand",
+   "rune_cleansing_basin",
+   "resonance_pedestal",
+   "rune_polishing_wheel"
+  ],
+  "inputs": {
+   "runestone_blank": 1,
+   "herb_emberleaf": 1
+  },
+  "output": "runestone_ember",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "runecraft": 35
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "ward_runestone",
+  "name": "Ward Runestone",
+  "discipline": "runecraft",
+  "steps": [
+   "rune_cutting_bench",
+   "rune_engraving_stand",
+   "rune_cleansing_basin",
+   "resonance_pedestal"
+  ],
+  "inputs": {
+   "runestone_blank": 1,
+   "reagent_salt": 1
+  },
+  "output": "runestone_ward",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "runecraft": 30
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "charge_mithril",
+  "name": "Charge Mithril",
+  "discipline": "arcane",
+  "steps": [
+   "arcane_crucible",
+   "leyline_conductor",
+   "aetheric_stabilizer"
+  ],
+  "inputs": {
+   "ore_mithril": 2,
+   "coal": 2
+  },
+  "output": "ingot_mithril",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "arcane_metalwork": 40
+  },
+  "unlock": {},
+  "desc": ""
+ },
+ {
+  "id": "mithril_runeblade",
+  "name": "Mithril Runeblade",
+  "discipline": "arcane",
+  "steps": [
+   "forge",
+   "arcane_crucible",
+   "spellbinding_array",
+   "arcane_anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_mithril": 2,
+   "leather_cured": 1
+  },
+  "output": "sword_mithril",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "arcane_metalwork": 80,
+   "smithing": 30
+  },
+  "unlock": {},
+  "desc": "The magic lives in the metal; the markings glow when the blade is drawn."
+ }
+]

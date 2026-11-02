@@ -1,0 +1,490 @@
+{
+ "shop_counter": {
+  "size": [
+   256,
+   64
+  ],
+  "solid": true,
+  "desc": "long wooden shop counter, top-down, with a ledger book, scales and a coin dish"
+ },
+ "weapon_rack": {
+  "size": [
+   160,
+   56
+  ],
+  "solid": true,
+  "desc": "wall weapon rack holding 4 swords/axes, seen from above"
+ },
+ "armor_stand": {
+  "size": [
+   72,
+   88
+  ],
+  "solid": true,
+  "desc": "armour stand with a breastplate on it"
+ },
+ "display_table": {
+  "size": [
+   128,
+   80
+  ],
+  "solid": true,
+  "desc": "display table with helmets, gloves and a shield laid out"
+ },
+ "bed": {
+  "size": [
+   96,
+   160
+  ],
+  "solid": true,
+  "desc": "wooden bed with blanket and pillow"
+ },
+ "bed_fancy": {
+  "size": [
+   112,
+   160
+  ],
+  "solid": true,
+  "desc": "canopy-less fancy bed with burgundy covers and cushions (Velvet Lantern)"
+ },
+ "table_round": {
+  "size": [
+   96,
+   96
+  ],
+  "solid": true,
+  "desc": "round tavern table with tankards and a candle"
+ },
+ "table_long": {
+  "size": [
+   192,
+   80
+  ],
+  "solid": true,
+  "desc": "long trestle table with plates and tankards"
+ },
+ "chair": {
+  "size": [
+   40,
+   40
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "stool": {
+  "size": [
+   32,
+   32
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "bench": {
+  "size": [
+   160,
+   36
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "bar_counter": {
+  "size": [
+   320,
+   64
+  ],
+  "solid": true,
+  "desc": "tavern bar counter with tankards and a tap"
+ },
+ "keg": {
+  "size": [
+   56,
+   56
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "barrel": {
+  "size": [
+   56,
+   56
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "crate": {
+  "size": [
+   56,
+   56
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "sack": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "shelf": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "shelf with jars and bottles"
+ },
+ "bookshelf": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "wardrobe": {
+  "size": [
+   112,
+   48
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "chest": {
+  "size": [
+   72,
+   56
+  ],
+  "solid": true,
+  "desc": "iron-bound chest"
+ },
+ "fireplace": {
+  "size": [
+   128,
+   72
+  ],
+  "solid": true,
+  "desc": "stone hearth/fireplace set into a wall, burning"
+ },
+ "rug_red": {
+  "size": [
+   192,
+   128
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "rug_brown": {
+  "size": [
+   160,
+   112
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "stairs_up": {
+  "size": [
+   96,
+   128
+  ],
+  "solid": false,
+  "desc": "wooden staircase seen from above"
+ },
+ "stairs_down": {
+  "size": [
+   96,
+   128
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "lantern_post": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": true,
+  "desc": "iron lantern post seen from above (lamp head visible)"
+ },
+ "candle": {
+  "size": [
+   24,
+   24
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "well": {
+  "size": [
+   112,
+   112
+  ],
+  "solid": true,
+  "desc": "stone well with small roof frame and bucket"
+ },
+ "notice_board": {
+  "size": [
+   144,
+   72
+  ],
+  "solid": true,
+  "desc": "village notice board with pinned papers, top-down"
+ },
+ "market_stall": {
+  "size": [
+   192,
+   128
+  ],
+  "solid": true,
+  "desc": "market stall with striped burgundy/cream awning"
+ },
+ "cart": {
+  "size": [
+   128,
+   96
+  ],
+  "solid": true,
+  "desc": "hand cart with hay"
+ },
+ "beer_table": {
+  "size": [
+   128,
+   96
+  ],
+  "solid": true,
+  "desc": "outdoor beer-garden table with benches"
+ },
+ "sign_smithy": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": true,
+  "desc": "hanging sign: anvil emblem"
+ },
+ "sign_inn": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": true,
+  "desc": "hanging sign: wyvern holding tankard"
+ },
+ "sign_grocer": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": true,
+  "desc": "hanging sign: wheat sheaf and apple"
+ },
+ "fence_h": {
+  "size": [
+   64,
+   24
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "fence_v": {
+  "size": [
+   24,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "bush": {
+  "size": [
+   80,
+   80
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "bush_flower": {
+  "size": [
+   80,
+   80
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "rock_a": {
+  "size": [
+   64,
+   48
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "rock_b": {
+  "size": [
+   88,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "flowers": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "tree_oak_a": {
+  "size": [
+   224,
+   224
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "tree_oak_b": {
+  "size": [
+   192,
+   192
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "tree_pine": {
+  "size": [
+   176,
+   176
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "tree_small": {
+  "size": [
+   128,
+   128
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "haybale": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "coal_pile": {
+  "size": [
+   80,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "ore_pile": {
+  "size": [
+   80,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "woodpile": {
+  "size": [
+   96,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "produce_crate": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": true,
+  "desc": "crate of apples/cabbages"
+ },
+ "grain_sacks": {
+  "size": [
+   80,
+   64
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "altar": {
+  "size": [
+   128,
+   64
+  ],
+  "solid": true,
+  "desc": "small chapel altar with candles"
+ },
+ "pew": {
+  "size": [
+   160,
+   40
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "washtub": {
+  "size": [
+   72,
+   72
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "eggs_splat": {
+  "size": [
+   96,
+   64
+  ],
+  "solid": false,
+  "desc": "broken egg splatter decal (vandalism)"
+ },
+ "gravestone": {
+  "size": [
+   40,
+   48
+  ],
+  "solid": true,
+  "desc": ""
+ },
+ "loot_pile": {
+  "size": [
+   64,
+   48
+  ],
+  "solid": false,
+  "desc": "dropped expedition bag on the floor"
+ },
+ "door_mat": {
+  "size": [
+   96,
+   40
+  ],
+  "solid": false,
+  "desc": ""
+ },
+ "workbench": {
+  "size": [
+   160,
+   64
+  ],
+  "solid": true,
+  "desc": "carpenter's workbench with tools"
+ },
+ "dummy_target": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": true,
+  "desc": "training dummy"
+ }
+}

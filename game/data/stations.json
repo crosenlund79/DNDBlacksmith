@@ -1,0 +1,709 @@
+[
+ {
+  "id": "anvil",
+  "name": "The Anvil",
+  "discipline": "classic",
+  "pos": [
+   12,
+   10
+  ],
+  "size": [
+   112,
+   80
+  ],
+  "purpose": "Shapes heated metal into blades, plates and fittings. The heart of ordinary smithing.",
+  "check": {
+   "count": 3,
+   "speed": 0.55,
+   "zone": 34,
+   "weight": 1.4
+  },
+  "unlock": {},
+  "sfx": "hammer",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "forge",
+  "name": "Forge / Hearth",
+  "discipline": "classic",
+  "pos": [
+   2.6,
+   9
+  ],
+  "size": [
+   160,
+   128
+  ],
+  "purpose": "Heats metal to working temperature. Colour of the glow tells the smith when to strike.",
+  "check": {
+   "count": 1,
+   "speed": 0.45,
+   "zone": 40,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "forge",
+  "fx": [
+   "fire",
+   "light_forge",
+   "embers"
+  ],
+  "solid": true
+ },
+ {
+  "id": "crucible",
+  "name": "Crucible",
+  "discipline": "classic",
+  "pos": [
+   2.4,
+   12.8
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Melts ore and combines metals into ingots and alloys.",
+  "check": {
+   "count": 2,
+   "speed": 0.5,
+   "zone": 36,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "bubble",
+  "fx": [
+   "glow_small"
+  ],
+  "solid": true
+ },
+ {
+  "id": "quench_trough",
+  "name": "Quenching Trough",
+  "discipline": "classic",
+  "pos": [
+   6.6,
+   12.6
+  ],
+  "size": [
+   128,
+   64
+  ],
+  "purpose": "Cools and hardens finished work. Too slow and the steel stays soft; too fast and it cracks.",
+  "check": {
+   "count": 1,
+   "speed": 0.65,
+   "zone": 30,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "quench",
+  "fx": [
+   "steam"
+  ],
+  "solid": true
+ },
+ {
+  "id": "bellows",
+  "name": "Bellows",
+  "discipline": "classic",
+  "pos": [
+   5.0,
+   8.4
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Feeds air to the forge to raise the heat for steel and alloys.",
+  "check": {
+   "count": 2,
+   "speed": 0.6,
+   "zone": 38,
+   "weight": 0.7
+  },
+  "unlock": {},
+  "sfx": "bellows",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "grinding_wheel",
+  "name": "Grinding Wheel",
+  "discipline": "classic",
+  "pos": [
+   7.0,
+   5.2
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Sharpens edges and finishes surfaces. Also used for repairs.",
+  "check": {
+   "count": 1,
+   "speed": 0.7,
+   "zone": 30,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "grind",
+  "fx": [
+   "sparks"
+  ],
+  "solid": true
+ },
+ {
+  "id": "rune_cutting_bench",
+  "name": "Runestone Cutting Bench",
+  "discipline": "runecraft",
+  "pos": [
+   2.6,
+   16.6
+  ],
+  "size": [
+   128,
+   80
+  ],
+  "purpose": "Cuts raw runestone into workable blanks.",
+  "check": {
+   "count": 1,
+   "speed": 0.5,
+   "zone": 34,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "runewright_tools"
+  },
+  "sfx": "chisel",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "rune_engraving_stand",
+  "name": "Rune Engraving Stand",
+  "discipline": "runecraft",
+  "pos": [
+   5.4,
+   16.8
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Engraves runes into blanks and sets finished runestones into equipment.",
+  "check": {
+   "count": 2,
+   "speed": 0.6,
+   "zone": 28,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "runewright_tools"
+  },
+  "sfx": "chisel",
+  "fx": [
+   "rune_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "rune_cleansing_basin",
+  "name": "Runic Cleansing Basin",
+  "discipline": "runecraft",
+  "pos": [
+   7.6,
+   16.8
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Washes residual chaos from freshly engraved stones.",
+  "check": {
+   "count": 1,
+   "speed": 0.45,
+   "zone": 40,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "runewright_tools"
+  },
+  "sfx": "water",
+  "fx": [
+   "rune_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "resonance_pedestal",
+  "name": "Resonance Pedestal",
+  "discipline": "runecraft",
+  "pos": [
+   9.8,
+   16.8
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Tunes a runestone until its hum steadies.",
+  "check": {
+   "count": 2,
+   "speed": 0.7,
+   "zone": 26,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "runewright_tools"
+  },
+  "sfx": "rune_hum",
+  "fx": [
+   "rune_glow",
+   "light_rune"
+  ],
+  "solid": true
+ },
+ {
+  "id": "rune_polishing_wheel",
+  "name": "Runestone Polishing Wheel",
+  "discipline": "runecraft",
+  "pos": [
+   12.0,
+   16.8
+  ],
+  "size": [
+   96,
+   96
+  ],
+  "purpose": "Polishes runestones to a mirror finish, raising their potency.",
+  "check": {
+   "count": 1,
+   "speed": 0.6,
+   "zone": 32,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "runewright_tools"
+  },
+  "sfx": "grind",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "mortar_station",
+  "name": "Mortar & Pestle Station",
+  "discipline": "alchemy",
+  "pos": [
+   15.0,
+   17.0
+  ],
+  "size": [
+   96,
+   80
+  ],
+  "purpose": "Grinds herbs, salts and minerals into reagents.",
+  "check": {
+   "count": 2,
+   "speed": 0.5,
+   "zone": 36,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "alchemy_kit"
+  },
+  "sfx": "grind_soft",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "alembic",
+  "name": "Alembic",
+  "discipline": "alchemy",
+  "pos": [
+   17.3,
+   16.9
+  ],
+  "size": [
+   112,
+   96
+  ],
+  "purpose": "Distils oils and essences.",
+  "check": {
+   "count": 1,
+   "speed": 0.55,
+   "zone": 32,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "alchemy_kit"
+  },
+  "sfx": "bubble",
+  "fx": [
+   "glow_small"
+  ],
+  "solid": true
+ },
+ {
+  "id": "cauldron",
+  "name": "Alchemical Cauldron",
+  "discipline": "alchemy",
+  "pos": [
+   19.7,
+   16.6
+  ],
+  "size": [
+   112,
+   112
+  ],
+  "purpose": "Brews potions, coatings and tempering baths.",
+  "check": {
+   "count": 2,
+   "speed": 0.5,
+   "zone": 34,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "alchemy_kit"
+  },
+  "sfx": "bubble",
+  "fx": [
+   "bubbles",
+   "light_green"
+  ],
+  "solid": true
+ },
+ {
+  "id": "reagent_table",
+  "name": "Reagent Separation Table",
+  "discipline": "alchemy",
+  "pos": [
+   22.2,
+   17.1
+  ],
+  "size": [
+   128,
+   80
+  ],
+  "purpose": "Separates mixtures into pure reagents.",
+  "check": {
+   "count": 1,
+   "speed": 0.65,
+   "zone": 28,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "alchemy_kit"
+  },
+  "sfx": "glass",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "infusion_rack",
+  "name": "Infusion Rack",
+  "discipline": "alchemy",
+  "pos": [
+   16.0,
+   13.4
+  ],
+  "size": [
+   128,
+   64
+  ],
+  "purpose": "Steeps infusions and finishes potions.",
+  "check": {
+   "count": 1,
+   "speed": 0.45,
+   "zone": 40,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "alchemy_kit"
+  },
+  "sfx": "glass",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "arcane_crucible",
+  "name": "Arcane Crucible",
+  "discipline": "arcane",
+  "pos": [
+   26.4,
+   12.4
+  ],
+  "size": [
+   128,
+   128
+  ],
+  "purpose": "Melts mithril and adamantine while binding magic into the molten metal itself.",
+  "check": {
+   "count": 2,
+   "speed": 0.75,
+   "zone": 24,
+   "weight": 1.3
+  },
+  "unlock": {
+   "upgrade": "arcane_foundry"
+  },
+  "sfx": "arcane",
+  "fx": [
+   "arcane_glow",
+   "light_arcane"
+  ],
+  "solid": true
+ },
+ {
+  "id": "spellbinding_array",
+  "name": "Spellbinding Array",
+  "discipline": "arcane",
+  "pos": [
+   25.6,
+   16.2
+  ],
+  "size": [
+   160,
+   160
+  ],
+  "purpose": "A floor circle that locks a spell pattern into cooling metal.",
+  "check": {
+   "count": 2,
+   "speed": 0.8,
+   "zone": 22,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "arcane_foundry"
+  },
+  "sfx": "arcane",
+  "fx": [
+   "arcane_glow"
+  ],
+  "solid": false
+ },
+ {
+  "id": "leyline_conductor",
+  "name": "Leyline Conductor",
+  "discipline": "arcane",
+  "pos": [
+   28.6,
+   12.6
+  ],
+  "size": [
+   96,
+   128
+  ],
+  "purpose": "Draws power from the leyline beneath Brindlewick.",
+  "check": {
+   "count": 1,
+   "speed": 0.7,
+   "zone": 26,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "arcane_foundry"
+  },
+  "sfx": "arcane",
+  "fx": [
+   "arcane_glow",
+   "light_arcane"
+  ],
+  "solid": true
+ },
+ {
+  "id": "aetheric_stabilizer",
+  "name": "Aetheric Stabilizer",
+  "discipline": "arcane",
+  "pos": [
+   28.4,
+   16.6
+  ],
+  "size": [
+   112,
+   112
+  ],
+  "purpose": "Keeps charged alloys from tearing themselves apart.",
+  "check": {
+   "count": 1,
+   "speed": 0.6,
+   "zone": 30,
+   "weight": 1.0
+  },
+  "unlock": {
+   "upgrade": "arcane_foundry"
+  },
+  "sfx": "arcane",
+  "fx": [
+   "arcane_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "arcane_anvil",
+  "name": "Arcane Imprinting Anvil",
+  "discipline": "arcane",
+  "pos": [
+   22.8,
+   12.6
+  ],
+  "size": [
+   128,
+   96
+  ],
+  "purpose": "Hammers the bound magic into visible, glowing patterns in the finished piece.",
+  "check": {
+   "count": 3,
+   "speed": 0.7,
+   "zone": 24,
+   "weight": 1.4
+  },
+  "unlock": {
+   "upgrade": "arcane_foundry"
+  },
+  "sfx": "hammer_arcane",
+  "fx": [
+   "arcane_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "stitching_table",
+  "name": "Enchanted Stitching Table",
+  "discipline": "stitching",
+  "pos": [
+   18.0,
+   6.8
+  ],
+  "size": [
+   128,
+   80
+  ],
+  "purpose": "Cuts and stitches leather goods: jerkins, boots, gloves, belts and bracers.",
+  "check": {
+   "count": 2,
+   "speed": 0.5,
+   "zone": 36,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "stitch",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "thread_spinner",
+  "name": "Ethereal Thread Spinner",
+  "discipline": "stitching",
+  "pos": [
+   20.6,
+   6.8
+  ],
+  "size": [
+   112,
+   96
+  ],
+  "purpose": "Spins moonlit thread that holds enchantments.",
+  "check": {
+   "count": 1,
+   "speed": 0.6,
+   "zone": 28,
+   "weight": 1.0
+  },
+  "unlock": {
+   "skill": [
+    "enchanted_stitching",
+    3
+   ]
+  },
+  "sfx": "spin",
+  "fx": [
+   "thread_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "leather_vat",
+  "name": "Leather Treatment Vat",
+  "discipline": "stitching",
+  "pos": [
+   22.6,
+   7.2
+  ],
+  "size": [
+   112,
+   112
+  ],
+  "purpose": "Cures raw hides into supple, durable leather.",
+  "check": {
+   "count": 1,
+   "speed": 0.45,
+   "zone": 40,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "water",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "embroidery_frame",
+  "name": "Arcane Embroidery Frame",
+  "discipline": "stitching",
+  "pos": [
+   18.2,
+   9.8
+  ],
+  "size": [
+   112,
+   112
+  ],
+  "purpose": "Embroiders protective sigils into textiles and leather.",
+  "check": {
+   "count": 2,
+   "speed": 0.7,
+   "zone": 26,
+   "weight": 1.0
+  },
+  "unlock": {
+   "skill": [
+    "enchanted_stitching",
+    3
+   ]
+  },
+  "sfx": "stitch",
+  "fx": [
+   "thread_glow"
+  ],
+  "solid": true
+ },
+ {
+  "id": "fitting_mannequin",
+  "name": "Enchanted Fitting Mannequin",
+  "discipline": "stitching",
+  "pos": [
+   20.8,
+   9.9
+  ],
+  "size": [
+   80,
+   96
+  ],
+  "purpose": "Fits and balances finished garments so enchantments sit true.",
+  "check": {
+   "count": 1,
+   "speed": 0.55,
+   "zone": 32,
+   "weight": 1.0
+  },
+  "unlock": {
+   "skill": [
+    "enchanted_stitching",
+    3
+   ]
+  },
+  "sfx": "stitch",
+  "fx": [],
+  "solid": true
+ }
+]

@@ -1,0 +1,73 @@
+[
+ {
+  "id": "ironroot_mine",
+  "name": "Ironroot Mine",
+  "exit": "north",
+  "kind": "mining",
+  "days": [
+   1,
+   2
+  ],
+  "danger": 1,
+  "skill": "mining",
+  "loot": "mine",
+  "desc": "Old dwarf-cut galleries north of the village. Iron, coal and the odd vein of silver."
+ },
+ {
+  "id": "whisperwood",
+  "name": "Whisperwood",
+  "exit": "west",
+  "kind": "scouting",
+  "days": [
+   1,
+   2
+  ],
+  "danger": 2,
+  "skill": "travelling",
+  "loot": "forest",
+  "desc": "Herbs, hides and wolves."
+ },
+ {
+  "id": "highmarsh_road",
+  "name": "Highmarsh Road",
+  "exit": "east",
+  "kind": "trade",
+  "days": [
+   2,
+   3
+  ],
+  "danger": 2,
+  "skill": "travelling",
+  "loot": "trade",
+  "desc": "The trade road to Highmarsh. Bandits on the bad stretches."
+ },
+ {
+  "id": "barrow_fields",
+  "name": "Barrow Fields",
+  "exit": "south",
+  "kind": "relics",
+  "days": [
+   2,
+   3
+  ],
+  "danger": 4,
+  "skill": "relic_hunting",
+  "loot": "barrow",
+  "desc": "Burial mounds full of grave-goods and things that guard them."
+ },
+ {
+  "id": "deep_ironroot",
+  "name": "Deep Ironroot",
+  "exit": "north",
+  "kind": "mining",
+  "days": [
+   3,
+   4
+  ],
+  "danger": 6,
+  "skill": "mining",
+  "loot": "deep_mine",
+  "desc": "Below the old workings. Mithril — and whatever drove the dwarves out.",
+  "requires_flag": "delve_map"
+ }
+]
