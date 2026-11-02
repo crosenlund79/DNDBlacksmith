@@ -83,6 +83,55 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
 
 Adding a room is a data change: add a rect and a door to `make_layout.py`, then re-run it.
 
+## Skill-check minigames (`scripts/ui/minigames/`)
+
+- `Minigames.create(args)` picks the check for a station from `crafting.json` → `minigames`. Without an entry it returns the original `SkillCheckPanel` ring.
+- **Shared contract:** every check takes `args {station, count, speed, zone, title, subtitle, on_done}` and calls `on_done(qualities)` with one value per round.
+- **Skill:** it arrives as `zone` and `speed` from `Crafting.check_params()`. `MinigameBase` turns them into `ease` and `pace`:
+
+  | Minigame | ease scales | pace scales |
+  |---|---|---|
+  | Align | alignment window | airflow drift |
+  | Edge | sweet-spot size | wander amplitude |
+  | Multi-hit | section width | sweep speed |
+  | Rune | binding tolerance | swirl and surges |
+  | Rings | contact window | ring speed |
+
+- Continuous precision goes through `Crafting.check_quality`, so all checks share one quality curve. The exception is multi-hit, which scores by hit count.
+- Every round emits `Events.station_worked`, so the world shows sparks, steam and similar effects at the station.
+- Frame time is clamped to 50 ms, so a hitch can never jump a needle or rune past its target.
+
+## Hirelings (`hirelings.gd`)
+
+- **Traits** (`Hire.TRAITS`) scale per-skill output (`mult`), experience (`xp`), expedition danger and injury, and haul quality.
+- **`Hire.odds(h, dest)`** gives the success, injury and death probabilities. The ledger shows them before sending, and `_resolve` uses the same numbers.
+- **New hireling fields,** added to older saves on first access:
+  - `traits`
+  - `activity`
+  - `log` (last 6 results)
+  - `history` (last 8 expeditions)
+- **`Hire.replace()`** dismisses an employee and hires an applicant in one step. `Hire.equip()` moves gear from the stores to an employee.
+
+## Customers
+
+- `Shop.customer_hour` sends a customer only when one of `Shop.SEATS` (4) seats is free. The customer gets a `seat` index and `present = false`.
+- `spot_for()` routes them to `wait_seat_<n>`. When the figure arrives, `Shop.mark_arrived()` sets `present`, rings the bell and posts the single notification.
+- The patience timer runs from `seated`.
+- `Shop.dismiss_customer()` frees the seat.
+- `Shop.waiting()` lists only the seated customers; the shop panel and dialogue use it.
+
+## Figures, animals and atmosphere
+
+- **Character sheets:** `tools/art/make_minis.py` + `miniature.py` write them in the existing 6×4 layout:
+  - rows: front, side, back, mirrored side
+  - columns: 2 idle, 4 walk
+  - base fixed in every cell
+- **Loader:** unchanged. The sprite offset is now (0, −32), which puts the base on the actor's feet.
+- **Animals:** `AnimalActor` (`scripts/world/animal.gd`) uses the same sheet format.
+- **Breeze:** `shaders/sway.gdshader` is a shared material. Its phase comes from world position, and its strength depends on the plant kind (`world.gd` `SWAY`).
+- **Dust:** CPUParticles2D emitters over the streets and the workshop and inn rooms.
+- **Forge corner:** a radial soot gradient over the forge room's floor, a warm hearth light, smoke and embers.
+
 ## NPCs
 
 - `AStar2D` waypoint graph: densified road polylines, outdoor spots, room hubs, doorway pairs and interior spots (see above).
@@ -154,6 +203,9 @@ It is saved with the item, and the results panel can be reopened from the stores
   | `nav` | Every spot is reachable |
   | `craft` | The 10 crafting demonstrations |
   | `craft_reload` | Crafted items survive restart and the record reopens |
+  | `minigames` | Each specialised check played well and badly |
+  | `iter2` | Figures, waiting area, animals, atmosphere, recruitment, the ledger, expeditions and risk, crafts through minigames |
+  | `iter2_reload` | Hireling states and histories persist |
 
 - `tools/lint/check_gd.py` runs gdtoolkit syntax checks plus heuristics for Godot 4 type-inference errors. It works without the engine.
 

@@ -24,7 +24,8 @@ Rooms connect through doorways and short halls; there are no long empty corridor
 
 | Room | Contents |
 |---|---|
-| **Shopfront** | Counter, displays and the street entrance. Customers stay here. |
+| **Shopfront** | Counter, displays and the street entrance. |
+| **Waiting area** (outside the street door) | Four seats under a striped sign, plus a decorative stand showing the kinds of equipment the forge makes. At most four customers wait at once. You are told about a customer only when they actually sit down. Talk to a waiting customer to serve them, take a repair job, or ask them to come back another time, which frees their seat. Customers who wait too long give up. |
 | **Stock hall** | The hub between the shop, the workshops and the private wing. |
 | **Smithing Hall** | Forge, bellows, anvil, crucible, quenching trough and grinding wheel. Soot floor, tool wall and bar stock. |
 | **Rune Room** | Five runecraft stations on slate, rune shelves and faint sigils. |
@@ -84,18 +85,22 @@ There are 24 recipes. They are data-driven in `tools/data/make_recipes.py`.
 
 **Socketing:** at the Rune Engraving Stand you can set finished runestones into existing equipment. This is distinct from arcane metal.
 
-## Precision checks
+## Skill checks: the precision ring and five specialised minigames
 
-- A needle sweeps the ring. You stop it with E, Space or a click.
-- Quality is continuous: the closer to the zone's centre, the better. The centre gives 120%, the edge 70%, and misses fall towards 10%.
-- Every check shows a grade and a coloured pip, plays a sound and triggers an effect at the station:
-  - sparks at the anvil and grinding wheel
-  - steam at the quench
-  - bubbles at the cauldron
-  - rune light
-  - arcane flashes
-- Each operation's checks are averaged. Operations are weighted, so drawing out the blade matters more than wrapping the grip.
-- The final craftsmanship can exceed 100%.
+Every station runs a skill check for each operation. Each check, or round, gives a continuous craftsmanship value that can exceed 100%. Skill eases every check: a wider target and slower movement. You still have to play it. Every check gives a grade, a sound and an effect at the station: sparks, steam, bubbles, rune light or arcane flashes. All checks accept the mouse and the keyboard.
+
+| Check | Where | How it plays |
+|---|---|---|
+| **Precision ring** (default) | Forge, anvil, crucible, quench, cutting bench, cleansing basin, stitching, vat, mannequin, arcane stations | Stop the sweeping needle in the ember zone (E, Space or click). The centre gives 120%, the edge 70%, and misses fall towards 10%. |
+| **Spark & Ember Alignment** | Bellows | Two rotating mechanisms are pushed about by the airflow. Turn the Spark wheel (A/D or ←/→) and the Ember ring (W/S or ↑/↓), or drag either with the mouse. Pump (E, Space, or click the hearth) when both notches face the vent. The flame, sparks and airflow show how close you are, and each mechanism clicks as it enters the window. Quality depends on how precisely both are aligned at the pump. |
+| **Edge Control** | Grinding wheel, rune polishing wheel | A close-up of the blade on the stone. Hold the angle (W/S or mouse up/down) and the pressure (A/D or mouse left/right) on a sweet spot that slowly wanders, while the grit kicks the blade now and then. Quality is the precision you hold over the whole pass. The sparks and the ghost of the ideal blade show how you are doing. |
+| **Multi-Hit Sequence** | Embroidery frame, resonance pedestal, thread spinner, spellbinding array, infusion rack | After a brief pause, one fast sweep crosses four or five glowing sections. Press as the needle crosses each one. Every hit counts the same, wherever in the section it lands. Quality depends on how many sections you strike; a press outside a section costs a little. Striking all five is exceptional. |
+| **Rune Stabilization** | Rune engraving stand, including setting runestones into equipment | A charged rune hovers above the engraved socket on the blade. It has momentum, the socket's magic swirls it sideways, and it surges. Guide it in with the mouse (it follows, lagging) or push it with W/A/S/D, then hold it seated for the binding. Quality is how closely and steadily it stays. |
+| **Ring Contact** | Mortar and cauldron (inward); alembic and reagent table (outward) | A still ring appears, then a second ring contracts or expands towards it. Press when they meet. Effects suit mixing, brewing, distilling and volatile reactions. |
+
+- Which check a station uses is set in `data/crafting.json` (`minigames`).
+- Each operation's rounds are averaged. Operations are weighted, so drawing out the blade matters more than wrapping the grip.
+- The final craftsmanship feeds dice, stats and rarity exactly as before.
 
 ## Dice
 
@@ -166,16 +171,49 @@ The colours apply to item names, slot borders and tooltips.
 
 ## Hirelings
 
-- Up to 3 hirelings (4 with Brannoc). You start with **Borin Flintbeard**, a dwarf miner and procurer.
-- **Work skills:** Mining, Alchemy, Runecraft, Smithing, Travelling, Relic Hunting. Each is trainable through work and expeditions.
-- **Work time:** allocated in percent per skill, and must total 100%.
-- **Hourly output:** ore, herbs and reagents, raw runestones, ingots or nails, small trade income, or the occasional relic.
-- **Wages** are paid daily.
-- **Expeditions** go to Ironroot Mine, Whisperwood, Highmarsh Road, Barrow Fields and Deep Ironroot (which needs the Delve Map).
-  - The outcome depends on skill, gear, danger and chance: success, a partial haul, injury or permanent death.
-  - Hirelings visibly leave and return through the village exits.
-  - Borin's first bag always holds a legendary and some mithril.
-- **Recruitment:** the notice board offers 3–4 random applicants each week. They differ in race, personality and skill spread, and you can hire, replace or dismiss them.
+You can employ up to 3 hirelings alongside Brannoc. You start with **Borin Flintbeard**, a dwarf miner: *Stout-hearted* (+30% mining) but *Clumsy with glassware* (−40% alchemy).
+
+**Skills:**
+
+- Everyone, Brannoc included, shares the same trainable skills: Mining, Smithing, Alchemy, Runecraft, Travelling (scouting, trading, transport) and Relic Hunting.
+- Skills rise with the work that uses them.
+- **Traits:** each employee has a strength and often a weakness, such as Forge-born, Nimble fingers, Silver tongue, Keen eye, Quick learner or Hardy, against Bad back, Fearful, Frail, Restless or Heavy-handed. Traits change their output, their expedition risk and how fast they learn.
+- Nobody is locked to a profession. Anyone can do any work; skill and traits decide how well.
+
+**Work in the Ledger of Hands [H]:**
+
+- Split working time (8:00–18:00) between the six skills; the split must total 100%.
+- One-click presets: focus on the best skill, split the two best, or an even spread.
+- Each hour employees work autonomously, gain experience and produce results: ore, ingots, herbs, runestone blanks, trade income or relics.
+- The ledger shows each employee's current activity with progress to the next result, their levels and experience bars, a short work log and their expedition history.
+- Wages are paid daily.
+
+**Gear:** give weapons and armour from your stores to an employee. Gear raises their expedition power.
+
+**Expeditions:**
+
+| Destination | Notes |
+|---|---|
+| Ironroot Mine | Mining |
+| Whisperwood | Scouting |
+| Highmarsh Road | Trade |
+| Barrow Fields | Relics |
+| Deep Ironroot | Mining; needs the Delve Map |
+
+- Destinations differ in danger, duration (1–4 days) and loot.
+- Before you send someone, the ledger shows the risk (safe, risky, dangerous or deadly), the chance of success and of injury, and whether they could die. These come from their skill, travelling, gear and traits.
+- Possible outcomes: a full haul, a partial haul, injury (days of rest) or permanent death.
+- Every trip gives experience.
+- While someone is away their workshop schedule pauses. They visibly leave and return through the village exits.
+- Bags wait on the workshop floor.
+- Borin's first bag always holds a legendary and some mithril.
+- Expedition state, injuries, deaths and histories are saved.
+
+**Recruitment:**
+
+- The village notice board pins a new set of applicants each week. Some weeks nobody answers; most weeks two to four people do, each with their own race, personality, skill spread and traits.
+- You cannot always get the ideal candidate.
+- When all three places are taken, you can replace an employee who is at home with an applicant in one step.
 
 ## Autonomous adventurers
 
@@ -273,17 +311,27 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 - The HUD guides the first-day loop through talking to Borin, crafting a sword, arming Mira, the inn, departures, Borin's bag and saving.
 - **Saving:** three manual slots, an autosave when you sleep, and a quicksave. All world state is restored, including relationships, memories, expeditions, orders, containers and the clock.
 
-## Simplified in this first build
+## Simplified so far
 
 - Balance is provisional: prices, XP curves, danger maths and drop rates.
-- All stations share one precision-check mechanic. They differ in their operations, difficulty, sound and visual feedback, but there are no station-specific minigames yet.
-- Hirelings use the same skill framework, but they do not yet craft at stations themselves.
+- Five families of stations have specialised minigames; the rest keep the precision ring. Minigame difficulty curves are provisional.
+- Hirelings use the same skill framework and work autonomously, but they produce from their allocation rather than crafting recipes at stations.
 - The shop counter is the main sales interface. Customers don't physically take items from the shelves.
 - Expedition combat is a statistical simulation; there is no tactical combat.
 - Romance is a small working example; there is no marriage ceremony scene beyond a fade.
 - Villagers use simple hourly schedules, and NPCs don't collide with each other.
-- Hireling equipment exists in the model (Borin carries an axe and jerkin) but has no management screen yet.
+- Hireling gear is handed over from the stores in the ledger; there is no separate equipment screen per slot.
+- Animals wander a fixed home range in straight lines; they do not use the navigation graph.
 - All art and audio are procedurally generated first-pass assets.
+
+## Characters and village life
+
+- **Figures:** characters are painted tabletop miniatures on small decorative bases, in the ink-and-parchment style. Each has front, side and back poses, and never rotates the whole figure. Walking is a restrained step and hop on a planted base.
+- **Animals:** two cats and two dogs live around the square, the inn and the forge. They sit, look about and trot short distances.
+- **Atmosphere:**
+  - Flowers, bushes and tree crowns sway in a light breeze.
+  - Fine dust drifts over the streets and through the workshop and inn.
+  - The forge corner is darker and sootier, with a strong warm hearth glow, rising smoke and embers.
 
 ## Iteration 1 screenshots
 

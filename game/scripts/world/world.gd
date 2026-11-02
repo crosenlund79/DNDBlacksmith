@@ -594,7 +594,7 @@ func _station_fx(fx: String, pos: Vector2, size: Vector2) -> void:
 	match fx:
 		"fire", "light_forge":
 			if fx == "light_forge":
-				var l := FX.light(Color("#ff8a2a"), 520.0, 1.35, true)
+				var l := FX.light(Color("#ff8a2a"), 400.0, 1.4, true)
 				l.position = pos
 				add_child(l)
 			else:
@@ -760,7 +760,7 @@ func _build_atmosphere() -> void:
 		shade.z_index = 1
 		floor_layer.add_child(shade)
 		var fp := station_pos("forge")
-		var glow := FX.light(Color("#ff7a20"), 760.0, 1.1, true)
+		var glow := FX.light(Color("#ff7a20"), 380.0, 0.9, true)
 		glow.position = fp + Vector2(0, 30)
 		add_child(glow)
 		var sm := FX.smoke(8)
@@ -1341,12 +1341,20 @@ func _update_focus() -> void:
 		if d < float(e["r"]) and d < best_d:
 			best_d = d
 			best = e
+	# only the nearest figure shows its name, so a row of customers never overlaps
+	var near_id := ""
+	var near_d := 220.0
+	for id in npcs:
+		var nn: NPCActor = npcs[id]
+		if nn.visible and ppos.distance_to(nn.position) < near_d:
+			near_d = ppos.distance_to(nn.position)
+			near_id = id
 	for id in npcs:
 		var n: NPCActor = npcs[id]
 		if not n.visible:
 			continue
 		var d := ppos.distance_to(n.position)
-		n.show_name(d < 220.0)
+		n.show_name(id == near_id)
 		if d < 90.0 and d < best_d:
 			best_d = d
 			best = {"kind": "npc", "id": id, "label": "Talk to " + n.display_name, "pos": n.position}
