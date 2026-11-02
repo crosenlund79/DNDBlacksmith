@@ -281,6 +281,9 @@ func phase_full() -> void:
 	await wait(0.5)
 	expect(panel() is DicePanel, "dice panel opened after the last step")
 	await shot("dice_panel")
+	if panel() is DicePanel and (panel() as DicePanel).mode != "auto":
+		await click("Digital dice")
+		await wait(0.3)
 	await click("Roll the dice")
 	await wait(1.8)
 	await shot("dice_rolled")
@@ -739,3 +742,19 @@ func phase_craft_reload() -> void:
 		await wait(1.0)
 		expect(panel() is CraftResultPanel, "10c. results panel re-opened from the saved record")
 		await shot("reload_record_legendary")
+
+
+## Diagnostic: where are the adventurers in the evening, and are they getting to the inn?
+func phase_inn_diag() -> void:
+	await click("New Game")
+	await wait(2.0)
+	await advance_to(19, 30)
+	for t in 4:
+		await wait(5.0)
+		for a in Adv.in_town():
+			var n: NPCActor = W().npcs.get(a["id"])
+			if n == null:
+				continue
+			var spot: String = W().spot_for(a["id"])
+			note("t+%ds %s status=%s spot=%s pos=%s in_inn=%s path=%d visible=%s area=%s" % [(t + 1) * 5, a["id"], a.get("status", ""), spot, n.position.round(),
+				W().brect(DB.building("inn")).has_point(n.position), n.path.size(), n.visible, W().room_at("inn", n.position)])
