@@ -1253,24 +1253,29 @@ func phase_slice() -> void:
 	await wait(0.5)
 	await shot("slice_inn_table_talk")
 	await close_panel()
-	# --- iteration 5: a dispute at the waiting seats
+	# --- iteration 5: a dispute at the waiting seats (whoever is actually in town and on their feet)
 	await advance_to(10, 0)
-	var kes := Adv.get_a("kestra")
-	kes["status"] = "in_town"
+	var disputer := ""
+	for a in Adv.in_town():
+		var nn: NPCActor = W().npcs.get(a["id"])
+		if nn and nn.visible and not nn.get_meta("travelling", false) and a["id"] != "garrick":
+			disputer = a["id"]
+			break
+	expect(disputer != "", "slice: someone in town to raise a dispute")
 	Game.state["customers"].clear()
-	Shop.raise_dispute("kestra", Items.make("dagger", {"quality": 40.0, "crafted_by": "Brannoc Ironhand"}))
+	Shop.raise_dispute(disputer, Items.make("dagger", {"quality": 40.0, "crafted_by": "Brannoc Ironhand"}))
 	W()._update_schedules()
 	var kw := 0.0
-	while not Shop.waiting().any(func(c): return c["npc"] == "kestra") and kw < 60.0:
+	while not Shop.waiting().any(func(c): return c["npc"] == disputer) and kw < 60.0:
 		await wait(1.0)
 		kw += 1.0
-	if await talk_to("kestra"):
+	if await talk_to(disputer):
 		await shot("slice_dispute")
 		await click("Refuse")
 		await wait(0.4)
 		await shot("slice_dispute_refused")
 		await click("Farewell")
-	expect(Social.has_memory("kestra", "refused_" + str(Game.day())), "slice: Kestra remembers the refusal")
+	expect(Social.has_memory(disputer, "refused_" + str(Game.day())), "slice: %s remembers the refusal" % Talk.npc_name(disputer))
 	await press("panel_ledger")
 	await wait(0.6)
 	await shot("slice_ledger_reputation")
@@ -1283,7 +1288,7 @@ func phase_slice() -> void:
 	await click("Save")
 	await wait(0.5)
 	var keep := {"ember": str(ember.get("uid", "")), "garrick_weapon": str(gar["equipment"].get("weapon", {}).get("uid", "")), "garrick_hist": gar["history"].size(),
-		"borin_hist": Hire.get_h("borin").get("history", []).size(), "kestra_aff": Social.aff("kestra"), "rep": Shop.reputation(), "scout": Regions.scouted("ironroot_mine"),
+		"borin_hist": Hire.get_h("borin").get("history", []).size(), "disputer": disputer, "kestra_aff": Social.aff(disputer), "rep": Shop.reputation(), "scout": Regions.scouted("ironroot_mine"),
 		"inv": Game.inventory().size(), "day": Game.day()}
 	var f := FileAccess.open("user://playtest/expect_slice.json", FileAccess.WRITE)
 	f.store_string(JSON.stringify(keep))
@@ -1297,7 +1302,8 @@ func phase_slice_reload() -> void:
 	var gar := Adv.get_a("garrick")
 	expect(str(gar.get("equipment", {}).get("weapon", {}).get("uid", "")) == str(e["garrick_weapon"]) and gar.get("history", []).size() == int(e["garrick_hist"]), "persist: Garrick still carries the Emberwarden, history intact")
 	expect(Hire.get_h("borin").get("history", []).size() == int(e["borin_hist"]), "persist: Borin's expedition history")
-	expect(is_equal_approx(Social.aff("kestra"), float(e["kestra_aff"])) and Social.has_memory("kestra", "refused_" + str(e["day"])), "persist: Kestra's grudge")
+	var dis := str(e.get("disputer", "kestra"))
+	expect(is_equal_approx(Social.aff(dis), float(e["kestra_aff"])) and Social.has_memory(dis, "refused_" + str(e["day"])), "persist: %s's grudge" % Talk.npc_name(dis))
 	expect(is_equal_approx(Regions.scouted("ironroot_mine"), float(e["scout"])) and Game.inventory().size() == int(e["inv"]), "persist: scouting knowledge and stores")
 	await press("panel_adventurers")
 	await wait(0.6)
