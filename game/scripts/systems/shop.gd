@@ -163,6 +163,7 @@ static func fulfil(order_id: String, uid: int) -> String:
 		if margin >= 5 or it.get("rarity") in ["legendary", "rare"]:
 			Game.state["returns"].append(Loot.make_container("package_reward", Loot.roll_table("reward", 10.0), a["name"],
 				"%s left this for you: 'Work like yours deserves more than coin.'" % a["name"]))
+			Events.inventory_changed.emit()   # world redraws the waiting bags
 			Events.toast.emit("%s left you a reward package in the workshop!" % a["name"], "good")
 		Events.orders_changed.emit()
 		Objectives.on_sold(o["npc"], it)

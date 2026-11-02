@@ -59,7 +59,7 @@ func _customers() -> void:
 			v.add_child(UIKit.rich("[b]%s[/b] wants their [b]%s[/b] repaired (pays about %d g)." % [Talk.npc_name(npc), cu["item"]["name"], cu["pay"]], 22))
 			v.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
 		elif not a.is_empty():
-			var married := Social.spouse() == npc
+			var married: bool = Social.spouse() == npc
 			v.add_child(UIKit.rich("[b]%s[/b], %s %s (level %d) · %d gold%s\nNeeds: [i]%s[/i]" % [a["name"], Adv.rating_text(a), a["cls"], a["level"], a["gold"],
 				" · [color=#7e2418]your wife — gear is free[/color]" if married else "", a.get("needs", "") if a.get("needs", "") != "" else "nothing urgent"], 22))
 			var offers := UIKit.hbox(8)
@@ -88,9 +88,12 @@ func _customers() -> void:
 func _repair(npc: String) -> void:
 	var c := Crafting.check_params("grinding_wheel")
 	Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
-		"on_done": func(qs: Array):
-			Shop.do_repair(npc, float(qs[0]))
-			Events.toast.emit("Repair done (%d%%)." % int(qs[0]), "good")})
+		"on_done": _on_repair_done.bind(npc)})
+
+
+func _on_repair_done(qs: Array, npc: String) -> void:
+	Shop.do_repair(npc, float(qs[0]))
+	Events.toast.emit("Repair done (%d%%)." % int(qs[0]), "good")
 
 
 func _stock() -> void:

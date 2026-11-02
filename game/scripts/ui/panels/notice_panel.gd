@@ -35,7 +35,7 @@ func _build() -> void:
 		var lab := UIKit.rich("[b]%s[/b] · %s\n[i]%s[/i]\n%s\nWage %d g/day · signing fee %d g" % [a["name"], a["race"], a["personality"], "   ".join(skills), a["wage"], a["fee"]], 20)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lab)
-		var idx := i
+		var idx: int = i
 		var b := UIKit.button("Hire", func():
 			var err := Hire.hire_applicant(idx)
 			if err != "":

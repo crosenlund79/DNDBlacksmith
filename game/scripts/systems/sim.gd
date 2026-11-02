@@ -65,6 +65,7 @@ static func take_delivery() -> String:
 	elif band in ["friendly", "devoted"] and randf() < 0.5:
 		Game.state["returns"].append(Loot.make_container("purse_gift", Loot.roll_table("gift", 10.0), "Aldric Pell", "Tucked under the cheese: a little something extra."))
 		lines.append("He winks at a small purse tucked under the cheese.")
+		Events.inventory_changed.emit()   # world redraws the waiting bags
 	elif Social.has_memory("aldric", "kin_gear_failed_mira") or Social.has_memory("aldric", "blame_mira"):
 		lines.append("He doesn't meet your eye. \"Mira came home with a broken bow-arm. Your gear, I hear.\"")
 	Social.change("aldric", 1.0, 3.0)

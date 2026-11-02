@@ -225,7 +225,7 @@ static func _resolve(h: Dictionary) -> void:
 	var injury := randf() < clampf(0.08 + (danger - power) * 0.06, 0.02, 0.6)
 	var death := (not success) and injury and randf() < clampf((danger - power) * 0.05, 0.0, 0.3)
 	h["expeditions"] = int(h.get("expeditions", 0)) + 1
-	var first_bag := h["id"] == "borin" and not Game.has_flag("borin_first_bag")
+	var first_bag: bool = h["id"] == "borin" and not Game.has_flag("borin_first_bag")
 	var contents: Array = []
 	if death:
 		h["status"] = "dead"

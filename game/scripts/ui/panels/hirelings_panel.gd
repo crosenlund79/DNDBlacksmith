@@ -106,7 +106,7 @@ func _card(h: Dictionary) -> Control:
 	right.add_child(UIKit.label("Expeditions", 24, "heading"))
 	if st == "working":
 		for d in DB.destinations.values():
-			var locked := d.has("requires_flag") and not Game.has_flag(d["requires_flag"])
+			var locked: bool = d.has("requires_flag") and not Game.has_flag(d["requires_flag"])
 			var b := UIKit.button("%s — %s, danger %d, %d–%d days" % [d["name"], d["kind"], int(d["danger"]), int(d["days"][0]), int(d["days"][1])], func():
 				var err := Hire.send(hid, d["id"])
 				if err != "":

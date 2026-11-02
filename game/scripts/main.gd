@@ -17,6 +17,9 @@ func _clear() -> void:
 	Game.ui_blockers = 0
 	for n in [world, ui, menu]:
 		if is_instance_valid(n):
+			# stop the old world/UI at once: it stays in the tree until the end of the frame and
+			# would otherwise keep writing player pos/area into a freshly loaded state
+			n.process_mode = Node.PROCESS_MODE_DISABLED
 			n.queue_free()
 	world = null
 	ui = null

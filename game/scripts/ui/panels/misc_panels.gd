@@ -20,6 +20,6 @@ func _ready() -> void:
 		Events.request_fade.emit("You sleep… the forge ticks as it cools.", hours * 60 - Game.state["minute"] % 60)
 		var t := get_tree().create_timer(2.6)
 		t.timeout.connect(Saves.save.bind("autosave"))
-		t.timeout.connect(Events.toast.emit.bind("Autosaved.", "good")), 200))
+		t.timeout.connect(func(): Events.toast.emit("Autosaved.", "good")), 200))
 	h.add_child(UIKit.button("Not yet", close, 200))
 	content.add_child(h)

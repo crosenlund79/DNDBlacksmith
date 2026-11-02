@@ -108,13 +108,16 @@ func _work() -> void:
 	var c := Crafting.check_params(station_id)
 	var sid := station_id
 	Events.open_panel.emit("skillcheck", {"station": sid, "count": c["count"], "speed": c["speed"], "zone": c["zone"],
-		"title": DB.station(sid)["name"], "on_done": func(qs: Array):
-			Crafting.record_step(sid, qs)
-			if Crafting.job().get("awaiting_dice", false):
-				Events.open_panel.emit("dice", {})
-			else:
-				Events.toast.emit("Step done. Next: %s." % DB.station(Crafting.current_station()).get("name", "?"), "info")})
+		"title": DB.station(sid)["name"], "on_done": _on_work_done.bind(sid)})
 	Audio.play("sfx/" + str(DB.station(sid).get("sfx", "hammer")).replace("hammer", "hammer_1"), -2.0)
+
+
+func _on_work_done(qs: Array, sid: String) -> void:
+	Crafting.record_step(sid, qs)
+	if Crafting.job().get("awaiting_dice", false):
+		Events.open_panel.emit("dice", {})
+	else:
+		Events.toast.emit("Step done. Next: %s." % DB.station(Crafting.current_station()).get("name", "?"), "info")
 
 
 func _practice() -> void:
@@ -122,6 +125,19 @@ func _practice() -> void:
 	var sid := station_id
 	Events.open_panel.emit("skillcheck", {"station": sid, "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Practice — " + DB.station(sid)["name"],
 		"on_done": func(qs: Array): Game.grant_player_xp(Crafting.skill_for_station(sid), 2 + int(float(qs[0]) / 40.0))})
+
+
+func _on_socket_pressed(ob_item: OptionButton, ob_rune: OptionButton) -> void:
+	var uid := ob_item.get_item_id(ob_item.selected)
+	var rd: String = ob_rune.get_item_metadata(ob_rune.selected)
+	Events.open_panel.emit("skillcheck", {"station": "rune_engraving_stand", "count": 1, "speed": 0.6, "zone": 28.0,
+		"title": "Setting the runestone", "on_done": _on_socket_done.bind(uid, rd)})
+
+
+func _on_socket_done(qs: Array, uid: int, rd: String) -> void:
+	if Crafting.socket(uid, rd, float(qs[0])):
+		Events.toast.emit("The runestone settles into the metal with a hum.", "good")
+		Audio.play("sfx/rune_hum")
 
 
 func _socket_ui() -> Control:
@@ -142,13 +158,6 @@ func _socket_ui() -> Control:
 		ob_rune.set_item_metadata(ob_rune.item_count - 1, r["def"])
 	h.add_child(ob_item)
 	h.add_child(ob_rune)
-	h.add_child(UIKit.button("Engrave and set", func():
-		var uid := ob_item.get_item_id(ob_item.selected)
-		var rd: String = ob_rune.get_item_metadata(ob_rune.selected)
-		Events.open_panel.emit("skillcheck", {"station": "rune_engraving_stand", "count": 1, "speed": 0.6, "zone": 28.0, "title": "Setting the runestone",
-			"on_done": func(qs: Array):
-				if Crafting.socket(uid, rd, float(qs[0])):
-					Events.toast.emit("The runestone settles into the metal with a hum.", "good")
-					Audio.play("sfx/rune_hum")}), 220))
+	h.add_child(UIKit.button("Engrave and set", _on_socket_pressed.bind(ob_item, ob_rune), 220))
 	v.add_child(h)
 	return v

@@ -157,7 +157,7 @@ static func _resolve(a: Dictionary) -> void:
 	var xp := int(danger * 30 * (1.0 if success else 0.4))
 	a["gold"] = int(a["gold"]) + gold
 	a["xp"] = int(a["xp"]) + xp
-	var loot := Loot.roll_table(d["loot"], float(a["level"]) * 2.0) if success else []
+	var loot: Array = Loot.roll_table(d["loot"], float(a["level"]) * 2.0) if success else []
 	# wear and tear
 	for k in a["equipment"]:
 		var st: Dictionary = a["equipment"][k].get("stats", {})

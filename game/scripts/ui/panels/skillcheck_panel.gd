@@ -63,7 +63,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	var press := event.is_action_pressed("interact") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+	var press: bool = event.is_action_pressed("interact") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 	if press and running:
 		get_viewport().set_input_as_handled()
 		_resolve(false)

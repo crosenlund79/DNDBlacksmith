@@ -33,6 +33,9 @@ func _init(title_text := "", w := 900.0, h := 640.0, dark := false) -> void:
 
 
 func _ready() -> void:
+	# grow both ways so the window stays centred when its content outgrows the minimum size
+	grow_horizontal = Control.GROW_DIRECTION_BOTH
+	grow_vertical = Control.GROW_DIRECTION_BOTH
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	if blocks_time:
 		Game.block_time(true)

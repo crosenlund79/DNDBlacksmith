@@ -65,12 +65,15 @@ func _choose(oid: String) -> void:
 			"repair":
 				var c := Crafting.check_params("grinding_wheel")
 				Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
-					"on_done": func(qs: Array):
-						Shop.do_repair(who, float(qs[0]))
-						Events.toast.emit("Repair finished (%d%%)." % int(qs[0]), "good")
-						close()})
+					"on_done": _on_repair_done.bind(who)})
 		return
 	if r.has("fade"):
 		Events.request_fade.emit(r["fade"], int(r.get("minutes", 60)))
 	text.text = r.get("text", "")
 	_options()
+
+
+func _on_repair_done(qs: Array, who: String) -> void:
+	Shop.do_repair(who, float(qs[0]))
+	Events.toast.emit("Repair finished (%d%%)." % int(qs[0]), "good")
+	close()
