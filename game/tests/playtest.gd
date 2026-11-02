@@ -338,12 +338,15 @@ func phase_full() -> void:
 	await press("cancel")
 	# --- inn in the evening, adventurer dialogue, upstairs
 	await advance_to(19, 30)
-	await wait(5.0)
 	var adv_id := ""
-	for a in Adv.in_town():
-		var n: NPCActor = W().npcs.get(a["id"])
-		if n and n.visible and W().brect(DB.building("inn")).has_point(n.position):
-			adv_id = a["id"]
+	var waited := 0.0
+	while adv_id == "" and waited < 20.0:
+		await wait(1.0)
+		waited += 1.0
+		for a in Adv.in_town():
+			var n: NPCActor = W().npcs.get(a["id"])
+			if n and n.visible and n.path.is_empty() and W().brect(DB.building("inn")).has_point(n.position):
+				adv_id = a["id"]
 	expect(adv_id != "", "inn: an adventurer is in the common room")
 	if adv_id != "":
 		await tp(W().npcs[adv_id].position + Vector2(0, -60))

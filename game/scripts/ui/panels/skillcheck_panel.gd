@@ -33,7 +33,6 @@ func _init(a: Dictionary) -> void:
 
 func _ready() -> void:
 	Game.block_time(true)
-	size = get_viewport_rect().size
 	_next()
 
 

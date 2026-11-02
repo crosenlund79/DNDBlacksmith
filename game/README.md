@@ -17,6 +17,18 @@ You need Godot 4.3 or newer (the standard build, not .NET).
 | Linux / macOS | `GODOT=/path/to/godot ./run_linux.sh` (add `--tests` to run the test suite) |
 | Editor | Open `game/project.godot` in the Godot editor and press F5 |
 
+## Tests
+
+The tests are verified with **Godot 4.3.stable.official.77dcf97d8**.
+
+| Test | Command (from `game/`) |
+|---|---|
+| Compile check: every script loads with the autoloads present | `godot --headless --path . res://tests/compile_all.tscn` |
+| Unit and regression tests (44) | `godot --headless --path . res://tests/test_runner.tscn` (or `run_tests_windows.bat`) |
+| Rendered play-test: real main scene, synthetic input, screenshots in `user://playtest/` | `godot --path . res://tests/playtest.tscn -- full`, then `-- reload` in a new process to test save → restart → continue |
+
+Other play-test phases are `smoke`, `stations` and `panels`. On a machine with no display, wrap the play-tests in `xvfb-run -a -s "-screen 0 1920x1080x24"` and add `--rendering-driver opengl3`.
+
 ## Controls
 
 | Key | Action |
