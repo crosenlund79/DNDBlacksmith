@@ -51,6 +51,23 @@ crafting = {
   "resonance": {"label": "Resonance", "stat": "potency", "desc": "how clearly the rune sings"},
   "spellweave": {"label": "Spellweave", "stat": "magic", "desc": "how much magic the metal holds"},
  },
+ "minigames": {
+  "_doc": "Specialised skill checks per station (default: the circular precision ring). "
+          "type: align | edge | multihit | rune | rings. Rings: dir in/out, fx look.",
+  "bellows": {"type": "align"},
+  "grinding_wheel": {"type": "edge"},
+  "rune_polishing_wheel": {"type": "edge"},
+  "rune_engraving_stand": {"type": "rune"},
+  "resonance_pedestal": {"type": "multihit", "targets": 5},
+  "embroidery_frame": {"type": "multihit", "targets": 5},
+  "thread_spinner": {"type": "multihit", "targets": 4},
+  "spellbinding_array": {"type": "multihit", "targets": 5},
+  "infusion_rack": {"type": "multihit", "targets": 4},
+  "mortar_station": {"type": "rings", "dir": "in", "fx": "mixing"},
+  "cauldron": {"type": "rings", "dir": "in", "fx": "brewing"},
+  "alembic": {"type": "rings", "dir": "out", "fx": "distilling"},
+  "reagent_table": {"type": "rings", "dir": "out", "fx": "volatile"},
+ },
  "materials": {
   "iron": {"name": "Iron", "stat": 1.0, "durability": 1.0, "difficulty": 0, "rarity_bonus": 0},
   "steel": {"name": "Steel", "stat": 1.18, "durability": 1.3, "difficulty": 1, "rarity_bonus": 4},

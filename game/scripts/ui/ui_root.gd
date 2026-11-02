@@ -274,7 +274,7 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 			open(StationPanel.new(args["id"]))
 		"skillcheck":
 			# overlay: the panel that asked for the check stays alive (its callback lives there)
-			var sc := SkillCheckPanel.new(args)
+			var sc := Minigames.create(args)
 			var under := current
 			if is_instance_valid(under):
 				under.visible = false

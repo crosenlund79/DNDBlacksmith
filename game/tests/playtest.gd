@@ -762,3 +762,125 @@ func phase_inn_diag() -> void:
 			var spot: String = W().spot_for(a["id"])
 			note("t+%ds %s status=%s spot=%s pos=%s in_inn=%s path=%d visible=%s area=%s" % [(t + 1) * 5, a["id"], a.get("status", ""), spot, n.position.round(),
 				W().brect(DB.building("inn")).has_point(n.position), n.path.size(), n.visible, W().room_at("inn", n.position)])
+
+
+# ======================================================================= specialised minigames
+func _minigame() -> MinigameBase:
+	for c in U().panel_host.get_children():
+		if c is MinigameBase and not c.is_queued_for_deletion():
+			return c
+	return null
+
+
+func _hold_axis(neg: String, pos: String, value: float, dead := 0.02) -> void:
+	if value > dead:
+		Input.action_press(pos)
+		Input.action_release(neg)
+	elif value < -dead:
+		Input.action_press(neg)
+		Input.action_release(pos)
+	else:
+		Input.action_release(neg)
+		Input.action_release(pos)
+
+
+func _release_all() -> void:
+	for a in ["move_left", "move_right", "move_up", "move_down"]:
+		Input.action_release(a)
+
+
+## Plays whatever specialised minigame is open, through the same input actions a player uses.
+## good=false plays deliberately badly (to show that quality responds to play).
+func play_minigame(good := true, tag := "") -> Array:
+	var mg := _minigame()
+	if mg == null:
+		return []
+	var guard := 0.0
+	var pressed_round := -1
+	var shot_done := tag == ""
+	while is_instance_valid(mg) and not mg.is_queued_for_deletion() and guard < 90.0:
+		var rnd := mg.results.size()
+		if not mg.finished:
+			if mg is AlignGame:
+				var ag := mg as AlignGame
+				if good:
+					_hold_axis("move_left", "move_right", -ag.spark / 20.0, 0.08)
+					_hold_axis("move_up", "move_down", -ag.ember / 20.0, 0.08)
+					if absf(ag.spark) < ag.tol() * 0.18 and absf(ag.ember) < ag.tol() * 0.18 and pressed_round != rnd:
+						pressed_round = rnd
+						_release_all()
+						await press("interact")
+				elif ag.round_t > 0.5 and pressed_round != rnd:
+					pressed_round = rnd
+					await press("interact")
+			elif mg is EdgeGame:
+				var eg := mg as EdgeGame
+				if good:
+					var dlt := eg.target - eg.p
+					_hold_axis("move_left", "move_right", dlt.x * 6.0, 0.06)
+					_hold_axis("move_up", "move_down", dlt.y * 6.0, 0.06)
+			elif mg is MultiHitGame:
+				var mh := mg as MultiHitGame
+				if mh.running:
+					for tg in mh.targets:
+						var ahead := mh.angle + float(mh.args.get("speed", 0.55)) * 1.45 * 360.0 * minf(get_process_delta_time(), 0.05)
+						if int(tg[2]) == 0 and absf(ahead - float(tg[0])) <= float(tg[1]) * 0.85:
+							if good or mh.hits() < 2:
+								await press("interact")
+							break
+			elif mg is RuneGame:
+				var rg := mg as RuneGame
+				if good:
+					var want := -rg.r * 0.03 - rg.v * 0.012
+					_hold_axis("move_left", "move_right", want.x, 0.05)
+					_hold_axis("move_up", "move_down", want.y, 0.05)
+			elif mg is RingsGame:
+				var rr := mg as RingsGame
+				if rr.state == 1 and pressed_round != rnd:
+					var gap := absf(rr.r - RingsGame.R0)
+					var stepr := rr.spd * minf(get_process_delta_time(), 0.05)
+					if (good and gap <= stepr * 1.2) or (not good and gap < 45.0):
+						pressed_round = rnd
+						await press("interact")
+		else:
+			_release_all()
+		if not shot_done and guard > 1.6:
+			shot_done = true
+			await shot(tag)
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+	_release_all()
+	var out: Array = mg.results.duplicate() if is_instance_valid(mg) else []
+	await wait(0.4)
+	return out
+
+
+## Opens one specialised check directly at a station and plays it.
+func run_minigame(station: String, good: bool, count := 1) -> Array:
+	var c := Crafting.check_params(station)
+	var got := []
+	Events.open_panel.emit("skillcheck", {"station": station, "count": count, "speed": c["speed"], "zone": c["zone"],
+		"title": "Test — " + DB.station(station)["name"], "on_done": func(qs: Array): got.append_array(qs)})
+	await wait(0.3)
+	var mg := _minigame()
+	if mg == null:
+		note("  no minigame opened at %s" % station)
+		return []
+	await play_minigame(good, ("minigame_%s_%s" % [Minigames.type_for({"station": station}), station]) if good else "")
+	await wait(0.3)
+	return got
+
+
+func phase_minigames() -> void:
+	await click("New Game")
+	await wait(2.0)
+	await use("station", "bellows")
+	await close_panel()
+	for st in ["bellows", "grinding_wheel", "embroidery_frame", "rune_engraving_stand", "cauldron", "alembic"]:
+		var good := await run_minigame(st, true)
+		var poor := await run_minigame(st, false)
+		var g := 0.0 if good.is_empty() else float(good[0])
+		var p := 0.0 if poor.is_empty() else float(poor[0])
+		expect(not good.is_empty() and not poor.is_empty() and g > p, "%s (%s): skilful play %.0f%% beats careless play %.0f%%" % [st, Minigames.type_for({"station": st}), g, p])
+	# the default ring is kept where no specialised check is defined
+	expect(Minigames.type_for({"station": "anvil"}) == "ring", "anvil keeps the circular precision ring")
