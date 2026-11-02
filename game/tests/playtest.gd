@@ -459,3 +459,31 @@ func phase_diag() -> void:
 	var menu: Control = main.get("menu")
 	note("menu size %s anchors %s %s %s %s" % [menu.size, menu.anchor_left, menu.anchor_top, menu.anchor_right, menu.anchor_bottom])
 	await shot("diag_menu")
+
+
+func phase_stations() -> void:
+	await click("New Game")
+	await wait(2.5)
+	for sid in DB.stations:
+		await press("cancel")
+		await use("station", sid)
+		var ok: bool = panel() is StationPanel and (panel() as StationPanel).station_id == sid
+		var focus: Dictionary = W()._focus
+		expect(ok, "station %s (focus %s/%s, panel %s)" % [sid, focus.get("kind", "-"), focus.get("id", "-"), panel().get_class() if panel() else "none"])
+
+
+func phase_panels() -> void:
+	await click("New Game")
+	await wait(2.5)
+	var vs := get_viewport().get_visible_rect().size
+	for a in ["inventory", "panel_hirelings", "panel_skills", "panel_adventurers", "panel_orders", "panel_ledger"]:
+		await press(a)
+		await wait(0.8)
+		var p := panel()
+		expect(p != null, "panel opens: " + a)
+		if p:
+			var r := p.get_global_rect()
+			expect(r.position.y >= -1 and r.end.y <= vs.y + 1 and r.position.x >= -1 and r.end.x <= vs.x + 1, "panel %s fits the screen %s" % [a, r])
+			await shot("panel_" + a)
+		await press("cancel")
+		await wait(0.3)

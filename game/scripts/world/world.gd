@@ -301,6 +301,9 @@ func _draw_walls(segs: Array, tex: String) -> void:
 
 func _build_building(b: Dictionary, is_area: bool) -> void:
 	var r := brect(b)
+	if is_area:
+		# interior areas live outside the village map: frame them with dim roof timbers, not a void
+		_tex_poly(_rect_pts(r.grow(900)), "wall_timber", ground_layer, Color(0.32, 0.26, 0.22))
 	_tex_poly(_rect_pts(r), b.get("floor", "floor_wood"), floor_layer)
 	var wall_tex := "wall_timber" if b.get("roof", "") == "thatch" else "wall_stone"
 	_draw_walls(_wall_segments(r, b.get("doors", [])), wall_tex)

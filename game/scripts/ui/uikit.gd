@@ -15,7 +15,9 @@ static func label(text: String, size := 22, font := "body", color := INK) -> Lab
 	l.add_theme_font_override("font", Assets.font(font))
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Only long text wraps: a wrapping Label in a grid/row cell with no width collapses to one
+	# character per line. Short labels keep their natural width.
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if text.length() > 48 else TextServer.AUTOWRAP_OFF
 	return l
 
 
