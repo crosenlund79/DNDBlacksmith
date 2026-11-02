@@ -346,3 +346,14 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
   - digital and physical dice
   - results for the iron sword, steel sword, armour, runestone, alchemy, leather and a legendary
 - **Persistence:** the same legendary reopened from the stores after a restart
+
+## Iteration 2 screenshots
+
+`docs/screenshots/iteration2/` holds 25 screenshots captured by the rendered play-test (phases `minigames`, `iter2`, `iter2_reload` and `craft`). They show:
+
+- each of the five specialised minigames, and the same minigames inside real crafts
+- the hirelings ledger before and after expeditions, and after a reload
+- the notice board, including replacing an employee when all places are taken
+- the four-seat waiting area, asking a customer to leave, and the freed seat
+- the crafting display
+- tabletop figures, cats and dogs, flowers in the breeze, and the darker forge corner
