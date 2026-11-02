@@ -57,6 +57,24 @@
   ]
  },
  {
+  "id": "sword_bastard",
+  "name": "Steel Bastard Sword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 260,
+  "stats": {
+   "attack": [
+    16,
+    22
+   ],
+   "durability": 120
+  },
+  "icon": "sword_steel",
+  "stack": false,
+  "desc": "A hand-and-a-half blade. A master's work.",
+  "tags": []
+ },
+ {
   "id": "axe_hand",
   "name": "Hand Axe",
   "type": "weapon",

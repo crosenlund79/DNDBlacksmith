@@ -123,16 +123,9 @@ static func apply_rarity(it: Dictionary, rarity: String) -> void:
 		it["name"] = ("%s %s" % [prefix, base_name]).strip_edges() if prefix != "" else ("%s %s" % [base_name, suffix]).strip_edges()
 
 
-## Rarity from craftsmanship and the fortune die (d100). Bonus from runestones/arcane metal.
+## Rarity from craftsmanship and the fortune die (d100). Formula and thresholds: data/crafting.json.
 static func rarity_from(quality: float, fortune: int, bonus := 0.0) -> String:
-	var score := quality * 0.65 + fortune * 0.45 + bonus
-	if score >= 100.0:
-		return "legendary"
-	if score >= 82.0:
-		return "rare"
-	if score >= 60.0:
-		return "magic"
-	return "common"
+	return str(Crafting.rarity_eval(quality, fortune, bonus)["rarity"])
 
 
 static func stat(it: Dictionary, key: String) -> int:
@@ -212,6 +205,10 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append("Craftsmanship  [color=%s]%d%%[/color]" % [qc, int(round(q))])
 	if it.has("dice_log"):
 		lines.append("[color=#a89a80][i]Dice: %s[/i][/color]" % it["dice_log"])
+	if it.has("craft"):
+		var cr: Dictionary = it["craft"]
+		lines.append("[color=#a89a80][i]%s · %d operations · %s dice%s[/i][/color]" % [cr.get("material", ""), cr.get("ops", []).size(),
+			cr.get("dice_mode", "digital"), " · Masterwork" if cr.get("masterwork", false) else ""])
 	if it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])
 	var desc: String = def(it).get("desc", "")

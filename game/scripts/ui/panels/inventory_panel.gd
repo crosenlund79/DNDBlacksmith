@@ -88,6 +88,8 @@ func _detail() -> void:
 	p.add_theme_stylebox_override("panel", Assets.panel_style("dark"))
 	p.add_child(UIKit.rich(Items.tooltip(it), 20, true))
 	detail.add_child(p)
+	if it.has("craft"):
+		detail.add_child(UIKit.button("Read the record of the work", func(): Events.open_panel.emit("craft_result", {"item": it, "fresh": false}), 0))
 	if Items.is_equipment(it):
 		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])); selected = {}, 0))
 		var sale: bool = it.get("for_sale", false)

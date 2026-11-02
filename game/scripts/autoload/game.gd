@@ -51,9 +51,9 @@ func new_game() -> void:
 		"objectives": {},
 		"stats": {"crafted": 0, "sold": 0, "legendaries": 0},
 	}
-	# starting materials — enough for a first sword and some ingots
-	for pair in [["ore_iron", 6], ["coal", 6], ["ingot_iron", 2], ["leather_cured", 2], ["leather_hide", 2],
-			["thread_linen", 2], ["ore_silver", 2], ["herb_emberleaf", 2], ["herb_moonwort", 2], ["reagent_salt", 1], ["runestone_blank", 1]]:
+	# starting materials — enough to try every open discipline once or twice
+	for pair in [["ore_iron", 8], ["coal", 10], ["ingot_iron", 6], ["ingot_steel", 2], ["leather_cured", 5], ["leather_hide", 4],
+			["thread_linen", 4], ["ore_silver", 2], ["herb_emberleaf", 4], ["herb_moonwort", 4], ["reagent_salt", 3], ["runestone_blank", 2]]:
 		add_item(Items.make(pair[0], {"qty": pair[1]}), false)
 	var starter := Items.make("dagger", {"quality": 74.0})
 	starter["for_sale"] = true
@@ -169,8 +169,10 @@ func add_item(item: Dictionary, notify := true) -> void:
 		return
 	var inv := inventory()
 	if DB.item(item["def"]).get("stack", false):
+		# batches of different rarity (a flawless potion, an exquisite runestone) keep their own stack
+		var plain: bool = DB.item(item["def"]).get("type", "") == "material" or not item.has("craft")
 		for it in inv:
-			if it["def"] == item["def"]:
+			if plain and it["def"] == item["def"] and it.get("rarity", "common") == item.get("rarity", "common"):
 				it["qty"] = int(it.get("qty", 1)) + int(item.get("qty", 1))
 				if item["def"] == "ore_mithril":
 					set_flag("found_mithril")

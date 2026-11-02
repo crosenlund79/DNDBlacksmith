@@ -3,14 +3,14 @@
   "id": "alchemy_kit",
   "name": "Alchemist's Kit",
   "cost": 120,
-  "desc": "Glassware, mortar and cauldron. Unlocks the Alchemy stations.",
+  "desc": "Fine glassware and a copper still. Wider precision zones at all Alchemy stations.",
   "requires": {}
  },
  {
   "id": "runewright_tools",
   "name": "Runewright's Tools",
   "cost": 160,
-  "desc": "Chisels, basin and pedestal. Unlocks the Runecrafting stations.",
+  "desc": "Dwarf-made chisels and a tuning fork. Wider precision zones at all Runecrafting stations.",
   "requires": {}
  },
  {

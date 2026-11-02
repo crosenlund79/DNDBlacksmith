@@ -1,11 +1,6 @@
 # Ember & Ash — gameplay systems in the first build
 
-> **Build status:** all systems are implemented in code and data. This build has **not yet been run inside the Godot engine**, because the build environment could not download or execute a Godot binary. The checks so far are:
->
-> - static: GDScript syntax checks, a Godot 4.3 API/type review, and data cross-checks
-> - the baseline test scene (`tests/test_runner.tscn`), which is ready to run
->
-> Expect a short round of engine-side fixes on first launch. See the final report for details.
+> **Build status:** runs in Godot 4.3. It is covered by headless unit tests (`tests/test_runner.tscn`) and by rendered play-test phases (`tests/playtest.tscn`) that play the real game with synthetic input.
 
 ## The village of Brindlewick
 
@@ -17,11 +12,27 @@ The village is about 96 × 64 tiles of 64 px each. It is built from modular spri
 
 | Place | What you can do |
 |---|---|
-| **Ironhand Forge** | The workshop: 25 specialist stations plus the anvil, in five working bays. Shop counter and display. Living quarters with your bed. Bags from expeditions land on the floor here. |
-| **The Tipsy Wyvern** | The inn, right across the road from the forge. Bar, hearth, tables, adventurers and Hilde. Stairs lead up to the guest rooms and the **Velvet Lantern**, where adult companions offer conversation, rumours and a discreet fade-to-black evening. |
-| **Pell's Provisions** | Aldric the grocer's shop. |
+| **Ironhand Forge** | A compact building of 13 rooms (see below). |
+| **The Tipsy Wyvern** | Downstairs: common room with bar, hearth and tables; kitchen; Hilde's room. Upstairs, by the stairs: a landing, four guest rooms and the **Velvet Lantern** parlour with two private rooms, where adult companions offer conversation, rumours and a discreet fade-to-black evening. |
+| **Pell's Provisions** | Aldric's shop, storeroom and living quarters. |
 | **Village square** | Notice board (applicants, commissions, news), well and market stall. |
-| **Other buildings** | Martha's cottage, Tobin's workshop, the Chapel of the Dawn, Jory's farm, Eda's and Cooper's Row houses. |
+| **Other buildings** | Martha's cottage, Tobin's workshop, Jory's farm, and Eda's and Cooper's Row houses: each has a main room and a bedroom. The Chapel of the Dawn has a nave and a vestry. |
+
+### Inside the Ironhand Forge
+
+Rooms connect through doorways and short halls; there are no long empty corridors. Each discipline has its own floor, walls, clutter and light.
+
+| Room | Contents |
+|---|---|
+| **Shopfront** | Counter, displays and the street entrance. Customers stay here. |
+| **Stock hall** | The hub between the shop, the workshops and the private wing. |
+| **Smithing Hall** | Forge, bellows, anvil, crucible, quenching trough and grinding wheel. Soot floor, tool wall and bar stock. |
+| **Rune Room** | Five runecraft stations on slate, rune shelves and faint sigils. |
+| **Alchemy Room** | Five alchemy stations, herb racks, bottle shelves and spill stains. |
+| **Leather & Stitching** | Five stitching stations, hide racks, pattern board and thread. |
+| **Material store** | Ore, coal and crates. |
+| **Arcane Foundry** | Five arcane stations on violet stone. Locked until the Arcane Foundry upgrade, but you can walk in and inspect every station. |
+| **Private quarters** | Living/dining room, a study whose desk ledger opens the books, a bedroom, a storeroom and a pantry. Customers never come back here. |
 
 **Day and night:**
 
@@ -30,58 +41,91 @@ The village is about 96 × 64 tiles of 64 px each. It is built from modular spri
 - Lanterns, doors and windows light up at night; hearths and forges flicker.
 - The music and ambience follow where you are and the time of day.
 
-## Crafting: the 25 stations
+## Crafting: operations at physical stations
 
-Each station has its own sprite, interface panel, purpose text, unlock rule and check parameters (count, speed, zone width, weight). All parameters are data-driven in `data/stations.json`.
+**Recipes are sequences of named operations, and each happens at a real station.** You walk from station to station, and a marker floats over the next one.
 
-| Discipline | Stations | Unlock |
+| Recipe | Operations | Stations |
 |---|---|---|
-| Classic Smithing | Forge, Crucible, Quenching Trough, Bellows, Grinding Wheel (+ Anvil) | Available from the start |
-| Runecrafting | Cutting Bench, Engraving Stand, Cleansing Basin, Resonance Pedestal, Polishing Wheel | Runewright's Tools upgrade |
-| Alchemy | Mortar & Pestle, Alembic, Cauldron, Reagent Table, Infusion Rack | Alchemist's Kit upgrade |
-| Arcane Metalworking | Arcane Crucible, Spellbinding Array, Leyline Conductor, Aetheric Stabilizer, Imprinting Anvil | Arcane Foundry: Runecraft 3, mithril found, 600 g |
-| Enchanted Stitching | Stitching Table and Leather Vat (basic leather); Thread Spinner, Embroidery Frame and Fitting Mannequin (enchanted) | Basic from the start; Enchanted Stitching 3 for the enchanted stations |
+| Leather belt | 1 | Stitching table |
+| Iron longsword | 4 | Heat the billet (forge), draw out the blade (anvil), quench the edge, grind and sharpen |
+| Steel longsword | 7 | Adds holding the heat at the bellows, normalising in the coals and wrapping the grip at the stitching table |
+| Iron cuirass | 6 | Heat the plates, dish the breastplate, re-heat, planish and roll the edges, temper, rivet the leather straps |
+| Ember runestone | 5 | Cleave, engrave, wash, tune, polish |
+| Healing draught | 3 | Bruise, simmer, steep |
 
-**How a recipe works:**
+**What a recipe defines:**
 
-1. Choose a recipe at any station it uses. The ingredients are consumed.
-2. Visit the stations in order. Each step runs the **circular skill check**.
-3. Roll the dice.
-4. The item is revealed.
+- materials (inputs)
+- the operation sequence and stations
+- the number of checks per operation and their weight
+- the required skills
+- the difficulty and the material (iron, steel, silver, charged mithril, leather, ethereal thread…)
+- the dice that decide its attributes
 
-There are 23 demonstration recipes across all five disciplines, including:
+There are 24 recipes. They are data-driven in `tools/data/make_recipes.py`.
 
-- ingots and steel
-- sword, axe, mace, cuirass, helm and shield
-- a silver band (the proposal ring)
-- leather goods and warded gloves
-- oils, potions and coatings
-- runestones
-- charged mithril and the **Mithril Runeblade**, whose arcane markings are part of the metal itself
+**Which disciplines are open:**
+
+| Discipline | Status |
+|---|---|
+| Smithing | Open from the start |
+| Runecrafting | Open from the start. Runewright's Tools widen its precision zones. |
+| Alchemy | Open from the start. The Alchemist's Kit widens its precision zones. |
+| Leatherwork | Open from the start. Enchanted stitching needs Enchanted Stitching 3. |
+| Arcane Metalworking | Gated by the Arcane Foundry upgrade (Runecraft 3, mithril found, 600 g) |
+
+**Beginner vs expert:**
+
+- Each recipe's difficulty (plus its material's) is weighed against your skill. Above your level the zone narrows and the needle speeds up; below it, it widens and slows.
+- Some recipes need a minimum level. For example, the Steel Bastard Sword needs Smithing 8.
+- Experts earn less experience from routine work.
+- Hirelings use the same skill framework.
 
 **Socketing:** at the Rune Engraving Stand you can set finished runestones into existing equipment. This is distinct from arcane metal.
 
-## Skill check
+## Precision checks
 
 - A needle sweeps the ring. You stop it with E, Space or a click.
-- The score depends on how close to the zone's centre you stop it:
-  - perfect centre: 114–120%
-  - zone edge: about 70%
-  - misses fall towards 10%
-- Several checks per station feed a weighted mean. A poor check lowers quality; it never destroys the item.
-- Skill widens the zone and slows the needle.
-- Every check has visual and audio feedback.
+- Quality is continuous: the closer to the zone's centre, the better. The centre gives 120%, the edge 70%, and misses fall towards 10%.
+- Every check shows a grade and a coloured pip, plays a sound and triggers an effect at the station:
+  - sparks at the anvil and grinding wheel
+  - steam at the quench
+  - bubbles at the cauldron
+  - rune light
+  - arcane flashes
+- Each operation's checks are averaged. Operations are weighted, so drawing out the blade matters more than wrapping the grip.
+- The final craftsmanship can exceed 100%.
 
 ## Dice
 
 - **Digital:** animated rolls.
-- **Physical:** you roll real dice and enter the faces; values are validated.
-- Typical dice:
-  - Weapons: edge d20, temper d12, fortune d100
-  - Armour: guard d20, temper d12, fortune d100
-  - Materials: purity d6
-- Craftsmanship dominates the stats; the main die shifts them ±15%.
-- Rarity comes from quality × 0.65 + fortune × 0.45 (+ runestone/arcane bonuses). Excellent work survives a bad roll; perfect work plus a great roll gives a legendary.
+- **Physical:** roll real dice and enter the faces; values are validated.
+- Before rolling, the dice panel tells you the worst and best rarity your craftsmanship allows.
+
+**Dice by item type:**
+
+| Item type | Dice |
+|---|---|
+| Weapons | edge d20, temper d12, fortune d100 |
+| Armour | guard d20, temper d12, fortune d100 |
+| Potions | potency d8, fortune d100 |
+| Runestones | resonance d10, fortune d100 |
+| Arcane blades | add spellweave d12 |
+| Materials | purity d6 (a 6 adds a unit) |
+
+- Stats = definition × craftsmanship × material × dice × skill. Craftsmanship dominates; dice move a stat by about ±15%.
+
+**The results panel** shows:
+
+- the item, its stats and rarity
+- every operation with its score bar
+- the final craftsmanship
+- each die rolled
+- a rarity bar with how the score was built
+- the experience gained
+
+The record is saved on the item. Reopen it from the stores with **Read the record of the work**.
 
 ## Items, rarity and legendaries
 
@@ -99,6 +143,12 @@ There are 23 demonstration recipes across all five disciplines, including:
 | Set | green |
 
 The colours apply to item names, slot borders and tooltips.
+
+**Rarity from crafting:** score = craftsmanship × 0.75 + fortune × 0.35 + material and runestone bonuses.
+
+- A **masterwork** (craftsmanship of 115% or more) adds 26.
+- With the default thresholds (magic 68, rare 88, legendary 112), exceptional work becomes legendary even with a poor fortune roll. Sloppy work cannot reach legendary even with a perfect roll.
+- All of these numbers live in `data/crafting.json`.
 
 **Legendary discovery** is the same everywhere (crafting, loot bags, gifts):
 
@@ -226,7 +276,8 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 ## Simplified in this first build
 
 - Balance is provisional: prices, XP curves, danger maths and drop rates.
-- All 25 stations share one universal check. Station-specific minigames are planned.
+- All stations share one precision-check mechanic. They differ in their operations, difficulty, sound and visual feedback, but there are no station-specific minigames yet.
+- Hirelings use the same skill framework, but they do not yet craft at stations themselves.
 - The shop counter is the main sales interface. Customers don't physically take items from the shelves.
 - Expedition combat is a statistical simulation; there is no tactical combat.
 - Romance is a small working example; there is no marriage ceremony scene beyond a fade.

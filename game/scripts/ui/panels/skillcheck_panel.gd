@@ -50,10 +50,11 @@ func _next() -> void:
 
 func _process(delta: float) -> void:
 	if running:
-		var d := speed * 360.0 * delta
+		# clamp the step so a frame hitch can never jump the needle past the zone
+		var d := speed * 360.0 * minf(delta, 0.05)
 		angle += d
 		swept += d
-		if swept > 360.0 * 1.25:
+		if swept > 360.0 * 2.0:
 			_resolve(true)
 	if feedback_t > 0.0:
 		feedback_t -= delta
@@ -91,6 +92,7 @@ func _resolve(missed: bool) -> void:
 	else:
 		Audio.play("sfx/check_poor")
 	var station := str(args.get("station", ""))
+	Events.station_worked.emit(station, q)
 	var sfx := str(DB.station(station).get("sfx", ""))
 	if sfx.begins_with("hammer"):
 		Audio.play("sfx/hammer_%d" % randi_range(1, 3) if sfx == "hammer" else "sfx/hammer_arcane", -3.0)
@@ -109,7 +111,9 @@ func _resolve(missed: bool) -> void:
 
 func _draw() -> void:
 	var vs := size
-	draw_rect(Rect2(Vector2.ZERO, vs), Color(0.04, 0.025, 0.015, 0.72))
+	# lighter veil, so the station and its sparks/steam stay visible behind the ring
+	draw_rect(Rect2(Vector2.ZERO, vs), Color(0.04, 0.025, 0.015, 0.42))
+	draw_circle(vs * 0.5, 300.0, Color(0.04, 0.025, 0.015, 0.45))
 	var c := vs * 0.5
 	var R := 170.0
 	if Assets.has_tex("ui/skillcheck_ring"):
@@ -120,7 +124,7 @@ func _draw() -> void:
 	var half := deg_to_rad(zone * 0.5)
 	var zc := deg_to_rad(zone_center)
 	draw_arc(c, R, zc - half, zc + half, 32, Color("#e6702a"), 22.0)
-	draw_arc(c, R, zc - half * 0.12, zc + half * 0.12, 8, Color("#ffd27a"), 26.0)
+	draw_arc(c, R, zc - half * 0.2, zc + half * 0.2, 8, Color("#ffd27a"), 26.0)
 	for i in 24:
 		var a := TAU * i / 24.0
 		draw_line(c + Vector2(cos(a), sin(a)) * (R - 22), c + Vector2(cos(a), sin(a)) * (R - 12), Color(0.94, 0.89, 0.8, 0.5), 2.0)
@@ -133,7 +137,17 @@ func _draw() -> void:
 	draw_circle(c, 9.0, Color("#b8923e"))
 	var f := Assets.font("title")
 	var fb := Assets.font("heading")
-	draw_string(f, Vector2(0, c.y - R - 70), str(args.get("title", "")), HORIZONTAL_ALIGNMENT_CENTER, vs.x, 42, Color("#efe4cc"))
+	draw_string(f, Vector2(0, c.y - R - 92), str(args.get("title", "")), HORIZONTAL_ALIGNMENT_CENTER, vs.x, 42, Color("#efe4cc"))
+	if args.has("subtitle"):
+		draw_string(fb, Vector2(0, c.y - R - 56), str(args["subtitle"]), HORIZONTAL_ALIGNMENT_CENTER, vs.x, 24, Color("#c8b898"))
+	# per-check results so far, as small coloured pips
+	for i in count:
+		var px := c.x + (i - (count - 1) * 0.5) * 34.0
+		var col := Color(0.94, 0.89, 0.8, 0.25)
+		if i < results.size():
+			var rq := float(results[i])
+			col = Color("#ffa050") if rq >= 114 else (Color("#f0d060") if rq >= 90 else (Color("#efe4cc") if rq >= 75 else Color("#ff9a80")))
+		draw_circle(Vector2(px, c.y + R + 150), 11.0, col)
 	draw_string(fb, Vector2(0, c.y + R + 70), "Check %d of %d — press %s when the needle crosses the ember" % [mini(results.size() + 1, count), count, Settings.key_label("interact")], HORIZONTAL_ALIGNMENT_CENTER, vs.x, 26, Color("#c8b898"))
 	if feedback_t > 0.0:
 		draw_string(f, Vector2(0, c.y + 14), feedback, HORIZONTAL_ALIGNMENT_CENTER, vs.x, 44, Color(feedback_col, clampf(feedback_t * 1.5, 0.0, 1.0)))

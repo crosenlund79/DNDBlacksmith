@@ -286,6 +286,8 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 			open(DicePanel.new())
 		"reveal":
 			open(RevealPanel.new(args["item"]))
+		"craft_result":
+			open(CraftResultPanel.new(args["item"], bool(args.get("fresh", true))))
 		"loot":
 			open(LootPanel.new(int(args["uid"])))
 		"inventory":

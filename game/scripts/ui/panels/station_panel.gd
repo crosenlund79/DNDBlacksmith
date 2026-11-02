@@ -31,7 +31,7 @@ func _build() -> void:
 	info.add_child(UIKit.label(Crafting.DISCIPLINE_NAME.get(st.get("discipline", ""), ""), 22, "heading_italic", UIKit.RUBRIC))
 	info.add_child(UIKit.label(st.get("purpose", ""), 22))
 	var c := Crafting.check_params(station_id)
-	info.add_child(UIKit.label("Skill check: %d × ring, zone %d°, speed %.2f rev/s (eased by %s %d)" % [c["count"], int(c["zone"]), c["speed"],
+	info.add_child(UIKit.label("Precision ring at average difficulty: zone %d°, needle %.2f rev/s (your %s %d widens and slows it)" % [int(c["zone"]), c["speed"],
 		SkillSys.skill_name(Crafting.skill_for_station(station_id)), Game.player_level(Crafting.skill_for_station(station_id))], 18, "body_italic"))
 	var why := Crafting.station_locked_reason(station_id)
 	if why != "":
@@ -43,23 +43,29 @@ func _build() -> void:
 	var job := Crafting.job()
 	if not job.is_empty():
 		var r := DB.recipe(job["recipe"])
-		var steps: Array = r["steps"]
-		var chain := []
-		for i in steps.size():
-			var nm: String = DB.station(steps[i])["name"]
+		var ops := Crafting.operations(job["recipe"])
+		body.add_child(UIKit.rich("[b]Current work:[/b] %s  [i](%s, %s)[/i]" % [r["name"], Crafting.material(job["recipe"]).get("name", ""), Crafting.difficulty_word(job["recipe"])], 22))
+		var done: Array = job.get("ops", [])
+		var lines := []
+		for i in ops.size():
+			var o: Dictionary = ops[i]
+			var nm := "%d. %s — %s (%d check%s)" % [i + 1, o["op"], DB.station(o["station"]).get("name", o["station"]), int(o.get("checks", 1)), "s" if int(o.get("checks", 1)) > 1 else ""]
 			if i < int(job["step"]):
-				chain.append("[s]%s[/s]" % nm)
+				var q := float(done[i]["q"]) if i < done.size() else 0.0
+				lines.append("[color=#5e421c][s]%s[/s]  [b]%d%%[/b][/color]" % [nm, int(round(q))])
 			elif i == int(job["step"]) and not job["awaiting_dice"]:
-				chain.append("[b][color=#7e2418]%s[/color][/b]" % nm)
+				lines.append("[b][color=#7e2418]▶ %s[/color][/b]" % nm)
 			else:
-				chain.append(nm)
-		body.add_child(UIKit.rich("[b]Current work:[/b] %s\n%s%s" % [r["name"], " → ".join(chain), "  → [b]Dice[/b]" if job["awaiting_dice"] else ""], 22))
+				lines.append(nm)
+		lines.append(("[b][color=#7e2418]▶ Roll the dice[/color][/b]" if job["awaiting_dice"] else "Then: roll the dice"))
+		body.add_child(UIKit.rich("\n".join(lines), 20))
 		if job["awaiting_dice"]:
 			body.add_child(UIKit.button("Roll the dice and finish the piece", func(): Events.open_panel.emit("dice", {}), 420))
 		elif Crafting.current_station() == station_id:
-			body.add_child(UIKit.button("Begin work here (%d check%s)" % [c["count"], "s" if c["count"] > 1 else ""], _work, 420))
+			var op := Crafting.op_params()
+			body.add_child(UIKit.button("%s (%d check%s)" % [op["op"], op["count"], "s" if op["count"] > 1 else ""], _work, 520))
 		else:
-			body.add_child(UIKit.label("Next step is at the %s." % DB.station(Crafting.current_station())["name"], 22, "body_italic"))
+			body.add_child(UIKit.label("Next: %s at the %s." % [Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], 22, "body_italic"))
 		body.add_child(UIKit.button("Abandon work (return materials)", func(): Crafting.cancel(), 340))
 	else:
 		body.add_child(UIKit.label("Recipes using this station", 26, "heading"))
@@ -85,10 +91,15 @@ func _recipe_row(rec: Dictionary) -> Control:
 		var have := Game.count(id)
 		ins.append("[color=%s]%s %d/%d[/color]" % ["#26622f" if have >= need else "#9e3a0c", DB.item(id).get("name", id), have, need])
 	var steps := []
-	for s in rec["steps"]:
-		steps.append(DB.station(s)["name"])
+	for o in Crafting.operations(rec["id"]):
+		steps.append(str(o["op"]))
 	var lock := Crafting.recipe_locked_reason(rec["id"])
-	v.add_child(UIKit.rich("[b]%s[/b]  [i]%s[/i]\n%s\n[color=#5e421c]%s[/color]%s" % [rec["name"], rec.get("desc", ""), ", ".join(ins), " → ".join(steps),
+	var req := []
+	for sk in rec.get("requires", {}):
+		req.append("%s %d" % [SkillSys.skill_name(sk), int(rec["requires"][sk])])
+	var meta := "[color=#5e421c]%d operations · %s · difficulty %d (%s)%s[/color]" % [steps.size(), Crafting.material(rec["id"]).get("name", ""),
+		Crafting.difficulty(rec["id"]), Crafting.difficulty_word(rec["id"]), (" · needs " + ", ".join(req)) if not req.is_empty() else ""]
+	v.add_child(UIKit.rich("[b]%s[/b]  [i]%s[/i]\n%s\n%s\n[color=#5e421c][i]%s[/i][/color]%s" % [rec["name"], rec.get("desc", ""), ", ".join(ins), meta, " → ".join(steps),
 		("\n[color=#9e3a0c]" + lock + "[/color]") if lock != "" else ""], 19))
 	row.add_child(v)
 	var b := UIKit.button("Begin", func(): _start(rec["id"]), 120)
@@ -99,16 +110,19 @@ func _recipe_row(rec: Dictionary) -> Control:
 
 func _start(rid: String) -> void:
 	if Crafting.start(rid):
-		Events.toast.emit("Begun: %s. First step: %s." % [DB.recipe(rid)["name"], DB.station(Crafting.current_station())["name"]], "info")
+		Events.toast.emit("Begun: %s. First: %s at the %s." % [DB.recipe(rid)["name"], Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], "info")
 		if Crafting.current_station() == station_id:
 			_work()
 
 
 func _work() -> void:
-	var c := Crafting.check_params(station_id)
+	var c := Crafting.op_params()
+	if c.is_empty():
+		return
 	var sid := station_id
 	Events.open_panel.emit("skillcheck", {"station": sid, "count": c["count"], "speed": c["speed"], "zone": c["zone"],
-		"title": DB.station(sid)["name"], "on_done": _on_work_done.bind(sid)})
+		"title": c["op"], "subtitle": "%s · %s" % [DB.station(sid)["name"], DB.recipe(Crafting.job()["recipe"]).get("name", "")],
+		"on_done": _on_work_done.bind(sid)})
 	Audio.play("sfx/" + str(DB.station(sid).get("sfx", "hammer")).replace("hammer", "hammer_1"), -2.0)
 
 
@@ -117,7 +131,12 @@ func _on_work_done(qs: Array, sid: String) -> void:
 	if Crafting.job().get("awaiting_dice", false):
 		Events.open_panel.emit("dice", {})
 	else:
-		Events.toast.emit("Step done. Next: %s." % DB.station(Crafting.current_station()).get("name", "?"), "info")
+		var avg := 0.0
+		for q in qs:
+			avg += float(q)
+		avg /= maxf(1.0, qs.size())
+		Events.toast.emit("%s — %d%%. Next: %s at the %s." % [Crafting.grade(avg), int(round(avg)), Crafting.current_op().get("op", "?"),
+			DB.station(Crafting.current_station()).get("name", "?")], "good" if avg >= 90.0 else "info")
 
 
 func _practice() -> void:

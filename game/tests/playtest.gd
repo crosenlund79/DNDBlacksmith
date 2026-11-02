@@ -159,10 +159,15 @@ func talk_to(npc: String) -> bool:
 
 
 ## Plays the circular skill checks that are currently open, aiming for the zone centre.
-func play_checks(aim := true) -> int:
+## Plays every open precision check. aim=false deliberately misses; frac aims that far from the
+## centre (as a fraction of the half-zone), so demos can produce good, great or perfect work.
+var check_log: Array = []
+
+
+func play_checks(aim := true, frac := 0.0) -> int:
 	var n := 0
 	var guard := 0.0
-	while guard < 30.0:
+	while guard < 60.0:
 		var sc: SkillCheckPanel = null
 		for c in U().panel_host.get_children():
 			if c is SkillCheckPanel and not c.is_queued_for_deletion():
@@ -170,16 +175,25 @@ func play_checks(aim := true) -> int:
 		if sc == null:
 			break
 		if sc.running:
-			var off := fposmod(sc.zone_center - sc.angle, 360.0)
-			var step := sc.speed * 360.0 * get_process_delta_time() * 1.5
-			if (aim and off < step) or (not aim and off > 300.0):
+			var off := fposmod(sc.zone_center - sc.angle, 360.0) - frac * sc.zone * 0.5
+			var step := sc.speed * 360.0 * minf(get_process_delta_time(), 0.05)
+			if (aim and off >= 0.0 and off < step * 1.5) or (not aim and off > 300.0):
 				await press("interact")
 				n += 1
+				if not sc.results.is_empty():
+					check_log.append(float(sc.results[-1]))
 				continue
 		await get_tree().process_frame
 		guard += get_process_delta_time()
 	await wait(0.5)
 	return n
+
+
+func _checks_open() -> bool:
+	for c in U().panel_host.get_children():
+		if c is SkillCheckPanel and not c.is_queued_for_deletion():
+			return true
+	return false
 
 
 func advance_to(hour: int, minute := 0) -> void:
@@ -250,13 +264,14 @@ func phase_full() -> void:
 	await wait(0.5)
 	expect(Crafting.active(), "crafting: job started (current step %s)" % Crafting.current_station())
 	var guard := 0
-	while Crafting.active() and not Crafting.job().get("awaiting_dice", false) and guard < 8:
+	while Crafting.active() and not Crafting.job().get("awaiting_dice", false) and guard < 12:
 		guard += 1
 		var st := Crafting.current_station()
-		if panel() == null or not (panel() is StationPanel) or (panel() as StationPanel).station_id != st:
-			await press("cancel")
-			await use("station", st)
-			await click("Begin work here")
+		if not _checks_open():
+			if panel() == null or not (panel() is StationPanel) or (panel() as StationPanel).station_id != st:
+				await close_panel()
+				await use("station", st)
+			await click(str(Crafting.current_op().get("op", "")))
 		await wait(0.4)
 		if guard == 1:
 			await shot("skillcheck_" + st)
@@ -272,7 +287,7 @@ func phase_full() -> void:
 	var before := Game.inventory().size()
 	await click("Finish the piece")
 	await wait(1.0)
-	expect(panel() is RevealPanel, "reveal panel shows the finished sword")
+	expect(panel() is CraftResultPanel, "results panel shows the finished sword")
 	await shot("crafted_sword_reveal")
 	var sword := {}
 	for it in Game.inventory():
@@ -551,3 +566,176 @@ func phase_nav() -> void:
 		if not W().spot_ids.has(name):
 			missing.append(name)
 	expect(missing.is_empty(), "nav: schedule spots exist %s" % [missing])
+
+
+# ======================================================================= crafting demonstrations
+var shot_stations := {}
+
+
+## Crafts one recipe entirely through the UI: walk to each station, run its operation's checks,
+## roll (digital) or enter (physical) the dice, and return the item from the results panel.
+func craft_ui(rid: String, frac: float, dice_mode: String, phys := {}, tag := "") -> Dictionary:
+	var r := DB.recipe(rid)
+	var ops := Crafting.operations(rid)
+	await close_panel()
+	await use("station", str(ops[0]["station"]))
+	if not (panel() is StationPanel):
+		expect(false, "%s: station panel at %s" % [rid, ops[0]["station"]])
+		return {}
+	var row_btn: Button = null
+	for b in _buttons(panel()):
+		if b.text == "Begin" and _row_text(b).begins_with(str(r["name"]) + " "):
+			row_btn = b
+	if row_btn == null:
+		expect(false, "%s: Begin button available" % rid)
+		return {}
+	if tag != "":
+		await shot(tag + "_recipes")
+	row_btn.pressed.emit()
+	await wait(0.4)
+	check_log.clear()
+	var guard := 0
+	while Crafting.active() and not Crafting.job().get("awaiting_dice", false) and guard < 16:
+		guard += 1
+		var st := Crafting.current_station()
+		if not _checks_open():
+			if panel() == null or not (panel() is StationPanel) or (panel() as StationPanel).station_id != st:
+				await close_panel()
+				await use("station", st)
+			await click(str(Crafting.current_op().get("op", "")))
+		await wait(0.35)
+		if tag != "" and not shot_stations.has(st):
+			shot_stations[st] = true
+			await shot("check_" + st)
+		await play_checks(true, frac)
+	expect(Crafting.job().get("awaiting_dice", false), "%s: all %d operations performed at their stations" % [rid, ops.size()])
+	await wait(0.5)
+	if not (panel() is DicePanel):
+		expect(false, "%s: dice panel opens after the last operation" % rid)
+		return {}
+	var dp := panel() as DicePanel
+	if dice_mode == "physical":
+		if dp.mode != "physical":
+			await click("Physical dice")
+			await wait(0.3)
+		dp = panel() as DicePanel
+		for k in phys:
+			for sb in dp.inputs.get(k, []):
+				(sb as SpinBox).value = int(phys[k])
+		if tag != "":
+			await shot(tag + "_dice_physical")
+		await click("Use these rolls")
+	else:
+		if dp.mode != "auto":
+			await click("Digital dice")
+			await wait(0.3)
+		if tag != "":
+			await shot(tag + "_dice")
+		await click("Roll the dice")
+		await wait(1.8)
+		if tag != "":
+			await shot(tag + "_dice_rolled")
+		await click("Finish the piece")
+	await wait(1.4)
+	if not (panel() is CraftResultPanel):
+		expect(false, "%s: results panel shown" % rid)
+		return {}
+	var it: Dictionary = (panel() as CraftResultPanel).item
+	note("  %s → %s | q %.1f%% | %s | checks %s | dice %s" % [rid, it.get("name"), float(it.get("quality", 0)), it.get("rarity"),
+		check_log.map(func(x): return int(round(x))), it.get("dice_log", "")])
+	await wait(1.2)
+	await shot("result_" + (tag if tag != "" else rid))
+	await click("Keep it")
+	await wait(0.3)
+	return it
+
+
+func phase_craft() -> void:
+	await click("New Game")
+	await wait(2.5)
+	Settings.set_value("gameplay/dice_mode", "auto")
+	# the arcane room is locked but can be inspected
+	await use("station", "arcane_crucible")
+	expect(panel() is StationPanel and Crafting.station_locked_reason("arcane_crucible") != "", "arcane: room inspectable, station locked")
+	await shot("arcane_locked")
+	await close_panel()
+	# materials first: short recipes with one or two operations
+	var ingots := await craft_ui("smelt_iron", 0.45, "auto", {}, "smelt")
+	expect(not ingots.is_empty(), "material: iron ingots smelted (2 operations)")
+	var leather := await craft_ui("cure_leather", 0.5, "auto")
+	expect(not leather.is_empty(), "material: leather cured (1 operation)")
+	# 1. basic iron sword through several stations, digital dice
+	var sword := await craft_ui("iron_longsword", 0.35, "auto", {}, "sword")
+	expect(sword.get("def") == "sword_iron" and sword.get("craft", {}).get("ops", []).size() == 4, "1. iron longsword forged through 4 stations")
+	expect(sword.get("craft", {}).get("dice_mode") == "digital", "7a. digital dice recorded")
+	# 2. higher-quality steel weapon (7 operations), physical dice
+	var steel := await craft_ui("steel_longsword", 0.25, "physical", {"edge": 14, "temper": 9, "fortune": 41}, "steel")
+	expect(steel.get("def") == "sword_steel" and Items.stat(steel, "attack") > Items.stat(sword, "attack"), "2. steel longsword outclasses the iron one (%d vs %d attack)" % [Items.stat(steel, "attack"), Items.stat(sword, "attack")])
+	expect(steel.get("craft", {}).get("dice_mode") == "physical" and int(steel.get("craft", {}).get("dice", {}).get("edge", {}).get("total", 0)) == 14, "7b. physical dice entered and used (edge 14)")
+	# 3. armour
+	var cuirass := await craft_ui("iron_cuirass", 0.4, "auto", {}, "cuirass")
+	expect(cuirass.get("def") == "cuirass_iron" and Items.stat(cuirass, "protection") > 0, "3. iron cuirass (%d protection)" % Items.stat(cuirass, "protection"))
+	# 4. runestone
+	var rune := await craft_ui("ember_runestone", 0.35, "auto", {}, "rune")
+	expect(str(rune.get("def", "")) == "runestone_ember" and Items.stat(rune, "fire") > 0, "4. ember runestone (fire %d)" % Items.stat(rune, "fire"))
+	# 5. alchemical treatment
+	var draught := await craft_ui("healing_draught", 0.4, "auto", {}, "alchemy")
+	expect(str(draught.get("def", "")) == "potion_healing" and Items.stat(draught, "heal") > 0, "5. healing draught (heal %d)" % Items.stat(draught, "heal"))
+	# 6. leather item
+	var jerkin := await craft_ui("leather_jerkin", 0.4, "physical", {"guard": 11, "temper": 7, "fortune": 55}, "leather")
+	expect(str(jerkin.get("def", "")) == "jerkin_leather", "6. leather jerkin (%d protection)" % Items.stat(jerkin, "protection"))
+	# 8. craftsmanship above 100%
+	var best := 0.0
+	for x in [sword, steel, cuirass, rune, draught, jerkin]:
+		best = maxf(best, float(x.get("quality", 0)))
+	expect(best > 100.0, "8. craftsmanship above 100%% (best %.1f%%)" % best)
+	# 9. legendary through exceptional crafting: dead-centre checks, a mediocre fortune roll
+	Engine.time_scale = 0.3
+	var leg := await craft_ui("iron_longsword", 0.0, "physical", {"edge": 9, "temper": 6, "fortune": 18}, "legendary")
+	Engine.time_scale = 1.0
+	expect(leg.get("rarity") == "legendary" and leg.get("star", false), "9. legendary from exceptional crafting with fortune 18 (q %.1f%%, %s)" % [float(leg.get("quality", 0)), leg.get("rarity")])
+	# 10. save, then (phase craft_reload) restart, load and inspect the record
+	await close_panel()
+	await press("cancel")
+	await wait(0.4)
+	await click("Save game")
+	await wait(0.5)
+	await click("Save")
+	await wait(0.5)
+	expect(Saves.exists("slot_1"), "10a. saved to slot 1")
+	var keep := {}
+	for x in [sword, steel, cuirass, rune, draught, jerkin, leg]:
+		if not x.is_empty():
+			keep[str(x["uid"])] = {"name": x["name"], "rarity": x["rarity"], "quality": x["quality"], "stats": x["stats"], "ops": x.get("craft", {}).get("ops", []).size()}
+	var f := FileAccess.open("user://playtest/expect_craft.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify({"items": keep, "legendary": str(leg.get("uid", ""))}))
+
+
+func phase_craft_reload() -> void:
+	expect(await click("Continue"), "restart: Continue")
+	await wait(3.0)
+	var exp: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("user://playtest/expect_craft.json"))
+	var items: Dictionary = exp["items"]
+	var ok := 0
+	for uid in items:
+		var it := Game.find_uid(int(uid))
+		var e: Dictionary = items[uid]
+		if not it.is_empty() and it["name"] == e["name"] and it["rarity"] == e["rarity"] and is_equal_approx(float(it["quality"]), float(e["quality"])) \
+				and it.get("craft", {}).get("ops", []).size() == int(e["ops"]) and JSON.stringify(it["stats"]) == JSON.stringify(e["stats"]):
+			ok += 1
+		else:
+			note("  mismatch %s: %s" % [uid, it.get("name", "missing")])
+	expect(ok == items.size(), "10b. %d/%d crafted items restored with stats, rarity and record" % [ok, items.size()])
+	await press("inventory")
+	await wait(0.6)
+	var inv := panel() as InventoryPanel
+	expect(inv != null, "inventory opens after reload")
+	var leg := Game.find_uid(int(exp["legendary"]))
+	if inv and not leg.is_empty():
+		inv._select(leg)
+		await wait(0.4)
+		await shot("reload_inventory_legendary")
+		expect(await click("Read the record of the work"), "10c. record of the work can be opened")
+		await wait(1.0)
+		expect(panel() is CraftResultPanel, "10c. results panel re-opened from the saved record")
+		await shot("reload_record_legendary")

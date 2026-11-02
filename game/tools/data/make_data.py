@@ -20,16 +20,16 @@ stations = [
  st("quench_trough", "Quenching Trough", "classic", [6.6, 12.6], [128, 64], "Cools and hardens finished work. Too slow and the steel stays soft; too fast and it cracks.", C(1, 0.65, 30), sfx="quench", fx=["steam"]),
  st("bellows", "Bellows", "classic", [5.0, 8.4], [96, 96], "Feeds air to the forge to raise the heat for steel and alloys.", C(2, 0.6, 38, 0.7), sfx="bellows"),
  st("grinding_wheel", "Grinding Wheel", "classic", [7.0, 5.2], [96, 96], "Sharpens edges and finishes surfaces. Also used for repairs.", C(1, 0.7, 30), sfx="grind", fx=["sparks"]),
- st("rune_cutting_bench", "Runestone Cutting Bench", "runecraft", [2.6, 16.6], [128, 80], "Cuts raw runestone into workable blanks.", C(1, 0.5, 34), unlock={"upgrade": "runewright_tools"}, sfx="chisel"),
- st("rune_engraving_stand", "Rune Engraving Stand", "runecraft", [5.4, 16.8], [96, 96], "Engraves runes into blanks and sets finished runestones into equipment.", C(2, 0.6, 28), unlock={"upgrade": "runewright_tools"}, sfx="chisel", fx=["rune_glow"]),
- st("rune_cleansing_basin", "Runic Cleansing Basin", "runecraft", [7.6, 16.8], [96, 96], "Washes residual chaos from freshly engraved stones.", C(1, 0.45, 40), unlock={"upgrade": "runewright_tools"}, sfx="water", fx=["rune_glow"]),
- st("resonance_pedestal", "Resonance Pedestal", "runecraft", [9.8, 16.8], [96, 96], "Tunes a runestone until its hum steadies.", C(2, 0.7, 26), unlock={"upgrade": "runewright_tools"}, sfx="rune_hum", fx=["rune_glow", "light_rune"]),
- st("rune_polishing_wheel", "Runestone Polishing Wheel", "runecraft", [12.0, 16.8], [96, 96], "Polishes runestones to a mirror finish, raising their potency.", C(1, 0.6, 32), unlock={"upgrade": "runewright_tools"}, sfx="grind"),
- st("mortar_station", "Mortar & Pestle Station", "alchemy", [15.0, 17.0], [96, 80], "Grinds herbs, salts and minerals into reagents.", C(2, 0.5, 36), unlock={"upgrade": "alchemy_kit"}, sfx="grind_soft"),
- st("alembic", "Alembic", "alchemy", [17.3, 16.9], [112, 96], "Distils oils and essences.", C(1, 0.55, 32), unlock={"upgrade": "alchemy_kit"}, sfx="bubble", fx=["glow_small"]),
- st("cauldron", "Alchemical Cauldron", "alchemy", [19.7, 16.6], [112, 112], "Brews potions, coatings and tempering baths.", C(2, 0.5, 34), unlock={"upgrade": "alchemy_kit"}, sfx="bubble", fx=["bubbles", "light_green"]),
- st("reagent_table", "Reagent Separation Table", "alchemy", [22.2, 17.1], [128, 80], "Separates mixtures into pure reagents.", C(1, 0.65, 28), unlock={"upgrade": "alchemy_kit"}, sfx="glass"),
- st("infusion_rack", "Infusion Rack", "alchemy", [16.0, 13.4], [128, 64], "Steeps infusions and finishes potions.", C(1, 0.45, 40), unlock={"upgrade": "alchemy_kit"}, sfx="glass"),
+ st("rune_cutting_bench", "Runestone Cutting Bench", "runecraft", [2.6, 16.6], [128, 80], "Cuts raw runestone into workable blanks.", C(1, 0.5, 34), sfx="chisel"),
+ st("rune_engraving_stand", "Rune Engraving Stand", "runecraft", [5.4, 16.8], [96, 96], "Engraves runes into blanks and sets finished runestones into equipment.", C(2, 0.6, 28), sfx="chisel", fx=["rune_glow"]),
+ st("rune_cleansing_basin", "Runic Cleansing Basin", "runecraft", [7.6, 16.8], [96, 96], "Washes residual chaos from freshly engraved stones.", C(1, 0.45, 40), sfx="water", fx=["rune_glow"]),
+ st("resonance_pedestal", "Resonance Pedestal", "runecraft", [9.8, 16.8], [96, 96], "Tunes a runestone until its hum steadies.", C(2, 0.7, 26), sfx="rune_hum", fx=["rune_glow", "light_rune"]),
+ st("rune_polishing_wheel", "Runestone Polishing Wheel", "runecraft", [12.0, 16.8], [96, 96], "Polishes runestones to a mirror finish, raising their potency.", C(1, 0.6, 32), sfx="grind"),
+ st("mortar_station", "Mortar & Pestle Station", "alchemy", [15.0, 17.0], [96, 80], "Grinds herbs, salts and minerals into reagents.", C(2, 0.5, 36), sfx="grind_soft"),
+ st("alembic", "Alembic", "alchemy", [17.3, 16.9], [112, 96], "Distils oils and essences.", C(1, 0.55, 32), sfx="bubble", fx=["glow_small"]),
+ st("cauldron", "Alchemical Cauldron", "alchemy", [19.7, 16.6], [112, 112], "Brews potions, coatings and tempering baths.", C(2, 0.5, 34), sfx="bubble", fx=["bubbles", "light_green"]),
+ st("reagent_table", "Reagent Separation Table", "alchemy", [22.2, 17.1], [128, 80], "Separates mixtures into pure reagents.", C(1, 0.65, 28), sfx="glass"),
+ st("infusion_rack", "Infusion Rack", "alchemy", [16.0, 13.4], [128, 64], "Steeps infusions and finishes potions.", C(1, 0.45, 40), sfx="glass"),
  st("arcane_crucible", "Arcane Crucible", "arcane", [26.4, 12.4], [128, 128], "Melts mithril and adamantine while binding magic into the molten metal itself.", C(2, 0.75, 24, 1.3), unlock={"upgrade": "arcane_foundry"}, sfx="arcane", fx=["arcane_glow", "light_arcane"]),
  st("spellbinding_array", "Spellbinding Array", "arcane", [25.6, 16.2], [160, 160], "A floor circle that locks a spell pattern into cooling metal.", C(2, 0.8, 22), unlock={"upgrade": "arcane_foundry"}, sfx="arcane", fx=["arcane_glow"], solid=False),
  st("leyline_conductor", "Leyline Conductor", "arcane", [28.6, 12.6], [96, 128], "Draws power from the leyline beneath Brindlewick.", C(1, 0.7, 26), unlock={"upgrade": "arcane_foundry"}, sfx="arcane", fx=["arcane_glow", "light_arcane"]),
@@ -51,6 +51,7 @@ items = [
  it("sword_iron", "Iron Longsword", "weapon", "weapon", 60, {"attack": [8, 12], "durability": 60}, desc="A plain, honest blade."),
  it("sword_steel", "Steel Longsword", "weapon", "weapon", 140, {"attack": [12, 17], "durability": 90}),
  it("sword_mithril", "Mithril Runeblade", "weapon", "weapon", 520, {"attack": [18, 26], "durability": 140, "magic": 10}, tags=["arcane"]),
+ it("sword_bastard", "Steel Bastard Sword", "weapon", "weapon", 260, {"attack": [16, 22], "durability": 120}, icon="sword_steel", desc="A hand-and-a-half blade. A master's work."),
  it("axe_hand", "Hand Axe", "weapon", "weapon", 55, {"attack": [9, 13], "durability": 55}),
  it("mace_flanged", "Flanged Mace", "weapon", "weapon", 90, {"attack": [10, 15], "durability": 85}),
  it("dagger", "Dagger", "weapon", "weapon", 35, {"attack": [5, 8], "durability": 40}),
@@ -110,38 +111,10 @@ items = [
 W("items.json", items)
 
 # ---------------------------------------------------------------- recipes
-DW = {"edge": "1d20", "temper": "1d12", "fortune": "1d100"}
-DA = {"guard": "1d20", "temper": "1d12", "fortune": "1d100"}
-DM = {"purity": "1d6"}
-def rc(id, name, disc, steps, inputs, out, qty=1, dice=None, xp=None, unlock=None, desc=""):
-    return dict(id=id, name=name, discipline=disc, steps=steps, inputs=inputs, output=out, qty=qty,
-                dice=dice or {}, xp=xp or {}, unlock=unlock or {}, desc=desc)
-recipes = [
- rc("smelt_iron", "Smelt Iron Ingots", "classic", ["crucible", "forge"], {"ore_iron": 2, "coal": 1}, "ingot_iron", 2, DM, {"smithing": 12}),
- rc("smelt_steel", "Fold Steel Ingot", "classic", ["crucible", "bellows", "forge"], {"ingot_iron": 2, "coal": 2}, "ingot_steel", 1, DM, {"smithing": 18}),
- rc("iron_longsword", "Iron Longsword", "classic", ["forge", "anvil", "quench_trough", "grinding_wheel"], {"ingot_iron": 2, "leather_cured": 1}, "sword_iron", 1, DW, {"smithing": 30}, desc="The first sword every apprentice learns."),
- rc("steel_longsword", "Steel Longsword", "classic", ["forge", "bellows", "anvil", "quench_trough", "grinding_wheel"], {"ingot_steel": 2, "leather_cured": 1}, "sword_steel", 1, DW, {"smithing": 45}, unlock={"skill": ["smithing", 3]}),
- rc("hand_axe", "Hand Axe", "classic", ["forge", "anvil", "quench_trough"], {"ingot_iron": 1, "coal": 1}, "axe_hand", 1, DW, {"smithing": 22}),
- rc("flanged_mace", "Flanged Mace", "classic", ["forge", "anvil", "quench_trough"], {"ingot_iron": 2, "coal": 1}, "mace_flanged", 1, DW, {"smithing": 28}),
- rc("iron_cuirass", "Iron Cuirass", "classic", ["forge", "anvil", "quench_trough", "grinding_wheel"], {"ingot_iron": 3, "leather_cured": 1}, "cuirass_iron", 1, DA, {"smithing": 40}),
- rc("iron_helm", "Iron Helm", "classic", ["forge", "anvil", "grinding_wheel"], {"ingot_iron": 1, "leather_cured": 1}, "helm_iron", 1, DA, {"smithing": 20}),
- rc("round_shield", "Round Shield", "classic", ["forge", "anvil"], {"ingot_iron": 1, "leather_cured": 1}, "shield_round", 1, DA, {"smithing": 18}),
- rc("silver_band", "Silver Band", "classic", ["crucible", "anvil", "grinding_wheel"], {"ore_silver": 2}, "ring_silver", 1, {"fortune": "1d100"}, {"smithing": 20}, desc="A ring fit for a proposal."),
- rc("cure_leather", "Cure Leather", "stitching", ["leather_vat"], {"leather_hide": 2}, "leather_cured", 2, DM, {"enchanted_stitching": 10}),
- rc("leather_jerkin", "Leather Jerkin", "stitching", ["leather_vat", "stitching_table"], {"leather_cured": 3, "thread_linen": 1}, "jerkin_leather", 1, DA, {"enchanted_stitching": 28}),
- rc("leather_boots", "Leather Boots", "stitching", ["stitching_table"], {"leather_cured": 2, "thread_linen": 1}, "boots_leather", 1, DA, {"enchanted_stitching": 18}),
- rc("leather_gloves", "Leather Gloves", "stitching", ["stitching_table"], {"leather_cured": 1, "thread_linen": 1}, "gloves_leather", 1, DA, {"enchanted_stitching": 14}),
- rc("leather_belt", "Leather Belt", "stitching", ["stitching_table"], {"leather_cured": 1}, "belt_leather", 1, DA, {"enchanted_stitching": 10}),
- rc("warded_gloves", "Warded Gloves", "stitching", ["thread_spinner", "stitching_table", "embroidery_frame", "fitting_mannequin"], {"leather_cured": 2, "thread_ethereal": 1, "runestone_ward": 1}, "gloves_warded", 1, DA, {"enchanted_stitching": 60}, unlock={"skill": ["enchanted_stitching", 3]}),
- rc("whetstone_oil", "Whetstone Oil", "alchemy", ["mortar_station", "alembic"], {"herb_emberleaf": 1, "reagent_salt": 1}, "oil_whetstone", 2, DM, {"alchemy": 15}),
- rc("healing_draught", "Healing Draught", "alchemy", ["mortar_station", "cauldron", "infusion_rack"], {"herb_moonwort": 2}, "potion_healing", 2, DM, {"alchemy": 20}),
- rc("flame_coating", "Flame Coating", "alchemy", ["mortar_station", "reagent_table", "cauldron"], {"herb_emberleaf": 2, "coal": 1}, "coating_flame", 1, DM, {"alchemy": 26}),
- rc("ember_runestone", "Ember Runestone", "runecraft", ["rune_cutting_bench", "rune_engraving_stand", "rune_cleansing_basin", "resonance_pedestal", "rune_polishing_wheel"], {"runestone_blank": 1, "herb_emberleaf": 1}, "runestone_ember", 1, DM, {"runecraft": 35}),
- rc("ward_runestone", "Ward Runestone", "runecraft", ["rune_cutting_bench", "rune_engraving_stand", "rune_cleansing_basin", "resonance_pedestal"], {"runestone_blank": 1, "reagent_salt": 1}, "runestone_ward", 1, DM, {"runecraft": 30}),
- rc("charge_mithril", "Charge Mithril", "arcane", ["arcane_crucible", "leyline_conductor", "aetheric_stabilizer"], {"ore_mithril": 2, "coal": 2}, "ingot_mithril", 1, DM, {"arcane_metalwork": 40}),
- rc("mithril_runeblade", "Mithril Runeblade", "arcane", ["forge", "arcane_crucible", "spellbinding_array", "arcane_anvil", "quench_trough", "grinding_wheel"], {"ingot_mithril": 2, "leather_cured": 1}, "sword_mithril", 1, DW, {"arcane_metalwork": 80, "smithing": 30}, desc="The magic lives in the metal; the markings glow when the blade is drawn."),
-]
-W("recipes.json", recipes)
+# Recipes (operations, materials, dice) and crafting balance live in make_recipes.py.
+import make_recipes
+W("recipes.json", make_recipes.recipes)
+W("crafting.json", make_recipes.crafting)
 
 # ---------------------------------------------------------------- skills & upgrades
 W("skills.json", {
@@ -159,8 +132,8 @@ W("skills.json", {
  "work_skills": ["mining", "alchemy", "runecraft", "smithing", "travelling", "relic_hunting"]
 })
 W("upgrades.json", [
- {"id": "alchemy_kit", "name": "Alchemist's Kit", "cost": 120, "desc": "Glassware, mortar and cauldron. Unlocks the Alchemy stations.", "requires": {}},
- {"id": "runewright_tools", "name": "Runewright's Tools", "cost": 160, "desc": "Chisels, basin and pedestal. Unlocks the Runecrafting stations.", "requires": {}},
+ {"id": "alchemy_kit", "name": "Alchemist's Kit", "cost": 120, "desc": "Fine glassware and a copper still. Wider precision zones at all Alchemy stations.", "requires": {}},
+ {"id": "runewright_tools", "name": "Runewright's Tools", "cost": 160, "desc": "Dwarf-made chisels and a tuning fork. Wider precision zones at all Runecrafting stations.", "requires": {}},
  {"id": "arcane_foundry", "name": "Arcane Foundry", "cost": 600, "desc": "Leyline tap and warded crucible. Unlocks Arcane Metalworking.", "requires": {"skill": ["runecraft", 3], "flag": "found_mithril"}},
  {"id": "display_cases", "name": "Glass Display Cases", "cost": 90, "desc": "Customers pay a little more for well-presented stock (+10% prices).", "requires": {}},
  {"id": "second_anvil_hook", "name": "Apprentice Hooks", "cost": 60, "desc": "Hirelings produce 15% more workshop output.", "requires": {}}

@@ -1,5 +1,5 @@
 ## DB — read-only game data loaded from res://data/*.json.
-## EN: Items, stations, recipes, characters, destinations, loot tables, upgrades, skills, props,
+## EN: Items, stations, recipes, crafting balance, characters, destinations, loot tables, upgrades, skills, props,
 ##     dialogue and the village layout. Data-driven so content can grow without code changes.
 ## DA: Genstande, stationer, opskrifter, personer, destinationer, loot-tabeller, opgraderinger,
 ##     færdigheder, rekvisitter, dialog og landsbyens layout — datadrevet, så indhold kan vokse
@@ -21,6 +21,7 @@ var props := {}
 var layout := {}
 var dialogue := {}
 var names := {}
+var crafting := {}
 
 
 func _ready() -> void:
@@ -70,6 +71,8 @@ func reload() -> void:
 	dialogue = dl if dl is Dictionary else {}
 	var nm: Variant = _read("names.json")
 	names = nm if nm is Dictionary else {}
+	var cf: Variant = _read("crafting.json")
+	crafting = cf if cf is Dictionary else {}
 	Log.info("Data loaded: %d items, %d stations, %d recipes, %d characters" % [items.size(), stations.size(), recipes.size(), characters.size()])
 
 

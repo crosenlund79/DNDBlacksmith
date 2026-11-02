@@ -4,11 +4,9 @@
 class_name DicePanel
 extends UIWindow
 
-const DICE_HELP := {"edge": "the blade's bite (attack)", "guard": "how well it turns a blow (protection)",
-	"temper": "how long it lasts (durability)", "fortune": "the forge-luck that decides rarity (d100)", "purity": "purity of the batch"}
-
 var spec := {}
 var results := {}
+var faces := {}
 var faces_ui := {}
 var inputs := {}
 var mode := "auto"
@@ -34,6 +32,11 @@ func _build() -> void:
 	var j := Crafting.job()
 	var q := Crafting.final_quality(j)
 	content.add_child(UIKit.rich("[b]%s[/b] — craftsmanship [color=#9e3a0c][b]%d%%[/b][/color]\n[i]Your precision sets the foundation; the dice decide the rest.[/i]" % [DB.recipe(j.get("recipe", "")).get("name", ""), int(round(q))], 24))
+	if spec.has("fortune"):
+		var lo := Crafting.rarity_eval(q, 1, 0.0)
+		var hi := Crafting.rarity_eval(q, 100, 0.0)
+		content.add_child(UIKit.rich("[i]With this craftsmanship the piece will be at least [b]%s[/b] and at best [b]%s[/b] (before material and rune bonuses).[/i]" % [
+			Items.RARITY_LABEL[lo["rarity"]], Items.RARITY_LABEL[hi["rarity"]]], 20))
 	var modes := UIKit.hbox()
 	var ba := UIKit.button("Digital dice", func(): _set_mode("auto"), 220)
 	var bp := UIKit.button("Physical dice (enter rolls)", func(): _set_mode("physical"), 320)
@@ -52,7 +55,8 @@ func _build() -> void:
 		die.custom_minimum_size = Vector2(72, 72)
 		die.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		row.add_child(die)
-		var lab := UIKit.rich("[b]%s[/b] — %s\n[i]%s[/i]" % [key.capitalize(), expr, DICE_HELP.get(key, "")], 22)
+		var attr: Dictionary = DB.crafting.get("dice", {}).get(key, {})
+		var lab := UIKit.rich("[b]%s[/b] — %s\n[i]%s[/i]" % [attr.get("label", key.capitalize()), expr, attr.get("desc", "")], 22)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lab)
 		if mode == "auto":
@@ -62,13 +66,16 @@ func _build() -> void:
 			faces_ui[key] = f
 			row.add_child(f)
 		else:
-			var sb := SpinBox.new()
-			sb.min_value = 1
-			sb.max_value = sides
-			sb.value = 1
-			sb.custom_minimum_size = Vector2(140, 46)
-			inputs[key] = sb
-			row.add_child(sb)
+			var boxes := []
+			for i in int(Dice.parse(expr)["n"]):
+				var sb := SpinBox.new()
+				sb.min_value = 1
+				sb.max_value = sides
+				sb.value = 1
+				sb.custom_minimum_size = Vector2(140, 46)
+				boxes.append(sb)
+				row.add_child(sb)
+			inputs[key] = boxes
 		content.add_child(row)
 	content.add_child(UIKit.divider())
 	if mode == "auto":
@@ -81,6 +88,7 @@ func _set_mode(m: String) -> void:
 	mode = m
 	rolled = false
 	results.clear()
+	faces.clear()
 	Settings.set_value("gameplay/dice_mode", m)
 	_build()
 
@@ -88,7 +96,9 @@ func _set_mode(m: String) -> void:
 func _roll() -> void:
 	Audio.play("sfx/dice_roll")
 	for key in spec:
-		results[key] = int(Dice.roll(spec[key])["total"])
+		var r := Dice.roll(spec[key])
+		results[key] = int(r["total"])
+		faces[key] = r["faces"]
 	_anim_t = 1.1
 	set_process(true)
 
@@ -104,25 +114,33 @@ func _process(delta: float) -> void:
 		Audio.play("sfx/dice_land")
 		rolled = true
 		var keep := results.duplicate()
+		var keep_f := faces.duplicate()
 		_build()
 		results = keep
+		faces = keep_f
 		for key in faces_ui:
 			(faces_ui[key] as Label).text = str(results[key])
 
 
 func _confirm_physical() -> void:
 	for key in inputs:
-		var v := int((inputs[key] as SpinBox).value)
-		var chk := Dice.from_faces(spec[key], [v])
+		var vals := []
+		for sb in inputs[key]:
+			vals.append(int((sb as SpinBox).value))
+		var chk := Dice.from_faces(spec[key], vals)
 		if chk.is_empty():
 			Events.toast.emit("%s must be between 1 and %d." % [key, Dice.sides(spec[key])], "bad")
 			return
 		results[key] = int(chk["total"])
+		faces[key] = vals
 	Audio.play("sfx/dice_land")
 	_finish()
 
 
 func _finish() -> void:
-	var it := Crafting.finish(results)
+	var full := {}
+	for key in results:
+		full[key] = {"total": int(results[key]), "faces": faces.get(key, [int(results[key])])}
+	var it := Crafting.finish(full, "physical" if mode == "physical" else "digital")
 	if not it.is_empty():
-		Events.open_panel.emit("reveal", {"item": it})
+		Events.open_panel.emit("craft_result", {"item": it, "fresh": true})

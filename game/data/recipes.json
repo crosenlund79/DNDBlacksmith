@@ -3,6 +3,23 @@
   "id": "smelt_iron",
   "name": "Smelt Iron Ingots",
   "discipline": "classic",
+  "category": "material",
+  "material": "ore",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Melt the ore",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "forge",
+    "op": "Cast and cool the ingots",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "crucible",
    "forge"
@@ -19,13 +36,36 @@
   "xp": {
    "smithing": 12
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "smelt_steel",
   "name": "Fold Steel Ingot",
   "discipline": "classic",
+  "category": "material",
+  "material": "iron",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Melt iron with carbon",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Drive the heat up",
+    "checks": 2,
+    "weight": 0.7
+   },
+   {
+    "station": "forge",
+    "op": "Fold and weld the bloom",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
   "steps": [
    "crucible",
    "bellows",
@@ -43,13 +83,42 @@
   "xp": {
    "smithing": 18
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "iron_longsword",
   "name": "Iron Longsword",
   "discipline": "classic",
+  "category": "weapon",
+  "material": "iron",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the billet",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw out the blade",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "quench_trough",
+    "op": "Quench the edge",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind and sharpen",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "forge",
    "anvil",
@@ -70,19 +139,68 @@
   "xp": {
    "smithing": 30
   },
-  "unlock": {},
+  "requires": {},
   "desc": "The first sword every apprentice learns."
  },
  {
   "id": "steel_longsword",
   "name": "Steel Longsword",
   "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Bring the steel to yellow heat",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Hold the heat steady",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "anvil",
+    "op": "Draw and bevel the blade",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "forge",
+    "op": "Normalise in the coals",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "quench_trough",
+    "op": "Oil-quench the blade",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Hone a keen edge",
+    "checks": 2,
+    "weight": 1.1
+   },
+   {
+    "station": "stitching_table",
+    "op": "Wrap the grip",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
   "steps": [
    "forge",
    "bellows",
    "anvil",
+   "forge",
    "quench_trough",
-   "grinding_wheel"
+   "grinding_wheel",
+   "stitching_table"
   ],
   "inputs": {
    "ingot_steel": 2,
@@ -98,22 +216,93 @@
   "xp": {
    "smithing": 45
   },
-  "unlock": {
-   "skill": [
-    "smithing",
-    3
-   ]
+  "requires": {
+   "smithing": 3
   },
-  "desc": ""
+  "desc": "Folded steel, normalised twice. Rewards a steady hand."
+ },
+ {
+  "id": "steel_bastard_sword",
+  "name": "Steel Bastard Sword",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 8,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the long billet",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Forge the hand-and-a-half blade",
+    "checks": 4,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Interrupted quench",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the double fuller",
+    "checks": 2,
+    "weight": 1.1
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 3,
+   "leather_cured": 1
+  },
+  "output": "sword_bastard",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 70
+  },
+  "requires": {
+   "smithing": 8
+  },
+  "desc": "A master's blade. Only an expert can keep the long steel straight."
  },
  {
   "id": "hand_axe",
   "name": "Hand Axe",
   "discipline": "classic",
+  "category": "weapon",
+  "material": "iron",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the head",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Punch the eye and shape the bit",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
   "steps": [
    "forge",
-   "anvil",
-   "quench_trough"
+   "anvil"
   ],
   "inputs": {
    "ingot_iron": 1,
@@ -129,13 +318,36 @@
   "xp": {
    "smithing": 22
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "flanged_mace",
   "name": "Flanged Mace",
   "discipline": "classic",
+  "category": "weapon",
+  "material": "iron",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the head",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Weld on the flanges",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "forge",
    "anvil",
@@ -155,18 +367,61 @@
   "xp": {
    "smithing": 28
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "iron_cuirass",
   "name": "Iron Cuirass",
   "discipline": "classic",
+  "category": "armour",
+  "material": "iron",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the plates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Dish the breastplate",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "forge",
+    "op": "Re-heat for the backplate",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "anvil",
+    "op": "Planish and roll the edges",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "quench_trough",
+    "op": "Temper the plates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet the leather straps",
+    "checks": 1,
+    "weight": 0.7
+   }
+  ],
   "steps": [
    "forge",
    "anvil",
+   "forge",
+   "anvil",
    "quench_trough",
-   "grinding_wheel"
+   "stitching_table"
   ],
   "inputs": {
    "ingot_iron": 3,
@@ -182,13 +437,36 @@
   "xp": {
    "smithing": 40
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "iron_helm",
   "name": "Iron Helm",
   "discipline": "classic",
+  "category": "armour",
+  "material": "iron",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the skull plate",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Raise the dome",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Smooth the brow",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "forge",
    "anvil",
@@ -208,13 +486,30 @@
   "xp": {
    "smithing": 20
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "round_shield",
   "name": "Round Shield",
   "discipline": "classic",
+  "category": "armour",
+  "material": "iron",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the boss",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Dome the boss and band the rim",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
   "steps": [
    "forge",
    "anvil"
@@ -233,13 +528,36 @@
   "xp": {
    "smithing": 18
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "silver_band",
   "name": "Silver Band",
   "discipline": "classic",
+  "category": "jewellery",
+  "material": "silver",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Melt the silver",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw and close the band",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Polish to a shine",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "crucible",
    "anvil",
@@ -256,13 +574,24 @@
   "xp": {
    "smithing": 20
   },
-  "unlock": {},
+  "requires": {},
   "desc": "A ring fit for a proposal."
  },
  {
   "id": "cure_leather",
   "name": "Cure Leather",
   "discipline": "stitching",
+  "category": "material",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Soak and tan the hides",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "leather_vat"
   ],
@@ -277,15 +606,39 @@
   "xp": {
    "enchanted_stitching": 10
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "leather_jerkin",
   "name": "Leather Jerkin",
   "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Oil and soften the panels",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "stitching_table",
+    "op": "Cut the pattern",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Saddle-stitch the seams",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
   "steps": [
    "leather_vat",
+   "stitching_table",
    "stitching_table"
   ],
   "inputs": {
@@ -302,13 +655,24 @@
   "xp": {
    "enchanted_stitching": 28
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "leather_boots",
   "name": "Leather Boots",
   "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Last and stitch the boots",
+    "checks": 2,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "stitching_table"
   ],
@@ -326,13 +690,24 @@
   "xp": {
    "enchanted_stitching": 18
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "leather_gloves",
   "name": "Leather Gloves",
   "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Cut and stitch the fingers",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "stitching_table"
   ],
@@ -350,13 +725,24 @@
   "xp": {
    "enchanted_stitching": 14
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "leather_belt",
   "name": "Leather Belt",
   "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Cut, edge and punch",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "stitching_table"
   ],
@@ -373,13 +759,42 @@
   "xp": {
    "enchanted_stitching": 10
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "warded_gloves",
   "name": "Warded Gloves",
   "discipline": "stitching",
+  "category": "armour",
+  "material": "ethereal",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "thread_spinner",
+    "op": "Spin ethereal thread",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Stitch the gloves",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider the ward sigils",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit and balance",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "thread_spinner",
    "stitching_table",
@@ -401,11 +816,8 @@
   "xp": {
    "enchanted_stitching": 60
   },
-  "unlock": {
-   "skill": [
-    "enchanted_stitching",
-    3
-   ]
+  "requires": {
+   "enchanted_stitching": 3
   },
   "desc": ""
  },
@@ -413,6 +825,23 @@
   "id": "whetstone_oil",
   "name": "Whetstone Oil",
   "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Grind emberleaf with quicksalt",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "alembic",
+    "op": "Distil the oil",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "mortar_station",
    "alembic"
@@ -424,18 +853,42 @@
   "output": "oil_whetstone",
   "qty": 2,
   "dice": {
-   "purity": "1d6"
+   "potency": "1d8",
+   "fortune": "1d100"
   },
   "xp": {
    "alchemy": 15
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "healing_draught",
   "name": "Healing Draught",
   "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Bruise the moonwort",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "cauldron",
+    "op": "Simmer the draught",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "infusion_rack",
+    "op": "Steep and bottle",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "mortar_station",
    "cauldron",
@@ -447,18 +900,42 @@
   "output": "potion_healing",
   "qty": 2,
   "dice": {
-   "purity": "1d6"
+   "potency": "1d8",
+   "fortune": "1d100"
   },
   "xp": {
    "alchemy": 20
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "flame_coating",
   "name": "Flame Coating",
   "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Grind emberleaf and coal",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "reagent_table",
+    "op": "Separate the volatile oil",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "cauldron",
+    "op": "Reduce to a coating",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
   "steps": [
    "mortar_station",
    "reagent_table",
@@ -471,18 +948,54 @@
   "output": "coating_flame",
   "qty": 1,
   "dice": {
-   "purity": "1d6"
+   "potency": "1d8",
+   "fortune": "1d100"
   },
   "xp": {
    "alchemy": 26
   },
-  "unlock": {},
-  "desc": ""
+  "requires": {},
+  "desc": "Brushed onto a blade before a hunt: it burns on the strike."
  },
  {
   "id": "ember_runestone",
   "name": "Ember Runestone",
   "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "rune_cutting_bench",
+    "op": "Cleave the blank",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Engrave the ember rune",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Wash away the chaos",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "resonance_pedestal",
+    "op": "Tune the hum",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "rune_polishing_wheel",
+    "op": "Polish to a mirror",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "rune_cutting_bench",
    "rune_engraving_stand",
@@ -497,22 +1010,45 @@
   "output": "runestone_ember",
   "qty": 1,
   "dice": {
-   "purity": "1d6"
+   "resonance": "1d10",
+   "fortune": "1d100"
   },
   "xp": {
    "runecraft": 35
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "ward_runestone",
   "name": "Ward Runestone",
   "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "rune_cutting_bench",
+    "op": "Cleave the blank",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Engrave the ward rune",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "resonance_pedestal",
+    "op": "Tune the hum",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
   "steps": [
    "rune_cutting_bench",
    "rune_engraving_stand",
-   "rune_cleansing_basin",
    "resonance_pedestal"
   ],
   "inputs": {
@@ -522,18 +1058,42 @@
   "output": "runestone_ward",
   "qty": 1,
   "dice": {
-   "purity": "1d6"
+   "resonance": "1d10",
+   "fortune": "1d100"
   },
   "xp": {
    "runecraft": 30
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "charge_mithril",
   "name": "Charge Mithril",
   "discipline": "arcane",
+  "category": "material",
+  "material": "ore",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "arcane_crucible",
+    "op": "Melt mithril in warded fire",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "leyline_conductor",
+    "op": "Draw the leyline",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "aetheric_stabilizer",
+    "op": "Stabilise the charge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "arcane_crucible",
    "leyline_conductor",
@@ -551,13 +1111,54 @@
   "xp": {
    "arcane_metalwork": 40
   },
-  "unlock": {},
+  "requires": {},
   "desc": ""
  },
  {
   "id": "mithril_runeblade",
   "name": "Mithril Runeblade",
   "discipline": "arcane",
+  "category": "weapon",
+  "material": "mithril",
+  "difficulty": 7,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the charged billet",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "arcane_crucible",
+    "op": "Re-melt the fuller channel",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "spellbinding_array",
+    "op": "Bind the spell pattern",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "arcane_anvil",
+    "op": "Imprint the glowing runes",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Quench in still water",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Hone",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
   "steps": [
    "forge",
    "arcane_crucible",
@@ -574,6 +1175,7 @@
   "qty": 1,
   "dice": {
    "edge": "1d20",
+   "spellweave": "1d12",
    "temper": "1d12",
    "fortune": "1d100"
   },
@@ -581,7 +1183,9 @@
    "arcane_metalwork": 80,
    "smithing": 30
   },
-  "unlock": {},
+  "requires": {
+   "arcane_metalwork": 1
+  },
   "desc": "The magic lives in the metal; the markings glow when the blade is drawn."
  }
 ]

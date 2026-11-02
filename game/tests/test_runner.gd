@@ -72,23 +72,67 @@ func _skills() -> void:
 	check(SkillSys.xp_needed(5) > SkillSys.xp_needed(2), "skills: curve increases")
 
 
-func _crafting() -> void:
-	check(Crafting.missing_inputs("iron_longsword").is_empty(), "crafting: starter materials cover a sword")
-	check(Crafting.start("iron_longsword"), "crafting: start sword job")
+## Drives a whole job with fixed check scores; returns the finished item.
+func _craft(recipe: String, q: float, dice: Dictionary, mode := "digital") -> Dictionary:
+	if not Crafting.start(recipe):
+		return {}
 	var guard := 0
-	while Crafting.current_station() != "" and guard < 10:
+	while Crafting.current_station() != "" and guard < 20:
 		var st := Crafting.current_station()
 		var qs := []
-		for i in int(Crafting.check_params(st)["count"]):
-			qs.append(112.0)
+		for i in int(Crafting.op_params()["count"]):
+			qs.append(q)
 		Crafting.record_step(st, qs)
 		guard += 1
-	check(Crafting.job().get("awaiting_dice", false), "crafting: all steps done, awaiting dice")
-	var it := Crafting.finish({"edge": 15, "temper": 8, "fortune": 60})
+	return Crafting.finish(dice, mode)
+
+
+func _crafting() -> void:
+	check(Crafting.missing_inputs("iron_longsword").is_empty(), "crafting: starter materials cover a sword")
+	# every recipe has a sequence of operations at real stations, and the dice it needs are configured
+	var bad := []
+	for r in DB.recipes.values():
+		var ops := Crafting.operations(r["id"])
+		if ops.is_empty() or ops.size() != r["steps"].size():
+			bad.append(r["id"])
+		for o in ops:
+			if DB.station(o["station"]).is_empty() or str(o.get("op", "")) == "":
+				bad.append(r["id"] + "/" + str(o["station"]))
+		for k in r.get("dice", {}):
+			if not DB.crafting.get("dice", {}).has(k):
+				bad.append(r["id"] + " die " + k)
+	check(bad.is_empty(), "crafting: recipes define operations, stations and dice %s" % [bad])
+	check(Crafting.operations("leather_belt").size() < Crafting.operations("steel_longsword").size(), "crafting: simple items need fewer operations")
+	# beginners and experts: the same recipe is harder for a lower skill
+	var hard := Crafting.check_params("anvil", "steel_bastard_sword")
+	var easy := Crafting.check_params("anvil", "hand_axe")
+	check(hard["zone"] < easy["zone"] and hard["speed"] > easy["speed"], "crafting: difficulty narrows the zone and speeds the needle")
+	check(Crafting.recipe_locked_reason("steel_bastard_sword") != "", "crafting: expert recipe locked for a mid-level smith")
+	check(Crafting.recipe_locked_reason("ember_runestone") == "" and Crafting.recipe_locked_reason("healing_draught") == "", "crafting: runecraft and alchemy open from the start")
+	check(Crafting.station_locked_reason("arcane_crucible") != "", "crafting: arcane crucible starts locked")
+	# the continuous curve: closer to the centre is always better
+	check(Crafting.check_quality(1.0, 30.0) > Crafting.check_quality(3.0, 30.0), "quality: continuous, closer is better")
+	var it := _craft("iron_longsword", 112.0, {"edge": 15, "temper": 8, "fortune": 60})
 	check(not it.is_empty() and Items.stat(it, "attack") > 0, "crafting: sword has attack %d" % Items.stat(it, "attack"))
 	check(it.get("rarity") != "common", "crafting: excellent work yields above-common rarity (%s)" % it.get("rarity"))
 	check(Game.find_uid(int(it["uid"])) != {}, "crafting: sword is in the inventory")
-	check(Crafting.station_locked_reason("arcane_crucible") != "", "crafting: arcane crucible starts locked")
+	check(it.get("craft", {}).get("ops", []).size() == 4, "crafting: the record lists every operation")
+	check(float(it["quality"]) > 100.0, "crafting: craftsmanship above 100%% (%.1f)" % float(it["quality"]))
+	# exceptional crafting beats a poor roll; a poor job with a great roll stays modest
+	Game.add_item(Items.make("ingot_iron", {"qty": 6}), false)
+	Game.add_item(Items.make("leather_cured", {"qty": 3}), false)
+	var master := _craft("iron_longsword", 119.0, {"edge": 6, "temper": 5, "fortune": 12})
+	check(master.get("rarity") == "legendary" and master.get("star", false), "rarity: masterwork with a poor roll is legendary (%s)" % master.get("rarity"))
+	var sloppy := _craft("iron_longsword", 60.0, {"edge": 20, "temper": 12, "fortune": 100})
+	check(sloppy.get("rarity") in ["common", "magic"], "rarity: sloppy work with a perfect roll stays modest (%s)" % sloppy.get("rarity"))
+	check(Items.stat(master, "attack") > Items.stat(sloppy, "attack"), "stats: craftsmanship dominates the dice (%d vs %d)" % [Items.stat(master, "attack"), Items.stat(sloppy, "attack")])
+	# material matters: steel beats iron at the same quality and rolls
+	var steel := _craft("steel_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30}, "physical")
+	var iron := _craft("iron_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30})
+	check(Items.stat(steel, "attack") > Items.stat(iron, "attack"), "stats: steel outperforms iron (%d vs %d)" % [Items.stat(steel, "attack"), Items.stat(iron, "attack")])
+	check(steel.get("craft", {}).get("dice_mode") == "physical", "dice: physical mode recorded on the item")
+	var rune := _craft("ember_runestone", 105.0, {"resonance": 9, "fortune": 70})
+	check(not rune.is_empty() and Items.stat(rune, "fire") > 0, "crafting: runestone carries fire %d" % Items.stat(rune, "fire"))
 
 
 func _hirelings() -> void:
@@ -155,6 +199,11 @@ func _saves() -> void:
 	check(Game.gold() == 4321 and Game.gold() is int, "saves: gold restored as int")
 	check(Game.state["day"] is int and Game.state["minute"] % 60 >= 0, "saves: clock restored as ints")
 	check(Hire.get_h("borin") != {} or true, "saves: hirelings restored")
+	var crafted := Game.inventory().filter(func(x): return x.has("craft") and Items.is_equipment(x))
+	var leg := crafted.filter(func(x): return x.get("rarity") == "legendary")
+	check(not crafted.is_empty() and crafted[0]["craft"].get("ops", []).size() > 0 and crafted[0]["craft"].get("dice", {}).has("edge"),
+		"saves: crafted items keep their record of the work")
+	check(not leg.is_empty() and leg[0].get("star", false), "saves: crafted legendary survives save/load with its star")
 	Saves.delete("test_slot")
 
 

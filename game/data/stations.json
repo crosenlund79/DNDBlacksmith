@@ -172,9 +172,7 @@
    "zone": 34,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "runewright_tools"
-  },
+  "unlock": {},
   "sfx": "chisel",
   "fx": [],
   "solid": true
@@ -198,9 +196,7 @@
    "zone": 28,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "runewright_tools"
-  },
+  "unlock": {},
   "sfx": "chisel",
   "fx": [
    "rune_glow"
@@ -226,9 +222,7 @@
    "zone": 40,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "runewright_tools"
-  },
+  "unlock": {},
   "sfx": "water",
   "fx": [
    "rune_glow"
@@ -254,9 +248,7 @@
    "zone": 26,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "runewright_tools"
-  },
+  "unlock": {},
   "sfx": "rune_hum",
   "fx": [
    "rune_glow",
@@ -283,9 +275,7 @@
    "zone": 32,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "runewright_tools"
-  },
+  "unlock": {},
   "sfx": "grind",
   "fx": [],
   "solid": true
@@ -309,9 +299,7 @@
    "zone": 36,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "alchemy_kit"
-  },
+  "unlock": {},
   "sfx": "grind_soft",
   "fx": [],
   "solid": true
@@ -335,9 +323,7 @@
    "zone": 32,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "alchemy_kit"
-  },
+  "unlock": {},
   "sfx": "bubble",
   "fx": [
    "glow_small"
@@ -363,9 +349,7 @@
    "zone": 34,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "alchemy_kit"
-  },
+  "unlock": {},
   "sfx": "bubble",
   "fx": [
    "bubbles",
@@ -392,9 +376,7 @@
    "zone": 28,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "alchemy_kit"
-  },
+  "unlock": {},
   "sfx": "glass",
   "fx": [],
   "solid": true
@@ -418,9 +400,7 @@
    "zone": 40,
    "weight": 1.0
   },
-  "unlock": {
-   "upgrade": "alchemy_kit"
-  },
+  "unlock": {},
   "sfx": "glass",
   "fx": [],
   "solid": true
