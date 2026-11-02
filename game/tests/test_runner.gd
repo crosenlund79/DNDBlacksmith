@@ -56,7 +56,7 @@ func _quality() -> void:
 	var perfect := Crafting.check_quality(0.0, 30.0)
 	var edge := Crafting.check_quality(15.0, 30.0)
 	var miss := Crafting.check_quality(60.0, 30.0)
-	check(perfect > 100.0, "quality: perfect centre exceeds 100% (%.0f)" % perfect)
+	check(perfect > 100.0, "quality: perfect centre exceeds 100%% (%.0f)" % perfect)
 	check(edge < perfect and edge >= 60.0, "quality: zone edge acceptable (%.0f)" % edge)
 	check(miss < edge and miss > 0.0, "quality: far miss degrades but does not destroy (%.0f)" % miss)
 	check(Items.rarity_from(40.0, 10) == "common", "rarity: poor work + bad roll = common")

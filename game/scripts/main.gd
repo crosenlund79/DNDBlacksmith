@@ -5,6 +5,7 @@ extends Node
 var world: VillageWorld
 var ui: UIRoot
 var menu: Control
+var menu_layer: CanvasLayer
 
 
 func _ready() -> void:
@@ -15,7 +16,7 @@ func _ready() -> void:
 func _clear() -> void:
 	Game.running = false
 	Game.ui_blockers = 0
-	for n in [world, ui, menu]:
+	for n in [world, ui, menu, menu_layer]:
 		if is_instance_valid(n):
 			# stop the old world/UI at once: it stays in the tree until the end of the frame and
 			# would otherwise keep writing player pos/area into a freshly loaded state
@@ -24,12 +25,17 @@ func _clear() -> void:
 	world = null
 	ui = null
 	menu = null
+	menu_layer = null
 
 
 func to_menu() -> void:
 	_clear()
+	# Controls need a CanvasLayer (or Control) parent for full-rect anchors to resolve
+	menu_layer = CanvasLayer.new()
+	add_child(menu_layer)
 	menu = MainMenu.new()
-	add_child(menu)
+	menu.main = self
+	menu_layer.add_child(menu)
 	Audio.play_music("music/title")
 	Audio.set_ambience("bed", "")
 

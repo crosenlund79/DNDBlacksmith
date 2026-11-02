@@ -3,6 +3,8 @@
 class_name MainMenu
 extends Control
 
+var main: Node
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -45,7 +47,6 @@ func _ready() -> void:
 	col.add_child(UIKit.label("A blacksmith's chronicle", 28, "heading_italic", Color("#5e421c")))
 	col.add_child(UIKit.divider())
 	var has_save := Saves.latest_slot() != ""
-	var main: Node = get_parent()
 	var entries := [
 		["I.", "Continue", func(): main.call("continue_game"), has_save],
 		["II.", "New Game", func(): main.call("new_game"), true],

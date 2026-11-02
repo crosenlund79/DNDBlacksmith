@@ -83,7 +83,7 @@ static func _aldric_asks() -> void:
 
 
 static func on_mira_equipped(it: Dictionary, price: int) -> void:
-	var good := float(it.get("quality", 70)) >= 80.0 or it.get("rarity") in ["rare", "legendary", "unique", "set"]
+	var good: bool = float(it.get("quality", 70)) >= 80.0 or it.get("rarity") in ["rare", "legendary", "unique", "set"]
 	if good:
 		Social.change("mira", 6.0, 4.0, "equip_mira_good", "Equipped Mira with fine work (%s)." % it["name"])
 	if price == 0:

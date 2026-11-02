@@ -311,7 +311,7 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey) or not event.pressed:
+	if not event.is_pressed() or event.is_echo():
 		return
 	if event.is_action_pressed("debug_overlay"):
 		debug_label.visible = not debug_label.visible
