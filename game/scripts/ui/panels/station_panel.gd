@@ -74,6 +74,9 @@ func _build() -> void:
 	if station_id == "rune_engraving_stand" and why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(_socket_ui())
+	if station_id == "infusion_rack" and why == "":
+		body.add_child(UIKit.divider())
+		body.add_child(_treat_ui())
 	if why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(UIKit.button("Practise a check (no materials, a little experience)", _practice, 460))
@@ -178,5 +181,31 @@ func _socket_ui() -> Control:
 	h.add_child(ob_item)
 	h.add_child(ob_rune)
 	h.add_child(UIKit.button("Engrave and set", _on_socket_pressed.bind(ob_item, ob_rune), 220))
+	v.add_child(h)
+	return v
+
+
+## Infusion rack: brush an oil or coating onto a piece of equipment (lasts a few expeditions).
+func _treat_ui() -> Control:
+	var v := UIKit.vbox(6)
+	v.add_child(UIKit.label("Treat equipment with an oil or coating", 26, "heading"))
+	var items := Game.inventory().filter(func(x): return Items.is_equipment(x))
+	var coats := Game.inventory().filter(func(x): return x["def"] in Crafting.TREATMENTS)
+	if items.is_empty() or coats.is_empty():
+		v.add_child(UIKit.label("You need a whetstone oil, flame or frost coating, and a piece of equipment.", 20, "body_italic"))
+		return v
+	var h := UIKit.hbox()
+	var ob_item := OptionButton.new()
+	for x in items:
+		ob_item.add_item(Items.display_name(x), int(x["uid"]))
+	var ob_coat := OptionButton.new()
+	for c in coats:
+		ob_coat.add_item(c["name"])
+		ob_coat.set_item_metadata(ob_coat.item_count - 1, c["def"])
+	h.add_child(ob_item)
+	h.add_child(ob_coat)
+	h.add_child(UIKit.button("Apply", func():
+		var msg := Crafting.treat(ob_item.get_item_id(ob_item.selected), str(ob_coat.get_item_metadata(ob_coat.selected)))
+		Events.toast.emit(msg, "good" if msg.begins_with("The") else "bad"), 160))
 	v.add_child(h)
 	return v

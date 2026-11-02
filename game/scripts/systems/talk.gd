@@ -94,7 +94,10 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		"serve_repair":
 			return {"text": "You turn the damaged piece over in your hands. Grinding wheel it is.", "action": "repair"}
 		"travels":
+			Adv.ensure(a)
 			var rep: String = a.get("last_report", "")
+			if not a["log"].is_empty() and Social.fam(npc) >= 10.0:
+				rep += "\n\n[i]" + "\n".join(a["log"]) + "[/i]"
 			if rep == "":
 				rep = "\"Haven't been out yet this season. Soon — %s, maybe.\"" % DB.destinations.get(Adv.choose_dest(a.duplicate()), {}).get("name", "the Barrow Fields")
 			return {"text": rep + "\n\nThey are carrying: " + _gear_text(a)}
@@ -102,7 +105,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": "", "action": "shop"}
 		"order":
 			var o := Shop.create_order(npc, a["needs"])
-			return {"text": "\"Something for my %s — I'd pay %d gold for %s %d or better.\"" % [o["slot"], o["reward"], o["stat"], o["min"]]}
+			if o.is_empty():
+				return {"text": "\"Not from you, smith. Not after last time.\""}
+			return {"text": "\"I need a %s — I'd pay %d gold. %s\"" % [Shop.order_text(o), o["reward"], o.get("note", "")]}
 		"drink":
 			if not Game.can_afford(4):
 				return {"text": "Your purse is too light."}

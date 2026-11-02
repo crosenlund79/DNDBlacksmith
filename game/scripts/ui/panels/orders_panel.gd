@@ -29,8 +29,8 @@ func _build() -> void:
 		row.add_child(UIKit.portrait("portraits/" + str(o["npc"]), 110))
 		var v := UIKit.vbox(6)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_child(UIKit.rich("[b]%s[/b] needs a [b]%s[/b] with [b]%s ≥ %d[/b]. Reward %d g (more for exceeding it). Due by day %d.\n[i]%s[/i]" % [
-			Talk.npc_name(o["npc"]), o["slot"], o["stat"], o["min"], o["reward"], o["deadline"], o.get("note", "")], 21))
+		v.add_child(UIKit.rich("[b]%s[/b] needs a [b]%s[/b]. Reward %d g (more for exceeding it). Due by day %d.\n[i]%s[/i]" % [
+			Talk.npc_name(o["npc"]), Shop.order_text(o), o["reward"], o["deadline"], o.get("note", "")], 21))
 		var h := UIKit.hbox(8)
 		var any := false
 		for it in Game.inventory():

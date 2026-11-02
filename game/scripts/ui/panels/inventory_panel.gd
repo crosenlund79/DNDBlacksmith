@@ -96,6 +96,11 @@ func _detail() -> void:
 		detail.add_child(UIKit.button("Read the notes", func():
 			Events.toast.emit(Regions.read_recipe(int(it["uid"])), "good")
 			selected = {}, 0))
+	if DB.item(it["def"]).get("type", "") == "potion" and it["def"] != "ale_mug":
+		var fs: bool = it.get("for_sale", false)
+		detail.add_child(UIKit.button("Take off the shop shelf" if fs else "Put on the shop shelf (adventurers buy before they leave)", func():
+			it["for_sale"] = not fs
+			Events.inventory_changed.emit(), 0))
 	if not Items.is_equipment(it) and DB.item(it["def"]).get("type", "") in ["potion", "material", "relic"] and not Regions.is_unidentified(it):
 		var tr: bool = it.get("trade", false)
 		detail.add_child(UIKit.button("Keep it at home" if tr else "Send with the next trade run", func():

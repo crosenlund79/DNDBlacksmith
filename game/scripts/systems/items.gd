@@ -128,6 +128,21 @@ static func rarity_from(quality: float, fortune: int, bonus := 0.0) -> String:
 	return str(Crafting.rarity_eval(quality, fortune, bonus)["rarity"])
 
 
+## Material tier of an item (1 iron/leather … 4 adamantine) — orders can ask for "steel or better".
+static func tier(it: Dictionary) -> int:
+	var id := str(it.get("def", ""))
+	if id.contains("adamantine"):
+		return 4
+	if id.contains("mithril") or id.contains("starsteel") or id in ["grimhold", "wyvernscale_pauldron"]:
+		return 3
+	if id.contains("steel") or id.contains("emberwarden") or id in ["ring_garnet", "amulet_sapphire", "hood_embroidered", "gloves_warded"]:
+		return 2
+	return 1
+
+
+const TIER_WORD := {1: "any material", 2: "steel or better", 3: "mithril or starsteel", 4: "adamantine"}
+
+
 static func stat(it: Dictionary, key: String) -> int:
 	var v := int(it.get("stats", {}).get(key, 0))
 	for a in it.get("affixes", []):

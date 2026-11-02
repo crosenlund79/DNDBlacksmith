@@ -167,16 +167,29 @@ static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 	var stat := "attack" if slot == "weapon" else ("magic" if slot in ["ring", "amulet"] else "protection")
 	var current := Items.stat(a["equipment"].get(slot, {}), stat)
 	var need: int = maxi(current + 2, int(a["level"]) * 2 + 4)
-	var o := {"id": "ord_%d" % Game.new_uid(), "npc": npc, "slot": slot, "stat": stat, "min": need,
-		"reward": 40 + int(a["level"]) * 18 + need * 3, "deadline": Game.day() + 3, "status": "open", "note": note}
+	# what the next trip demands: a damage type its threats fear, a better metal for veterans
+	var prop := str(a.get("wants_prop", ""))
+	var tier := 2 if int(a["level"]) >= 5 and slot in ["weapon", "armor", "shield"] else 1
+	if prop != "" and slot == "weapon":
+		stat = prop
+		need = 3 + int(a["level"]) / 3
+	var dest_name: String = DB.destinations.get(a.get("next_dest", ""), {}).get("name", "")
+	if note == "" and dest_name != "":
+		note = "For %s%s." % [dest_name, (" — they say the things there fear " + prop) if prop != "" else ""]
+	var o := {"id": "ord_%d" % Game.new_uid(), "npc": npc, "slot": slot, "stat": stat, "min": need, "tier": tier,
+		"reward": 40 + int(a["level"]) * 18 + need * 3 + (30 if tier >= 2 else 0) + (25 if prop != "" else 0), "deadline": Game.day() + 3, "status": "open", "note": note}
 	orders().append(o)
 	Events.orders_changed.emit()
-	Events.toast.emit("New commission from %s: %s with %s ≥ %d." % [a["name"], slot, stat, need], "info")
+	Events.toast.emit("New commission from %s: %s." % [a["name"], order_text(o)], "info")
 	return o
 
 
 static func item_meets(o: Dictionary, it: Dictionary) -> bool:
-	return Items.slot(it) == o["slot"] and Items.stat(it, o["stat"]) >= int(o["min"])
+	return Items.slot(it) == o["slot"] and Items.stat(it, o["stat"]) >= int(o["min"]) and Items.tier(it) >= int(o.get("tier", 1))
+
+
+static func order_text(o: Dictionary) -> String:
+	return "%s with %s ≥ %d%s" % [o["slot"], o["stat"], int(o["min"]), (", " + Items.TIER_WORD[int(o["tier"])]) if int(o.get("tier", 1)) >= 2 else ""]
 
 
 static func fulfil(order_id: String, uid: int) -> String:

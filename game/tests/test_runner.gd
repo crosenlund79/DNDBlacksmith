@@ -28,6 +28,7 @@ func _ready() -> void:
 	_hirelings()
 	_expedition_risk()
 	_materials_cycle()
+	_adventurer_world()
 	_adventurers()
 	_social()
 	_loot()
@@ -264,6 +265,72 @@ func _materials_cycle() -> void:
 		"processing: a hireling brewed potions/oils and prepared runestones from stored materials")
 	Hire.list().erase(al)
 	Game.add_gold(gold0 - Game.gold(), "test", "reset")
+
+
+## Iteration 4: equipment materially changes how expeditions go; logs credit the gear;
+## orders follow the threats ahead; adventurers buy draughts before they leave.
+func _adventurer_world() -> void:
+	var a := Adv.get_a("kestra")
+	Adv.ensure(a)
+	var saved_eq: Dictionary = a["equipment"].duplicate(true)
+	var saved_lv: int = a["level"]
+	a["level"] = 4
+	# the same rogue with a worn dagger vs a forged flame blade, many times over the Barrow Fields
+	var trial := func(weapon: Dictionary) -> float:
+		a["equipment"] = {"weapon": weapon, "armor": Items.make("jerkin_leather", {"quality": 60.0})}
+		var wins := 0
+		for i in 300:
+			var r := Adv.run_encounters(a, "barrow_fields")
+			if int(r["wins"]) * 2 >= int(r["fought"]):
+				wins += 1
+		return wins / 300.0
+	var poor: float = trial.call(Items.make("dagger", {"quality": 45.0}))
+	var blade := Items.make("sword_emberwarden", {"quality": 108.0, "crafted_by": "Brannoc Ironhand"})
+	var good: float = trial.call(blade)
+	check(good > poor + 0.15, "adventurers: a forged flame blade lifts Barrow success from %d%% to %d%%" % [int(poor * 100), int(good * 100)])
+	var r2 := Adv.run_encounters(a, "barrow_fields")
+	var named := false
+	for ln in r2["lines"]:
+		if str(ln).contains(blade["name"]):
+			named = true
+	check(named, "adventurers: the expedition log names the blade %s" % [r2["lines"]])
+	# a full trip: equip, depart, resolve — the smith's piece earns the credit and a memory
+	a["equipment"] = {"weapon": blade, "armor": Items.make("cuirass_iron", {"quality": 90.0})}
+	a["status"] = "away"
+	a["dest"] = "barrow_fields"
+	a["days_left"] = 1
+	var hist0: int = a["history"].size()
+	Adv.on_day()
+	check(a["history"].size() == hist0 + 1 and a["status"] != "away", "adventurers: the trip resolved (%s)" % a.get("last_report", ""))
+	# orders follow the next destination's threats
+	a["status"] = "in_town"
+	a["equipment"] = {"weapon": Items.make("dagger", {"quality": 50.0})}
+	a["next_dest"] = "barrow_fields"
+	Adv.plan_next(a)
+	var o := Shop.create_order("kestra", "weapon")
+	check(o.get("stat", "") == "fire", "orders: bound for the barrows, she asks for %s" % Shop.order_text(o))
+	var ok_item := Items.make("sword_emberwarden", {"quality": 100.0})
+	check(Shop.item_meets(o, ok_item) and not Shop.item_meets(o, Items.make("sword_iron", {"quality": 120.0})), "orders: only a blade with fire satisfies it")
+	Shop.orders().erase(o)
+	# supplies: a draught from the shop shelf
+	var pot := Items.make("potion_healing", {"qty": 2})
+	pot["for_sale"] = true
+	Game.inventory().append(pot)
+	a["gold"] = 200
+	a["potions"] = 0
+	a["depart_day"] = Game.day()
+	var g0 := Game.gold()
+	Adv.morning_departures()
+	check(int(a["potions"]) == 1 and Game.gold() > g0, "adventurers: bought a healing draught from the shelf before leaving")
+	a["status"] = "in_town"
+	a["equipment"] = saved_eq
+	a["level"] = saved_lv
+	# coatings: treat a blade, it wears off after three trips
+	var sw := Items.make("sword_iron", {"quality": 80.0})
+	Game.add_item(sw, false)
+	Game.add_item(Items.make("coating_flame", {"qty": 1}), false)
+	var msg := Crafting.treat(int(sw["uid"]), "coating_flame")
+	check(sw.has("coating") and int(sw["coating"]["value"]) > 0, "alchemy: %s" % msg)
 
 
 func _adventurers() -> void:

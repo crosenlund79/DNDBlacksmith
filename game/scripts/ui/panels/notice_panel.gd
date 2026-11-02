@@ -73,7 +73,7 @@ func _build() -> void:
 	var any := false
 	for o in Shop.open_orders():
 		any = true
-		body.add_child(UIKit.rich("• [b]%s[/b] wants a [b]%s[/b] with %s ≥ %d — %d g, due day %d. [i]%s[/i]" % [Talk.npc_name(o["npc"]), o["slot"], o["stat"], o["min"], o["reward"], o["deadline"], o.get("note", "")], 20))
+		body.add_child(UIKit.rich("• [b]%s[/b] wants a [b]%s[/b] — %d g, due day %d. [i]%s[/i]" % [Talk.npc_name(o["npc"]), Shop.order_text(o), o["reward"], o["deadline"], o.get("note", "")], 20))
 	if not any:
 		body.add_child(UIKit.label("None at the moment.", 20, "body_italic"))
 	body.add_child(UIKit.divider())

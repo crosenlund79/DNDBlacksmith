@@ -427,6 +427,30 @@ static func _apply_rarity_plain(it: Dictionary, rar: String) -> void:
 		it["stats"][k] = int(round(float(it["stats"][k]) * float(p[1])))
 
 
+const TREATMENTS := {"oil_whetstone": ["attack", "Whetstone Oil"], "coating_flame": ["fire", "Flame Coating"], "coating_frost": ["frost", "Frost Coating"]}
+
+
+## Brushes a treatment onto equipment: its effect lasts three expeditions (used by the encounters).
+static func treat(item_uid: int, coat_def: String) -> String:
+	var it := Game.find_uid(item_uid)
+	if it.is_empty() or not TREATMENTS.has(coat_def) or Game.count(coat_def) < 1:
+		return "Nothing to treat."
+	var c: Dictionary = {}
+	for x in Game.inventory():
+		if x["def"] == coat_def:
+			c = x
+			break
+	var t: Array = TREATMENTS[coat_def]
+	var base := float(DB.item(coat_def).get("stats", {}).get(t[0], DB.item(coat_def).get("stats", {}).get("edge", 2)))
+	var val := int(round(maxf(2.0, base * 2.0) * (0.7 + float(c.get("quality", 70)) / 200.0)))
+	Game.remove_def(coat_def, 1)
+	it["coating"] = {"name": t[1], "stat": t[0], "value": val, "uses": 3}
+	Audio.play("sfx/glass")
+	Game.grant_player_xp("alchemy", 4)
+	Events.inventory_changed.emit()
+	return "The %s takes the %s (+%d %s for three expeditions)." % [it["name"], t[1], val, t[0]]
+
+
 ## Sets a runestone into a piece of equipment (Rune Engraving Stand). Quality scales the effect.
 static func socket(item_uid: int, rune_def: String, quality: float) -> bool:
 	var it := Game.find_uid(item_uid)
