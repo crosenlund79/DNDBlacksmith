@@ -440,3 +440,19 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 **Verification:**
 - A 28-day soak test of the living world.
 - The end-to-end rendered session and reload, `slice` and `slice_reload`.
+
+## Living Village screenshots
+
+`docs/screenshots/living_village/` (from the `village` play-test phase):
+
+| File | Shows |
+|---|---|
+| `difficulty_choice.jpg` | Apprentice / Journeyman / Master at New Game |
+| `board_wanted.jpg` | The MOST WANTED board: pinned sheets ranked by renown |
+| `board_active.jpg` | Active expeditions with Observe buttons |
+| `dossier_buyer.jpg` | A dossier carrying the exact sword the smith sold, with maker mark |
+| `observe_live.jpg` | Live observation: region map, party marker, members, journal |
+| `revisit_fight.jpg` | Replay of a past fight with every roll and damage breakdown |
+| `board_legends.jpg` | Hall of renown, chronicle and past expeditions |
+| `shop_offers.jpg` | Finds offered at the shop counter |
+| `master_board.jpg` | Master difficulty: departure times and rumours only |
