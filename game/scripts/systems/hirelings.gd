@@ -75,7 +75,21 @@ static func trait_mult(h: Dictionary, key: String, skill := "") -> float:
 
 
 static func add_xp(h: Dictionary, skill: String, amount: int) -> void:
-	SkillSys.add_xp(h["skills"], skill, int(round(amount * trait_mult(h, "xp"))), h["id"])
+	SkillSys.add_xp(h["skills"], skill, int(round(amount * trait_mult(h, "xp") * float(h.get("potential", 1.0)))), h["id"])
+
+
+## Hidden potential: a growth multiplier nobody states on a notice. The smith learns it by watching
+## them work — after five days in the shop (or at once on easier difficulties once they have grown).
+static func potential_known(h: Dictionary) -> bool:
+	return Game.day() - int(h.get("hired_day", Game.day())) >= 5
+
+
+static func potential_word(h: Dictionary) -> String:
+	if not potential_known(h):
+		return "Potential: unknown — watch them work for a few days"
+	var p := float(h.get("potential", 1.0))
+	var w := "remarkable — learns twice as fast as most" if p >= 1.35 else ("promising" if p >= 1.12 else ("ordinary" if p >= 0.9 else "limited — slow to improve"))
+	return "Potential: " + w
 
 
 static func log_line(h: Dictionary, text: String) -> void:
@@ -178,7 +192,7 @@ static func refresh_applicants() -> void:
 		var wage := 3 + int((levels.values().reduce(func(a, b): return a + b, 0)) / 3)
 		out.append({"name": name, "look": lk["look"], "race": race, "female": lk["female"],
 			"personality": DB.names["personality"].pick_random(), "levels": levels, "wage": wage, "fee": wage * 4,
-			"traits": random_traits()})
+			"traits": random_traits(), "potential": snappedf(randf_range(0.7, 1.55), 0.01)})
 	Game.state["applicants"] = out
 	Events.hirelings_changed.emit()
 
@@ -196,6 +210,7 @@ static func hire_applicant(index: int) -> String:
 	var id := "hire_%d" % Game.new_uid()
 	var h := _new_entry(id, a["name"], a["look"], a["race"], a["personality"], a["levels"], int(a["wage"]))
 	h["traits"] = a.get("traits", random_traits())
+	h["potential"] = float(a.get("potential", 1.0))
 	list().append(h)
 	apps.remove_at(index)
 	Audio.play("sfx/hire")
@@ -406,6 +421,7 @@ static func on_day() -> void:
 	for h in list():
 		if h["status"] != "dead":
 			wages += int(h["wage"])
+	wages = int(round(wages * float(Expeditions.diff().get("wages", 1.0))))
 	if wages > 0:
 		Game.add_gold(-wages, "wages", "Daily wages")
 	Events.hirelings_changed.emit()

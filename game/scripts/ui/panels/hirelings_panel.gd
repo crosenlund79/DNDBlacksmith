@@ -42,7 +42,7 @@ func _card(h: Dictionary) -> Control:
 	var left := UIKit.vbox(4)
 	left.custom_minimum_size = Vector2(300, 0)
 	left.add_child(UIKit.portrait("portraits/" + str(h["look"]), 140))
-	left.add_child(UIKit.rich("[font_size=28][b]%s[/b][/font_size]\n%s · wage %d g/day\n[i]%s[/i]" % [h["name"], h["race"], h["wage"], h["personality"]], 19))
+	left.add_child(UIKit.rich("[font_size=28][b]%s[/b][/font_size]\n%s · wage %d g/day\n[i]%s[/i]\n[color=#5e421c]%s[/color]" % [h["name"], h["race"], h["wage"], h["personality"], Hire.potential_word(h)], 19))
 	var tl := []
 	for tid in Hire.traits_of(h):
 		var tr: Dictionary = Hire.TRAITS.get(tid, {})

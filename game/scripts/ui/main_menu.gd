@@ -49,7 +49,7 @@ func _ready() -> void:
 	var has_save := Saves.latest_slot() != ""
 	var entries := [
 		["I.", "Continue", func(): main.call("continue_game"), has_save],
-		["II.", "New Game", func(): main.call("new_game"), true],
+		["II.", "New Game", func(): _sub(DifficultyPanel.new(func(d): main.call("new_game", d), true)), true],
 		["III.", "Load Game", func(): _sub(SavePanel.new("load")), has_save],
 		["IV.", "Settings", func(): _sub(SettingsPanel.new()), true],
 		["V.", "Credits", _credits, true],

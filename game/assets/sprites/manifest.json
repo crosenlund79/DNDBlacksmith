@@ -310,6 +310,10 @@
    192,
    128
   ],
+  "props/template_most_wanted_board.png": [
+   192,
+   96
+  ],
   "props/template_nightstand.png": [
    48,
    48
@@ -503,6 +507,14 @@
    64
   ],
   "icons/template_boots_ranger.png": [
+   64,
+   64
+  ],
+  "icons/template_bow_hunting.png": [
+   64,
+   64
+  ],
+  "icons/template_bow_yew.png": [
    64,
    64
   ],
@@ -782,6 +794,10 @@
    64,
    64
   ],
+  "icons/template_yew_stave.png": [
+   64,
+   64
+  ],
   "textures/template_cobble.png": [
    256,
    256
@@ -910,6 +926,14 @@
    512,
    24
   ],
+  "ui/template_dossier.png": [
+   1200,
+   800
+  ],
+  "ui/template_map_marker.png": [
+   48,
+   48
+  ],
   "ui/template_menu_background.png": [
    1920,
    1080
@@ -926,6 +950,10 @@
    1920,
    1080
   ],
+  "ui/template_pin.png": [
+   32,
+   32
+  ],
   "ui/template_skillcheck_ring.png": [
    384,
    384
@@ -938,6 +966,14 @@
    72,
    72
   ],
+  "ui/template_stamp_fallen.png": [
+   220,
+   80
+  ],
+  "ui/template_stamp_missing.png": [
+   220,
+   80
+  ],
   "ui/template_station_marker.png": [
    48,
    48
@@ -945,6 +981,18 @@
   "ui/template_tooltip_bg.png": [
    128,
    128
+  ],
+  "ui/template_wanted_board.png": [
+   1600,
+   900
+  ],
+  "ui/template_wanted_sheet.png": [
+   300,
+   400
+  ],
+  "ui/template_wax_seal.png": [
+   64,
+   64
   ],
   "enemies/template_bandit.png": [
    256,

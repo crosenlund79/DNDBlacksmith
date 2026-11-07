@@ -977,6 +977,76 @@ def hood_embroidered(P):
 
 
 # ------------------------------------------------------------- small UI icons (32x32, 128 design)
+# ------------------------------------------------------------- bows (vertical in a 128 space, rotated by the caller)
+PAL.setdefault("yew", ("#e2a070", "#b4643a", "#5e2c14"))
+PAL.setdefault("sapwood", ("#f6e8c4", "#e6d0a0", "#9a8058"))
+PAL.setdefault("horn", ("#efe2c4", "#b8a07a", "#4e3e2a"))
+
+
+def bow_limb(top, bot, bulge, th, cx=52):
+    """Closed tapering limb shape: tips at (cx, top)/(cx, bot), belly bulging right by `bulge`, `th` thick at the grip."""
+    mid = (top + bot) / 2
+    q1, q3 = top + (mid - top) * 0.45, mid + (bot - mid) * 0.55
+    outer = [(cx, top), (cx + bulge * 0.78, q1), (cx + bulge, mid), (cx + bulge * 0.78, q3), (cx, bot)]
+    inner = [(cx - 1.2, bot - 1), (cx + bulge * 0.78 - th * 0.7, q3), (cx + bulge - th, mid), (cx + bulge * 0.78 - th * 0.7, q1), (cx - 1.2, top + 1)]
+    return smooth(outer, close=False) + " " + "L" + smooth(inner, close=False)[1:] + " Z", outer
+
+
+def bow(P, top, bot, bulge, th, role="yew", grip="leather", nock="horn", string="#efe6cc", back_stripe=None, fine=False):
+    d, outer = bow_limb(top, bot, bulge, th)
+    b = []
+    cx = 52
+    # string first (behind the limb), slightly bowed by the nocks
+    b.append(lin(f"M{cx+1},{top+3} L{cx+1},{bot-3}", INK, 3.0))
+    b.append(lin(f"M{cx+1},{top+3} L{cx+1},{bot-3}", string, 1.3))
+    b.append(P.shape(d, role, s=2.2))
+    if back_stripe:   # pale sapwood back along the outside of the limb
+        b.append(lin(smooth([(cx + 0.5, top + 4), (cx + bulge * 0.78 - 0.4, top + (bot - top) * 0.225), (cx + bulge - 1.4, (top + bot) / 2),
+                             (cx + bulge * 0.78 - 0.4, bot - (bot - top) * 0.225), (cx + 0.5, bot - 4)], close=False), back_stripe, 2.2, 0.95))
+    mid = (top + bot) / 2
+    gx = cx + bulge - th / 2
+    b.append(P.shape(rect(gx - th / 2 - 2, mid - 10, th + 4, 20, 2.5), grip, s=1.2, lw=2.6))
+    b.append(P.detail(" ".join(f"M{gx-th/2-1.5:.1f},{mid-7+i*4.5:.1f} L{gx+th/2+1.5:.1f},{mid-5+i*4.5:.1f}" for i in range(4)), grip, 0.55))
+    if fine:
+        for yy in (mid - 12, mid + 12):
+            b.append(P.shape(rect(gx - th / 2 - 2.5, yy - 1.6, th + 5, 3.2, 1), "gold", s=0.5, lw=1.6))
+    # arrow rest nub + grain
+    b.append(P.detail(f"M{cx+bulge*0.6:.1f},{top+(bot-top)*0.3:.1f} q2,10 3,20 M{cx+bulge*0.6:.1f},{bot-(bot-top)*0.3:.1f} q2,-10 3,-20", role, 0.4, 0.6))
+    for (y, sy) in ((top, 1), (bot, -1)):
+        b.append(P.shape(f"M{cx-2.5},{y+sy*8} L{cx+2.8},{y+sy*8} L{cx+0.6},{y-sy*1.5} Z", nock, s=0.6, lw=2))
+    return J(b)
+
+
+def bow_hunting(P):
+    b = bow(P, 22, 106, 30, 10.5, role="yew", grip="leather", nock="wood", string="#e8dcc0")
+    return rot(f'<g transform="translate(4,0)">{b}</g>', 45), ""
+
+
+def bow_yew(P):
+    b = bow(P, 0, 128, 17, 9, role="yew", grip="cloth", nock="horn", string="#f4ecd4", back_stripe=PAL["sapwood"][1], fine=True)
+    return rot(f'<g transform="translate(6,0)">{b}</g>', 45), ""
+
+
+def yew_stave(P):
+    """Seasoned yew stave: a split length with the pale sapwood back, bark scraps, a knot and a sealed end grain."""
+    b = []
+    body = smooth([(58, 10), (66, 8), (70, 40), (71, 84), (69, 118), (61, 120), (58, 84), (57, 40)], t=0.35)
+    b.append(P.shape(body, "yew", s=2.5))
+    # sapwood stripe along the left side + bark scraps
+    b.append(P.shape(smooth([(58, 12), (61.5, 11), (60.5, 50), (61, 90), (61.5, 117), (58.5, 117), (57.5, 84), (57, 40)], t=0.35), "sapwood", s=0.6, lw=1.4))
+    for (y0, y1, dx) in ((26, 40, 0), (70, 86, 0.5), (98, 106, 0)):
+        b.append(P.shape(f"M{56+dx},{y0} q-2.4,{(y1-y0)/2} 0,{y1-y0} l2,-1 q-1.2,{-(y1-y0)/2+1} 0,{-(y1-y0)+2} Z", "brown", s=0.4, lw=1.2))
+    b.append(P.detail(" ".join(f"M{64+i*1.6:.1f},{16+i*3} q1.5,30 0.8,{88-i*6}" for i in range(3)), "yew", 0.45, 0.7))
+    b.append(P.shape(ell(66, 62, 2.8, 4.2), "brown", s=0.6, lw=1.4))
+    b.append(P.detail("M64,56 q2,6 0,12 M68.5,56 q-2,6 0,12", "yew", 0.4, 0.7))
+    # waxed end (top) showing rings, twine binding + tag near the bottom
+    b.append(P.shape(ell(62, 10, 5.5, 3.2), "wax", s=0.6, lw=1.6, fill_override="#c84a30"))
+    b.append(lin("M57.5,104 L70.5,101 M57.5,108 L70.5,105", INK, 3.2) + lin("M57.5,104 L70.5,101 M57.5,108 L70.5,105", PAL["straw"][1], 1.6))
+    b.append(lin("M70,103 q8,4 12,12", INK, 1.2))
+    b.append(P.shape(rect(76, 113, 14, 10, 1.5), "paper", s=0.6, lw=1.6) + fill(ell(80, 116.5, 1.3), INK))
+    return rot(J(b), 45), ""
+
+
 def star(P):
     pts = []
     for i in range(10):
@@ -1012,7 +1082,7 @@ def lock(P):
 ICONS = {k: v for k, v in globals().items() if callable(v)}
 
 
-SCALE = dict(gem_garnet=1.08, gem_moonstone=1.06, relic_unknown_arms=1.06,
+SCALE = dict(bow_hunting=1.28, gem_garnet=1.08, gem_moonstone=1.06, relic_unknown_arms=1.06,
              ring_silver=1.3, mace_flanged=1.12, dagger=1.15, herb_emberleaf=1.12, herb_moonwort=1.12, axe_hand=1.08,
              amulet_silver=1.08, runestone_blank=1.1, runestone_ember=1.1, runestone_ward=1.1, runestone_frost=1.1)
 

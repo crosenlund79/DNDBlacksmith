@@ -37,6 +37,7 @@ func _build() -> void:
 
 
 func _customers() -> void:
+	_offers()
 	var people := []
 	for c in Shop.waiting():
 		people.append(c["npc"])
@@ -100,6 +101,35 @@ func _customers() -> void:
 		row.add_child(v)
 		body.add_child(row)
 		body.add_child(UIKit.divider())
+
+
+## Finds brought home from expeditions, offered to the forge (they go elsewhere after three days).
+func _offers() -> void:
+	var offs := Shop.offers()
+	if offs.is_empty():
+		return
+	body.add_child(UIKit.label("Offered by returning adventurers", 26, "heading"))
+	var grid := HFlowContainer.new()
+	grid.add_theme_constant_override("h_separation", 14)
+	for o in offs:
+		var it: Dictionary = o["item"]
+		var a := Adv.get_a(str(o["from"]))
+		var col := UIKit.vbox(3)
+		col.custom_minimum_size = Vector2(250, 0)
+		col.add_child(ItemSlot.new(it, 64.0))
+		col.add_child(UIKit.rich("[b]%s[/b]\nfrom %s · %s · %d day%s left" % [Items.display_name(it), a.get("name", "?"), "free" if int(o["price"]) == 0 else "%d g" % int(o["price"]),
+			3 - (Game.day() - int(o["day"])), "" if 3 - (Game.day() - int(o["day"])) == 1 else "s"], 17))
+		var h := UIKit.hbox(6)
+		var oid: String = o["id"]
+		h.add_child(UIKit.button("Buy", func():
+			var err := Shop.accept_offer(oid)
+			Events.toast.emit(err if err != "" else "Bought — it is in your stores.", "bad" if err != "" else "good")
+			_build(), 110))
+		h.add_child(UIKit.button("Decline", func(): Shop.decline_offer(oid); _build(), 110))
+		col.add_child(h)
+		grid.add_child(col)
+	body.add_child(grid)
+	body.add_child(UIKit.divider())
 
 
 func _repair(npc: String) -> void:

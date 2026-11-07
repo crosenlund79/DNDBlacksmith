@@ -74,12 +74,12 @@ func _build_hud() -> void:
 	tl.add_child(v)
 	hud.add_child(tl)
 	# top-right: hotkeys
-	var keys := UIKit.label("[I] Inventory  [H] Hirelings  [K] Skills  [J] Adventurers  [O] Orders  [L] Ledger  [Esc] Menu", 18, "body", Color("#efe4cc"))
+	var keys := UIKit.label("[I] Inventory  [H] Hirelings  [K] Skills  [J] Adventurers  [B] Most Wanted  [O] Orders  [L] Ledger  [P] Pause  [−/+] Speed  [Esc] Menu", 18, "body", Color("#efe4cc"))
 	keys.add_theme_color_override("font_outline_color", Color("#20140c"))
 	keys.add_theme_constant_override("outline_size", 6)
 	keys.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	keys.position = Vector2(-900, 20)
-	keys.size = Vector2(880, 30)
+	keys.position = Vector2(-1180, 20)
+	keys.size = Vector2(1160, 30)
 	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hud.add_child(keys)
 	# prompt
@@ -154,7 +154,8 @@ func _build_hud() -> void:
 func _refresh_hud() -> void:
 	if Game.state.is_empty():
 		return
-	clock_label.text = "Day %d · %s · %s" % [Game.day(), Game.weekday_name(), Game.time_string()]
+	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name(), Game.time_string(),
+		"  ‖ paused" if Game.paused else ("  ▸×%d" % Game.speed if Game.speed > 1 else "")]
 	gold_label.text = "%d gold" % Game.gold()
 	var obj := Objectives.text()
 	objective_label.visible = obj != "" and Settings.get_value("gameplay/show_hints", true)
@@ -314,6 +315,8 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 			open(SavePanel.new(args.get("mode", "save")))
 		"settings":
 			open(SettingsPanel.new())
+		"difficulty":
+			open(DifficultyPanel.new())
 		"wanted":
 			open(WantedPanel.new(str(args.get("tab", "wanted"))))
 		"dossier":
@@ -336,7 +339,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			open(DevPanel.new())
 		return
+	# time controls work over the board and the observer (they do not stop the clock)
+	if event.is_action_pressed("time_pause"):
+		get_viewport().set_input_as_handled()
+		Game.toggle_pause()
+		toast("Time paused." if Game.paused else "Time runs again.", "info")
+		_refresh_hud()
+		return
+	if event.is_action_pressed("time_faster") or event.is_action_pressed("time_slower"):
+		get_viewport().set_input_as_handled()
+		var i := Game.SPEEDS.find(Game.speed) + (1 if event.is_action_pressed("time_faster") else -1)
+		Game.set_speed(int(Game.SPEEDS[clampi(i, 0, Game.SPEEDS.size() - 1)]))
+		toast("Time ×%d" % Game.speed, "info")
+		_refresh_hud()
+		return
 	if is_instance_valid(current):
+		return
+	if event.is_action_pressed("panel_wanted"):
+		get_viewport().set_input_as_handled()
+		_on_open_panel("wanted", {})
 		return
 	var map := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skills",
 		"panel_adventurers": "adventurers", "panel_orders": "orders", "cancel": "pause"}

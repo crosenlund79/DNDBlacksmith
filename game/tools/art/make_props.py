@@ -489,6 +489,38 @@ def notice_board(P, W, H):
     return sh, J(b), ""
 
 
+def most_wanted_board(P, W, H):
+    """Inn wall board (192x96): dark frame, cork field, carved header plank, pinned wanted sheets
+    with tiny portrait squares and red wax seals."""
+    sh = sh_(P, rect(4, 6, 184, 84, 3), 4, 4)
+    b = [P.shape(rect(4, 8, 184, 82, 3), "wood", s=3, fill_override=PAL["brown"][2])]
+    b.append(P.shape(rect(11, 22, 170, 61, 1.5), "brown", s=-2, hl=False, lw=1.4, fill_override="#9a7448"))
+    rnd = random.Random(9)
+    b.append(fill(" ".join(ell(rnd.uniform(14, 178), rnd.uniform(25, 80), 0.6) for _ in range(40)), INK, 0.55))
+    # carved header plank with a recessed (blank) field and rubric lozenges
+    b.append(P.shape(smooth([(46, 8), (96, 3), (146, 8), (152, 15), (146, 23), (96, 26), (46, 23), (40, 15)], t=0.25), "wood", s=1.5, lw=1.6))
+    b.append(P.shape(rect(56, 10, 80, 10, 2), "brown", s=-1, hl=False, lw=1.0, fill_override=PAL["brown"][2]))
+    for x in (50, 142):
+        b.append(fill(poly([(x, 12), (x + 3, 15), (x, 18), (x - 3, 15)]), RUB))
+    sheets = [(18, 28, 30, 40, -4), (54, 30, 28, 38, 3), (88, 27, 30, 41, -2), (124, 30, 28, 38, 4), (156, 28, 24, 34, -3)]
+    for i, (x, y, w, h, rot) in enumerate(sheets):
+        g = [P.shape(rect(x, y, w, h, 0.5), "paper", s=1, lw=1.1)]
+        px, py, pw = x + w * 0.22, y + 6, w * 0.56
+        g.append(P.shape(rect(px, py, pw, pw * 0.95, 0.5), "linen", s=0.6, lw=0.8, fill_override="#c8b48c"))
+        g.append(fill(ell(px + pw / 2, py + pw * 0.38, pw * 0.2) + " " + ell(px + pw / 2, py + pw * 0.95, pw * 0.36, pw * 0.3), "#5a4430", 0.85))
+        ty = py + pw + 4
+        g.append(P.detail(" ".join(f"M{x+3},{ty+k*3.2:.1f} h{w-6-rnd.uniform(0,7):.1f}" for k in range(int((y + h - ty - 5) / 3.2) + 1)), "paper", 0.25, 0.6))
+        g.append(fill(ell(x + w - 6, y + h - 6, 3.2), RUB) + lin(ell(x + w - 6, y + h - 6, 3.2), INK, 0.7) + fill(ell(x + w - 7, y + h - 7, 1), "#e8907a", 0.8))
+        if i == 2:   # one notice struck through in red (a fallen adventurer)
+            g.append(lin(f"M{x+2},{y+h-4} L{x+w-2},{y+4}", RUB, 1.4, 0.9))
+        b.append(f'<g transform="rotate({rot} {x+w/2} {y+h/2})">' + J(g) + "</g>")
+        b.append(fill(ell(x + w / 2, y + 2.5, 1.6), GILT) + lin(ell(x + w / 2, y + 2.5, 1.6), INK, 0.5))
+    for x, y in [(8, 12), (184, 12), (8, 86), (184, 86)]:
+        b.append(fill(ell(x, y, 1.6), PAL["darkiron"][0]) + lin(ell(x, y, 1.6), INK, 0.5))
+    emit = glow(P, 30, 70, 50, EMBER_HOT, 0.12)
+    return sh, J(b), emit
+
+
 def market_stall(P, W, H):
     sh = sh_(P, rect(8, 8, 172, 104, 3), 6, 7)
     b = []

@@ -45,6 +45,15 @@ static func diff() -> Dictionary:
 	return cfg().get("difficulty", {}).get(diff_id(), {"observe": true, "detail": true, "enemy": 1.0, "death": true, "death_dc": 7, "heal_rate": 1.0, "prices": 1.0, "wages": 1.0, "loot": 1.0})
 
 
+## Change difficulty mid-game: permissions (observation, detail) and economy factors follow at once.
+static func set_difficulty(id: String) -> void:
+	if not cfg().get("difficulty", {}).has(id) or id == diff_id():
+		return
+	Game.state["difficulty"] = id
+	Chronicle.add("info", "The smith now plays at %s difficulty." % str(diff().get("name", id)))
+	Events.expeditions_changed.emit()
+
+
 static func can_observe() -> bool:
 	return bool(diff().get("observe", true))
 
@@ -1315,6 +1324,33 @@ static func _archive(e: Dictionary) -> void:
 	while done().size() > 25:
 		done().pop_back()
 	Events.expeditions_changed.emit()
+
+
+## What an adventurer says when asked about their last expedition: drawn from its real journal.
+static func tale(adv_id: String) -> String:
+	var a := Adv.get_a(adv_id)
+	var cur := exp_of(adv_id)
+	if not cur.is_empty():
+		return ""
+	var last := {}
+	for e in done():
+		if (e["party"] as Array).has(adv_id):
+			last = e
+			break
+	if last.is_empty():
+		return ""
+	var reg: String = region(last["dest"]).get("name", "the wilds")
+	var lines := []
+	for j in last["journal"]:
+		if str(j["kind"]) in ["victory", "defeat", "death", "trap", "discovery", "loot", "rescue", "wound", "retreat"]:
+			lines.append(str(j["text"]))
+	var picked: Array = lines.slice(maxi(0, lines.size() - 4))
+	var mood: String = {"returned": "We came back with our heads high.", "retreated": "We turned back. No shame in living.", "missing": "", "rescued": "I don't remember the end of it. Woodcutters, they say."}.get(str(last["outcome"]), "")
+	var weapon: Dictionary = a.get("equipment", {}).get("weapon", {})
+	var praise := ""
+	if str(weapon.get("crafted_by", "")).begins_with("Brannoc"):
+		praise = " Your %s held the whole way." % Items.display_name(weapon) if not weapon.get("broken", false) else " Your %s broke on the way — I need it mended." % Items.display_name(weapon)
+	return "\"%s, day %d. %s%s\"\n\n[i]%s[/i]" % [reg, int(last["journal"][-1]["day"]) if not (last["journal"] as Array).is_empty() else Game.day(), mood, praise, "\n".join(picked.map(func(x): return "— " + str(x)))]
 
 
 # ======================================================================= helpers

@@ -19,6 +19,8 @@ static func price_of(it: Dictionary) -> int:
 	var p := Items.value(it)
 	if Game.has_upgrade("display_cases"):
 		p = int(p * 1.1)
+	# difficulty: Apprentice buyers pay a little more, Master buyers haggle harder
+	p = int(round(p * float(Expeditions.diff().get("prices", 1.0))))
 	return maxi(1, p)
 
 
@@ -116,6 +118,17 @@ static func accept_offer(oid: String) -> String:
 				ord["reward"] = int(ord["reward"]) + 60
 		return ""
 	return "That offer is gone."
+
+
+static func decline_offer(oid: String) -> void:
+	for o in offers():
+		if o["id"] == oid:
+			offers().erase(o)
+			# they sell it on at the market instead
+			var a := Adv.get_a(o["from"])
+			if not a.is_empty():
+				a["gold"] = int(a.get("gold", 0)) + int(Items.value(o["item"]) * 0.4)
+			return
 
 
 static func expire_offers() -> void:
@@ -375,11 +388,52 @@ static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 	if note == "" and dest_name != "":
 		note = "For %s%s." % [dest_name, (" — they say the things there fear " + prop) if prop != "" else ""]
 	var o := {"id": "ord_%d" % Game.new_uid(), "npc": npc, "slot": slot, "stat": stat, "min": need, "tier": tier,
-		"reward": 40 + int(a["level"]) * 18 + need * 3 + (30 if tier >= 2 else 0) + (25 if prop != "" else 0), "deadline": Game.day() + 3, "status": "open", "note": note}
+		"reward": 40 + int(a["level"]) * 18 + need * 3 + (30 if tier >= 2 else 0) + (25 if prop != "" else 0), "deadline": Game.day() + 3, "status": "open", "note": note,
+		"placed": Game.day()}
+	_set_priority(o, a)
 	orders().append(o)
 	Events.orders_changed.emit()
 	Events.toast.emit("New commission from %s: %s." % [a["name"], order_text(o)], "info")
 	return o
+
+
+## Every commission has a priority (what the customer cares about most) and a bonus objective.
+## quality: pays more, and a bonus for fine craftsmanship · speed: a short deadline, a bonus for
+## delivering by the next day · cost: a thin purse, but the customer remembers the favour.
+const PRIORITY := {
+	"quality": {"name": "Quality first", "desc": "pays well; bonus for craftsmanship of 75% or more"},
+	"speed": {"name": "Needed fast", "desc": "short deadline; bonus if delivered by tomorrow"},
+	"cost": {"name": "Tight purse", "desc": "less coin, but they will not forget the kindness"},
+}
+
+
+static func _set_priority(o: Dictionary, a: Dictionary) -> void:
+	var risk := float(a.get("risk", 0.5))
+	var r := randf()
+	var pri := "speed" if r < 0.2 + risk * 0.2 else ("cost" if int(a.get("gold", 0)) < 60 and r < 0.75 else "quality")
+	o["priority"] = pri
+	match pri:
+		"quality":
+			o["reward"] = int(o["reward"] * 1.2)
+			o["bonus"] = {"kind": "fine", "min": 75, "gold": 30 + int(a.get("level", 1)) * 5, "text": "craftsmanship 75%+"}
+		"speed":
+			o["deadline"] = Game.day() + 2
+			o["bonus"] = {"kind": "early", "by": Game.day() + 1, "gold": 25 + int(a.get("level", 1)) * 4, "text": "delivered by day %d" % (Game.day() + 1)}
+		"cost":
+			o["reward"] = int(o["reward"] * 0.7)
+			o["bonus"] = {"kind": "rare", "gold": 20, "rel": 10.0, "text": "rare quality or better (they will remember it)"}
+
+
+static func bonus_met(o: Dictionary, it: Dictionary) -> bool:
+	var b: Dictionary = o.get("bonus", {})
+	match str(b.get("kind", "")):
+		"fine":
+			return float(it.get("craft", {}).get("quality", 0.0)) >= float(b.get("min", 75))
+		"early":
+			return Game.day() <= int(b.get("by", 0))
+		"rare":
+			return it.get("rarity", "") in ["rare", "legendary", "unique", "set"]
+	return false
 
 
 static func item_meets(o: Dictionary, it: Dictionary) -> bool:
@@ -388,6 +442,13 @@ static func item_meets(o: Dictionary, it: Dictionary) -> bool:
 
 static func order_text(o: Dictionary) -> String:
 	return "%s with %s ≥ %d%s" % [o["slot"], o["stat"], int(o["min"]), (", " + Items.TIER_WORD[int(o["tier"])]) if int(o.get("tier", 1)) >= 2 else ""]
+
+
+static func order_terms(o: Dictionary) -> String:
+	var p: Dictionary = PRIORITY.get(o.get("priority", ""), {})
+	if p.is_empty():
+		return ""
+	return "%s — %s. Bonus: %s (+%d g)" % [p["name"], p["desc"], o.get("bonus", {}).get("text", ""), int(o.get("bonus", {}).get("gold", 0))]
 
 
 static func fulfil(order_id: String, uid: int) -> String:
@@ -403,6 +464,15 @@ static func fulfil(order_id: String, uid: int) -> String:
 		var margin := Items.stat(it, o["stat"]) - int(o["min"])
 		var bonus := int(margin * 4 + (40 if it.get("rarity") in ["rare", "legendary", "unique", "set"] else 0))
 		var reward := int(o["reward"]) + bonus
+		var got_bonus := bonus_met(o, it)
+		if got_bonus:
+			reward += int(o["bonus"].get("gold", 0))
+			Social.change(o["npc"], float(o["bonus"].get("rel", 4.0)), 4.0, "bonus_" + o["id"], "Brannoc did better than I asked: %s." % o["bonus"].get("text", ""))
+			Events.toast.emit("Bonus objective met — %s (+%d g)." % [o["bonus"].get("text", ""), int(o["bonus"].get("gold", 0))], "good")
+		o["bonus_met"] = got_bonus
+		o["delivered_uid"] = int(it["uid"])
+		Items.add_history(it, "Commissioned by %s (%s)." % [a["name"], PRIORITY.get(o.get("priority", ""), {}).get("name", "commission")])
+		Chronicle.add("commission", "Brannoc delivered %s's commission: %s%s." % [a["name"], Items.display_name(it), " — and beat the bonus" if got_bonus else ""], {"adv": o["npc"], "uid": int(it["uid"])})
 		if Social.spouse() == o["npc"]:
 			reward = 0
 		else:

@@ -29,14 +29,20 @@ func _build() -> void:
 		var row := UIKit.hbox(16)
 		row.add_child(UIKit.portrait("portraits/" + str(a["look"]), 120))
 		var skills := []
-		for s in DB.work_skills:
+		var exact := bool(Expeditions.diff().get("detail", true))
+		for si in DB.work_skills.size():
+			var s: String = DB.work_skills[si]
 			var lv := int(a["levels"].get(s, 0))
-			skills.append("%s %s" % [SkillSys.skill_name(s), "●".repeat(lv) + "○".repeat(maxi(0, 5 - lv))])
+			if exact:
+				skills.append("%s %s" % [SkillSys.skill_name(s), "●".repeat(lv) + "○".repeat(maxi(0, 5 - lv))])
+			else:
+				# Master: a notice is a boast — only a range until they work for you
+				skills.append("%s %d–%d" % [SkillSys.skill_name(s), maxi(0, lv - (si + i) % 2), lv + 1])
 		var tl := []
 		for tid in a.get("traits", []):
 			var tr: Dictionary = Hire.TRAITS.get(tid, {})
 			tl.append("[color=%s]%s %s[/color]" % ["#26622f" if tr.get("good", false) else "#9e3a0c", "▲" if tr.get("good", false) else "▼", tr.get("name", tid)])
-		var lab := UIKit.rich("[b]%s[/b] · %s · %s\n[i]%s[/i]\n%s\nWage %d g/day · signing fee %d g" % [a["name"], a["race"], "  ".join(tl), a["personality"], "   ".join(skills), a["wage"], a["fee"]], 20)
+		var lab := UIKit.rich("[b]%s[/b] · %s · %s\n[i]%s[/i]\n%s\nWage %d g/day · signing fee %d g · [i]potential unknown until they work for you[/i]" % [a["name"], a["race"], "  ".join(tl), a["personality"], "   ".join(skills), a["wage"], a["fee"]], 20)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lab)
 		var idx: int = i

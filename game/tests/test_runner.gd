@@ -35,6 +35,7 @@ func _ready() -> void:
 	_adventurers()
 	_social()
 	_loot()
+	_living_village()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -561,6 +562,146 @@ func _saves() -> void:
 		"saves: crafted items keep their record of the work")
 	check(not leg.is_empty() and leg[0].get("star", false), "saves: crafted legendary survives save/load with its star")
 	Saves.delete("test_slot")
+
+
+## Everyone home, rested and ready to leave today.
+func _ready_everyone() -> void:
+	for a in Adv.all().values():
+		Expeditions.ensure(a)
+		if a["status"] != "dead":
+			a["status"] = "in_town"
+			a["hp"] = a["hp_max"]
+			a["fatigue"] = 0.0
+			a["depart_day"] = Game.day()
+			a.erase("exp")
+	Expeditions.st()["parties"] = {}
+
+
+func _run_out(eid: String) -> Dictionary:
+	var e: Dictionary = Expeditions.active().get(eid, {})
+	var guard := 0
+	while Expeditions.active().has(eid) and guard < 600:
+		guard += 1
+		Expeditions.step(e)
+	return e
+
+
+func _living_village() -> void:
+	Expeditions.set_difficulty("journeyman")
+	# template sprites: user-provided names fall back to template_ files
+	check(Assets.template_id("stations/forge") == "stations/template_forge", "templates: id maps to template_ file")
+	check(Assets.has_tex("stations/forge") and Assets.has_tex("enemies/wolf"), "templates: unprefixed ids resolve via template_ sprites")
+	# a crafted instance sold to an adventurer is the exact item they carry
+	var sword := Items.make("sword_steel", {"quality": 96.0})
+	sword["crafted_by"] = "Brannoc Ironhand"
+	var uid := int(sword["uid"])
+	var dar: Dictionary = Adv.all().values()[0]
+	Adv.give_item(dar, sword, 0)
+	check(int(dar["equipment"]["weapon"]["uid"]) == uid and dar["equipment"]["weapon"]["owner"] == dar["id"], "items: the adventurer carries the exact instance (uid %d)" % uid)
+	check(int(Game.find_uid_anywhere(uid).get("uid", -1)) == uid, "items: an instance can be found wherever it is")
+	# parties form at the inn and leave
+	_ready_everyone()
+	Expeditions.form_parties()
+	var parties: Array = Expeditions.st()["parties"].values()
+	check(not parties.is_empty(), "expeditions: parties form at the inn (%d)" % parties.size())
+	var sizes_ok := true
+	for p in parties:
+		sizes_ok = sizes_ok and (p["members"] as Array).size() >= 1 and (p["members"] as Array).size() <= 4
+	check(sizes_ok, "expeditions: parties have 1–4 members")
+	Expeditions.prepare_parties()
+	Expeditions.depart_parties()
+	check(not Expeditions.active().is_empty(), "expeditions: parties depart (%d active)" % Expeditions.active().size())
+	var e0: Dictionary = Expeditions.active().values()[0]
+	var a0 := Adv.get_a(str(e0["party"][0]))
+	check(a0["status"] == "away" and Expeditions.region(e0["dest"]).size() > 0, "expeditions: members are away in a real region (%s)" % e0["dest"])
+	# observation does not stop time
+	var op := ObserverPanel.new(str(e0["id"]))
+	check(not op.blocks_time, "observer: watching never pauses the simulation")
+	op.free()
+	var wp := WantedPanel.new("wanted")
+	check(not wp.blocks_time, "board: the Most Wanted board lets time run")
+	wp.free()
+	# run every expedition to its end without anybody watching
+	var ids: Array = Expeditions.active().keys()
+	for eid in ids:
+		_run_out(eid)
+	check(Expeditions.active().is_empty(), "expeditions: all finish on their own")
+	var fin: Dictionary = Expeditions.done()[0]
+	check(not (fin["journal"] as Array).is_empty() and str(fin["outcome"]) != "", "expeditions: journal and outcome recorded (%s)" % fin["outcome"])
+	var timed := true
+	for j in fin["journal"]:
+		timed = timed and j.has("t") and j.has("time") and j.has("day")
+	check(timed, "expeditions: journal entries are timestamped")
+	check(not Chronicle.entries().is_empty(), "chronicle: events were recorded (%d)" % Chronicle.entries().size())
+	# combat uses real dice and the item instance
+	var rolls_ok := true
+	var saw_attack := false
+	var weapon_seen := false
+	for e in Expeditions.done():
+		for r in e["encounters"]:
+			for act in r.get("actions", []):
+				if str(act.get("kind", "")) == "attack" and act.has("roll"):
+					saw_attack = true
+					rolls_ok = rolls_ok and int(act["roll"]) >= 1 and int(act["roll"]) <= 20
+					if int(act.get("weapon_uid", -1)) > 0:
+						weapon_seen = true
+	check(saw_attack and rolls_ok, "combat: attacks roll a d20 (1–20)")
+	check(weapon_seen, "combat: attacks name the weapon instance used")
+	# Monte Carlo: apprentice never kills, many expeditions in a row
+	Expeditions.set_difficulty("apprentice")
+	var alive_before := Adv.all().values().filter(func(x): return x["status"] != "dead").size()
+	for round_i in 6:
+		_ready_everyone()
+		Expeditions.form_parties()
+		Expeditions.prepare_parties()
+		Expeditions.depart_parties()
+		for eid in Expeditions.active().keys():
+			_run_out(eid)
+	var alive_after := Adv.all().values().filter(func(x): return x["status"] != "dead").size()
+	check(alive_after == alive_before, "difficulty: Apprentice never kills (%d → %d alive)" % [alive_before, alive_after])
+	check(Expeditions.can_observe(), "difficulty: Apprentice may observe live")
+	# Master: no omniscient view; harsher prices; switching updates permissions at once
+	var probe := Items.make("sword_steel", {"quality": 80.0})
+	Expeditions.set_difficulty("journeyman")
+	var p_j := Shop.price_of(probe)
+	Expeditions.set_difficulty("master")
+	check(not Expeditions.can_observe(), "difficulty: Master forbids live observation")
+	check(Shop.price_of(probe) < p_j, "difficulty: Master buyers pay less (%d < %d)" % [Shop.price_of(probe), p_j])
+	Expeditions.set_difficulty("journeyman")
+	check(Expeditions.can_observe(), "difficulty: switching back restores observation")
+	# commissions carry a priority and a bonus objective
+	var o := Shop.create_order(str(a0["id"]), "weapon")
+	check(o.is_empty() or (o.has("priority") and o.has("bonus")), "commissions: priority and bonus objective")
+	# hidden employee potential changes growth
+	var hi := {"id": "t_hi", "skills": SkillSys.new_set({"smithing": 3}), "traits": [], "potential": 1.5, "hired_day": Game.day()}
+	var lo := {"id": "t_lo", "skills": SkillSys.new_set({"smithing": 3}), "traits": [], "potential": 0.7, "hired_day": Game.day()}
+	Hire.add_xp(hi, "smithing", 40)
+	Hire.add_xp(lo, "smithing", 40)
+	check(int(hi["skills"]["smithing"]["xp"]) > int(lo["skills"]["smithing"]["xp"]), "employees: hidden potential changes growth (%d vs %d xp)" % [int(hi["skills"]["smithing"]["xp"]), int(lo["skills"]["smithing"]["xp"])])
+	check(Hire.potential_word(hi).contains("unknown"), "employees: potential is hidden until they have worked a while")
+	hi["hired_day"] = Game.day() - 6
+	check(Hire.potential_word(hi).contains("remarkable"), "employees: potential revealed by watching them work")
+	# finds offered to the forge become real inventory
+	var find := Items.make("yew_stave", {})
+	Shop.add_offer(str(a0["id"]), find, false)
+	var off: Dictionary = Shop.offers()[-1]
+	Game.state["gold"] = 500
+	check(Shop.accept_offer(str(off["id"])) == "" and Game.find_uid(int(find["uid"])).get("owner", "") == "smith", "offers: a bought find enters the smith's stores")
+	# an expedition in progress survives save and load
+	_ready_everyone()
+	Expeditions.form_parties()
+	Expeditions.prepare_parties()
+	Expeditions.depart_parties()
+	var live_id: String = Expeditions.active().keys()[0] if not Expeditions.active().is_empty() else ""
+	Expeditions.step(Expeditions.active()[live_id])
+	var jn := (Expeditions.active()[live_id]["journal"] as Array).size()
+	check(Saves.save("test_exp"), "saves: write with an expedition on the road")
+	Game.state["exp"] = {"active": {}, "done": [], "parties": {}}
+	check(Saves.load_slot("test_exp") and Expeditions.active().has(live_id), "saves: the active expedition is restored")
+	check((Expeditions.active()[live_id]["journal"] as Array).size() == jn, "saves: its journal is intact")
+	_run_out(live_id)
+	check(not Expeditions.active().has(live_id), "saves: a restored expedition runs on to its end")
+	Saves.delete("test_exp")
 
 
 ## Regressions for the failures found when first launching in Godot 4.3.

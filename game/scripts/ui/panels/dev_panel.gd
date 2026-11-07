@@ -55,6 +55,16 @@ func _ready() -> void:
 		["Village social events", func(): Sim._social_events(); _say("Social events rolled.")],
 		["Weekly grocer delivery", func(): Game.state["world"]["delivery_pending"] = true; Events.world_flag_changed.emit("delivery"); _say("Aldric is at the door.")],
 		["Reveal all adventurers (rumours)", func(): _rumours()]])
+	_section("Expeditions & difficulty", [
+		["Form, provision & dispatch parties now", func(): _dispatch()],
+		["Step every expedition once", func(): _step_all(1)],
+		["Run every expedition to its end", func(): _step_all(400)],
+		["Apprentice", func(): Expeditions.set_difficulty("apprentice"); _say("Difficulty: Apprentice")],
+		["Journeyman", func(): Expeditions.set_difficulty("journeyman"); _say("Difficulty: Journeyman")],
+		["Master", func(): Expeditions.set_difficulty("master"); _say("Difficulty: Master")],
+		["Pause / resume time", func(): Game.toggle_pause(); _say("Paused" if Game.paused else "Running")],
+		["Speed ×1", func(): Game.set_speed(1); _say("×1")], ["Speed ×4", func(): Game.set_speed(4); _say("×4")], ["Speed ×8", func(): Game.set_speed(8); _say("×8")],
+		["Open the Most Wanted board", func(): Events.open_panel.emit("wanted", {})]])
 	_section("Relationships", [
 		["+20 affection: everyone in town", func(): _aff(20.0)],
 		["−20 affection: everyone in town", func(): _aff(-20.0)]])
@@ -126,8 +136,9 @@ func _potions() -> void:
 
 
 func _resolve_all() -> void:
+	_step_all(400)
 	for a in Adv.all().values():
-		if a["status"] == "away":
+		if a["status"] == "away" and not a.has("exp"):
 			a["days_left"] = 1
 	Adv.on_day()
 	_say("Expeditions resolved")
@@ -136,8 +147,34 @@ func _resolve_all() -> void:
 func _depart_all() -> void:
 	for a in Adv.in_town():
 		a["depart_day"] = Game.day()
-	Adv.morning_departures()
-	_say("Departures")
+	_dispatch()
+
+
+## The dawn routine on demand: parties form at the inn, buy supplies and march out.
+func _dispatch() -> void:
+	for a in Adv.all().values():
+		Expeditions.ensure(a)
+		if a["status"] == "in_town":
+			a["hp"] = maxf(float(a["hp"]), float(a["hp_max"]) * 0.8)
+			a["fatigue"] = minf(float(a["fatigue"]), 20.0)
+	Expeditions.form_parties()
+	Expeditions.prepare_parties()
+	Expeditions.depart_parties()
+	_say("%d expedition(s) on the road." % Expeditions.active().size())
+
+
+## Steps each expedition `n` times, or until it is over (does not touch the clock).
+func _step_all(n: int) -> void:
+	var done := 0
+	for eid in Expeditions.active().keys():
+		var e: Dictionary = Expeditions.active()[eid]
+		for i in n:
+			if not Expeditions.active().has(eid):
+				done += 1
+				break
+			Expeditions.step(e)
+	Events.expeditions_changed.emit()
+	_say("Stepped. %d finished, %d still out." % [done, Expeditions.active().size()])
 
 
 func _hire_home() -> void:

@@ -40,6 +40,10 @@ const DEFAULT_KEYS := {
 	"debug_overlay": [KEY_F3],
 	"dev_panel": [KEY_F10],
 	"run": [KEY_SHIFT],
+	"panel_wanted": [KEY_B],
+	"time_pause": [KEY_P],
+	"time_faster": [KEY_EQUAL, KEY_KP_ADD],
+	"time_slower": [KEY_MINUS, KEY_KP_SUBTRACT],
 }
 
 

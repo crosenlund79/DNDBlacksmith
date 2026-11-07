@@ -40,8 +40,8 @@ func to_menu() -> void:
 	Audio.set_ambience("bed", "")
 
 
-func new_game() -> void:
-	Game.new_game()
+func new_game(difficulty := "journeyman") -> void:
+	Game.new_game(difficulty)
 	_start_world()
 
 
@@ -67,6 +67,8 @@ func _start_world() -> void:
 	ui = UIRoot.new()
 	add_child(ui)
 	Game.ui_blockers = 0
+	Game.paused = false
+	Game.speed = 1
 	Game.running = true
 	Events.objective_changed.emit(Objectives.text())
 	Log.info("World started on day %d" % Game.day())

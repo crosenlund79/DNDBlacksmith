@@ -60,7 +60,7 @@ static func options(npc: String, area: String) -> Array:
 			out.insert(1, {"id": "send_away", "label": "Ask them to come back another time"})
 	var a := Adv.get_a(npc)
 	if not a.is_empty() and a["status"] in ["in_town", "injured"]:
-		out.append({"id": "travels", "label": "Ask about their travels"})
+		out.append({"id": "travels", "label": "Ask about their last expedition"})
 		out.append({"id": "equip", "label": "Give equipment (free)" if Social.spouse() == npc else "Offer equipment"})
 		if a.get("needs", "") != "" and not Shop.open_orders().any(func(o): return o["npc"] == npc):
 			out.append({"id": "order", "label": "Ask what they need forged"})
@@ -121,6 +121,10 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": "You turn the damaged piece over in your hands. Grinding wheel it is.", "action": "repair"}
 		"travels":
 			Adv.ensure(a)
+			var t := Expeditions.tale(npc)
+			if t != "":
+				Social.change(npc, 1.0, 3.0, "tale_" + str(Game.day()), "Brannoc asked about my last expedition.")
+				return {"text": t + "\n\nThey are carrying: " + _gear_text(a)}
 			var rep: String = a.get("last_report", "")
 			if not a["log"].is_empty() and Social.fam(npc) >= 10.0:
 				rep += "\n\n[i]" + "\n".join(a["log"]) + "[/i]"
