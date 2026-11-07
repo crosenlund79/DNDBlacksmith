@@ -123,6 +123,10 @@ items = [
  it("warplate_adamantine", "Adamantine Warplate", "armor_metal", "armor", 700, {"protection": [16, 22], "durability": 190, "ward": 6, "magic": 4}, desc="Ward-magic bound into the metal itself; violet seams glow under strain.", tags=["arcane"]),
  it("boots_ranger", "Ranger's Soft Boots", "boots", "boots", 70, {"protection": [1, 3], "durability": 60, "speed": 6}, desc="Silent on leaf-litter. Light enough to run in."),
  it("hood_embroidered", "Embroidered Hood", "helmet", "helmet", 140, {"protection": [2, 3], "durability": 50, "ward": 4}, desc="Gold sigils stitched with ethereal thread turn aside curses.", tags=["enchanted"]),
+ # ---- the living village: ranged weapons
+ it("yew_stave", "Yew Stave", "material", None, 14, stack=True, desc="Seasoned yew from Whisperwood: heartwood and sapwood in one stave."),
+ it("bow_hunting", "Hunting Bow", "weapon", "weapon", 70, {"attack": [7, 11], "durability": 55, "speed": 3}, desc="A plain yew bow with a linen string."),
+ it("bow_yew", "Yew Longbow", "weapon", "weapon", 190, {"attack": [11, 16], "durability": 80, "speed": 5}, desc="Taller than its archer; reaches out to where wolves gather."),
  # named unique / set
  it("grimhold", "Grimhold, the Last Hammer", "weapon", "weapon", 900, {"attack": [24, 34], "durability": 200, "smithing": 2}, tags=["unique"]),
  it("wyvernscale_pauldron", "Wyvernscale Pauldron", "armor_metal", "armor", 400, {"protection": [14, 20], "durability": 150}, tags=["set"]),
@@ -178,14 +182,14 @@ W("destinations.json", [
 W("suppliers.json", {
  "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",
  "village": [["ore_iron", 6], ["coal", 3], ["leather_hide", 7], ["thread_linen", 4], ["reagent_salt", 7]],
- "supplier_herbalist": [["herb_emberleaf", 8], ["herb_moonwort", 8], ["reagent_salt", 6]],
+ "supplier_herbalist": [["herb_emberleaf", 8], ["herb_moonwort", 8], ["reagent_salt", 6], ["yew_stave", 16]],
  "supplier_highmarsh": [["ingot_steel", 30], ["ore_silver", 18], ["thread_ethereal", 48], ["gem_garnet", 40], ["gem_sapphire", 52], ["ore_mithril", 110]]
 })
 W("loot_tables.json", {
  "_doc": "rolls: number of items; entries: [item_id, weight, [min,max] qty]; rarity_bias raises chances of rare/legendary equipment rolls.",
  "mine": {"rolls": [3, 5], "entries": [["ore_iron", 40, [2, 5]], ["coal", 30, [2, 5]], ["ore_copper", 12, [1, 3]], ["ore_silver", 8, [1, 2]], ["runestone_blank", 7, [1, 1]], ["gem_garnet", 5, [1, 1]], ["gem_moonstone", 3, [1, 1]], ["ore_mithril", 2, [1, 1]], ["relic_map", 1, [1, 1]]], "skill_entries": {"3": [["gem_sapphire", 4, [1, 1]]], "5": [["ore_mithril", 4, [1, 2]]]}},
  "deep_mine": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_silver", 20, [1, 3]], ["runestone_blank", 18, [1, 2]], ["ore_adamantine", 8, [1, 2]], ["gem_sapphire", 8, [1, 1]], ["gem_starstone", 3, [1, 1]], ["starmetal_fragment", 3, [1, 1]], ["equip:weapon", 6, [1, 1]], ["relic_unknown_arms", 4, [1, 1]], ["relic_crown_shard", 2, [1, 1]]], "rarity_bias": 25, "skill_entries": {"6": [["gem_starstone", 6, [1, 1]]]}},
- "forest": {"rolls": [3, 4], "entries": [["herb_emberleaf", 30, [1, 3]], ["herb_moonwort", 30, [1, 3]], ["leather_hide", 25, [1, 2]], ["thread_linen", 10, [1, 2]], ["equip:any", 5, [1, 1]]]},
+ "forest": {"rolls": [3, 4], "entries": [["herb_emberleaf", 30, [1, 3]], ["herb_moonwort", 30, [1, 3]], ["leather_hide", 25, [1, 2]], ["yew_stave", 15, [1, 2]], ["thread_linen", 10, [1, 2]], ["equip:any", 5, [1, 1]]]},
  "trade": {"rolls": [2, 4], "entries": [["reagent_salt", 25, [1, 3]], ["thread_linen", 20, [2, 4]], ["thread_ethereal", 8, [1, 1]], ["leather_cured", 20, [1, 2]], ["coal", 20, [2, 4]], ["equip:any", 7, [1, 1]]]},
  "barrow": {"rolls": [3, 5], "entries": [["relic_coin", 20, [1, 2]], ["relic_idol", 10, [1, 1]], ["runestone_blank", 12, [1, 2]], ["equip:any", 24, [1, 1]], ["relic_unknown_arms", 9, [1, 1]], ["relic_unknown_tablet", 8, [1, 1]], ["relic_unknown_reliquary", 6, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["ore_silver", 12, [1, 2]]], "rarity_bias": 15, "skill_entries": {"4": [["relic_unknown_reliquary", 6, [1, 1]]]}},
  "relic_reveal": {"rolls": [1, 1], "entries": [["equip:ancient", 40, [1, 1]], ["starmetal_fragment", 18, [1, 2]], ["gem_starstone", 10, [1, 1]], ["gem_moonstone", 12, [1, 2]], ["recipe_scroll", 20, [1, 1]]], "rarity_bias": 30},
@@ -357,6 +361,7 @@ props = {
  "nightstand": P(48, 48, desc="nightstand with candle and book"),
  "bar_shelf": P(192, 40, desc="behind-the-bar shelf of bottles and mugs"),
  # ---- shop-front waiting area / decor (drawn by tools/art/make_props.py)
+ "most_wanted_board": {"size": [192, 96], "solid": True, "desc": "MOST WANTED board on the inn wall: dark wood frame, cork, pinned parchment sheets with tiny portraits and red wax seals, a carved header plank"},
  "waiting_seat": P(64, 64, desc="single outdoor wooden seat with a burgundy cushion"),
  "waiting_awning": P(192, 64, desc="small striped awning on two poles with a hanging hourglass sign (waiting area)"),
  "craft_display": P(192, 96, desc="display stand of example crafted equipment: swords in a rack, cuirass, helm and shield"),

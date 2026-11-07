@@ -90,7 +90,7 @@ def contact(stations):
     for st in stations:
         bp = os.path.join(OUT_DIR, st["id"] + ".png")
         sp = os.path.join(SPR, "stations", st["id"] + ".png")
-        if not (os.path.exists(bp) and os.path.exists(sp)):
+        if not (artlib.exists(bp) and artlib.exists(sp)):
             continue
         b = Image.open(bp).convert("RGBA")
         s = Image.open(sp).convert("RGBA")

@@ -45,19 +45,19 @@ def verify():
     errs = []
     for s in artlib.load("stations.json"):
         p = os.path.join(SPR, "stations", s["id"] + ".png")
-        if not os.path.exists(p) or list(Image.open(p).size) != s["size"]:
+        if not artlib.exists(p) or list(Image.open(p).size) != s["size"]:
             errs.append(p)
     for k, v in artlib.load("props.json").items():
         p = os.path.join(SPR, "props", k + ".png")
-        if not os.path.exists(p) or list(Image.open(p).size) != v["size"]:
+        if not artlib.exists(p) or list(Image.open(p).size) != v["size"]:
             errs.append(p)
     for it in artlib.load("items.json"):
         p = os.path.join(SPR, "icons", it["icon"] + ".png")
-        if not os.path.exists(p) or Image.open(p).size != (64, 64):
+        if not artlib.exists(p) or Image.open(p).size != (64, 64):
             errs.append(p)
     for b in artlib.load("layout.json")["buildings"]:
         p = os.path.join(SPR, "roofs", b["id"] + ".png")
-        if not os.path.exists(p) or Image.open(p).size != (b["rect"][2] * 64, b["rect"][3] * 64):
+        if not artlib.exists(p) or Image.open(p).size != (b["rect"][2] * 64, b["rect"][3] * 64):
             errs.append(p)
     print("verify:", "OK" if not errs else errs)
 

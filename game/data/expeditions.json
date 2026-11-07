@@ -1,0 +1,1158 @@
+{
+ "enemies": [
+  {
+   "id": "wolf",
+   "name": "Grey Wolf",
+   "kind": "beast",
+   "hp": 11,
+   "atk": 3,
+   "dmg": "1d6+1",
+   "ac": 12,
+   "xp": 12,
+   "weak": "fire",
+   "resist": "",
+   "power": 8,
+   "desc": "Hunts in packs; goes for the slowest."
+  },
+  {
+   "id": "wolf_alpha",
+   "name": "The Whisperwood Alpha",
+   "kind": "beast",
+   "hp": 42,
+   "atk": 6,
+   "dmg": "2d6+3",
+   "ac": 14,
+   "xp": 90,
+   "weak": "fire",
+   "resist": "",
+   "power": 40,
+   "desc": "A scarred grey giant that has led the pack for a decade."
+  },
+  {
+   "id": "boar",
+   "name": "Tusked Boar",
+   "kind": "beast",
+   "hp": 18,
+   "atk": 4,
+   "dmg": "1d8+2",
+   "ac": 12,
+   "xp": 18,
+   "weak": "",
+   "resist": "",
+   "power": 12,
+   "desc": ""
+  },
+  {
+   "id": "spider",
+   "name": "Cave Spider",
+   "kind": "beast",
+   "hp": 9,
+   "atk": 4,
+   "dmg": "1d6",
+   "ac": 13,
+   "xp": 10,
+   "weak": "fire",
+   "resist": "",
+   "power": 8,
+   "desc": "Venom slows its prey."
+  },
+  {
+   "id": "brood_mother",
+   "name": "The Brood Mother",
+   "kind": "beast",
+   "hp": 48,
+   "atk": 6,
+   "dmg": "2d6+2",
+   "ac": 14,
+   "xp": 100,
+   "weak": "fire",
+   "resist": "",
+   "power": 44,
+   "desc": ""
+  },
+  {
+   "id": "goblin",
+   "name": "Tunnel Goblin",
+   "kind": "humanoid",
+   "hp": 8,
+   "atk": 3,
+   "dmg": "1d6",
+   "ac": 13,
+   "xp": 8,
+   "weak": "",
+   "resist": "",
+   "power": 7,
+   "desc": ""
+  },
+  {
+   "id": "bandit",
+   "name": "Road Bandit",
+   "kind": "humanoid",
+   "hp": 14,
+   "atk": 4,
+   "dmg": "1d8+1",
+   "ac": 13,
+   "xp": 14,
+   "weak": "",
+   "resist": "",
+   "power": 11,
+   "desc": ""
+  },
+  {
+   "id": "bandit_captain",
+   "name": "Captain Vell of the Toll Bridge",
+   "kind": "humanoid",
+   "hp": 40,
+   "atk": 6,
+   "dmg": "2d6+2",
+   "ac": 15,
+   "xp": 90,
+   "weak": "",
+   "resist": "",
+   "power": 40,
+   "desc": ""
+  },
+  {
+   "id": "bog_wraith",
+   "name": "Bog Wraith",
+   "kind": "spirit",
+   "hp": 20,
+   "atk": 5,
+   "dmg": "1d8+2",
+   "ac": 14,
+   "xp": 30,
+   "weak": "magic",
+   "resist": "physical",
+   "power": 20,
+   "desc": "Blades pass through it; magic does not."
+  },
+  {
+   "id": "skeleton",
+   "name": "Skeleton Warden",
+   "kind": "undead",
+   "hp": 13,
+   "atk": 4,
+   "dmg": "1d8",
+   "ac": 13,
+   "xp": 14,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 11,
+   "desc": ""
+  },
+  {
+   "id": "wight",
+   "name": "Barrow Wight",
+   "kind": "undead",
+   "hp": 24,
+   "atk": 5,
+   "dmg": "1d10+2",
+   "ac": 14,
+   "xp": 34,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 22,
+   "desc": "Its touch drains warmth; fire undoes it."
+  },
+  {
+   "id": "barrow_lord",
+   "name": "The Barrow Wight-Lord",
+   "kind": "undead",
+   "hp": 62,
+   "atk": 7,
+   "dmg": "2d8+3",
+   "ac": 16,
+   "xp": 160,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 58,
+   "desc": ""
+  },
+  {
+   "id": "golem",
+   "name": "Stone Golem",
+   "kind": "construct",
+   "hp": 50,
+   "atk": 6,
+   "dmg": "2d8+2",
+   "ac": 17,
+   "xp": 110,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 48,
+   "desc": "Cracks when frozen."
+  },
+  {
+   "id": "shadow",
+   "name": "Shadow Crawler",
+   "kind": "spirit",
+   "hp": 22,
+   "atk": 6,
+   "dmg": "1d10+2",
+   "ac": 15,
+   "xp": 40,
+   "weak": "fire",
+   "resist": "physical",
+   "power": 26,
+   "desc": ""
+  },
+  {
+   "id": "revenant",
+   "name": "The Dwarf-King's Revenant",
+   "kind": "undead",
+   "hp": 80,
+   "atk": 8,
+   "dmg": "2d10+4",
+   "ac": 17,
+   "xp": 220,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 74,
+   "desc": ""
+  }
+ ],
+ "regions": {
+  "whisperwood": {
+   "name": "Whisperwood",
+   "travel_h": [
+    2,
+    3
+   ],
+   "theme": "forest ruins, beasts, herbs",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The western road",
+     "kind": "entry",
+     "x": 90,
+     "y": 600,
+     "links": [
+      "trail"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "trail",
+     "name": "Deer trail",
+     "kind": "path",
+     "x": 300,
+     "y": 520,
+     "links": [
+      "glade",
+      "den"
+     ],
+     "enemies": [],
+     "dc": 11,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "glade",
+     "name": "Herb glade",
+     "kind": "resource",
+     "x": 340,
+     "y": 280,
+     "links": [
+      "tower"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "forest",
+     "tier": 1,
+     "desc": "Moonwort and emberleaf under the old oaks."
+    },
+    {
+     "id": "den",
+     "name": "Wolf den",
+     "kind": "encounter",
+     "x": 560,
+     "y": 470,
+     "links": [
+      "tower",
+      "shrine"
+     ],
+     "enemies": [
+      [
+       "wolf",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "tower",
+     "name": "Ruined watchtower",
+     "kind": "chest",
+     "x": 700,
+     "y": 230,
+     "links": [
+      "shrine",
+      "hollow"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "forest",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "shrine",
+     "name": "Mossy wayshrine",
+     "kind": "shrine",
+     "x": 880,
+     "y": 520,
+     "links": [
+      "hollow"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "traveller",
+     "name": "A wounded trapper",
+     "kind": "traveller",
+     "x": 980,
+     "y": 360,
+     "links": [
+      "hollow"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "hollow",
+     "name": "Alpha's hollow",
+     "kind": "boss",
+     "x": 1140,
+     "y": 210,
+     "links": [],
+     "enemies": [
+      [
+       "wolf_alpha",
+       1
+      ],
+      [
+       "wolf",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "forest",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "ironroot_mine": {
+   "name": "Ironroot Mine",
+   "travel_h": [
+    1,
+    2
+   ],
+   "theme": "broken quarry, goblins, ore, salvage",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The north track",
+     "kind": "entry",
+     "x": 110,
+     "y": 620,
+     "links": [
+      "mouth"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "mouth",
+     "name": "Quarry mouth",
+     "kind": "path",
+     "x": 280,
+     "y": 500,
+     "links": [
+      "vein",
+      "camp"
+     ],
+     "enemies": [],
+     "dc": 10,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "vein",
+     "name": "Exposed ore vein",
+     "kind": "resource",
+     "x": 400,
+     "y": 260,
+     "links": [
+      "gallery"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "mine",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "camp",
+     "name": "Goblin camp",
+     "kind": "encounter",
+     "x": 600,
+     "y": 520,
+     "links": [
+      "gallery",
+      "strongbox"
+     ],
+     "enemies": [
+      [
+       "goblin",
+       4
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "gallery",
+     "name": "Collapsed gallery",
+     "kind": "trap",
+     "x": 640,
+     "y": 250,
+     "links": [
+      "strongbox",
+      "nest"
+     ],
+     "enemies": [],
+     "dc": 13,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "strongbox",
+     "name": "Foreman's strongbox",
+     "kind": "chest",
+     "x": 860,
+     "y": 460,
+     "links": [
+      "nest"
+     ],
+     "enemies": [],
+     "dc": 13,
+     "loot": "mine",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "nest",
+     "name": "Spider nest",
+     "kind": "boss",
+     "x": 1120,
+     "y": 300,
+     "links": [],
+     "enemies": [
+      [
+       "brood_mother",
+       1
+      ],
+      [
+       "spider",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "mine",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "highmarsh_road": {
+   "name": "Highmarsh Road",
+   "travel_h": [
+    2,
+    3
+   ],
+   "theme": "trade road, bandits, bog",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The eastern gate",
+     "kind": "entry",
+     "x": 90,
+     "y": 360,
+     "links": [
+      "mile"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "mile",
+     "name": "Mile-stone camp",
+     "kind": "path",
+     "x": 280,
+     "y": 360,
+     "links": [
+      "caravan",
+      "bridge"
+     ],
+     "enemies": [],
+     "dc": 10,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "caravan",
+     "name": "Wrecked caravan",
+     "kind": "traveller",
+     "x": 420,
+     "y": 170,
+     "links": [
+      "bog"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "trade",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "bridge",
+     "name": "The toll bridge",
+     "kind": "encounter",
+     "x": 520,
+     "y": 520,
+     "links": [
+      "bog",
+      "cache"
+     ],
+     "enemies": [
+      [
+       "bandit",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "bog",
+     "name": "Bog crossing",
+     "kind": "encounter",
+     "x": 760,
+     "y": 280,
+     "links": [
+      "cache",
+      "captain"
+     ],
+     "enemies": [
+      [
+       "bog_wraith",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "cache",
+     "name": "Smugglers' cache",
+     "kind": "chest",
+     "x": 860,
+     "y": 560,
+     "links": [
+      "captain"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "trade",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "captain",
+     "name": "Vell's hideout",
+     "kind": "boss",
+     "x": 1150,
+     "y": 380,
+     "links": [],
+     "enemies": [
+      [
+       "bandit_captain",
+       1
+      ],
+      [
+       "bandit",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "trade",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "barrow_fields": {
+   "name": "Barrow Fields",
+   "travel_h": [
+    2,
+    3
+   ],
+   "theme": "the old crypt: undead, traps, relics",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The south road",
+     "kind": "entry",
+     "x": 640,
+     "y": 660,
+     "links": [
+      "rows"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "rows",
+     "name": "Grave rows",
+     "kind": "encounter",
+     "x": 640,
+     "y": 500,
+     "links": [
+      "sarcophagus",
+      "door"
+     ],
+     "enemies": [
+      [
+       "skeleton",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "sarcophagus",
+     "name": "Trapped sarcophagus",
+     "kind": "trap",
+     "x": 360,
+     "y": 420,
+     "links": [
+      "ossuary"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "barrow",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "door",
+     "name": "The rune door",
+     "kind": "puzzle",
+     "x": 900,
+     "y": 420,
+     "links": [
+      "vault"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "ossuary",
+     "name": "Ossuary",
+     "kind": "encounter",
+     "x": 330,
+     "y": 220,
+     "links": [
+      "lord"
+     ],
+     "enemies": [
+      [
+       "wight",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "vault",
+     "name": "Relic vault",
+     "kind": "chest",
+     "x": 960,
+     "y": 200,
+     "links": [
+      "lord"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "barrow",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "lord",
+     "name": "The Wight-Lord's barrow",
+     "kind": "boss",
+     "x": 640,
+     "y": 120,
+     "links": [],
+     "enemies": [
+      [
+       "barrow_lord",
+       1
+      ],
+      [
+       "skeleton",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "barrow",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "deep_ironroot": {
+   "name": "Deep Ironroot",
+   "travel_h": [
+    3,
+    4
+   ],
+   "theme": "ashen depths: golems, shadows, starstone",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The deep stair",
+     "kind": "entry",
+     "x": 120,
+     "y": 120,
+     "links": [
+      "crystal"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "crystal",
+     "name": "Crystal cavern",
+     "kind": "resource",
+     "x": 330,
+     "y": 230,
+     "links": [
+      "forge",
+      "rift"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "deep_mine",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "forge",
+     "name": "The golem forge",
+     "kind": "encounter",
+     "x": 560,
+     "y": 140,
+     "links": [
+      "hall"
+     ],
+     "enemies": [
+      [
+       "golem",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "rift",
+     "name": "Shadow rift",
+     "kind": "encounter",
+     "x": 520,
+     "y": 420,
+     "links": [
+      "seam",
+      "hall"
+     ],
+     "enemies": [
+      [
+       "shadow",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "seam",
+     "name": "Adamantine seam",
+     "kind": "resource",
+     "x": 800,
+     "y": 560,
+     "links": [
+      "hall"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "deep_mine",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "hall",
+     "name": "The Dwarf-King's hall",
+     "kind": "boss",
+     "x": 1080,
+     "y": 300,
+     "links": [],
+     "enemies": [
+      [
+       "revenant",
+       1
+      ],
+      [
+       "shadow",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "deep_mine",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  }
+ },
+ "archetypes": {
+  "Fighter": {
+   "role": "front",
+   "attr": {
+    "str": 3,
+    "dex": 1,
+    "int": 0,
+    "wis": 0,
+    "con": 3
+   },
+   "hp": 14,
+   "hp_lv": 7,
+   "skills": [
+    "guard",
+    "weapons"
+   ],
+   "prefers": [
+    "sword",
+    "axe",
+    "mace"
+   ]
+  },
+  "Paladin": {
+   "role": "front",
+   "attr": {
+    "str": 3,
+    "dex": 0,
+    "int": 0,
+    "wis": 2,
+    "con": 2
+   },
+   "hp": 13,
+   "hp_lv": 6,
+   "skills": [
+    "guard",
+    "smite",
+    "faith"
+   ],
+   "prefers": [
+    "mace",
+    "sword"
+   ]
+  },
+  "Barbarian": {
+   "role": "front",
+   "attr": {
+    "str": 4,
+    "dex": 1,
+    "int": -1,
+    "wis": 0,
+    "con": 3
+   },
+   "hp": 16,
+   "hp_lv": 8,
+   "skills": [
+    "rage",
+    "weapons"
+   ],
+   "prefers": [
+    "axe"
+   ]
+  },
+  "Ranger": {
+   "role": "scout",
+   "attr": {
+    "str": 1,
+    "dex": 3,
+    "int": 0,
+    "wis": 2,
+    "con": 1
+   },
+   "hp": 10,
+   "hp_lv": 5,
+   "skills": [
+    "scouting",
+    "archery",
+    "survival"
+   ],
+   "prefers": [
+    "bow",
+    "dagger"
+   ]
+  },
+  "Rogue": {
+   "role": "scout",
+   "attr": {
+    "str": 0,
+    "dex": 4,
+    "int": 1,
+    "wis": 0,
+    "con": 1
+   },
+   "hp": 9,
+   "hp_lv": 5,
+   "skills": [
+    "traps",
+    "locks",
+    "sneak"
+   ],
+   "prefers": [
+    "dagger",
+    "sword"
+   ]
+  },
+  "Wizard": {
+   "role": "caster",
+   "attr": {
+    "str": -1,
+    "dex": 1,
+    "int": 4,
+    "wis": 1,
+    "con": 0
+   },
+   "hp": 7,
+   "hp_lv": 4,
+   "skills": [
+    "arcana",
+    "firebolt"
+   ],
+   "prefers": [
+    "staff",
+    "dagger"
+   ]
+  },
+  "Cleric": {
+   "role": "healer",
+   "attr": {
+    "str": 1,
+    "dex": 0,
+    "int": 0,
+    "wis": 4,
+    "con": 2
+   },
+   "hp": 10,
+   "hp_lv": 6,
+   "skills": [
+    "healing",
+    "turn_undead",
+    "faith"
+   ],
+   "prefers": [
+    "mace"
+   ]
+  },
+  "Bard": {
+   "role": "support",
+   "attr": {
+    "str": 0,
+    "dex": 2,
+    "int": 1,
+    "wis": 1,
+    "con": 1
+   },
+   "hp": 9,
+   "hp_lv": 5,
+   "skills": [
+    "inspire",
+    "lore"
+   ],
+   "prefers": [
+    "dagger",
+    "sword"
+   ]
+  }
+ },
+ "relations": [
+  [
+   "sigrun",
+   "garrick",
+   40
+  ],
+  [
+   "mira",
+   "kestra",
+   35
+  ],
+  [
+   "elowen",
+   "tomas",
+   30
+  ],
+  [
+   "pip",
+   "mira",
+   25
+  ],
+  [
+   "pip",
+   "varn",
+   20
+  ],
+  [
+   "varn",
+   "garrick",
+   -35
+  ],
+  [
+   "kestra",
+   "garrick",
+   -30
+  ],
+  [
+   "sigrun",
+   "varn",
+   15
+  ],
+  [
+   "elowen",
+   "pip",
+   15
+  ],
+  [
+   "tomas",
+   "garrick",
+   25
+  ]
+ ],
+ "difficulty": {
+  "apprentice": {
+   "name": "Apprentice",
+   "observe": true,
+   "detail": true,
+   "enemy": 0.8,
+   "death": false,
+   "death_dc": 0,
+   "heal_rate": 1.5,
+   "prices": 1.15,
+   "wages": 0.85,
+   "loot": 1.2,
+   "desc": "Forgiving fights and prices; nobody dies — the fallen are carried home. Full live observation."
+  },
+  "journeyman": {
+   "name": "Journeyman",
+   "observe": true,
+   "detail": true,
+   "enemy": 1.0,
+   "death": true,
+   "death_dc": 7,
+   "heal_rate": 1.0,
+   "prices": 1.0,
+   "wages": 1.0,
+   "loot": 1.0,
+   "desc": "Moderate risks; death is possible but rare. Live observation and detailed inspection."
+  },
+  "master": {
+   "name": "Master",
+   "observe": false,
+   "detail": false,
+   "enemy": 1.25,
+   "death": true,
+   "death_dc": 11,
+   "heal_rate": 0.75,
+   "prices": 0.9,
+   "wages": 1.15,
+   "loot": 0.85,
+   "desc": "High risk, tight money, real losses. No omniscient observation: you learn what happened when they come home."
+  }
+ },
+ "renown_titles": [
+  [
+   0,
+   "Unknown"
+  ],
+  [
+   25,
+   "Local Name"
+  ],
+  [
+   70,
+   "Rising Blade"
+  ],
+  [
+   140,
+   "Hero of Brindlewick"
+  ],
+  [
+   260,
+   "Living Legend"
+  ]
+ ]
+}

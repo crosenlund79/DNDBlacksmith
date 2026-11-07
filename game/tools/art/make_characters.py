@@ -14,6 +14,7 @@ NOTE: the in-game sheets are now tabletop miniatures built by make_minis.py.  Th
 old straight-top-down sheets when run with --style=topdown; otherwise it regenerates portraits only.
 """
 import json
+import artlib
 import math
 import os
 import subprocess
@@ -185,7 +186,7 @@ def main():
             hp = os.path.join(TMP, f"sheet_{c['id']}.html")
             with open(hp, "w") as f:
                 f.write(build.page(svg, W, H))
-            jobs.append(dict(html=hp, png=os.path.join(OUT_CHARS, c["id"] + ".png"), w=W, h=H, transparent=True))
+            jobs.append(dict(html=hp, png=artlib.tpath(os.path.join(OUT_CHARS, c["id"] + ".png")), w=W, h=H, transparent=True))
         if "--no-portraits" not in flags:
             svg = portrait.portrait_svg(c, STYLE)
             hp = os.path.join(TMP, f"portrait_{c['id']}.html")

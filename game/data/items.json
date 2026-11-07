@@ -1093,6 +1093,56 @@
   ]
  },
  {
+  "id": "yew_stave",
+  "name": "Yew Stave",
+  "type": "material",
+  "slot": null,
+  "value": 14,
+  "stats": {},
+  "icon": "yew_stave",
+  "stack": true,
+  "desc": "Seasoned yew from Whisperwood: heartwood and sapwood in one stave.",
+  "tags": []
+ },
+ {
+  "id": "bow_hunting",
+  "name": "Hunting Bow",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 70,
+  "stats": {
+   "attack": [
+    7,
+    11
+   ],
+   "durability": 55,
+   "speed": 3
+  },
+  "icon": "bow_hunting",
+  "stack": false,
+  "desc": "A plain yew bow with a linen string.",
+  "tags": []
+ },
+ {
+  "id": "bow_yew",
+  "name": "Yew Longbow",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 190,
+  "stats": {
+   "attack": [
+    11,
+    16
+   ],
+   "durability": 80,
+   "speed": 5
+  },
+  "icon": "bow_yew",
+  "stack": false,
+  "desc": "Taller than its archer; reaches out to where wolves gather.",
+  "tags": []
+ },
+ {
   "id": "grimhold",
   "name": "Grimhold, the Last Hammer",
   "type": "weapon",

@@ -364,6 +364,46 @@ def write_html(name, svg, w, h, ss=2, css=""):
     return p
 
 
+def tpath(path):
+    """Shipped sprites are templates: assets/sprites/<dir>/template_<name>.png. A user-provided
+    <dir>/<name>.png (same name without the prefix) overrides it in the game with no code change."""
+    ap = os.path.abspath(path)
+    if ap.startswith(os.path.abspath(SPR) + os.sep) and ap.endswith(".png"):
+        d, b = os.path.split(ap)
+        if not b.startswith("template_"):
+            return os.path.join(d, "template_" + b)
+    return path
+
+
+def _install_template_open():
+    """Scripts that read shipped sprites back (checks, contact sheets) may name them without the
+    template_ prefix; open the template when no override of that name exists."""
+    try:
+        from PIL import Image as _I
+    except ImportError:
+        return
+    if getattr(_I.open, "_tpl", False):
+        return
+    orig = _I.open
+
+    def _open(fp, *a, **k):
+        if isinstance(fp, str) and not os.path.exists(fp):
+            t = tpath(fp)
+            if t != fp and os.path.exists(t):
+                fp = t
+        return orig(fp, *a, **k)
+    _open._tpl = True
+    _I.open = _open
+
+
+_install_template_open()
+
+
+def exists(path):
+    """True when the sprite exists as a user override or as its template."""
+    return os.path.exists(path) or os.path.exists(tpath(path))
+
+
 def render(jobs, workers=4):
     """jobs: list of dict(name, html|svg, w, h, ss, out, transparent=True, wrap=False).
     Renders at w*ss x h*ss, then Lanczos-downsamples to exactly w x h."""
@@ -394,6 +434,7 @@ def render(jobs, workers=4):
                 im = big.crop((W, H, 2 * W, 2 * H))
             else:
                 im = premult_resize(im, (W, H))
+        j["out"] = tpath(j["out"])
         os.makedirs(os.path.dirname(j["out"]), exist_ok=True)
         if j.get("transparent", True) is False:
             im = im.convert("RGB")

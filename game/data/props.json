@@ -695,6 +695,14 @@
   "solid": true,
   "desc": "behind-the-bar shelf of bottles and mugs"
  },
+ "most_wanted_board": {
+  "size": [
+   192,
+   96
+  ],
+  "solid": true,
+  "desc": "MOST WANTED board on the inn wall: dark wood frame, cork, pinned parchment sheets with tiny portraits and red wax seals, a carved header plank"
+ },
  "waiting_seat": {
   "size": [
    64,

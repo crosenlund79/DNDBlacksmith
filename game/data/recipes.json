@@ -1719,5 +1719,116 @@
    "arcane_metalwork": 1
   },
   "desc": "The ward is in the metal itself — not a rune set into it."
+ },
+ {
+  "id": "hunting_bow",
+  "name": "Hunting Bow",
+  "discipline": "stitching",
+  "category": "weapon",
+  "material": "leather",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam-bend the stave",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Shape and balance the limbs",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "stitching_table",
+    "op": "String and wrap the grip",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "yew_stave": 1,
+   "thread_linen": 1,
+   "leather_cured": 1
+  },
+  "output": "bow_hunting",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 20,
+   "smithing": 8
+  },
+  "requires": {},
+  "desc": "A ranger's first bow. Rangers fight best with one in hand."
+ },
+ {
+  "id": "yew_longbow",
+  "name": "Yew Longbow",
+  "discipline": "stitching",
+  "category": "weapon",
+  "material": "leather",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam-bend the long stave",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Tiller the limbs true",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Spin a ghost-thread string",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Wrap the grip and nock",
+    "checks": 1,
+    "weight": 0.7
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "grinding_wheel",
+   "thread_spinner",
+   "stitching_table"
+  ],
+  "inputs": {
+   "yew_stave": 2,
+   "thread_ethereal": 1,
+   "leather_cured": 1
+  },
+  "output": "bow_yew",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 45,
+   "smithing": 10
+  },
+  "requires": {
+   "enchanted_stitching": 2
+  },
+  "desc": "Taller than its archer. Needs a sure hand at the grinding wheel."
  }
 ]

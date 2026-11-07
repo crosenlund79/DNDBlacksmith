@@ -97,7 +97,7 @@ def compose(cid):
         for c in range(COLS):
             out.paste(b, (c * CELL, r * CELL))
     out.alpha_composite(figs)
-    out.save(os.path.join(OUT_CHARS, cid + ".png"), optimize=True)
+    out.save(artlib.tpath(os.path.join(OUT_CHARS, cid + ".png")), optimize=True)
 
 
 # ------------------------------------------------------------------ checks

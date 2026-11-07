@@ -265,6 +265,17 @@ recipes = [
      op("aetheric_stabilizer", "Settle the bound magic", 1), op("stitching_table", "Rivet the straps", 1, 0.5)],
     {"ingot_adamantine": 2, "leather_cured": 1}, "warplate_adamantine", 1, DXA, {"arcane_metalwork": 90, "smithing": 30},
     requires={"arcane_metalwork": 1}, desc="The ward is in the metal itself — not a rune set into it."),
+ # ---- the living village: bows for rangers (and anyone who prefers to fight from afar)
+ rc("hunting_bow", "Hunting Bow", "stitching", "weapon", "leather", 2,
+    [op("leather_vat", "Steam-bend the stave", 1), op("grinding_wheel", "Shape and balance the limbs", 1, 1.2),
+     op("stitching_table", "String and wrap the grip", 1, 0.8)],
+    {"yew_stave": 1, "thread_linen": 1, "leather_cured": 1}, "bow_hunting", 1, DW, {"enchanted_stitching": 20, "smithing": 8},
+    desc="A ranger's first bow. Rangers fight best with one in hand."),
+ rc("yew_longbow", "Yew Longbow", "stitching", "weapon", "leather", 4,
+    [op("leather_vat", "Steam-bend the long stave", 1, 1.1), op("grinding_wheel", "Tiller the limbs true", 2, 1.4),
+     op("thread_spinner", "Spin a ghost-thread string", 1), op("stitching_table", "Wrap the grip and nock", 1, 0.7)],
+    {"yew_stave": 2, "thread_ethereal": 1, "leather_cured": 1}, "bow_yew", 1, DW, {"enchanted_stitching": 45, "smithing": 10},
+    requires={"enchanted_stitching": 2}, desc="Taller than its archer. Needs a sure hand at the grinding wheel."),
 ]
 
 if __name__ == "__main__":

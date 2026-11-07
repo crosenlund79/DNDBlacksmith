@@ -1,8 +1,11 @@
 ## Assets — sprite/texture/font template & override system.
-## EN: get_tex("stations/forge") resolves, in order:
-##       1. user://overrides/sprites/stations/forge.png   (modder / artist override)
-##       2. res://assets/sprites/stations/forge.png       (shipped art, imported or raw)
-##       3. a generated placeholder (parchment card with the id) so missing art never crashes.
+## EN: Shipped art is TEMPLATE art: res://assets/sprites/<dir>/template_<name>.png.
+##     get_tex("stations/forge") resolves, in order:
+##       1. user://overrides/sprites/stations/forge.png        (modder / artist override, outside the project)
+##       2. res://assets/sprites/stations/forge.png            (a user-provided asset with the same name and no
+##                                                                template_ prefix — replaces the template, no code change)
+##       3. res://assets/sprites/stations/template_forge.png   (the shipped Claude-made template)
+##       4. a generated placeholder (parchment card with the id) so missing art never crashes.
 ##     Fonts and the shared Theme are also built here.
 ## DA: get_tex("stations/forge") slår op i rækkefølge: brugeroverskrivning, medfølgende grafik,
 ##     og ellers en genereret pladsholder, så manglende grafik aldrig får spillet til at gå ned.
@@ -26,8 +29,26 @@ func _ready() -> void:
 
 
 func has_tex(id: String) -> bool:
-	return FileAccess.file_exists(OVERRIDE_ROOT + id + ".png") or FileAccess.file_exists(SPRITE_ROOT + id + ".png") \
-		or ResourceLoader.exists(SPRITE_ROOT + id + ".png")
+	return FileAccess.file_exists(OVERRIDE_ROOT + id + ".png") or _exists(SPRITE_ROOT + id + ".png") \
+		or _exists(SPRITE_ROOT + template_id(id) + ".png")
+
+
+## "stations/forge" → "stations/template_forge"
+static func template_id(id: String) -> String:
+	var slash := id.rfind("/")
+	return id.substr(0, slash + 1) + "template_" + id.substr(slash + 1)
+
+
+func _exists(p: String) -> bool:
+	return ResourceLoader.exists(p) or FileAccess.file_exists(p)
+
+
+func _load_shipped(p: String) -> Texture2D:
+	if ResourceLoader.exists(p):
+		return load(p)
+	if FileAccess.file_exists(p):
+		return _load_raw(p)
+	return null
 
 
 func get_tex(id: String, fallback_size := Vector2i(64, 64)) -> Texture2D:
@@ -38,11 +59,9 @@ func get_tex(id: String, fallback_size := Vector2i(64, 64)) -> Texture2D:
 	if FileAccess.file_exists(ov):
 		tex = _load_raw(ov)
 	if tex == null:
-		var p := SPRITE_ROOT + id + ".png"
-		if ResourceLoader.exists(p):
-			tex = load(p)
-		elif FileAccess.file_exists(p):
-			tex = _load_raw(p)
+		tex = _load_shipped(SPRITE_ROOT + id + ".png")              # user-provided, same name
+	if tex == null:
+		tex = _load_shipped(SPRITE_ROOT + template_id(id) + ".png") # shipped template
 	if tex == null:
 		if not missing.has(id):
 			missing.append(id)
