@@ -48,7 +48,7 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
 
 ## Template / override system
 
-- **Sprites:** `Assets.get_tex("stations/forge")` looks for `user://overrides/sprites/<id>.png`, then `res://assets/sprites/<id>.png`. If neither exists it uses a generated parchment placeholder, logs the missing id once, and counts it in the F3 overlay. The whole game runs with zero art.
+- **Sprites:** `Assets.get_tex("stations/forge")` looks for `user://overrides/sprites/<id>.png`, then a user-provided `res://assets/sprites/stations/forge.png`, then the shipped template `res://assets/sprites/stations/template_forge.png`. **All Claude-made art is named `template_*`**: drop a same-named file without the prefix next to it and it wins automatically, with no code change; delete it and the template returns. The art scripts in `tools/art/` write `template_` names through `artlib.tpath()`. If none exists it uses a generated parchment placeholder, logs the missing id once, and counts it in the F3 overlay. The whole game runs with zero art.
 - **Audio:** `Audio.play("sfx/hammer_1")` looks for `user://overrides/audio/<id>.(ogg|wav)`, then `res://assets/audio/...`. Missing sounds are skipped silently.
 - **Raw files:** both systems also load files that have not been imported (raw PNG through `Image.load_from_file`, a minimal WAV reader, `FontFile.load_dynamic_font`). This makes a first run from the command line robust.
 - **Character sheets:** 768×512 px, 6 columns × 4 rows of 128 px. Rows are S, E, N, W; columns 0–1 are idle, 2–5 are walk.
@@ -218,6 +218,16 @@ Every crafting station stands on a painted tabletop base, the same miniature bas
 
 It is saved with the item, and the results panel can be reopened from the stores.
 
+## Living village (`expeditions.gd`, `chronicle.gd`)
+
+- **State:** `Game.state["exp"] = {active: {id: expedition}, done: [last 25], parties: {}}`, `Game.state["chronicle"]` (cap 400), `Game.state["offers"]`, `Game.state["difficulty"]`. All plain JSON, saved with the game.
+- **Clock:** `Game.now()` is absolute minutes. `Game.advance_minutes` calls `Expeditions.tick()` every five game minutes; each expedition steps while `next_at <= now`. The step is a state machine: `travel_out → moving ⇄ acting → travel_back → finish`. Pause and speed (`Game.paused`, `Game.speed` 1/2/4/8) only change how fast real time feeds the clock.
+- **Authority:** the simulation runs in exactly one place (static functions over `Game.state`). UI never simulates: the observer and board only read the expedition dictionaries and interpolate the marker with `Expeditions.marker_pos(e)`. There is no multiplayer in this project; the single simulation is the host-authoritative model a networked version would keep.
+- **Records:** every encounter appends a record to `e.encounters` with actions `{t, kind, actor, target, roll, mod, total, vs, hit, crit, dmg, parts, hp_after, weapon_uid, armour_uid, txt}`; the journal `{t, day, time, text, kind, rec}` points at it. The encounter view replays these, revealing live actions as `Game.now()` passes `rec.t + action.t`.
+- **Item instances** carry `uid`, `owner`, `history` (cap 12), `crafted_by`, `craft` (quality, dice, operations) and optional `named`. `Game.find_uid_anywhere(uid)` finds an instance in the stores, on an adventurer or a hireling.
+- **Difficulty** factors live in `expeditions.json → difficulty` and are read at use: `Expeditions.diff()` (enemy, death, death_dc, heal_rate, prices, wages, loot, observe, detail).
+- **UI:** `WantedPanel` (board, `WantedSheet` cards), `DossierPanel`, `ObserverPanel` (`MapView`, `EncounterView`), `DifficultyPanel`. These set `blocks_time = false`; `Game.ui_open` freezes the player while any window is open.
+
 ## Tests
 
 - `tests/test_runner.tscn` covers dice, quality and rarity, skills, recipe/operation data integrity, beginner-vs-expert difficulty, masterwork legendaries with poor rolls, material stat differences, physical dice records, runestones, hireling allocation and expeditions (including the guaranteed legendary in Borin's first bag), adventurer expeditions and sales, social ripple to relatives, loot containers, and save/load round-trips.
@@ -236,6 +246,9 @@ It is saved with the item, and the results panel can be reopened from the stores
   | `minigames` | Each specialised check played well and badly |
   | `iter2` | Figures, waiting area, animals, atmosphere, recruitment, the ledger, expeditions and risk, crafts through minigames |
   | `iter2_reload` | Hireling states and histories persist |
+  | `slice` / `slice_reload` | Vertical slice 003–008 route and persistence |
+  | `village` | Living Village acceptance: difficulty choice, craft → sell the exact instance → party forms → departs → board and dossiers → live observation (time keeps running) → finishes unobserved → journal, loot, ownership → revisit → commission priorities, offers, employees → save → Master restriction → existing visuals |
+  | `village_reload` | Expedition records, chronicle and the sold instance survive a restart |
 
 - `tools/lint/check_gd.py` runs gdtoolkit syntax checks plus heuristics for Godot 4 type-inference errors. It works without the engine.
 

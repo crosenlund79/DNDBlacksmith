@@ -15,6 +15,9 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 | L | Shop ledger and upgrades |
 | O | Orders |
 | F5 / F9 | Quick-save / quick-load |
+| B | The MOST WANTED board |
+| P | Pause / resume time |
+| − / + | Time ×1, ×2, ×4, ×8 |
 | F10 | Developer Tools (testing only) |
 | Esc | Menu, save and load |
 
@@ -110,6 +113,36 @@ Married, she keeps adventuring:
 - Arcane chain: **Charge Adamantine**, then the **Adamantine Warplate**, with a ward bound into the metal itself.
 - The **Emberwarden Longsword** uses four disciplines in one blade: steel, an ember rune, a flame-quenched edge and a ghost-thread grip. Give it to an adventurer heading for the barrows.
 
+## The living village: following the adventurers
+
+**Difficulty** is chosen at New Game and can be changed any time from the menu (Esc → Difficulty):
+
+| | Apprentice | Journeyman | Master |
+|---|---|---|---|
+| Death | never — the fallen are carried home | possible, rare | real |
+| Live observation | yes, full detail | yes, full detail | no — you hear what happened when they return |
+| Enemies / healing | ×0.8 / ×1.5 | ×1 / ×1 | ×1.25 / ×0.75 |
+| Prices / wages / loot | ×1.15 / ×0.85 / ×1.2 | ×1 | ×0.9 / ×1.15 / ×0.85 |
+
+**Every day:** at 06:00 adventurers gather at tables in the Wyvern and form parties of one to four; at 07:00 they buy supplies; at 08:00 they leave through a gate for Whisperwood, Ironroot Mine, Highmarsh Road, the Barrow Fields or Deep Ironroot. The expedition then unfolds on the clock — travel, scouting, traps, chests, shrines, travellers, fights and a boss — whether or not you watch.
+
+**The MOST WANTED board** (in the inn by the door, or press **B**):
+
+- *Most Wanted* — a pinned sheet per adventurer, ranked by renown. Click a sheet for the **dossier**: condition, attributes, defence and to-hit, skills, relationships, record, and the **actual items they carry** — hover an item for its maker and history.
+- *Active Expeditions* — parties forming and on the road, with **Observe Expedition**.
+- *At the Inn* — who is home, resting or injured.
+- *Legends & History* — the hall of renown, the fallen, tales from the chronicle and past expeditions (**Revisit** replays them).
+
+**Observe Expedition** shows the region map with the route, the points of interest and the party marker moving along the road; the members' health, fatigue and morale; and a timestamped journal. Each fight, trap and chest has an **Inspect** button that replays it: every d20 roll, the modifier, the target's defence, damage broken into weapon, attribute, class favour and armour, all naming the item instance used. Observing never pauses or changes anything: use **P** and **−/+** (or the buttons in the observer) to control time yourself.
+
+**What comes home:** gold, experience and renown; finds offered to you at the shop counter (Customers & Offers — Buy or Decline within three days); broken weapons brought in for repair; items renamed after a boss falls ("The Wolfbane"); and on bad days, the missing — who may stagger home, be found by a later party, or be confirmed dead.
+
+**Commissions** now state a priority — *Quality first*, *Needed fast* or *Tight purse* — and a bonus objective (craftsmanship 75%+, delivered by tomorrow, or rare quality) that pays extra and is remembered.
+
+**Employees** have a hidden potential that changes how fast they learn. It is revealed after about five days of work (shown in the Hirelings ledger). On Master, applicants' skills on the notice are only a range.
+
+**Talk:** ask an adventurer about their last expedition — they tell it from the real journal, and mention your weapon if it served them.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.
@@ -118,3 +151,17 @@ Married, she keeps adventuring:
 4. **Send in-town adventurers out**, then **Adventurers: resolve every expedition now**. Read the outcome in the overview (J).
 5. Use **Skip to 19:00** for the inn, **A dispute** for a refund-or-refuse decision, and **+20 affection** to speed up a romance.
 6. Save from the menu, quit, Continue. Everything persists: employees, adventurers, crafted items, relationships and expeditions.
+
+**Expeditions & difficulty (F10):** *Form, provision & dispatch parties now*, *Step every expedition once*, *Run every expedition to its end*, switch difficulty, pause, speed ×1/×4/×8, and open the board.
+
+**A 10-minute test route for the living village:**
+
+1. New Game → *Begin as Journeyman*. F10 → *+1000 gold*, *Materials* kit.
+2. Forge an iron longsword (smelter → anvil → quench → grinding wheel). Put it on display (L → Stock) and sell it to an adventurer at the shop counter, or offer it in dialogue.
+3. F10 → *Form, provision & dispatch parties now* (or wait until 06:00–08:00 next morning; parties sit at the inn tables).
+4. Walk into the inn and press E at the MOST WANTED board by the door. Open the buyer's dossier: the sword is listed with its maker mark ⚒.
+5. *Active Expeditions* → *Observe Expedition*. Press + a few times to speed time; watch the marker move and the journal grow. Inspect a fight.
+6. Close the observer and keep playing; the expedition finishes without you.
+7. *Legends & History* → *Revisit*. Check the shop counter for offers and the sword's history (hover it in the dossier).
+8. Esc → Save, quit, Continue: the board, records and the sword are as you left them.
+9. Esc → Difficulty → Master: *Observe* disappears and the board shows only departure times and rumours.

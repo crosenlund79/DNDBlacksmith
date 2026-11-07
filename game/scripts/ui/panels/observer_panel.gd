@@ -139,18 +139,29 @@ func _journal() -> void:
 		return
 	_last_journal = e["journal"].size()
 	UIKit.clear(journal_box)
-	journal_box.add_child(UIKit.label("Expedition journal — click ⚔ or ✦ to inspect an encounter", 20, "heading", UIKit.GILT))
+	journal_box.add_child(UIKit.label("Expedition journal — newest first; Inspect replays an encounter with its rolls", 20, "heading", UIKit.GILT))
 	for i in range(e["journal"].size() - 1, -1, -1):
 		var j: Dictionary = e["journal"][i]
 		var ri := int(j.get("rec", -1))
 		var mark: String = {"victory": "⚔", "defeat": "⚔", "trap": "✦", "loot": "✦", "discovery": "✦", "rescue": "✦", "fail": "✦", "death": "✝", "missing": "?"}.get(str(j.get("kind", "")), "·")
 		var txt := "Day %d %s  %s  %s" % [int(j.get("day", 1)), j.get("time", ""), mark, j["text"]]
 		if ri >= 0:
-			var b := UIKit.button(txt, func(): enc_view.show_record(e["encounters"][ri], e, false), 0)
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			journal_box.add_child(b)
+			# a small inspect button and the wrapped line beside it (a long button would widen the window)
+			var row := UIKit.hbox(8)
+			var b := UIKit.button(mark + " Inspect", func(): enc_view.show_record(e["encounters"][ri], e, false), 130)
+			b.add_theme_font_size_override("font_size", 17)
+			row.add_child(b)
+			var l := UIKit.label(txt, 17, "body_bold", UIKit.GILT)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			l.custom_minimum_size = Vector2(400, 0)
+			row.add_child(l)
+			journal_box.add_child(row)
 		else:
-			journal_box.add_child(UIKit.label(txt, 17, "body", UIKit.PAPER))
+			var l2 := UIKit.label(txt, 17, "body", UIKit.PAPER)
+			l2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l2.custom_minimum_size = Vector2(400, 0)
+			journal_box.add_child(l2)
 
 
 ## The region map with points of interest, the route and the party marker.
@@ -232,8 +243,8 @@ class EncounterView extends Control:
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		log_label = UIKit.rich("", 17, true)
-		log_label.position = Vector2(20, 400)
-		log_label.size = Vector2(1080, 220)
+		log_label.position = Vector2(20, 418)
+		log_label.size = Vector2(1080, 205)
 		log_label.fit_content = false
 		log_label.scroll_active = true
 		log_label.scroll_following = true
@@ -304,10 +315,19 @@ class EncounterView extends Control:
 		return Vector2(560, 200)
 
 	func _ppos(i: int, n: int) -> Vector2:
-		return Vector2(250 - (i % 2) * 70, 150 + (i - (n - 1) * 0.5) * 70 + 80)
+		return _slot(i, n, 50.0, 560.0)
 
 	func _epos(i: int, n: int) -> Vector2:
-		return Vector2(820 + (i % 2) * 90, 150 + (i - (n - 1) * 0.5) * 66 + 80)
+		return _slot(i, n, 600.0, 1110.0)
+
+	## Figures stand in one row (up to three) or two staggered rows, so no two overlap.
+	func _slot(i: int, n: int, x0: float, x1: float) -> Vector2:
+		var cols := n if n <= 3 else int(ceil(n / 2.0))
+		var row := i / cols
+		var col := i % cols
+		var sp := minf(180.0, (x1 - x0) / (cols + 0.5))
+		var y := 235.0 if n <= 3 else (170.0 if row == 0 else 318.0)
+		return Vector2(x0 + sp * (0.5 + col) + (sp * 0.5 if row == 1 else 0.0), y)
 
 	func _refresh_log() -> void:
 		var lines := []
@@ -315,7 +335,7 @@ class EncounterView extends Control:
 		for k in mini(shown, acts.size()):
 			var a: Dictionary = acts[k]
 			var ln := "[b]%s[/b]" % a.get("txt", "")
-			if a.has("roll"):
+			if a.has("roll") and not str(a.get("txt", "")).contains("d20"):
 				ln += "  [color=#c8b898](d20 %d %+d = %d vs %d)[/color]" % [int(a["roll"]), int(a.get("mod", 0)), int(a.get("total", 0)), int(a.get("vs", 0))]
 			var parts: Array = a.get("parts", [])
 			if not parts.is_empty() and a.get("hit", true):
@@ -356,9 +376,9 @@ class EncounterView extends Control:
 			draw_texture_rect(Assets.get_tex("ui/panel_dark"), Rect2(Vector2.ZERO, size), false, Color(1, 1, 1, 0.5))
 		var f := Assets.font("title")
 		var fb := Assets.font("heading")
-		draw_string(f, Vector2(0, 50), rec.get("node_name", ""), HORIZONTAL_ALIGNMENT_CENTER, size.x, 32, Color("#efe4cc"))
+		draw_string(f, Vector2(560, 46), rec.get("node_name", ""), HORIZONTAL_ALIGNMENT_CENTER, size.x - 580, 32, Color("#efe4cc"))
 		if rec.get("kind", "") != "combat":
-			draw_string(fb, Vector2(0, 90), {"trap": "A trap", "chest": "A locked chest", "puzzle": "A rune door", "traveller": "A traveller"}.get(rec.get("kind", ""), ""), HORIZONTAL_ALIGNMENT_CENTER, size.x, 22, Color("#c8b898"))
+			draw_string(fb, Vector2(560, 80), {"trap": "A trap", "chest": "A locked chest", "puzzle": "A rune door", "traveller": "A traveller"}.get(rec.get("kind", ""), ""), HORIZONTAL_ALIGNMENT_CENTER, size.x - 580, 22, Color("#c8b898"))
 			return
 		var hp := _hp_now()
 		var acts: Array = rec.get("actions", [])

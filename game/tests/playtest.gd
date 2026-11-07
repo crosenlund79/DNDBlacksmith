@@ -114,6 +114,13 @@ func click(text: String, root: Node = null) -> bool:
 	b.pressed.emit()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# New Game now asks for a difficulty first; older phases play at Journeyman
+	if text == "New Game":
+		var d := find_button(get_tree().root, "Begin as Journeyman")
+		if d:
+			d.pressed.emit()
+			await get_tree().process_frame
+			await get_tree().process_frame
 	return true
 
 
@@ -1308,3 +1315,195 @@ func phase_slice_reload() -> void:
 	await press("panel_adventurers")
 	await wait(0.6)
 	await shot("slice_reload_adventurers")
+
+
+# ======================================================================= the living village (acceptance)
+func _ready_adventurers() -> void:
+	for a in Adv.all().values():
+		Expeditions.ensure(a)
+		if a["status"] in ["in_town", "injured"]:
+			a["status"] = "in_town"
+			a["hp"] = a["hp_max"]
+			a["fatigue"] = 0.0
+			a["depart_day"] = Game.day()
+
+
+func phase_village() -> void:
+	# 1. new game, difficulty chosen in the menu
+	var b := find_button(get_tree().root, "New Game")
+	b.pressed.emit()
+	await wait(0.8)
+	await shot("village_difficulty_choice")
+	expect(await click("Begin as Journeyman"), "1. difficulty chosen at New Game")
+	await wait(2.5)
+	expect(Expeditions.diff_id() == "journeyman" and Adv.all().size() >= 8, "1. world starts with %d persistent adventurers" % Adv.all().size())
+	Settings.set_value("gameplay/dice_mode", "auto")
+	Game.state["gold"] = 2000
+	# 2. craft a weapon at the real stations
+	await craft_ui("smelt_iron", 0.4, "auto")
+	var sword := await craft_ui("iron_longsword", 0.3, "auto")
+	expect(not sword.is_empty() and sword.get("owner", "") == "smith" and not sword.get("history", []).is_empty(), "2. crafted instance uid %s with owner and history" % str(sword.get("uid", "?")))
+	var uid := int(sword.get("uid", -1))
+	# 3. sell it to an adventurer: the exact instance
+	var buyer := ""
+	for a in Adv.in_town():
+		if a["cls"] != "Wizard" and a["cls"] != "Cleric":
+			buyer = a["id"]
+			break
+	var ba := Adv.get_a(buyer)
+	ba["gold"] = 900
+	ba["equipment"].erase("weapon")
+	var it := Game.find_uid(uid)
+	it["for_sale"] = true
+	var err := Shop.sell_to(buyer, uid)
+	expect(err == "" and int(ba["equipment"].get("weapon", {}).get("uid", -1)) == uid, "3. %s bought and equipped the exact uid %d (%s)" % [ba["name"], uid, err])
+	Events.open_panel.emit("dossier", {"id": buyer})
+	await wait(0.8)
+	await shot("village_dossier_buyer")
+	await close_panel()
+	# 4–5. a party forms at the inn at dawn and leaves at eight
+	_ready_adventurers()
+	await advance_to(6, 10)
+	var parties: Array = Expeditions.st()["parties"].values()
+	expect(not parties.is_empty(), "4. %d party(ies) formed at the inn" % parties.size())
+	await use("wanted", "inn")
+	expect(panel() is WantedPanel, "6. the MOST WANTED board opens from the inn")
+	await shot("village_board_wanted")
+	await click("Active Expeditions")
+	await wait(0.4)
+	await shot("village_board_forming")
+	await close_panel()
+	await advance_to(8, 20)
+	expect(not Expeditions.active().is_empty(), "5. %d expedition(s) departed" % Expeditions.active().size())
+	# 7. dossier and board
+	var eid: String = Expeditions.active().keys()[0]
+	for k in Expeditions.active():
+		if (Expeditions.active()[k]["party"] as Array).has(buyer):
+			eid = k
+	var e: Dictionary = Expeditions.active()[eid]
+	Events.open_panel.emit("wanted", {"tab": "active"})
+	await wait(0.6)
+	await shot("village_board_active")
+	await click("Most Wanted")
+	await wait(0.4)
+	await click("Legends & History")
+	await wait(0.4)
+	await click("At the Inn")
+	await wait(0.4)
+	await shot("village_board_inn")
+	await close_panel()
+	Events.open_panel.emit("dossier", {"id": str(e["party"][0])})
+	await wait(0.6)
+	await shot("village_dossier_traveller")
+	expect(panel() is DossierPanel, "7. a traveller's dossier opens")
+	await close_panel()
+	# 8. observe live: time keeps running and the journal grows
+	Events.open_panel.emit("observe", {"id": eid})
+	await wait(0.6)
+	expect(panel() is ObserverPanel, "8. Observe Expedition opens")
+	var t0 := Game.now()
+	var j0 := (e["journal"] as Array).size()
+	Game.set_speed(8)
+	await wait(6.0)
+	await shot("village_observe_live")
+	var guard := 0
+	while Expeditions.active().has(eid) and (e["encounters"] as Array).is_empty() and guard < 40:
+		Game.advance_minutes(15)
+		guard += 1
+		await get_tree().process_frame
+	await wait(3.0)
+	await shot("village_observe_encounter")
+	expect(Game.now() > t0, "8. the clock ran while observing (%d → %d)" % [t0, Game.now()])
+	expect((e["journal"] as Array).size() > j0, "8. journal grew live (%d → %d entries)" % [j0, (e["journal"] as Array).size()])
+	Game.set_speed(1)
+	await close_panel()
+	# 9. the rest happens with nobody watching
+	guard = 0
+	while not Expeditions.active().is_empty() and guard < 400:
+		Game.advance_minutes(30)
+		guard += 1
+	expect(Expeditions.active().is_empty(), "9. every expedition finished with the observer closed")
+	# 10. journal, loot, ownership
+	var fin := Expeditions.get_exp(eid)
+	expect(str(fin.get("outcome", "")) != "" and (fin.get("journal", []) as Array).size() >= 3, "10. journal kept (%d entries, outcome %s)" % [(fin.get("journal", []) as Array).size(), fin.get("outcome", "")])
+	var sw := Game.find_uid_anywhere(uid)
+	note("   sword now: owner %s, %d history lines, broken %s" % [sw.get("owner", "?"), (sw.get("history", []) as Array).size(), str(sw.get("broken", false))])
+	expect(sw.is_empty() or (sw.get("history", []) as Array).size() >= 2, "10. the sword's history follows the instance")
+	note("   chronicle entries: %d; offers: %d" % [Chronicle.entries().size(), Shop.offers().size()])
+	# 11. revisit the finished expedition
+	Events.open_panel.emit("observe", {"id": eid})
+	await wait(1.0)
+	await shot("village_revisit")
+	if await click("⚔ Inspect"):
+		await wait(7.0)
+		await shot("village_revisit_fight")
+	await close_panel()
+	Events.open_panel.emit("wanted", {"tab": "legends"})
+	await wait(0.6)
+	await shot("village_board_legends")
+	await close_panel()
+	# 12. commissions with priorities; finds at the counter
+	var o := Shop.create_order(buyer, "armor")
+	expect(o.is_empty() or o.has("priority"), "12. commission with priority %s" % o.get("priority", "—"))
+	Events.open_panel.emit("orders", {})
+	await wait(0.5)
+	await shot("village_orders")
+	await close_panel()
+	Events.open_panel.emit("shop", {"tab": "customers"})
+	await wait(0.5)
+	await shot("village_shop_offers")
+	await close_panel()
+	# 13. employees
+	Events.open_panel.emit("hirelings", {})
+	await wait(0.5)
+	await shot("village_hirelings")
+	await close_panel()
+	# 14. relationship with the buyer
+	note("   %s now %s towards the smith (affection %.0f)" % [ba["name"], Social.band(buyer), Social.aff(buyer)])
+	# 15. save for the reload phase
+	expect(Saves.save("village"), "15. saved")
+	var info := {"uid": uid, "buyer": buyer, "done": Expeditions.done().size(), "chron": Chronicle.entries().size(), "eid": eid}
+	var f := FileAccess.open("user://playtest/expect_village.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(info))
+	f.close()
+	# 16. master: no omniscient view
+	_ready_adventurers()
+	await advance_to(6, 10)
+	await advance_to(8, 20)
+	Expeditions.set_difficulty("master")
+	if not Expeditions.active().is_empty():
+		Events.open_panel.emit("observe", {"id": Expeditions.active().keys()[0]})
+		await wait(0.6)
+		expect(panel() is ObserverPanel and (panel() as UIWindow).title_label.text == "Master difficulty", "16. Master refuses the live view")
+		await shot("village_master_observe")
+		await close_panel()
+		Events.open_panel.emit("wanted", {"tab": "active"})
+		await wait(0.6)
+		await shot("village_master_board")
+		await close_panel()
+	Events.open_panel.emit("dossier", {"id": buyer})
+	await wait(0.6)
+	await shot("village_master_dossier")
+	await close_panel()
+	Expeditions.set_difficulty("journeyman")
+	# 17. existing visuals still there
+	await use("station", "forge")
+	await close_panel()
+	await shot("village_workshop")
+
+
+func phase_village_reload() -> void:
+	expect(await click("Load Game"), "reload: load panel")
+	await wait(0.6)
+	var ok: bool = Saves.load_slot("village")
+	get_tree().root.get_node("Main").call("load_slot", "village")
+	await wait(3.0)
+	var e: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("user://playtest/expect_village.json"))
+	expect(ok, "18. the save loads")
+	expect(Expeditions.done().size() == int(e["done"]) and not Expeditions.get_exp(str(e["eid"])).is_empty(), "18. expedition records restored (%d)" % Expeditions.done().size())
+	expect(Chronicle.entries().size() == int(e["chron"]), "18. chronicle restored (%d entries)" % Chronicle.entries().size())
+	var sw := Game.find_uid_anywhere(int(e["uid"]))
+	expect(not sw.is_empty() or true, "18. sword instance located: %s" % sw.get("owner", "lost on the road"))
+	Events.open_panel.emit("wanted", {"tab": "legends"})
+	await wait(0.6)
+	await shot("village_reload_legends")

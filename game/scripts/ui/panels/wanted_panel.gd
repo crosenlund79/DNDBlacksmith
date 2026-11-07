@@ -61,7 +61,9 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tabs_row.add_child(spacer)
-	tabs_row.add_child(UIKit.label("Difficulty: %s%s" % [Expeditions.diff().get("name", ""), "" if Expeditions.can_observe() else " — what is known, not what is happening"], 18, "body_italic", UIKit.PAPER))
+	var dl := UIKit.label("Difficulty: %s%s" % [Expeditions.diff().get("name", ""), "" if Expeditions.can_observe() else " — what is known, not what is happening"], 18, "body_italic", UIKit.PAPER)
+	dl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	tabs_row.add_child(dl)
 	UIKit.clear(body)
 	match tab:
 		"wanted":

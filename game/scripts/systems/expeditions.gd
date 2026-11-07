@@ -1278,7 +1278,16 @@ static func _share_loot(e: Dictionary, alive: Array) -> void:
 					placed = true
 					break
 		if not placed and alive.size() > 0:
-			offers.append(it)
+			# like materials are offered as one bundle
+			var merged := false
+			if it.has("qty") and not Items.is_equipment(it):
+				for o in offers:
+					if o["def"] == it["def"] and o.has("qty"):
+						o["qty"] = int(o["qty"]) + int(it["qty"])
+						merged = true
+						break
+			if not merged:
+				offers.append(it)
 	var notable := []
 	for it in offers:
 		var seller := Adv.get_a(alive[randi() % alive.size()])

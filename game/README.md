@@ -24,10 +24,10 @@ The tests are verified with **Godot 4.3.stable.official.77dcf97d8**.
 | Test | Command (from `game/`) |
 |---|---|
 | Compile check: every script loads with the autoloads present | `godot --headless --path . res://tests/compile_all.tscn` |
-| Unit and regression tests (44) | `godot --headless --path . res://tests/test_runner.tscn` (or `run_tests_windows.bat`) |
+| Unit and regression tests (138) | `godot --headless --path . res://tests/test_runner.tscn` (or `run_tests_windows.bat`) |
 | Rendered play-test: real main scene, synthetic input, screenshots in `user://playtest/` | `godot --path . res://tests/playtest.tscn -- full`, then `-- reload` in a new process to test save → restart → continue |
 
-Other play-test phases are `smoke`, `stations` and `panels`. On a machine with no display, wrap the play-tests in `xvfb-run -a -s "-screen 0 1920x1080x24"` and add `--rendering-driver opengl3`.
+Other play-test phases are `smoke`, `stations`, `panels`, `craft`, `iter2`, `slice` and **`village`** (the Living Village acceptance route; follow it with `-- village_reload`). On a machine with no display, wrap the play-tests in `xvfb-run -a -s "-screen 0 1920x1080x24"` and add `--rendering-driver opengl3`.
 
 ## Controls
 
@@ -40,10 +40,14 @@ Other play-test phases are `smoke`, `stations` and `panels`. On a machine with n
 | K | Skills |
 | J | Adventurers |
 | O | Commissions |
+| B | The MOST WANTED board (also at the board in the inn) |
+| P | Pause / resume time |
+| − / + | Slow down / speed up time (×1, ×2, ×4, ×8) |
 | L | Ledger and upgrades |
 | Esc | Menu |
 | F5 / F9 | Quick save / quick load |
 | F3 | Diagnostics overlay |
+| F10 | Developer tools (expeditions, difficulty, time) |
 
 ## The first-day loop
 
