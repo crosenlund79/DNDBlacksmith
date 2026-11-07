@@ -29,7 +29,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if frozen or Game.ui_blockers > 0:
+	if frozen or Game.ui_blockers > 0 or Game.ui_open > 0:
 		velocity = Vector2.ZERO
 		_anim(Vector2.ZERO)
 		return

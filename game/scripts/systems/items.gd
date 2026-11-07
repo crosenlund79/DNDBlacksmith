@@ -143,11 +143,39 @@ static func tier(it: Dictionary) -> int:
 const TIER_WORD := {1: "any material", 2: "steel or better", 3: "mithril or starsteel", 4: "adamantine"}
 
 
+## Weapon family, for class affinities (rangers favour bows, barbarians axes…).
+static func wtype(it: Dictionary) -> String:
+	if it.is_empty():
+		return "none"
+	var id := str(it.get("def", ""))
+	for k in ["bow", "dagger", "axe", "mace", "staff"]:
+		if id.contains(k):
+			return k
+	if id == "grimhold":
+		return "mace"
+	if id.contains("sword") or id.contains("blade"):
+		return "sword"
+	return "other"
+
+
+## A short history for notable items: forged, sold, deeds, repairs, owners (shown in tooltips and dossiers).
+static func add_history(it: Dictionary, text: String) -> void:
+	if it.is_empty():
+		return
+	if not it.has("history"):
+		it["history"] = []
+	it["history"].append({"day": Game.day(), "text": text})
+	while it["history"].size() > 12:
+		it["history"].pop_front()
+
+
 static func stat(it: Dictionary, key: String) -> int:
 	var v := int(it.get("stats", {}).get(key, 0))
 	for a in it.get("affixes", []):
 		if a["stat"] == key:
 			v += int(a["value"])
+	if key == "attack" and it.get("broken", false):
+		v = v / 2
 	return v
 
 
@@ -195,6 +223,10 @@ static func tooltip(it: Dictionary) -> String:
 	var c := color(it).to_html(false)
 	var lines: Array[String] = []
 	lines.append("[font_size=26][color=#%s]%s[/color][/font_size]" % [c, display_name(it)])
+	if it.has("title"):
+		lines.append("[i][color=#%s]%s, once called %s[/color][/i]" % [c, def(it).get("name", ""), it.get("base_name", "")])
+	if it.get("broken", false):
+		lines.append("[color=#ff9a80]Broken — needs the grinding wheel and anvil[/color]")
 	if it.has("epithet"):
 		lines.append("[i][color=#%s]%s[/color][/i]" % [c, it["epithet"]])
 	lines.append("[color=#%s]%s %s[/color]" % [c, RARITY_LABEL.get(it.get("rarity", "common"), ""), type_label(it)])
@@ -238,6 +270,8 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append("[color=#a89a80][i]Set aside for the next trade run.[/i][/color]")
 	if it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])
+	for hst in it.get("history", []).slice(maxi(0, it.get("history", []).size() - 4)):
+		lines.append("[color=#c8b898][i]Day %d — %s[/i][/color]" % [int(hst["day"]), hst["text"]])
 	var desc: String = it.get("desc", def(it).get("desc", ""))
 	if desc != "":
 		lines.append("[i][color=#c8b898]%s[/color][/i]" % desc)

@@ -10,6 +10,7 @@ var content: VBoxContainer
 var title_label: Label
 var blocks_time := true
 var _blocked := false
+var _counted := false
 
 
 func _init(title_text := "", w := 900.0, h := 640.0, dark := false) -> void:
@@ -37,6 +38,8 @@ func _ready() -> void:
 	grow_horizontal = Control.GROW_DIRECTION_BOTH
 	grow_vertical = Control.GROW_DIRECTION_BOTH
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	Game.ui_open += 1
+	_counted = true
 	if blocks_time:
 		Game.block_time(true)
 		_blocked = true
@@ -58,6 +61,9 @@ func close() -> void:
 
 
 func _exit_tree() -> void:
+	if _counted:
+		Game.ui_open = maxi(0, Game.ui_open - 1)
+		_counted = false
 	if _blocked:
 		Game.block_time(false)
 		_blocked = false

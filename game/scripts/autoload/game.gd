@@ -14,7 +14,13 @@ const DAY_START_HOUR := 6
 var state: Dictionary = {}
 var running := false
 var ui_blockers := 0
+var ui_open := 0     # windows on screen (some — the Most Wanted board, the observer — let time run)
 var _acc := 0.0
+## Single-player time controls: pause and acceleration (1x, 2x, 4x, 8x). The simulation advances
+## only through advance_minutes(), whatever the frame rate, so faster time never skips events.
+var paused := false
+var speed := 1
+const SPEEDS := [1, 2, 4, 8]
 
 
 func _ready() -> void:
@@ -22,7 +28,7 @@ func _ready() -> void:
 
 
 # ------------------------------------------------------------------ new game
-func new_game() -> void:
+func new_game(difficulty := "journeyman") -> void:
 	state = {
 		"version": SAVE_VERSION,
 		"day": 1, "minute": 7 * 60 + 30,
@@ -50,6 +56,10 @@ func new_game() -> void:
 		"world": {"eggs": false, "eggs_by": "", "last_delivery_week": 0, "delivery_pending": false},
 		"objectives": {},
 		"stats": {"crafted": 0, "sold": 0, "legendaries": 0},
+		"difficulty": "journeyman",
+		"chronicle": [],
+		"exp": {"active": {}, "done": [], "parties": {}},
+		"offers": [],
 	}
 	# starting materials — enough to try every open discipline once or twice
 	for pair in [["ore_iron", 8], ["coal", 10], ["ingot_iron", 6], ["ingot_steel", 2], ["leather_cured", 5], ["leather_hide", 4],
@@ -63,24 +73,43 @@ func new_game() -> void:
 	Hire.refresh_applicants()
 	Social.init_all()
 	Objectives.init()
+	state["difficulty"] = difficulty if DB.expeditions.get("difficulty", {}).has(difficulty) else "journeyman"
+	Expeditions.init_world()
 	journal("Day 1. The forge is cold, Borin is restless and Mira Pell keeps glancing at the shop window.")
 	Log.info("New game created")
 
 
 # ------------------------------------------------------------------ clock
 func _process(delta: float) -> void:
-	if not running or ui_blockers > 0 or state.is_empty():
+	if not running or ui_blockers > 0 or state.is_empty() or paused:
 		return
-	_acc += delta * MINUTES_PER_SECOND * float(Settings.get_value("gameplay/time_scale", 1.0))
+	_acc += delta * MINUTES_PER_SECOND * float(Settings.get_value("gameplay/time_scale", 1.0)) * speed
 	if _acc >= 1.0:
 		var m := int(_acc)
 		_acc -= m
 		advance_minutes(m)
 
 
+## Absolute game time in minutes since the start of day 1 (the expedition clock).
+func now() -> int:
+	return (day() - 1) * 1440 + int(state.get("minute", 0))
+
+
+func set_speed(v: int) -> void:
+	speed = v if SPEEDS.has(v) else 1
+	Events.time_changed.emit(day(), int(state.get("minute", 0)))
+
+
+func toggle_pause() -> void:
+	paused = not paused
+	Events.time_changed.emit(day(), int(state.get("minute", 0)))
+
+
 func advance_minutes(m: int) -> void:
 	for i in m:
 		state["minute"] += 1
+		if state["minute"] % 5 == 0:
+			Expeditions.tick()
 		if state["minute"] % 60 == 0:
 			if state["minute"] >= 24 * 60:
 				state["minute"] = 0
@@ -222,6 +251,24 @@ func find_uid(uid: int) -> Dictionary:
 	for it in inventory():
 		if int(it.get("uid", -1)) == uid:
 			return it
+	return {}
+
+
+## Finds an item instance wherever it is: the smith's stores, an adventurer's or a hireling's gear.
+func find_uid_anywhere(uid: int) -> Dictionary:
+	if uid < 0:
+		return {}
+	var it := find_uid(uid)
+	if not it.is_empty():
+		return it
+	for a in state.get("adventurers", {}).values():
+		for s in a.get("equipment", {}):
+			if int(a["equipment"][s].get("uid", -1)) == uid:
+				return a["equipment"][s]
+	for h in state.get("hirelings", []):
+		for s in h.get("equipment", {}):
+			if int(h["equipment"][s].get("uid", -1)) == uid:
+				return h["equipment"][s]
 	return {}
 
 

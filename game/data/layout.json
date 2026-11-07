@@ -1377,6 +1377,12 @@
      15.2,
      9.0,
      0
+    ],
+    [
+     "most_wanted_board",
+     2.8,
+     13.45,
+     0
     ]
    ],
    "spots": {
@@ -1430,6 +1436,18 @@
      11.6,
      4.4
     ]
+   ],
+   "interact": [
+    {
+     "kind": "wanted",
+     "id": "inn",
+     "pos": [
+      2.8,
+      12.7
+     ],
+     "r": 150,
+     "label": "The MOST WANTED board \u2014 Brindlewick's adventurers"
+    }
    ]
   },
   {

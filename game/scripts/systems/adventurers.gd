@@ -199,6 +199,8 @@ static func on_day() -> void:
 	for a in all().values():
 		match a["status"]:
 			"away":
+				if a.has("exp"):
+					continue   # the expedition simulation (Expeditions) brings them home
 				a["days_left"] = int(a["days_left"]) - 1
 				if int(a["days_left"]) <= 0:
 					_resolve(a)
@@ -206,6 +208,7 @@ static func on_day() -> void:
 				a["injured_days"] = int(a["injured_days"]) - 1
 				if int(a["injured_days"]) <= 0:
 					a["status"] = "in_town"
+					a["activity"] = "recovering"
 					a["depart_day"] = Game.day() + randi_range(1, 2)
 	Events.adventurers_changed.emit()
 
@@ -412,8 +415,14 @@ static func _die(a: Dictionary, d: Dictionary, mine: Array) -> void:
 	a["status"] = "dead"
 	a["died_day"] = Game.day()
 	a["last_report"] = "%s fell at %s." % [a["name"], d["name"]]
-	Game.journal(a["last_report"])
-	Events.toast.emit(a["last_report"], "bad")
+	_die_consequences(a, mine, d["name"])
+
+
+## What a death means to the village: grief or blame in the family, the smith's name, a widower.
+static func _die_consequences(a: Dictionary, mine: Array, where: String) -> void:
+	Chronicle.add("death", "%s fell at %s." % [a["name"], where], {"adv": a["id"]}, true)
+	Events.toast.emit("%s fell at %s." % [a["name"], where], "bad")
+	Audio.play("sfx/check_poor", -2.0)
 	var bad := false
 	for it in mine:
 		if float(it.get("quality", 70)) < 60.0:
@@ -469,6 +478,7 @@ static func give_item(a: Dictionary, it: Dictionary, price: int) -> void:
 	if a["equipment"].has(s):
 		a["loot"].append(a["equipment"][s])
 	a["equipment"][s] = it
+	it["owner"] = a["id"]
 	if a["needs"] == s:
 		a["needs"] = ""
 	var q := float(it.get("quality", 70))

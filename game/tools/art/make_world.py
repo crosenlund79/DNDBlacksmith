@@ -10,6 +10,7 @@ import artlib
 from artlib import render, SPR
 
 GROUPS = ["stations", "props", "icons", "textures", "roofs", "ui", "interiors"]
+MANIFEST_ONLY = ["enemies"]     # built by make_enemies.py; listed in the manifest only
 
 
 def build(groups):
@@ -28,7 +29,7 @@ def build(groups):
 
 def manifest():
     out = {"generator": "game/tools/art/make_world.py", "style": "ink_parchment_gothic_80_20", "files": {}}
-    for g in GROUPS:
+    for g in GROUPS + [m for m in MANIFEST_ONLY if m not in GROUPS]:
         d = os.path.join(SPR, g)
         if not os.path.isdir(d):
             continue

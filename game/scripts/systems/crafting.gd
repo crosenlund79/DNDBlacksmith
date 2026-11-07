@@ -436,6 +436,8 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 		"dice": dice_log, "dice_mode": mode, "rarity_score": rev["score"], "rarity_parts": rev.get("parts", {}),
 		"masterwork": rev.get("masterwork", false), "xp": xp, "expert": expert, "day": Game.day(),
 	}
+	it["owner"] = "smith"
+	Items.add_history(it, "Forged at the Ironhand forge (%d%% craftsmanship)." % int(round(q)))
 	Game.state["craft"] = {}
 	Game.state["stats"]["crafted"] += 1
 	if out_def == "ingot_mithril" or out_def == "sword_mithril":

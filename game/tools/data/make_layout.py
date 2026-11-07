@@ -139,7 +139,9 @@ INN_FURNITURE = [
     F("table_long", 11.4, 12.7), F("bench", 11.4, 11.6), F("table_round", 11.6, 4.4),
     F("kitchen_stove", 17.0, 1.0), F("cupboard", 19.4, 3.6, 90), F("barrel", 15.0, 6.2), F("produce_crate", 18.6, 6.0),
     F("bed", 18.8, 9.6), F("dresser", 15.4, 13.4), F("nightstand", 17.4, 8.4), F("chest", 15.2, 9.0),
+    F("most_wanted_board", 2.8, 13.45),
 ]
+INN_INTERACT = [dict(kind="wanted", id="inn", pos=[2.8, 12.7], r=150, label="The MOST WANTED board — Brindlewick's adventurers")]
 INN_TABLES = [[4.4, 6.6], [9.4, 6.2], [4.0, 11.0], [8.8, 10.6], [11.4, 12.7], [11.6, 4.4]]
 INN_SPOTS = {"inn_bar": [6.0, 4.3], "inn_behind_bar": [6.0, 1.9], "inn_hearth": [2.2, 8.6], "inn_inside": [10.0, 12.6],
              "inn_kitchen": [16.6, 3.4], "hilde_bed": [17.0, 10.6]}
@@ -200,7 +202,7 @@ s.update(rect=[18, 34, 30, 23], doors=[{"side": "n", "at": 13, "w": 2}], chimney
          interact=SMITHY_INTERACT, station_pos=SMITHY_STATIONS, customer_rooms=["shop"])
 
 i = by_id["inn"]
-i.update(rooms=INN_ROOMS, room_doors=INN_DOORS, furniture=INN_FURNITURE, spots=INN_SPOTS, tables=INN_TABLES,
+i.update(rooms=INN_ROOMS, room_doors=INN_DOORS, furniture=INN_FURNITURE, spots=INN_SPOTS, tables=INN_TABLES, interact=INN_INTERACT,
          stairs={"pos": [12.6, 1.6], "to": "inn_upstairs"})
 
 g = by_id["grocery"]

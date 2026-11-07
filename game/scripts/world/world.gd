@@ -1198,8 +1198,12 @@ func spot_for(id: String) -> String:
 		return ""
 	var a := Adv.get_a(id)
 	if not a.is_empty():
-		if a["status"] in ["away", "dead"]:
+		if a["status"] in ["away", "dead", "missing"]:
 			return ""
+		# a party forming at dawn sits together at its own table until it leaves at eight
+		var pt := Expeditions.party_of(id)
+		if not pt.is_empty() and h >= 6 and h < 8:
+			return "inn_t%d" % (1 + int(pt.get("table", 1)) % 6) if id == pt["leader"] else "inn_t%db" % (1 + int(pt.get("table", 1)) % 6)
 		if Social.spouse() == id and (h >= 21 or h < 7):
 			return "quarters_table" if h < 23 and h >= 21 else ""
 		if a["status"] == "injured":
@@ -1444,6 +1448,8 @@ func interact(e: Dictionary) -> void:
 			Events.open_panel.emit("sleep", {})
 		"ledger":
 			Events.open_panel.emit("shop", {"tab": "ledger"})
+		"wanted":
+			Events.open_panel.emit("wanted", {})
 		"bag":
 			Events.open_panel.emit("loot", {"uid": int(e["id"])})
 		"eggs":

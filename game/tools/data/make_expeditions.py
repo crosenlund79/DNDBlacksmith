@@ -111,9 +111,9 @@ RELATIONS = [
 DIFFICULTY = {
     "apprentice": {"name": "Apprentice", "observe": True, "detail": True, "enemy": 0.8, "death": False, "death_dc": 0,
         "heal_rate": 1.5, "prices": 1.15, "wages": 0.85, "loot": 1.2, "desc": "Forgiving fights and prices; nobody dies — the fallen are carried home. Full live observation."},
-    "journeyman": {"name": "Journeyman", "observe": True, "detail": True, "enemy": 1.0, "death": True, "death_dc": 7,
+    "journeyman": {"name": "Journeyman", "observe": True, "detail": True, "enemy": 1.0, "death": True, "death_dc": 4,
         "heal_rate": 1.0, "prices": 1.0, "wages": 1.0, "loot": 1.0, "desc": "Moderate risks; death is possible but rare. Live observation and detailed inspection."},
-    "master": {"name": "Master", "observe": False, "detail": False, "enemy": 1.25, "death": True, "death_dc": 11,
+    "master": {"name": "Master", "observe": False, "detail": False, "enemy": 1.25, "death": True, "death_dc": 9,
         "heal_rate": 0.75, "prices": 0.9, "wages": 1.15, "loot": 0.85, "desc": "High risk, tight money, real losses. No omniscient observation: you learn what happened when they come home."},
 }
 

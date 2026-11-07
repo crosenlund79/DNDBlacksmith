@@ -71,6 +71,59 @@ static func pay_upkeep() -> void:
 	Game.add_gold(-cost, "upkeep", "Coal, rent and tools")
 
 
+# ------------------------------------------------------------------ offers from returning adventurers
+## Materials, relics and spare gear an adventurer brings home and offers to the smith (3 days).
+static func offers() -> Array:
+	if not Game.state.has("offers"):
+		Game.state["offers"] = []
+	return Game.state["offers"]
+
+
+static func add_offer(adv_id: String, it: Dictionary, announce := true) -> void:
+	var a := Adv.get_a(adv_id)
+	if a.is_empty() or it.is_empty():
+		return
+	var price := maxi(2, int(Items.value(it) * (0.55 if Social.band(adv_id) in ["friendly", "devoted"] else 0.75)))
+	if Social.spouse() == adv_id:
+		price = 0
+	it["owner"] = adv_id
+	offers().append({"id": "off_%d" % Game.new_uid(), "from": adv_id, "item": it, "price": price, "day": Game.day()})
+	if announce and (Regions.is_unidentified(it) or it.get("rarity", "common") in ["rare", "legendary"] or DB.item(it["def"]).get("tags", []).has("rare")):
+		Chronicle.add("discovery", "%s brought home %s and offers it to the forge." % [a["name"], Items.display_name(it)], {"adv": adv_id, "item": str(it["uid"])}, true)
+		Events.toast.emit("%s offers you %s (%d g) — see the shop counter." % [a["name"], Items.display_name(it), price], "good")
+
+
+static func accept_offer(oid: String) -> String:
+	for o in offers():
+		if o["id"] != oid:
+			continue
+		var price := int(o["price"])
+		if not Game.can_afford(price):
+			return "You cannot afford it."
+		var a := Adv.get_a(o["from"])
+		Game.add_gold(-price, "materials", "Bought %s from %s" % [o["item"]["name"], a.get("name", "")])
+		a["gold"] = int(a.get("gold", 0)) + price
+		var it: Dictionary = o["item"]
+		it["owner"] = "smith"
+		Items.add_history(it, "Sold to the forge by %s for %d g." % [a.get("name", ""), price])
+		Game.add_item(it)
+		offers().erase(o)
+		Social.change(o["from"], 2.0, 2.0)
+		# the relic hunter: a relic sold to the forge earns a special commission
+		if Regions.is_unidentified(it) and Shop.open_orders().filter(func(x): return x["npc"] == o["from"]).is_empty():
+			var ord := create_order(o["from"], "", "Since you have the relic I found — make me something worthy of the barrows.")
+			if not ord.is_empty():
+				ord["reward"] = int(ord["reward"]) + 60
+		return ""
+	return "That offer is gone."
+
+
+static func expire_offers() -> void:
+	for o in offers().duplicate():
+		if Game.day() - int(o["day"]) >= 3:
+			offers().erase(o)
+
+
 ## An adventurer's most worn piece, if anything is below 40% durability.
 static func worn_slot(a: Dictionary) -> String:
 	for slot in a.get("equipment", {}):
@@ -251,6 +304,7 @@ static func sell_to(npc: String, uid: int) -> String:
 	it = Game.take_uid(uid)
 	it.erase("for_sale")
 	var married := Social.spouse() == npc
+	Items.add_history(it, "Sold to %s for %d g." % [a["name"], price] if not married else "Given to %s, the smith's wife." % a["name"])
 	Adv.give_item(a, it, price)
 	if not married:
 		Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], a["name"]])
@@ -272,6 +326,10 @@ static func do_repair(npc: String, quality: float) -> void:
 			var st: Dictionary = it.get("stats", {})
 			if st.has("durability_max"):
 				st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))
+			if it.get("broken", false):
+				it.erase("broken")
+				Chronicle.add("item", "Brannoc mended %s's broken %s." % [a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
+			Items.add_history(it, "Repaired at the Ironhand forge (%d%%)." % int(quality))
 			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
 			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "Brannoc mended my %s %s." % [it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])

@@ -23,6 +23,8 @@ var dialogue := {}
 var names := {}
 var crafting := {}
 var suppliers := {}
+var expeditions := {}
+var enemies := {}
 
 
 func _ready() -> void:
@@ -74,6 +76,9 @@ func reload() -> void:
 	names = nm if nm is Dictionary else {}
 	var cf: Variant = _read("crafting.json")
 	crafting = cf if cf is Dictionary else {}
+	var ex: Variant = _read("expeditions.json")
+	expeditions = ex if ex is Dictionary else {}
+	enemies = _index(expeditions.get("enemies", []))
 	var sp: Variant = _read("suppliers.json")
 	suppliers = sp if sp is Dictionary else {}
 	Log.info("Data loaded: %d items, %d stations, %d recipes, %d characters" % [items.size(), stations.size(), recipes.size(), characters.size()])

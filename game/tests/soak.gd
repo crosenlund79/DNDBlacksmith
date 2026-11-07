@@ -40,6 +40,13 @@ func _ready() -> void:
 		sc.append("%s %s" % [d, Regions.knowledge_word(Regions.scouted(d))])
 	lines.append("day %d gold %d reputation %.1f (%s) inventory %d orders %d applicants %d" % [Game.day(), Game.gold(), Shop.reputation(), Shop.reputation_word(), Game.inventory().size(), Shop.orders().size(), Game.state["applicants"].size()])
 	lines.append("scouting: " + ", ".join(sc))
+	lines.append("expeditions done %d, active %d" % [Expeditions.done().size(), Expeditions.active().size()])
+	for ex in Expeditions.done().slice(0, 8):
+		lines.append("  EXP %s %s %s enc %d journal %d: %s" % [ex["dest"], ex["outcome"], str(ex["party"]), ex["encounters"].size(), ex["journal"].size(), ex.get("summary", "")])
+	lines.append("chronicle %d entries; recent:" % Chronicle.entries().size())
+	for c in Chronicle.recent(14):
+		lines.append("  [%s d%d %s] %s" % [c["kind"], c["day"], c["time"], c["text"]])
+	lines.append("offers %d, missing %s" % [Shop.offers().size(), str(Game.state["world"].get("missing", {}).keys())])
 	lines.append("journal tail: " + " | ".join(Game.state["journal"].slice(-6).map(func(j): return j["text"])))
 	print("\n".join(lines))
 	var alive := Adv.all().size() - deaths

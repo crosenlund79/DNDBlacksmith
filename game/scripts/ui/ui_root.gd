@@ -314,6 +314,12 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 			open(SavePanel.new(args.get("mode", "save")))
 		"settings":
 			open(SettingsPanel.new())
+		"wanted":
+			open(WantedPanel.new(str(args.get("tab", "wanted"))))
+		"dossier":
+			open(DossierPanel.new(str(args["id"])))
+		"observe":
+			open(ObserverPanel.new(str(args["id"])))
 
 
 func _unhandled_input(event: InputEvent) -> void:
