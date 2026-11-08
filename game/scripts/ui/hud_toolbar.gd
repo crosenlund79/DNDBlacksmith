@@ -135,7 +135,11 @@ class ToolbarButton extends Control:
 
 	var def: Array
 	var hover := false
-	var attention := ""
+	var attention := "":
+		set(v):
+			if v != attention:
+				attention = v
+				queue_redraw()
 	var _t := 0.0
 	var _down := false
 

@@ -196,7 +196,7 @@ func _draw_village(w: VillageWorld) -> void:
 			var nm := str(b.get("name", id))
 			var fs := 15
 			var tw := f.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-			var tp := mr.get_center() + Vector2(-tw * 0.5, 5)
+			var tp := Vector2(mr.get_center().x - tw * 0.5, mr.position.y + 20.0)   # names sit at the top, clear of the figures inside
 			draw_string_outline(f, tp, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 4, Color(PAPER, 0.92))
 			draw_string(f, tp, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 	# exits
@@ -214,7 +214,9 @@ func _draw_village(w: VillageWorld) -> void:
 			var label := str(ex.get("label", ex["id"]))
 			var fs2 := 16
 			var tw2 := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2).x
-			var lp := mp - dir * 26.0 + Vector2(-tw2 * 0.5, 6)
+			var lp := mp - dir * 30.0 + Vector2(-tw2 * 0.5, 6)
+			if dir.x != 0.0:
+				lp = Vector2(mp.x + 24.0 if dir.x < 0.0 else mp.x - 24.0 - tw2, mp.y - 16.0)
 			lp.x = clampf(lp.x, 10.0, size.x - tw2 - 10.0)
 			lp.y = clampf(lp.y, 24.0, size.y - 10.0)
 			draw_string_outline(f, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, 4, Color(PAPER, 0.95))
@@ -266,9 +268,11 @@ func _draw_interior(w: VillageWorld, bid: String) -> void:
 		var p := m(e["pos"])
 		match str(e["kind"]):
 			"station":
-				draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), GILT)
-				draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), INK, false, 1.0)
-				if not compact:
+				if compact:
+					draw_rect(Rect2(p - Vector2(1.5, 1.5), Vector2(3, 3)), Color(GILT, 0.7))
+				else:
+					draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), GILT)
+					draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), INK, false, 1.0)
 					_markers.append({"pos": p, "name": str(e.get("label", e["id"])), "reason": ""})
 			"stairs", "bed", "counter", "ledger":
 				draw_circle(p, 3.0, Color(INK, 0.6))

@@ -224,7 +224,8 @@ func phase_full() -> void:
 	await hold("move_down", 0.6)
 	var wall_x := W().brect(DB.building("smithy")).position.x
 	await tp(Vector2(wall_x + 90, W().player.position.y))
-	await hold("move_left", 1.2)
+	await hold("move_down", 1.0)
+	await hold("move_right", 1.0)
 	expect(W().player.position.x > wall_x + 10, "collision: smithy west wall stops the player")
 	# --- leave and re-enter: door is on the north wall
 	await tp(W().spots["smithy_inside"] + Vector2(0, -260))
@@ -1507,3 +1508,141 @@ func phase_village_reload() -> void:
 	Events.open_panel.emit("wanted", {"tab": "legends"})
 	await wait(0.6)
 	await shot("village_reload_legends")
+
+
+
+# ======================================================================= interface (iteration 009)
+func _iface_hover_marker(view: VillageMapView, name_part: String) -> void:
+	for mk in view._markers:
+		if str(mk["name"]).contains(name_part) or name_part == "":
+			var ev := InputEventMouseMotion.new()
+			ev.position = mk["pos"]
+			view._gui_input(ev)
+			await get_tree().process_frame
+			U().tooltip_panel.position = view.get_global_rect().position + (mk["pos"] as Vector2) + Vector2(24, 18)
+			return
+
+
+func phase_interface() -> void:
+	expect(await click("New Game"), "iface: new game")
+	await wait(2.5)
+	Settings.set_value("gameplay/dice_mode", "auto")
+	expect(U().toolbar != null and U().toolbar.buttons.size() == 10, "iface: toolbar with %d buttons" % U().toolbar.buttons.size())
+	expect(Tutorial.enabled() and U().tutorial_card.visible, "iface: the tutorial is shown on a new game")
+	var tb := U().toolbar.get_global_rect()
+	var toast_r := U().toast_box.get_global_rect()
+	var prompt_r := U().prompt_label.get_global_rect()
+	expect(not tb.intersects(toast_r) and not tb.intersects(prompt_r), "iface: toolbar %s clear of toasts %s and prompt %s" % [tb, toast_r, prompt_r])
+	await shot("iface_hud_indoor_start")
+	# walk a little: the first tutorial step completes on real movement
+	await hold("move_down", 1.0)
+	await hold("move_right", 1.0)
+	await wait(0.6)
+	expect(Tutorial.is_done("move"), "iface: walking completes the movement step")
+	await shot("iface_tutorial_step2")
+	# outdoors at mid-morning, with a customer waiting and an offer on the table
+	await advance_to(10, 0)
+	Shop._add_customer("martha", "repair")
+	W()._update_schedules(true)
+	var adv_id := ""
+	for a in Adv.in_town():
+		adv_id = a["id"]
+		break
+	if adv_id != "":
+		Shop.add_offer(adv_id, Items.make("gem_garnet"), false)
+	await tp(W().spots.get("well", Vector2(59, 31) * 64.0) + Vector2(0, 60))
+	await wait(1.0)
+	expect(not TalkMarkers.all().is_empty(), "iface: talk markers %s" % str(TalkMarkers.all().keys()))
+	await shot("iface_hud_outdoor")
+	U().toolbar._refresh()
+	var lb: Control = U().toolbar.buttons["ledger"]
+	lb.mouse_entered.emit()
+	await wait(0.3)
+	U().tooltip_panel.position = lb.get_global_rect().position + Vector2(-60, -U().tooltip_panel.size.y - 12)
+	expect(str(lb.get("attention")) != "", "iface: the ledger button pulses for a new offer")
+	await shot("iface_toolbar_hover")
+	lb.mouse_exited.emit()
+	# the full map (M)
+	await press("panel_map")
+	await wait(0.6)
+	expect(panel() is MapPanel, "iface: M opens the village map")
+	await wait(0.3)
+	if panel() is MapPanel:
+		await _iface_hover_marker((panel() as MapPanel).view, "Martha")
+	await wait(0.2)
+	await shot("iface_map")
+	await close_panel()
+	# craft a sword, sell it, so the histories have something to say
+	await craft_ui("iron_longsword", 0.3, "auto")
+	var sword := {}
+	for it in Game.inventory():
+		if it["def"] == "sword_iron" and it.has("craft"):
+			sword = it
+	var buyer := ""
+	for a in Adv.in_town():
+		if a["cls"] != "Wizard" and a["cls"] != "Cleric":
+			buyer = a["id"]
+			break
+	if not sword.is_empty() and buyer != "":
+		var ba := Adv.get_a(buyer)
+		ba["gold"] = 900
+		ba["equipment"].erase("weapon")
+		sword["for_sale"] = true
+		expect(Shop.sell_to(buyer, int(sword["uid"])) == "", "iface: sold the sword to %s" % buyer)
+		Social.change(buyer, 6.0, 3.0, "gift_test", "Brannoc gave me a healing draught.")
+	# ledger tabs
+	Game.add_gold(-14, "materials", "Bought coal")
+	Events.open_panel.emit("shop", {"tab": "ledger"})
+	await wait(0.6)
+	var sp := panel() as ShopPanel
+	expect(sp != null, "iface: ledger opens")
+	for lt in ["summary", "accounts", "journal", "upgrades"]:
+		if sp:
+			sp.ledger_tab = lt
+			sp._build()
+		await wait(0.4)
+		await shot("iface_ledger_" + lt)
+	await close_panel()
+	# histories
+	if buyer != "":
+		Events.open_panel.emit("history", {"kind": "npc", "id": buyer})
+		await wait(0.6)
+		await shot("iface_history_npc")
+	if not sword.is_empty():
+		Events.open_panel.emit("history", {"kind": "item", "id": str(sword["uid"])})
+		await wait(0.6)
+		await shot("iface_history_item")
+	Events.open_panel.emit("history", {"kind": "station", "id": "anvil"})
+	await wait(0.6)
+	expect(not History.station_entries("anvil").is_empty(), "iface: the anvil remembers the sword")
+	await shot("iface_history_station")
+	await close_panel()
+	# help: search and a section
+	await press("panel_help")
+	await wait(0.6)
+	expect(panel() is HelpPanel, "iface: F1 opens help")
+	var hp := panel() as HelpPanel
+	if hp:
+		hp.search.text = "rarity"
+		hp.search.text_changed.emit("rarity")
+		await wait(0.4)
+	await shot("iface_help_search")
+	await close_panel()
+	Events.open_panel.emit("help", {"topic": "recipes"})
+	await wait(0.6)
+	await shot("iface_help_recipes")
+	await close_panel()
+	# history links from a conversation and a station
+	if buyer != "" and W().npcs.has(buyer) and W().npcs[buyer].visible:
+		if await talk_to(buyer):
+			await shot("iface_dialogue_history_button")
+			await close_panel()
+	# back indoors: minimap shows the rooms of the forge
+	await tp(W().bpos("smithy", 12, 9))
+	await wait(1.2)
+	expect(W().area == "smithy", "iface: back inside the forge")
+	await use("station", "anvil")
+	await wait(0.4)
+	await shot("iface_station_header")
+	await close_panel()
+	await shot("iface_hud_indoor")

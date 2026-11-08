@@ -153,7 +153,7 @@ static func _recipes(out: Array) -> void:
 			dice.append("%s %s" % [str(k).capitalize(), str(r["dice"][k])])
 		var out_def := str(r.get("output", ""))
 		_e(out, "recipes", str(r.get("name", rid)),
-			"[i]%s[/i]\n[b]Discipline:[/b] %s · [b]Difficulty:[/b] %d\n[b]Needs:[/b] %s\n[b]Stations:[/b] %s\n[b]Dice:[/b] %s%s" % [str(r.get("desc", "")),
+			"%s[b]Discipline:[/b] %s · [b]Difficulty:[/b] %d\n[b]Needs:[/b] %s\n[b]Stations:[/b] %s\n[b]Dice:[/b] %s%s" % [("[i]%s[/i]\n" % str(r["desc"])) if str(r.get("desc", "")) != "" else "",
 				Crafting.DISCIPLINE_NAME.get(str(r.get("discipline", "")), str(r.get("discipline", ""))), int(r.get("difficulty", 0)),
 				", ".join(ins), " → ".join(st), ", ".join(dice) if not dice.is_empty() else "none", ("\n" + req.strip_edges()) if req != "" else ""],
 			"icons/" + str(DB.item(out_def).get("icon", out_def)), "recipe " + str(r.get("category", "")) + " " + ", ".join(ins))
@@ -229,7 +229,7 @@ static func _dice(out: Array) -> void:
 	var lines := []
 	for k in dice:
 		lines.append("[b]%s[/b] — %s" % [str(dice[k].get("label", k)), str(dice[k].get("desc", ""))])
-	_e(out, "dice", "The dice", "After the last step you roll the recipe's dice (digitally or with your own). " + "\n".join(lines), "ui/dice_d20", "dice roll d20 d100 physical")
+	_e(out, "dice", "The dice", "After the last step you roll the recipe's dice (digitally or with your own).\n" + "\n".join(lines), "ui/dice_d20", "dice roll d20 d100 physical")
 	var rar: Dictionary = DB.crafting.get("rarity", {})
 	var th: Dictionary = rar.get("thresholds", {})
 	_e(out, "dice", "Rarity", "Craftsmanship and the fortune die combine into a rarity score: Magic from %s, Rare from %s, Legendary from %s. Runestones, fine materials and masterwork (%s%% craftsmanship) add to it. Common · Magic · Rare · Legendary." % [

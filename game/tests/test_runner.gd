@@ -643,7 +643,7 @@ func _interface() -> void:
 	TalkMarkers.clear("tobin")
 	check(TalkMarkers.wants_to_talk("tobin") == "", "interface: talk flags clear")
 	var ser := ShopPanel._balance_series(7)
-	check(ser.size() == 7 and int(ser[6][1]) == Game.gold(), "interface: ledger gold trend ends at the current purse")
+	check(ser.size() == mini(7, Game.day() + 1) and int(ser[-1][1]) == Game.gold(), "interface: ledger gold trend ends at the current purse")
 
 
 func _saves() -> void:

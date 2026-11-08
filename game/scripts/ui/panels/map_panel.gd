@@ -7,6 +7,7 @@ extends UIWindow
 var view: VillageMapView
 var wants: VBoxContainer
 var _acc := 0.0
+var _toggle: Button
 
 
 func _init() -> void:
@@ -32,6 +33,14 @@ func _ready() -> void:
 	wants = UIKit.vbox(4)
 	side.add_child(UIKit.scroll(wants, 250))
 	side.add_child(UIKit.label("Hover a figure for its name.", 17, "body_italic"))
+	var w := get_tree().get_first_node_in_group("world") as VillageWorld
+	if w and w.area != "village" and w.buildings.has(w.area):
+		var bname := str(w.buildings[w.area].get("name", w.area))
+		_toggle = UIKit.button("Show " + bname, func():
+			view.force_village = not view.force_village
+			_toggle.text = ("Show " + bname) if view.force_village else "Show the village"
+			view.queue_redraw(), 0)
+		side.add_child(_toggle)
 	h.add_child(side)
 	content.add_child(h)
 	_fill_wants()

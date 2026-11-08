@@ -196,7 +196,7 @@ static func _cat_info(cat: String) -> Array:
 static func _balance_series(n := 7) -> Array:
 	var out := []
 	var today := Game.day()
-	for i in range(n - 1, -1, -1):
+	for i in range(mini(n - 1, today), -1, -1):
 		var d := today - i
 		var after := 0
 		for e in Game.state["ledger"]:
@@ -212,6 +212,7 @@ func _ledger_summary() -> void:
 	var delta := Game.gold() - first
 	var top := UIKit.hbox(24)
 	var purse := UIKit.vbox(2)
+	purse.custom_minimum_size = Vector2(380, 0)
 	purse.add_child(UIKit.label("Purse", 22, "heading_italic", UIKit.RUBRIC))
 	var ph := UIKit.hbox(8)
 	ph.add_child(UIKit.icon("icons/gold", 44))
@@ -277,26 +278,31 @@ func _card(icon: String, title: String, value: String, sub: String, btn: String,
 	sb.set_corner_radius_all(4)
 	sb.set_content_margin_all(12)
 	p.add_theme_stylebox_override("panel", sb)
-	p.custom_minimum_size = Vector2(390, 0)
+	p.custom_minimum_size = Vector2(404, 0)
 	var h := UIKit.hbox(12)
 	h.add_child(UIKit.icon(icon, 60))
 	var v := UIKit.vbox(0)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.add_child(UIKit.label(title, 19, "heading_italic", UIKit.RUBRIC))
-	v.add_child(UIKit.label(value, 30, "title"))
+	var tr := UIKit.hbox(10)
+	tr.add_child(UIKit.label(value, 30, "title"))
+	var tl := UIKit.label(title, 19, "heading_italic", UIKit.RUBRIC)
+	tl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tr.add_child(tl)
+	v.add_child(tr)
 	v.add_child(UIKit.label(sub, 17, "body_italic"))
-	h.add_child(v)
 	if btn != "":
 		var b := UIKit.button(btn, cb, 0)
-		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		h.add_child(b)
+		b.custom_minimum_size = Vector2(0, 36)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		v.add_child(b)
+	h.add_child(v)
 	p.add_child(h)
 	return p
 
 
 func _sparkline(series: Array) -> Control:
 	var c := Control.new()
-	c.custom_minimum_size = Vector2(560, 150)
+	c.custom_minimum_size = Vector2(760, 160)
 	c.draw.connect(func():
 		var lo := 1e9
 		var hi := -1e9
@@ -318,7 +324,7 @@ func _sparkline(series: Array) -> Control:
 			var px := x0 + w * (float(i) / maxf(1.0, series.size() - 1.0))
 			var py := y0 + hgt * (1.0 - (float(series[i][1]) - lo) / (hi - lo))
 			pts.append(Vector2(px, py))
-			c.draw_string(f, Vector2(px - 14, sz.y - 10), "D%d" % int(series[i][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#5e421c"))
+			c.draw_string(f, Vector2(px - 14, sz.y - 10), ("Day %d" % int(series[i][0])) if int(series[i][0]) > 0 else "Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#5e421c"))
 		var poly := pts.duplicate()
 		poly.append(Vector2(x0 + w, y0 + hgt))
 		poly.append(Vector2(x0, y0 + hgt))
@@ -348,7 +354,7 @@ func _ledger_accounts() -> void:
 			sums[cat][1] += a
 		if d == today:
 			sums[cat][0] += a
-	body.add_child(UIKit.label("Money in and out, by category. The ledger keeps the last %d transactions." % Game.state["ledger"].size(), 19, "body_italic"))
+	body.add_child(UIKit.label("Money in and out, by category (%d transactions recorded; the ledger keeps the last 400)." % Game.state["ledger"].size(), 19, "body_italic"))
 	var grid := GridContainer.new()
 	grid.columns = 5
 	grid.add_theme_constant_override("h_separation", 28)
@@ -424,7 +430,9 @@ func _ledger_journal() -> void:
 		r.add_child(UIKit.icon(str(_cat_info(str(e["cat"]))[1]), 26))
 		var t := UIKit.label("Day %d · %s" % [int(e["day"]), str(e.get("note", ""))], 17)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		t.autowrap_mode = TextServer.AUTOWRAP_OFF
 		t.clip_text = true
+		t.custom_minimum_size = Vector2(300, 0)
 		r.add_child(t)
 		r.add_child(_amount(int(e["amount"]), false, 17))
 		right.add_child(r)
