@@ -99,8 +99,28 @@ HARBOUR = {
 }
 
 
+## Pell's Provisions (Aldric Pell) — the village general store: the everyday workshop basics a smith runs short of
+## (iteration UX: iron ore and coal had no shop at all). Same shape as the herbalist; a little dearer than a trade
+## run, restocked each morning in small lots, so expeditions, mining and trade runs stay worth doing.
+GENERAL_STORE = {
+    "id": "general_store",
+    "shop": "Pell's Provisions",
+    "keeper": "aldric",
+    "stock": [
+        ["ore_iron", 8, [6, 12]], ["coal", 4, [8, 16]], ["leather_hide", 8, [3, 6]], ["leather_cured", 19, [1, 3]],
+        ["thread_linen", 5, [3, 6]], ["wool_fleece", 6, [2, 4]],
+    ],
+    "lines": [
+        "\"Ore from the Ironroot carters, coal by the sack, hides from the tanner's cart. Mind the lamp oil.\"",
+        "\"Cured leather's dear this week — the tanner's lad broke his arm.\"",
+        "\"Bread's for your belly, smith, the iron's for your forge. Don't mix them up.\"",
+        "\"If you want ore by the cartload, send someone up the Highmarsh road. I sell it by the basket.\"",
+    ],
+}
+
+
 def data():
-    return {"herbalist": HERBALIST, "ships": SHIPS, "schedule": SCHEDULE, "imports": IMPORTS, "harbour": HARBOUR}
+    return {"herbalist": HERBALIST, "general_store": GENERAL_STORE, "ships": SHIPS, "schedule": SCHEDULE, "imports": IMPORTS, "harbour": HARBOUR}
 
 
 def write():
