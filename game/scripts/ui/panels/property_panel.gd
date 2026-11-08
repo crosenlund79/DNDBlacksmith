@@ -160,8 +160,11 @@ func _side_layout() -> void:
 				var id: String = sid
 				var b2 := UIKit.button(str(DB.station(id).get("name", id)), func(): carrying = id; carry_flip = false; _build(), 0)
 				b2.add_theme_font_size_override("font_size", 17)
+				b2.tooltip_text = "Click to carry it to a spot of your choice."
 				flow.add_child(b2)
 			side.add_child(flow)
+			side.add_child(UIKit.button("Find a spot for everything in storage", _auto_place_all, 380))
+		side.add_child(UIKit.rich("[i]Free station places in your workshop rooms: [b]%d[/b] (one per eight square tiles of floor).[/i]" % Property.free_places(plan), 17))
 	side.add_child(UIKit.divider())
 	var h2 := UIKit.hbox(10)
 	var ok := Property.validate(plan) == ""
@@ -170,6 +173,20 @@ func _side_layout() -> void:
 	h2.add_child(apply)
 	h2.add_child(UIKit.button("Discard changes", func(): plan = Property.plan_copy(); carrying = ""; _build(), 240))
 	side.add_child(h2)
+
+
+## Sets up every stored station in a sensible free spot (its usual place, else a room of its own craft).
+func _auto_place_all() -> void:
+	var failed := []
+	for sid in (plan["stored"] as Array).duplicate():
+		var why := Property.auto_place(plan, str(sid))
+		if why != "":
+			failed.append("%s: %s" % [DB.station(str(sid)).get("name", sid), why])
+	if failed.is_empty():
+		Events.toast.emit("Everything is set up — check the plan, then apply the changes.", "good")
+	else:
+		Events.toast.emit("No room for " + "; ".join(failed), "bad")
+	_build()
 
 
 func _apply() -> void:

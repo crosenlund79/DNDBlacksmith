@@ -58,3 +58,41 @@ func test_trapping_layouts_refused() -> void:
 func test_old_save_keeps_building() -> void:
 	Game.state.erase("property")
 	check(Property.owns("cellar") and Property.owns("apartment") and Property.is_installed("arcane_anvil"), "a save from before iteration 009 keeps the whole building")
+
+
+## Iteration 012: every discipline is practically usable — with the whole building bought, all 29 stations can be
+## set up (automatically) without breaking reachability, and each room's default layout fits its own capacity.
+func test_every_station_fits() -> void:
+	fresh_game()
+	for u in Property.units():
+		Property.dev_grant_unit(str(u["id"]))
+	var plan := Property.plan_copy()
+	for r in plan["rooms"]:
+		if Property.kind(r) == "workshop":
+			var n := 0
+			var sp: Dictionary = Property.data().get("station_pos", {})
+			for sid in sp:
+				if Property.rect(r).has_point(Vector2(float(sp[sid][0]), float(sp[sid][1]))):
+					n += 1
+			check(n <= Property.capacity(r), "%s holds its default stations (%d of %d)" % [r.get("name", r["id"]), n, Property.capacity(r)])
+	var placed := 0
+	for st in DB.stations.values():
+		var sid: String = st["id"]
+		if (plan["stations"] as Dictionary).has(sid):
+			placed += 1
+			continue
+		(plan["stored"] as Array).append(sid)
+		if Property.auto_place(plan, sid) == "":
+			placed += 1
+		else:
+			note("could not place %s: %s" % [sid, Property.auto_place(plan.duplicate(true), sid)])
+	eq(placed, DB.stations.size(), "all %d stations are set up" % DB.stations.size())
+	eq(Property.validate(plan), "", "the full workshop is reachable")
+	eq(Property.commit(plan), "", "and the plan is accepted")
+	var ok := true
+	for st2 in DB.stations.values():
+		ok = ok and Property.is_installed(str(st2["id"]))
+	check(ok, "every station counts as installed")
+	check(Property.free_places() >= 0, "free places are counted (%d left)" % Property.free_places())
+	check(save_load("suite_prop_full"), "save and load")
+	check(Property.is_installed("loom") and Property.is_installed("tailors_bench"), "the late tailoring stations stay installed")

@@ -72,20 +72,7 @@ func _station_upgrade(sid: String) -> String:
 
 func _place_somewhere(sid: String) -> bool:
 	var plan := Property.plan_copy()
-	for r in plan["rooms"]:
-		if not Property.room_owned(r):
-			continue
-		var rr := Property.rect(r)
-		var y := rr.position.y + 1.2
-		while y < rr.end.y - 0.8:
-			var x := rr.position.x + 1.2
-			while x < rr.end.x - 0.8:
-				var p2 := plan.duplicate(true)
-				if Property.place(p2, sid, Vector2(x, y)) == "" and Property.validate(p2) == "":
-					return Property.commit(p2) == ""
-				x += 0.75
-			y += 0.75
-	return false
+	return Property.auto_place(plan, sid) == "" and Property.commit(plan) == ""
 
 
 func _buy_next_room() -> bool:

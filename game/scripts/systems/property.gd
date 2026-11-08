@@ -230,10 +230,81 @@ static func commit(plan: Dictionary) -> String:
 	return ""
 
 
-## How many stations a room can hold with working space around them: one per twelve square tiles.
+## How many stations a room can hold with working space around them: one per eight square tiles (iteration
+## 012 — the old one-per-twelve rule left 27 places for 29 stations and the default layouts of the rune,
+## alchemy and leather rooms over their own limit). Spacing, doorways and reachability are still checked one by one.
+const TILES_PER_STATION := 8.0
+
+
 static func capacity(r: Dictionary) -> int:
 	var rr := rect(r)
-	return maxi(2, int(rr.size.x * rr.size.y / 12.0))
+	return maxi(2, int(rr.size.x * rr.size.y / TILES_PER_STATION))
+
+
+## Stations standing in a room (plan-aware).
+static func count_in(plan: Dictionary, r: Dictionary) -> int:
+	var n := 0
+	for sid in plan["stations"]:
+		var e: Dictionary = plan["stations"][sid]
+		if rect(r).has_point(Vector2(float(e["pos"][0]), float(e["pos"][1]))):
+			n += 1
+	return n
+
+
+## Free station places across every owned workshop room (plan-aware).
+static func free_places(plan: Dictionary = {}) -> int:
+	if plan.is_empty():
+		plan = plan_copy()
+	var n := 0
+	for r in plan["rooms"]:
+		if room_owned(r) and kind(r) == "workshop":
+			n += maxi(0, capacity(r) - count_in(plan, r))
+	return n
+
+
+## Sets a station up in a sensible free spot: its usual place first, then a room of its own discipline, then any
+## other workshop room with space — every candidate validated (walls, doorways, spacing, reachability). Edits
+## `plan`; returns "" or why nothing fits.
+static func auto_place(plan: Dictionary, station_id: String) -> String:
+	var disc := str(DB.station(station_id).get("discipline", ""))
+	var sp: Dictionary = data().get("station_pos", {})
+	var home: Array = sp.get(station_id, DB.station(station_id).get("pos", [0, 0]))
+	var cands: Array = [Vector2(float(home[0]), float(home[1]))]
+	var rooms_by := []
+	for r in plan["rooms"]:
+		if not room_owned(r) or kind(r) != "workshop" or count_in(plan, r) >= capacity(r):
+			continue
+		var score := 0
+		var rr := rect(r)
+		if rr.has_point(cands[0]):
+			score += 4
+		for other in plan["stations"]:
+			var e: Dictionary = plan["stations"][other]
+			if rr.has_point(Vector2(float(e["pos"][0]), float(e["pos"][1]))) and str(DB.station(other).get("discipline", "")) == disc:
+				score += 2
+		rooms_by.append([score, r])
+	rooms_by.sort_custom(func(a, b): return int(a[0]) > int(b[0]))
+	for pair in rooms_by:
+		var rr2 := rect(pair[1])
+		var y := rr2.position.y + 1.2
+		while y < rr2.end.y - 0.8:
+			var x := rr2.position.x + 1.2
+			while x < rr2.end.x - 0.8:
+				cands.append(Vector2(x, y))
+				x += 0.75
+			y += 0.75
+	var last := "No owned workshop room has space for it — buy or open up more room."
+	for c: Vector2 in cands:
+		var p2 := plan.duplicate(true)
+		var why := place(p2, station_id, c)
+		if why == "":
+			why = validate(p2)
+		if why == "":
+			plan["stations"] = p2["stations"]
+			plan["stored"] = p2["stored"]
+			return ""
+		last = why
+	return last
 
 
 ## What a room is for: workshop, shop, store or home (rooms from before room kinds look it up by id).
