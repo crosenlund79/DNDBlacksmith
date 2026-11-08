@@ -52,7 +52,8 @@ func _process(delta: float) -> void:
 		var b := text_for(id, n)
 		if b.is_empty():
 			continue
-		var pri := d - (600.0 if not Hire.get_h(id).is_empty() else 0.0) + randf() * 200.0
+		var staff: bool = not Hire.get_h(id).is_empty() or bool(n.get_meta("apprentice", false))
+		var pri := d - (600.0 if staff else 0.0) + randf() * 200.0
 		cands.append([pri, id, b])
 	cands.sort_custom(func(a, b): return float(a[0]) < float(b[0]))
 	if not cands.is_empty():
@@ -72,6 +73,12 @@ func _crowded(n: NPCActor) -> bool:
 ## {icon, text} for what this person is doing, or {} when there is nothing worth saying.
 func text_for(id: String, n: NPCActor) -> Dictionary:
 	var hr := Game.hour()
+	if n.get_meta("apprentice", false):
+		# iteration 012: a workshop apprentice says what they are doing (only once they stand still at it)
+		var a := Apprentices.get_a(id)
+		if a.is_empty() or n.path.size() > 0:
+			return {}
+		return ApprenticeUI.bubble(a)
 	if n.target_spot.begins_with("funeral_"):
 		return {} if Memorial.funeral_now() else {"icon": "ui/act_candle", "text": "…"}
 	if n.get_meta("travelling", false) and n.get_meta("leaving", false):

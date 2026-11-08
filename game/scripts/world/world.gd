@@ -80,6 +80,7 @@ func _ready() -> void:
 	_refresh_eggs()
 	add_child(ActivityBubbles.new())   # iteration 010 (hirelings): activity bubbles over nearby people
 	add_child(MemorialWorld.new())     # iteration 010 (hirelings): graves, funeral, ghost, flowers, vase
+	add_child(ApprenticeActors.new())  # iteration 012: workshop apprentices at their stations
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
 	Events.adventurer_departed.connect(_on_departed)
 	Events.hireling_departed.connect(_on_departed)
@@ -1864,8 +1865,8 @@ func spot_for(id: String) -> String:
 func _update_schedules(instant := false) -> void:
 	for id in npcs:
 		var n: NPCActor = npcs[id]
-		if n.get_meta("travelling", false):
-			continue
+		if n.get_meta("travelling", false) or n.get_meta("apprentice", false):
+			continue   # apprentices follow their shift (ApprenticeActors)
 		var spot := spot_for(id)
 		if spot == "":
 			if n.visible and not instant:
@@ -2080,6 +2081,12 @@ func _update_focus() -> void:
 		if d < 90.0 and d < best_d:
 			best_d = d
 			best = {"kind": "npc", "id": id, "label": "Talk to " + n.display_name, "pos": n.position}
+	if best.get("kind", "") == "station":
+		# iteration 012: a station an apprentice is using says so (the smith still takes it; they step aside)
+		var lab := ApprenticeActors.station_prompt(str(best["id"]), str(best.get("label", "")))
+		if lab != str(best.get("label", "")):
+			best = best.duplicate()
+			best["label"] = lab
 	if best.get("label", "") != _focus.get("label", ""):
 		_focus = best
 		Events.open_panel.emit("prompt", {"text": best.get("label", "")})
@@ -2149,7 +2156,10 @@ func interact(e: Dictionary) -> void:
 			var n: NPCActor = npcs[e["id"]]
 			n.facing = "s"
 			Audio.play("sfx/npc_greet", -6.0, randf_range(0.85, 1.15))
-			Events.open_panel.emit("dialogue", {"npc": e["id"], "area": area})
+			if n.get_meta("apprentice", false):
+				Events.open_panel.emit("apprentice", {"id": e["id"]})   # iteration 012: a word with a workshop apprentice
+			else:
+				Events.open_panel.emit("dialogue", {"npc": e["id"], "area": area})
 		"bed":
 			Events.open_panel.emit("sleep", {})
 		"ledger":

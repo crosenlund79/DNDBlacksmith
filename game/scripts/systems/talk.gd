@@ -12,6 +12,10 @@ static func npc_name(npc: String) -> String:
 	var h := Hire.get_h(npc)
 	if not h.is_empty():
 		return h["name"]
+	if npc.begins_with("app_") and Game.state.has("apprentices"):   # a workshop apprentice (iteration 012)
+		var ap := Apprentices.get_a(npc)
+		if not ap.is_empty():
+			return str(ap["name"])
 	return DB.character(npc).get("name", npc)
 
 

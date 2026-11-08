@@ -322,7 +322,8 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append("[color=#a89a80][i]Set aside for the next trade run.[/i][/color]")
 	if is_equipment(it) and (it.has("prov") or str(it.get("crafted_by", "")) != ""):
 		var mk := Provenance.maker(it)
-		lines.append("[color=#a89a80][i]Made by %s — %s%s[/i][/color]" % [mk.get("name", it.get("crafted_by", "")), Provenance.mark(it).get("name", ""),
+		var app_maker := ApprenticeUI.maker_short(it)   # iteration 012: "Tomas Reed, your apprentice (under your eye)"
+		lines.append("[color=#a89a80][i]Made by %s — %s%s[/i][/color]" % [app_maker if app_maker != "" else mk.get("name", it.get("crafted_by", "")), Provenance.mark(it).get("name", ""),
 			(", day %d" % int(mk.get("day", 0))) if int(mk.get("day", 0)) > 0 else ""])
 	elif it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])

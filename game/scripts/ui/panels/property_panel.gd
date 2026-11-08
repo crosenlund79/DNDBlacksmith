@@ -165,6 +165,8 @@ func _side_layout() -> void:
 			side.add_child(flow)
 			side.add_child(UIKit.button("Find a spot for everything in storage", _auto_place_all, 380))
 		side.add_child(UIKit.rich("[i]Free station places in your workshop rooms: [b]%d[/b] (one per eight square tiles of floor).[/i]" % Property.free_places(plan), 17))
+		if not Apprentices.staff().is_empty():
+			side.add_child(UIKit.rich("[i][color=#24409a]●[/color] a station in use (initials of who works there) · [color=#9e3a0c]worn[/color] stations slow apprentices down — queue upkeep in the Workshop ledger [%s].[/i]" % Settings.key_label("panel_workshop"), 16))
 	side.add_child(UIKit.divider())
 	var h2 := UIKit.hbox(10)
 	var ok := Property.validate(plan) == ""
@@ -475,6 +477,22 @@ class PlanView extends Control:
 		var pb := Vector2(float(e[1]), b) if bool(e[0]) else Vector2(b, float(e[1]))
 		draw_line(_px(pa), _px(pb), Color("#20140c"), 4.0)
 
+	## Iteration 012: who is working at a station (a small blue roundel with their initials) and whether it is worn.
+	func _station_use(sid: String, c: Vector2, sz: Vector2) -> void:
+		if not Game.state.has("apprentices") or not Property.is_installed(sid):
+			return
+		var f := Assets.font("body_bold")
+		var u := Apprentices.station_user(sid)
+		if u != "":
+			var ini := "B.I." if u == "smith" else str(Apprentices.get_a(u).get("mark", {}).get("initials", "?"))
+			var at := c + Vector2(sz.x * 0.5 - 6, -sz.y * 0.5 + 6)
+			draw_circle(at, 13.0, Color("#24409a", 0.9))
+			draw_arc(at, 13.0, 0, TAU, 20, Color("#efe4cc"), 2.0)
+			draw_string(f, at + Vector2(-13, 5), ini.replace(".", ""), HORIZONTAL_ALIGNMENT_CENTER, 26, 12, Color("#efe4cc"))
+		if Apprentices.is_worn(sid):
+			var wt := c + Vector2(-sz.x * 0.5 + 2, sz.y * 0.5 - 2)
+			draw_string(f, wt, "worn %d%%" % int(round(Apprentices.station_condition(sid))), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#9e3a0c"))
+
 	func _station(sid: String, entry: Dictionary, tint: Color) -> void:
 		var sc := PropertyPanel.SC
 		var st := DB.station(sid)
@@ -491,5 +509,6 @@ class PlanView extends Control:
 			draw_texture_rect(tex, Rect2(c - sz * 0.5, sz), false, tint)
 		var fp := Property.footprint(sid, entry)
 		draw_rect(Rect2(_px(fp.position), fp.size * sc), Color("#20140c", 0.35), false, 1.0)
+		_station_use(sid, c, sz)
 		if sid == p.carrying or p.tab == "equipment":
 			draw_string(Assets.font("body"), c + Vector2(-60, sz.y * 0.5 + 12), str(st.get("name", sid)), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Color("#20140c"))

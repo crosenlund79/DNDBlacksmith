@@ -111,6 +111,8 @@ func _header(it: Dictionary) -> Control:
 	var mt := UIKit.vbox(0)
 	mt.add_child(UIKit.label("MAKER'S MARK", 14, "body_bold", Color("#8a7a60")))
 	mt.add_child(UIKit.label(str(mk.get("name", "an unknown smith")), 20, "body_bold"))
+	if ApprenticeUI.is_apprentice_work(it):
+		mt.add_child(UIKit.label("apprentice at the Ironhand forge" if str(mk.get("workshop", "")) == "ironhand" else "a former apprentice", 15, "body_italic", Color("#7e2418")))
 	mt.add_child(UIKit.label(str(Provenance.mark(it).get("name", "")), 17, "body_italic"))
 	mh.add_child(mt)
 	mv.add_child(mh)
@@ -174,6 +176,9 @@ func _overview(it: Dictionary) -> void:
 	var omt := UIKit.rich("Made by [b]%s[/b]%s%s.\n[i]%s — %s.[/i]" % [str(mk.get("name", "an unknown smith")),
 		(" on day %d" % day) if day > 0 else "", (" at " + where) if where != "" else "", str(Provenance.mark(it).get("name", "")).capitalize(),
 		str(Provenance.mark(it).get("desc", ""))], 19)
+	if ApprenticeUI.is_apprentice_work(it):
+		# iteration 012: an apprentice's piece names them, the forge, their own mark and the master's eye
+		omt.text = "%s%s\n[i]%s[/i]" % [ApprenticeUI.maker_line(it, true), (" Day %d." % day) if day > 0 else "", str(Provenance.mark(it).get("name", "")).capitalize()]
 	omt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	om.add_child(omt)
 	ov.add_child(om)
@@ -309,7 +314,7 @@ func _owners(it: Dictionary) -> void:
 	var first := _card()
 	var fh := UIKit.hbox(14)
 	fh.add_child(UIKit.icon(ItemStory.mark_icon(it), 56))
-	var fr := UIKit.rich("[b]%s by %s[/b]%s\n[i]%s · %s[/i]" % ["Forged" if Provenance.is_mine(it) else "Made", str(mk.get("name", "an unknown smith")),
+	var fr := UIKit.rich("[b]%s by %s[/b]%s\n[i]%s · %s[/i]" % ["Forged" if Provenance.is_mine(it) else "Made", (ApprenticeUI.maker_short(it) if ApprenticeUI.is_apprentice_work(it) else str(mk.get("name", "an unknown smith"))),
 		(" — day %d" % int(mk.get("day", 0))) if int(mk.get("day", 0)) > 0 else "", str(mk.get("place", "")) if str(mk.get("place", "")) != "" else "place unknown",
 		str(Provenance.mark(it).get("name", ""))], 20)
 	fr.size_flags_horizontal = Control.SIZE_EXPAND_FILL

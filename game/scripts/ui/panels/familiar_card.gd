@@ -37,7 +37,7 @@ func _reunion(it: Dictionary, d: Dictionary) -> void:
 		s.inspectable = false
 		col.add_child(s)
 	var mk := UIKit.hbox(6)
-	mk.add_child(UIKit.icon("marks/" + str(d.get("mark", "ironhand")), 40))
+	mk.add_child(UIKit.icon(ItemStory.mark_icon(it) if not it.is_empty() else "marks/" + str(d.get("mark", "ironhand")), 40))
 	mk.add_child(UIKit.label(str(d.get("mark_name", "")), 15, "body_italic"))
 	col.add_child(mk)
 	h.add_child(col)
@@ -51,7 +51,14 @@ func _reunion(it: Dictionary, d: Dictionary) -> void:
 		v.add_child(UIKit.label("once called %s" % str(d.get("base", "")), 18, "heading_italic", Color("#6e5a40")))
 	var day := int(d.get("day", 0))
 	var ago := int(d.get("days_ago", 0))
-	v.add_child(UIKit.rich("[b]You forged this on day %d[/b]%s." % [day, (" — %d day%s ago" % [ago, "" if ago == 1 else "s"]) if ago > 0 else ", this very day"], 22))
+	var made_by := "You forged this"
+	if not it.is_empty() and ApprenticeUI.is_apprentice_work(it):
+		# iteration 012: a piece from the workshop made by an apprentice
+		var amk := Provenance.maker(it)
+		made_by = "Your apprentice %s made this%s" % [str(amk.get("name", "")), " under your eye" if str(amk.get("supervisor", "")) == "smith" else ""]
+		if str(amk.get("workshop", "")) != "ironhand":
+			made_by = "%s, once your apprentice, made this in a workshop of their own" % str(amk.get("name", ""))
+	v.add_child(UIKit.rich("[b]%s on day %d[/b]%s." % [made_by, day, (" — %d day%s ago" % [ago, "" if ago == 1 else "s"]) if ago > 0 else ", this very day"], 22))
 	var ach: Array = d.get("achievements", [])
 	if not ach.is_empty():
 		v.add_child(UIKit.label("What it has done", 22, "heading"))
