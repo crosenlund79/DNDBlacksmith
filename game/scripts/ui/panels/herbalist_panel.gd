@@ -53,6 +53,8 @@ func _build() -> void:
 	side.add_child(UIKit.rich("Your purse: [b]%d g[/b]" % Game.gold(), 22))
 	var hrs := Venues.hours_text(store_id) if not Venues.get_v(store_id).is_empty() else ""
 	side.add_child(UIKit.label("Fresh stock every morning." + ((" Open %s." % hrs) if hrs != "" else ""), 18, "body_italic"))
+	if store_id == "herbalist":   # UX iteration (GUIDE): Maud sells herb lore — Knowledge
+		side.add_child(UIKit.button("Ask about herb lore…", func(): UIKit.clear(body); body.add_child(GuideUI.knowledge_box("herbalist", _build)), 0))
 
 	UIKit.clear(body)
 	var qrow := UIKit.hbox(8)

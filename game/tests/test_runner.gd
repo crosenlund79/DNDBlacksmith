@@ -958,7 +958,7 @@ func _interface() -> void:
 	check(not History.find_item(int(it["uid"])).is_empty(), "interface: find_item locates a sold piece on its new owner")
 	# --- reference guide: search and spoilers
 	var all := Reference.entries()
-	check(all.size() > 30 and Reference.TABS.size() == 10, "interface: reference guide has entries in ten sections")
+	check(all.size() > 30 and Reference.TABS.size() == 11, "interface: reference guide has entries in eleven sections (UX iteration: Knowledge & Notes)")
 	var hits := Reference.search("anvil")
 	check(not hits.is_empty() and hits.size() < all.size() and hits.all(func(e): return (str(e["title"]) + str(e["body"]) + str(e["keys"])).to_lower().contains("anvil")),
 		"interface: reference search filters (%d of %d)" % [hits.size(), all.size()])

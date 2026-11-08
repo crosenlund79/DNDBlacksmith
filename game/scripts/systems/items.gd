@@ -340,6 +340,10 @@ static func tooltip(it: Dictionary) -> String:
 	var desc: String = it.get("desc", def(it).get("desc", ""))
 	if desc != "":
 		lines.append("[i][color=#c8b898]%s[/color][/i]" % desc)
+	if not is_equipment(it):   # the UX iteration: the best current source, in one line (Guide)
+		var src := Guide.tooltip_line(str(it.get("def", "")))
+		if src != "":
+			lines.append("[color=#c8d8a8]Get more: %s[/color]" % src)
 	lines.append("[color=#dab470]Value %d g[/color]" % value(it))
 	if is_equipment(it) and int(it.get("uid", -1)) > 0:
 		lines.append("[color=#8a7a60][font_size=15]Right-click to inspect its story[/font_size][/color]")

@@ -3630,3 +3630,109 @@ func phase_refine_ux() -> void:
 	await wait(0.4)
 	await shot("refine_ux_catalogue")
 	await close_panel()
+
+# ======================================================================= UX iteration: guidance (GUIDE worker)
+func _find_rich_with_meta(root: Node, needle: String) -> RichTextLabel:
+	if root is RichTextLabel and (root as RichTextLabel).text.contains(needle):
+		return root
+	for c in root.get_children():
+		var r := _find_rich_with_meta(c, needle)
+		if r:
+			return r
+	return null
+
+
+func _find_named(root: Node, nm: String) -> Node:
+	if str(root.name) == nm:
+		return root
+	for c in root.get_children():
+		var r := _find_named(c, nm)
+		if r:
+			return r
+	return null
+
+
+func phase_guide_ux() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(10)
+	# the smith has no cured leather: an Iron Longsword is missing one ingredient
+	Game.remove_def("leather_cured", Game.count("leather_cured"))
+	StationPanel.query = "longsword"
+	StationPanel.selected = ""
+	await use("station", "anvil")
+	expect(panel() is StationPanel, "guide: the anvil's station panel opens")
+	await wait(0.4)
+	await shot("guide_station_missing")
+	var how := _find_named(panel(), "How_iron_longsword") as Button
+	expect(how != null, "guide: the recipe row has a How? button")
+	if how:
+		how.pressed.emit()
+		await wait(0.4)
+	expect(_find_named(panel(), "Guidance") != null, "guide: Show me how unfolds under the recipe")
+	var nb := _find_named(panel(), "NextStepAction") as Button
+	expect(nb != null and nb.text.contains("map"), "guide: the next step offers to show Pell's Provisions on the map (%s)" % (nb.text if nb else "-"))
+	await shot("guide_station_show_me_how")
+	await click("Full details", panel())
+	await wait(0.4)
+	await shot("guide_station_full_details")
+	# click the missing ingredient → its encyclopedia page
+	var rl := _find_rich_with_meta(panel(), "url=item:leather_cured")
+	expect(rl != null, "guide: the missing ingredient is a link")
+	if rl:
+		rl.meta_clicked.emit("item:leather_cured")
+		await wait(0.8)
+	expect(panel() is HelpPanel and (panel() as HelpPanel).page == "item:leather_cured", "guide: clicking it opens Help on Cured Leather")
+	await shot("guide_help_cured_leather")
+	await click("Full details", panel())
+	await wait(0.4)
+	(panel() as HelpPanel).scroller.scroll_vertical = 100000
+	await wait(0.3)
+	await shot("guide_help_cured_leather_tree")
+	# follow a link inside the encyclopedia: Raw Hide
+	(panel() as HelpPanel)._on_meta("item:leather_hide")
+	await wait(0.5)
+	expect((panel() as HelpPanel).page == "item:leather_hide", "guide: a link moves to Raw Hide")
+	await shot("guide_help_raw_hide")
+	await click("← Back", panel())
+	await wait(0.4)
+	expect((panel() as HelpPanel).page == "item:leather_cured", "guide: Back returns to Cured Leather")
+	await click("Return to the", panel())
+	await wait(0.6)
+	expect(panel() is StationPanel, "guide: Return goes back to the anvil")
+	await close_panel()
+	# the recipe page and a station page
+	Events.open_panel.emit("help", {"topic": "recipe:iron_longsword"})
+	await wait(0.6)
+	await shot("guide_help_recipe_longsword")
+	Events.open_panel.emit("help", {"topic": "materials"})
+	await wait(0.6)
+	await shot("guide_help_materials_list")
+	Events.open_panel.emit("help", {"topic": "station:leather_vat"})
+	await wait(0.6)
+	await shot("guide_help_station_vat")
+	await close_panel()
+	# buy a hint from Quell; it shows in Help › Knowledge
+	Game.state["gold"] = 400
+	Events.open_panel.emit("pawn", {"tab": "knowledge"})
+	await wait(0.6)
+	expect(await click("Pay", panel()), "guide: Quell sells a hint")
+	await wait(0.4)
+	await shot("guide_pawn_knowledge")
+	await close_panel()
+	expect(not Knowledge.owned_list().is_empty(), "guide: the hint is owned")
+	Events.open_panel.emit("help", {"topic": "knowledge"})
+	await wait(0.6)
+	await shot("guide_help_knowledge")
+	await close_panel()
+	# the material tooltip's one line
+	Events.open_panel.emit("inventory", {})
+	await wait(0.6)
+	for it in Game.inventory():
+		if str(it["def"]) == "leather_hide":
+			UIRoot.show_tooltip(Items.tooltip(it))
+	await wait(0.3)
+	await shot("guide_tooltip_hide")
+	UIRoot.hide_tooltip()
+	await close_panel()
+	StationPanel.query = ""
