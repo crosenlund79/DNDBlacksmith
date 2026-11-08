@@ -15,7 +15,8 @@ const STAT_ICON := {"attack": "ui/need_attack", "protection": "ui/need_protectio
 const MATERIAL_ICON := {"iron": "icons/ingot_iron", "steel": "icons/ingot_steel", "mithril": "icons/ingot_mithril",
 	"starsteel": "icons/sword_starsteel", "adamantine": "icons/ingot_adamantine", "leather": "icons/leather_cured",
 	"silver": "icons/ore_silver", "gems": "icons/gem_garnet"}
-const KIND_WORD := {"equipment": "Customer", "repair": "Repair job", "goods": "Shopping", "dispute": "Complaint", "commission": "Commission"}
+const KIND_WORD := {"equipment": "Customer", "repair": "Repair job", "goods": "Shopping", "dispute": "Complaint", "commission": "Commission",
+	"multi": "Several requests"}
 
 
 static func build(r: Dictionary, width := 0.0) -> PanelContainer:
@@ -80,6 +81,24 @@ static func build(r: Dictionary, width := 0.0) -> PanelContainer:
 	v.add_child(flow)
 	if str(r.get("note", "")) != "":
 		v.add_child(UIKit.label("“%s”" % r["note"], 18, "body_italic", Color("#5e421c")))
+	# one part of a multi-order: can the smith do it now, and has it been decided?
+	if r.has("availability"):
+		var st := str(r.get("status", "pending"))
+		var col := Color("#2f6a1e")
+		var txt := "✓ Craftable now — %s" % r.get("why", "")
+		match str(r["availability"]):
+			"materials":
+				col = Color("#6a5a12")
+				txt = "Craftable — %s" % r.get("why", "")
+			"locked":
+				col = UIKit.RUBRIC
+				txt = "✗ Not yet — %s" % r.get("why", "")
+		if st != "pending":
+			col = Color("#5e421c")
+			txt = {"accepted": "Accepted — now a commission", "declined": "Declined", "done": "Done"}.get(st, st)
+		var al := UIKit.label(txt, 19, "body_bold", col)
+		al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(al)
 	return pc
 
 

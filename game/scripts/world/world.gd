@@ -1805,6 +1805,9 @@ func spot_for(id: String) -> String:
 	for cu in Shop.customers():
 		if cu["npc"] == id:
 			return "wait_seat_%d" % int(cu.get("seat", 0))
+	var cer := Ceremony.spot_for(id, spots)   # a ceremony in the square overrides the day's routine
+	if cer != "":
+		return cer
 	var hire := Hire.get_h(id)
 	if not hire.is_empty():
 		match hire["status"]:
@@ -2006,6 +2009,7 @@ func _process(delta: float) -> void:
 			_update_ambience()
 	_update_focus()
 	_update_light(false)
+	Ceremony.tick(player.position, spots, delta)
 	Game.state["player"]["pos"] = [player.position.x, player.position.y]
 
 
@@ -2246,15 +2250,17 @@ func _smithy_view(src: Dictionary) -> Dictionary:
 	return b
 
 
-func _prop_rect_tiles(id: String, p: Vector2) -> Rect2:
+func _prop_rect_tiles(id: String, p: Vector2, rot_deg := 0.0) -> Rect2:
 	var info: Dictionary = DB.props.get(id, {"size": [64, 64]})
 	var sz := Vector2(float(info["size"][0]), float(info["size"][1])) / T
+	if int(round(rot_deg / 90.0)) % 2 != 0:
+		sz = Vector2(sz.y, sz.x)   # a quarter turn swaps the footprint
 	return Rect2(p - sz * 0.5, sz)
 
 
 ## Would a piece of furniture at tile `p` clash with a station, block a doorway or straddle a wall?
-func _furniture_clashes(id: String, p: Vector2, host: Dictionary) -> bool:
-	var fr := _prop_rect_tiles(id, p).grow(-0.08)
+func _furniture_clashes(id: String, p: Vector2, host: Dictionary, rot_deg := 0.0) -> bool:
+	var fr := _prop_rect_tiles(id, p, rot_deg).grow(-0.08)
 	if not Property.rect(host).grow(0.15).encloses(fr):
 		return true
 	for sid in Property.st()["stations"]:
@@ -2298,7 +2304,7 @@ func _smithy_furniture(src: Dictionary) -> Array:
 			show = owned and Property.room_discipline(host) == tag.substr(3)
 			if show:
 				decorated[str(host["id"])] = true
-		if show and owned and _furniture_clashes(str(f[0]), p, host):
+		if show and owned and _furniture_clashes(str(f[0]), p, host, float(f[3]) if (f as Array).size() > 3 else 0.0):
 			show = false
 		if show:
 			out.append(f)

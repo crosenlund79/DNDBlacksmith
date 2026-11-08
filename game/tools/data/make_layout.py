@@ -113,7 +113,7 @@ SMITHY_FURNITURE = [
     F("desk_ledger", 22.8, 9.8, 90), F("bookshelf", 23.0, 12.4), F("candle", 22.8, 9.6), F("bed", 20.4, 11.0),
     F("dresser", 20.4, 7.75), F("chair", 26.6, 1.9),
     # iteration 010: the Hall of Fame on the shopfront wall, a vase for remembrance flowers in the quarters
-    F("hall_of_fame_board", 10.45, 3.4, 90), F("vase", 23.4, 7.6),
+    F("hall_of_fame_board", 10.85, 3.4, 90), F("vase", 23.4, 7.6),
     # ---- what the neighbours keep in the rooms the smith does not own yet ("occ": shown only while unowned)
     FT("workbench", 3.0, 13.0, 0, "occ"), FT("leather_bundle", 1.4, 16.4, 0, "occ"), FT("shelf", 3.5, 10.55, 0, "occ"),
     FT("chair", 4.4, 14.2, 0, "occ"), FT("candle", 3.0, 12.8, 0, "occ"), FT("crate", 5.8, 16.8, 0, "occ"), FT("rug_brown", 3.4, 15.4, 0, "occ"),
@@ -166,7 +166,7 @@ SMITHY_INTERACT = [
     dict(kind="bed", id="cot", pos=[20.4, 11.0], r=100, label="Your cot — sleep until morning (autosave)"),
     dict(kind="property", id="deeds", pos=[23.0, 12.4], r=100, label="Deeds, plans & workshop equipment"),
     dict(kind="customize", id="mirror", pos=[20.4, 7.9], r=90, label="Mirror — change your appearance"),
-    dict(kind="hall_of_fame", id="smithy", pos=[11.0, 3.4], r=110, label="The Hall of Fame — the smithy's proudest work"),
+    dict(kind="hall_of_fame", id="smithy", pos=[11.5, 3.4], r=110, label="The Hall of Fame — the smithy's proudest work"),
     dict(kind="vase", id="quarters", pos=[23.4, 7.9], r=80, label="The vase"),
     dict(kind="customize", id="bedroom_mirror", pos=[25.0, 15.4], r=90, label="Mirror — change your appearance"),
     dict(kind="bed", id="armchair", pos=[26.6, 1.9], r=90, label="Sit by the hearth — rest"),

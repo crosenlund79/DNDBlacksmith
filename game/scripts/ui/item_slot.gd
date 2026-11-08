@@ -57,6 +57,14 @@ func _draw() -> void:
 		draw_rect(r.grow(-3), Color(0.62, 0.45, 1.0, 0.16 + 0.12 * pulse))
 	draw_texture_rect(Assets.get_tex(Items.icon_id(item)), r.grow(-6), false, Color(1, 0.86, 1.0) if item.get("arcane_glow", false) else Color.WHITE)
 	draw_rect(r, bc, false, 3.0 if rar != "common" else 2.0)
+	if item.has("epic"):
+		# Epic distinction: a rose-crimson inner frame with a slow glow, and a small ✦ mark
+		var ep := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 520.0)
+		draw_rect(r.grow(-5), Color(Recognition.EPIC_COLOR, 0.55 + 0.35 * ep), false, 2.5)
+		draw_rect(r.grow(-1), Color(Recognition.EPIC_COLOR, 0.25 * ep), false, 4.0)
+		var fe := Assets.font("body_bold")
+		draw_string_outline(fe, Vector2(size_px - 22, size_px - 6), "✦", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 4, Color("#20140c"))
+		draw_string(fe, Vector2(size_px - 22, size_px - 6), "✦", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Recognition.EPIC_COLOR)
 	if selected:
 		draw_rect(r.grow(2), Color("#e6702a"), false, 3.0)
 	if item.get("star", false):
@@ -74,5 +82,5 @@ func refresh() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not item.is_empty() and item.get("arcane_glow", false):
+	if not item.is_empty() and (item.get("arcane_glow", false) or item.has("epic")):
 		queue_redraw()
