@@ -138,6 +138,7 @@ func _build_hud() -> void:
 	tutorial_card = TutorialCard.new()
 	tutorial_card.position = Vector2(20, 250)
 	hud.add_child(tutorial_card)
+	hud.add_child(HirelingHud.new())   # bottom-left: the hands at a glance (iteration 010)
 	# prompt
 	prompt_label = UIKit.label("", 26, "heading", Color("#efe4cc"))
 	prompt_label.add_theme_color_override("font_outline_color", Color("#20140c"))

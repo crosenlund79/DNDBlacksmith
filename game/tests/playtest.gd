@@ -2448,3 +2448,9 @@ func phase_skilltree() -> void:
 	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
 	await shot("st_tree_secret")
 	await close_panel()
+
+
+## Iteration 010, hirelings: HUD portraits, camera glance, bubbles, funeral, grave, ghost, flowers, vase.
+func phase_hire10() -> void:
+	var ph: RefCounted = load("res://tests/playtest_hire10.gd").new()
+	await ph.run(self)

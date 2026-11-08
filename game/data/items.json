@@ -1184,6 +1184,21 @@
   ]
  },
  {
+  "id": "flowers_remembrance",
+  "name": "Wildflowers",
+  "type": "material",
+  "slot": null,
+  "value": 0,
+  "stats": {},
+  "icon": "flowers_remembrance",
+  "stack": false,
+  "desc": "A handful of meadow flowers tied with grass, left on the smithy step in the night. They would look well in the vase in your quarters.",
+  "tags": [
+   "keepsake",
+   "remembrance"
+  ]
+ },
+ {
   "id": "leather_bear",
   "name": "Bear Leather",
   "type": "material",

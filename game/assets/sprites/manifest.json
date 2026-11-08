@@ -330,6 +330,10 @@
    64,
    64
   ],
+  "props/template_headstone_hireling.png": [
+   64,
+   80
+  ],
   "props/template_hedge_h.png": [
    128,
    40
@@ -646,6 +650,14 @@
    112,
    80
   ],
+  "props/template_vase.png": [
+   48,
+   64
+  ],
+  "props/template_vase_flowers.png": [
+   48,
+   64
+  ],
   "props/template_waiting_awning.png": [
    192,
    64
@@ -681,6 +693,10 @@
   "props/template_well.png": [
    112,
    112
+  ],
+  "props/template_wildflowers_bundle.png": [
+   48,
+   40
   ],
   "props/template_woodpile.png": [
    96,
@@ -791,6 +807,10 @@
    64
   ],
   "icons/template_dragonscale_armor.png": [
+   64,
+   64
+  ],
+  "icons/template_flowers_remembrance.png": [
    64,
    64
   ],
@@ -1229,6 +1249,26 @@
   "roofs/template_stable.png": [
    384,
    320
+  ],
+  "ui/template_act_bandage.png": [
+   64,
+   64
+  ],
+  "ui/template_act_candle.png": [
+   64,
+   64
+  ],
+  "ui/template_act_hammer.png": [
+   64,
+   64
+  ],
+  "ui/template_act_road.png": [
+   64,
+   64
+  ],
+  "ui/template_act_zzz.png": [
+   64,
+   64
   ],
   "ui/template_button_disabled.png": [
    192,
