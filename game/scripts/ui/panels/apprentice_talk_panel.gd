@@ -66,7 +66,7 @@ static func info_card(a: Dictionary) -> Control:
 	var sp := str(a.get("specialty", ""))
 	nv.add_child(UIKit.label("%s%s" % [Apprentices.rank_name(a), (" · " + Apprentices.category_name(sp)) if sp != "" else ""], 19, "body_italic", UIKit.RUBRIC))
 	nv.add_child(UIKit.label("%s · %s" % [str(a.get("race", "")), str(a.get("personality", ""))], 16, "body_italic"))
-	nv.add_child(UIKit.label("Wage %d g/day · %d works" % [int(a.get("wage", 0)), int(a.get("works", 0))], 17))
+	nv.add_child(UIKit.label("Wage %d g/day · %s" % [int(a.get("wage", 0)), ApprenticeUI.works_text(int(a.get("works", 0)))], 17))
 	top.add_child(nv)
 	v.add_child(top)
 	var tr := UIKit.rich(ApprenticeUI.traits_bbcode(a.get("traits", []), true), 16)

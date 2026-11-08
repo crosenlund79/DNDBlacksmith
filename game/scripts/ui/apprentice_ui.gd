@@ -286,6 +286,10 @@ static func card(min_w := 0.0, tint := Color(0.94, 0.89, 0.78, 0.92)) -> PanelCo
 	return p
 
 
+static func works_text(n: int) -> String:
+	return "no works yet" if n <= 0 else ("1 work" if n == 1 else "%d works" % n)
+
+
 static func loyalty_word(v: float) -> String:
 	if v >= 80.0:
 		return "devoted"

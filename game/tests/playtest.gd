@@ -2913,6 +2913,12 @@ func phase_tailor10() -> void:
 		await shot("tailor10_tree_tailoring_learned")
 	await close_panel()
 
+## Iteration 012, apprentices: hiring at the board, the Workshop Ledger, miniatures at their stations, break, shift end,
+## the finished piece with the apprentice's mark, a word with them, save/load (tests/playtest_workshop12.gd).
+func phase_workshop12() -> void:
+	var ph: RefCounted = load("res://tests/playtest_workshop12.gd").new()
+	await ph.run(self)
+
 ## Iteration 010, hirelings: HUD portraits, camera glance, bubbles, funeral, grave, ghost, flowers, vase.
 func phase_hire10() -> void:
 	var ph: RefCounted = load("res://tests/playtest_hire10.gd").new()

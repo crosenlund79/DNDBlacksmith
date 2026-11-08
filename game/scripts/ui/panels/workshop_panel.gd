@@ -114,7 +114,7 @@ func _app_card(a: Dictionary) -> Control:
 	var stc := "#24409a" if str(a.get("status", "")) == "working" else "#6e5a40"
 	if not (a.get("notice", {}) as Dictionary).is_empty():
 		stc = "#9e3a0c"
-	v.add_child(UIKit.rich("[color=%s]%s[/color] · wage %d g/day · loyalty: %s · %d works" % [stc, stw, int(a.get("wage", 0)), ApprenticeUI.loyalty_word(float(a.get("loyalty", 50.0))), int(a.get("works", 0))], 16))
+	v.add_child(UIKit.rich("[color=%s]%s[/color] · wage %d g/day · loyalty: %s · %s" % [stc, stw, int(a.get("wage", 0)), ApprenticeUI.loyalty_word(float(a.get("loyalty", 50.0))), ApprenticeUI.works_text(int(a.get("works", 0)))], 16))
 	v.add_child(UIKit.rich(ApprenticeUI.traits_bbcode(a.get("traits", [])), 15))
 	v.add_child(ApprenticeUI.skills_grid(a, 90.0, 15))
 	var t := Apprentices.task(int(a.get("task", -1)))

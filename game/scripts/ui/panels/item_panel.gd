@@ -178,7 +178,7 @@ func _overview(it: Dictionary) -> void:
 		str(Provenance.mark(it).get("desc", ""))], 19)
 	if ApprenticeUI.is_apprentice_work(it):
 		# iteration 012: an apprentice's piece names them, the forge, their own mark and the master's eye
-		omt.text = "%s%s\n[i]%s[/i]" % [ApprenticeUI.maker_line(it, true), (" Day %d." % day) if day > 0 else "", str(Provenance.mark(it).get("name", "")).capitalize()]
+		omt.text = "%s%s\n[i]%s[/i]" % [ApprenticeUI.maker_line(it, true), (" Day %d." % day) if day > 0 else "", str(Provenance.mark(it).get("name", ""))]
 	omt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	om.add_child(omt)
 	ov.add_child(om)

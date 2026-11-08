@@ -215,7 +215,7 @@ func _sync_one(a: Dictionary, idx: int, jumped: bool) -> void:
 ## The goal position for an apprentice's plan: a working side of the station, the stock hall, the break table, or
 ## an idle place in the forge room (each apprentice keeps a slightly different spot).
 func _goal_for(a: Dictionary, p: Dictionary, idx: int) -> Dictionary:
-	var spread := Vector2(float((idx % 3) - 1) * 52.0, float(int(idx / 3)) * 46.0)
+	var spread := Vector2(float((idx % 3) - 1) * 78.0, float(int(idx / 3)) * 60.0)
 	match str(p["kind"]):
 		"station":
 			var sid := str(p["station"])
@@ -245,20 +245,36 @@ func _room_center(rid: String, fallback_tiles: Vector2) -> Vector2:
 	return w.bpos("smithy", fallback_tiles.x, fallback_tiles.y)
 
 
-## A working side of a station: below it (facing north) when there is room, else beside it, else above it.
+## A working side of a station: beside it (the miniature stands next to the work, never in front of or inside its
+## picture), else below it, else above it — on clear floor, away from the other stations' pictures.
 func work_spot(sid: String) -> Dictionary:
 	var c := w.station_pos(sid)
 	var size: Array = DB.station(sid).get("size", [96, 96])
 	var sx := float(size[0])
 	var sy := float(size[1])
-	var cands := [[Vector2(0, sy * 0.5 + 26.0), "n"], [Vector2(sx * 0.5 + 26.0, sy * 0.18), "w"], [Vector2(-sx * 0.5 - 26.0, sy * 0.18), "e"],
-		[Vector2(0, -sy * 0.42 - 24.0), "s"]]
-	var nav := PlayerNav.of(w)
+	var cands := [[Vector2(-sx * 0.5 - 24.0, sy * 0.3), "e"], [Vector2(sx * 0.5 + 24.0, sy * 0.3), "w"], [Vector2(0, sy * 0.5 + 40.0), "n"],
+		[Vector2(0, -sy * 0.5 - 6.0), "s"]]
 	for cnd in cands:
 		var p: Vector2 = c + (cnd[0] as Vector2)
-		if nav == null or (nav.walkable(p) and nav.clear_at(p, 16.0)):
+		if _spot_ok(p, sid):
 			return {"pos": p, "face": str(cnd[1])}
-	return {"pos": _free_near(c + (cands[0][0] as Vector2)), "face": "n"}
+	return {"pos": _free_near(c + (cands[2][0] as Vector2)), "face": "n"}
+
+
+## Clear floor for a miniature: walkable, clear of walls and footprints, and not over another station's picture.
+func _spot_ok(p: Vector2, own := "") -> bool:
+	var nav := PlayerNav.of(w)
+	if nav != null and not (nav.walkable(p) and nav.clear_at(p, 16.0)):
+		return false
+	for sid_v in (Property.st()["stations"] as Dictionary).keys():
+		var sid := str(sid_v)
+		if sid == own or not Property.is_installed(sid):
+			continue
+		var size: Array = DB.station(sid).get("size", [96, 96])
+		var sz := Vector2(float(size[0]), float(size[1]))
+		if Rect2(w.station_pos(sid) - sz * 0.5, sz).grow(14.0).has_point(p):
+			return false
+	return true
 
 
 func _free_near(p: Vector2) -> Vector2:
@@ -266,8 +282,16 @@ func _free_near(p: Vector2) -> Vector2:
 	if nav == null:
 		return p
 	nav.ensure_grid()
-	if nav.walkable(p) and nav.clear_at(p, 16.0):
+	if _spot_ok(p):
 		return p
+	# spiral outwards for clear floor away from the stations
+	var r := 24.0
+	while r <= 260.0:
+		for k in 16:
+			var q := p + Vector2(cos(TAU * k / 16.0), sin(TAU * k / 16.0)) * r
+			if _spot_ok(q):
+				return q
+		r += 20.0
 	var c := nav.nearest_cell(p, 200.0)
 	return Vector2(c) * PlayerNav.CELL if c.x != -99999 else p
 
@@ -382,7 +406,7 @@ func _sync_rings() -> void:
 		ring.width = 3.0
 		ring.default_color = Color("#7e2418", 0.55)
 		ring.position = w.station_pos(sid) + Vector2(0, float(size[1]) * 0.42)
-		ring.z_index = -1
+		ring.z_index = 1   # above the floor and the station's base, below every figure
 		w.floor_layer.add_child(ring)
 		_rings[sid] = ring
 
