@@ -2022,3 +2022,85 @@ func phase_interface() -> void:
 	await shot("iface_station_header")
 	await close_panel()
 	await shot("iface_hud_indoor")
+
+# ======================================================================= character (iteration 009)
+## Appearance panel with two looks, the changed miniature in the world, the fatigue HUD, Róisín upstairs.
+func phase_character() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(10, 0)
+	# appearance through the pause menu
+	await press("cancel")
+	await wait(0.3)
+	expect(panel() is PausePanel, "pause menu open")
+	await click("Appearance")
+	await wait(0.6)
+	expect(panel() is CustomizePanel, "appearance panel from the pause menu")
+	var cp := panel() as CustomizePanel
+	if cp:
+		cp.show_facing(0)
+		await shot("char_customize_default")
+		var a := Appearance.default_look()
+		a.merge({"hair": "long", "hair_col": "copper", "beard": "long", "beard_col": "copper", "skin": "fair", "shirt": "slate",
+			"extras": ["spectacles"]}, true)
+		cp._apply(a)
+		cp.show_facing(0)
+		await wait(0.3)
+		await shot("char_customize_a")
+		var b := Appearance.default_look()
+		b.merge({"hair": "short", "hair_col": "coal", "beard": "stubble", "beard_col": "coal", "skin": "deep", "shirt": "madder",
+			"apron": "black", "extras": ["headscarf", "scalp_scar"]}, true)
+		cp._apply(b)
+		cp.show_facing(1)
+		await wait(0.3)
+		await shot("char_customize_b")
+		expect(Appearance.look()["hair"] == "short" and not Appearance.is_default(Appearance.look()), "look applied")
+		await close_panel()
+	await close_panel()
+	# the changed miniature in the world (forge room), in the brighter of the two looks
+	var wl := Appearance.default_look()
+	wl.merge({"hair": "long", "hair_col": "copper", "beard": "long", "beard_col": "copper", "skin": "fair", "shirt": "slate"}, true)
+	Appearance.set_look(wl)
+	await tp(Vector2(6.0, 8.0) * 64.0 + W().brect(DB.building("smithy")).position)
+	await hold("move_down", 0.4)
+	await wait(0.4)
+	await shot("char_world_look")
+	# fatigue: a craft-weary evening
+	Vitality.set_fatigue(86.0)
+	await wait(0.4)
+	await shot("char_fatigue_hud")
+	expect(Vitality.work_factor() < 0.9, "tired hands work slower (%.2f)" % Vitality.work_factor())
+	await use("bed", "player_bed")
+	expect(panel() is SleepPanel, "bed: sleep / rest prompt")
+	await shot("char_bed_rest")
+	await click("Rest for an hour")
+	await wait(3.6)
+	expect(Vitality.fatigue() < 86.0, "rested an hour (%.0f)" % Vitality.fatigue())
+	# Róisín, upstairs at the Velvet Lantern
+	await advance_to(20, 0)
+	await use("stairs", "inn_upstairs")
+	await wait(0.6)
+	expect(W().area == "inn_upstairs", "upstairs at the Velvet Lantern")
+	await wait(2.5)
+	if await talk_to("roisin"):
+		await click("Talk")
+		await shot("char_roisin_dialogue")
+		await click("Share a pot of tea")
+		await click("Ask what she thinks")
+		await shot("char_roisin_opinion")
+		await close_panel()
+	else:
+		expect(false, "roisin visible upstairs (spot %s)" % W().spot_for("roisin"))
+	# later in the romance: dating options at night
+	Social.change("roisin", 40.0, 40.0, "", "", false)
+	Roisin.st()["clock"] = true
+	Roisin.st()["teas"] = 2
+	Social.set_romance("roisin", "dating")
+	await wait(0.3)
+	if await talk_to("roisin"):
+		await shot("char_roisin_dating")
+		await click("Spend the evening together")
+		await wait(1.0)
+		await shot("char_roisin_fade")
+		await wait(3.0)
+		await close_panel()

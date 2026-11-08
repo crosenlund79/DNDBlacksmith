@@ -33,3 +33,5 @@ signal request_dialogue(npc_id: String)
 signal request_fade(text: String, minutes: int)
 signal game_loaded
 signal objective_changed(text: String)
+signal fatigue_changed(value: float)              # Vitality: 0 fresh .. 100 spent
+signal appearance_changed                         # the player changed hair/beard/colours (Appearance)

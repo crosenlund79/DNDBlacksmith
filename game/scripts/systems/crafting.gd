@@ -318,6 +318,7 @@ static func record_step(station_id: String, qualities: Array) -> void:
 		"checks": qualities.duplicate(), "w": w})
 	j["step"] = int(j["step"]) + 1
 	Game.grant_player_xp(skill_for_station(station_id), 3 + qualities.size() * 2)
+	Vitality.on_craft_step(qualities.size())
 	if int(j["step"]) >= operations(j["recipe"]).size():
 		j["awaiting_dice"] = true
 	Events.crafting_changed.emit()

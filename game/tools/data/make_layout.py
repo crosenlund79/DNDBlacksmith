@@ -109,6 +109,7 @@ SMITHY_FURNITURE = [
     F("candle", 23.6, 3.6),
     # study — the smith's cramped back room at first: a cot, the ledger desk and a shelf of deeds
     F("desk_ledger", 22.8, 9.8, 90), F("bookshelf", 23.0, 12.4), F("candle", 22.8, 9.6), F("bed", 20.4, 11.0),
+    F("dresser", 20.4, 7.75), F("chair", 26.6, 1.9),
     # ---- what the neighbours keep in the rooms the smith does not own yet ("occ": shown only while unowned)
     FT("workbench", 3.0, 13.0, 0, "occ"), FT("leather_bundle", 1.4, 16.4, 0, "occ"), FT("shelf", 3.5, 10.55, 0, "occ"),
     FT("chair", 4.4, 14.2, 0, "occ"), FT("candle", 3.0, 12.8, 0, "occ"), FT("crate", 5.8, 16.8, 0, "occ"), FT("rug_brown", 3.4, 15.4, 0, "occ"),
@@ -160,6 +161,9 @@ SMITHY_INTERACT = [
     dict(kind="bed", id="player_bed", pos=[28.6, 9.6], r=120, label="Your bed — sleep until morning (autosave)"),
     dict(kind="bed", id="cot", pos=[20.4, 11.0], r=100, label="Your cot — sleep until morning (autosave)"),
     dict(kind="property", id="deeds", pos=[23.0, 12.4], r=100, label="Deeds, plans & workshop equipment"),
+    dict(kind="customize", id="mirror", pos=[20.4, 7.9], r=90, label="Mirror — change your appearance"),
+    dict(kind="customize", id="bedroom_mirror", pos=[25.0, 15.4], r=90, label="Mirror — change your appearance"),
+    dict(kind="bed", id="armchair", pos=[26.6, 1.9], r=90, label="Sit by the hearth — rest"),
     dict(kind="ledger", id="study_desk", pos=[22.8, 9.8], r=110, label="Your ledger — accounts, journal & upgrades"),
     dict(kind="counter", id="smithy", pos=[14.5, 3.6], r=150, label="Shop counter — stock, customers & ledger"),
 ]

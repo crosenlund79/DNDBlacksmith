@@ -52,6 +52,11 @@ func _load_shipped(p: String) -> Texture2D:
 
 
 func get_tex(id: String, fallback_size := Vector2i(64, 64)) -> Texture2D:
+	if id == "chars/player" or id == "portraits/player":
+		# the blacksmith's chosen appearance (null = the default art)
+		var custom := Appearance.custom_tex(id)
+		if custom != null:
+			return custom
 	if _cache.has(id):
 		return _cache[id]
 	var tex: Texture2D = null
@@ -97,10 +102,10 @@ func _placeholder(id: String, size: Vector2i) -> Texture2D:
 ## Slices a character sheet (6 cols x 4 rows of 128 px) into SpriteFrames.
 ## Rows: 0 S, 1 E, 2 N, 3 W. Cols 0-1 idle, 2-5 walk.
 func char_frames(sprite_id: String) -> SpriteFrames:
-	var key := "frames:" + sprite_id
+	var sheet := get_tex(sprite_id, Vector2i(768, 512))
+	var key := "frames:%s:%d" % [sprite_id, sheet.get_instance_id()]
 	if _cache.has(key):
 		return _cache[key]
-	var sheet := get_tex(sprite_id, Vector2i(768, 512))
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 	var dirs := ["s", "e", "n", "w"]

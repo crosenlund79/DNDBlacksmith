@@ -1,6 +1,12 @@
 ## Audio — buses, sound effects, ambience and music with a template/override system.
-## EN: play("sfx/hammer_1") resolves user://overrides/audio/<id>.(ogg|wav) first, then
-##     res://assets/audio/<id>.(ogg|wav). Missing sounds are logged once and skipped silently.
+## EN: play("sfx/hammer_1") resolves, in order:
+##       1. user://overrides/audio/<id>.(ogg|wav)        (player / modder override)
+##       2. res://assets/audio/inbox/<id>.(ogg|wav)      (creator inbox: drop files named after the id,
+##                                                         mirroring its path — see inbox/README.md)
+##       3. res://assets/audio/<id>.(ogg|wav)            (the shipped procedural sound)
+##     then the same three for ALIASES[id], so context ids such as "amb/harbour" or "music/lantern"
+##     play a fitting shipped sound until someone provides a dedicated one.
+##     Missing sounds are logged once and skipped silently.
 ##     Buses (Music, SFX, Ambience, UI) are created at runtime and follow Settings volumes.
 ## DA: play("sfx/hammer_1") slår først op i user://overrides/audio/ og derefter i
 ##     res://assets/audio/. Manglende lyde logges én gang og springes over. Busser oprettes ved
@@ -10,7 +16,18 @@ extends Node
 const BUSES := ["Music", "SFX", "Ambience", "UI"]
 const AUDIO_ROOT := "res://assets/audio/"
 const OVERRIDE_ROOT := "user://overrides/audio/"
+const INBOX_ROOT := "res://assets/audio/inbox/"
 const POOL := 12
+## Context ids → the shipped sound that serves them until a dedicated file exists.
+const ALIASES := {
+	"amb/harbour": "amb/harbour_loop", "amb/pond": "amb/pond_loop", "amb/tavern": "amb/tavern_loop",
+	"amb/inn": "amb/tavern_loop", "amb/lantern": "amb/tavern_loop", "amb/velvet_lantern": "amb/tavern_loop",
+	"amb/ironfront": "amb/tavern_loop", "music/lantern": "music/village_evening", "music/harbour": "music/village_evening",
+	"music/pond": "music/hearth_day", "sfx/ui_chip": "sfx/ui_click", "sfx/ui_toggle": "sfx/ui_click",
+	"sfx/ui_confirm": "sfx/check_good", "sfx/ui_tab": "sfx/page_turn", "sfx/rest": "sfx/page_turn",
+}
+
+var inbox_root := INBOX_ROOT    # tests point this at user:// to check the resolution order
 
 var _cache := {}
 var _missing := {}
@@ -57,27 +74,50 @@ func apply_volumes() -> void:
 			AudioServer.set_bus_mute(idx, v <= 0.001)
 
 
+## Every path tried for an id, in resolution order (override → inbox → shipped).
+func candidate_paths(id: String) -> Array:
+	var out := []
+	for root in [OVERRIDE_ROOT, inbox_root, AUDIO_ROOT]:
+		for ext in [".ogg", ".wav"]:
+			out.append(root + id + ext)
+	return out
+
+
+static func _present(p: String) -> bool:
+	return (p.begins_with("res://") and ResourceLoader.exists(p)) or FileAccess.file_exists(p)
+
+
+## The file that will play for `id` ("" if none), following ALIASES when the id itself has no file.
+func resolve_path(id: String) -> String:
+	for p: String in candidate_paths(id):
+		if _present(p):
+			return p
+	if ALIASES.has(id):
+		return resolve_path(ALIASES[id])
+	return ""
+
+
+func _load_path(p: String) -> AudioStream:
+	if p.begins_with("res://") and ResourceLoader.exists(p):
+		return load(p)
+	if FileAccess.file_exists(p):
+		return AudioStreamOggVorbis.load_from_file(p) if p.ends_with(".ogg") else _load_wav(p)
+	return null
+
+
 func get_stream(id: String) -> AudioStream:
 	if _cache.has(id):
 		return _cache[id]
 	var stream: AudioStream = null
-	for root in [OVERRIDE_ROOT, AUDIO_ROOT]:
-		for ext in [".ogg", ".wav"]:
-			var p: String = root + id + ext
-			if root == AUDIO_ROOT and ResourceLoader.exists(p):
-				stream = load(p)
-			elif FileAccess.file_exists(p):
-				stream = AudioStreamOggVorbis.load_from_file(p) if ext == ".ogg" else _load_wav(p)
-			if stream:
-				break
-		if stream:
-			break
+	var path := resolve_path(id)
+	if path != "":
+		stream = _load_path(path)
 	if stream == null:
 		if not _missing.has(id):
 			_missing[id] = true
 			Log.warn("Missing audio '%s'" % id)
 	else:
-		_set_loop(stream, id.ends_with("_loop") or id.begins_with("music/"))
+		_set_loop(stream, id.ends_with("_loop") or id.begins_with("music/") or id.begins_with("amb/"))
 	_cache[id] = stream
 	return stream
 

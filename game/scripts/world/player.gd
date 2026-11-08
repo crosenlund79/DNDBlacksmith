@@ -25,6 +25,7 @@ func _ready() -> void:
 	sprite.scale = Vector2(1.1, 1.1)
 	sprite.play("idle_s")
 	add_child(sprite)
+	Events.appearance_changed.connect(refresh_look)
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 
 
@@ -35,7 +36,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var spd := RUN if Input.is_action_pressed("run") else WALK
-	velocity = dir * spd
+	velocity = dir * spd * Vitality.move_factor()
 	move_and_slide()
 	_anim(dir)
 	if dir != Vector2.ZERO:
@@ -61,6 +62,13 @@ func _anim(dir: Vector2) -> void:
 func _play(a: String) -> void:
 	if sprite.animation != a:
 		sprite.play(a)
+
+
+## Re-slice the sheet after the appearance changed (keeps the current animation).
+func refresh_look() -> void:
+	var a := sprite.animation
+	sprite.sprite_frames = Assets.char_frames("chars/player")
+	sprite.play(a)
 
 
 func facing_vector() -> Vector2:

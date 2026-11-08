@@ -889,6 +889,18 @@
      0
     ],
     [
+     "dresser",
+     20.4,
+     7.75,
+     0
+    ],
+    [
+     "chair",
+     26.6,
+     1.9,
+     0
+    ],
+    [
      "workbench",
      3.0,
      13.0,
@@ -1295,6 +1307,36 @@
      ],
      "r": 100,
      "label": "Deeds, plans & workshop equipment"
+    },
+    {
+     "kind": "customize",
+     "id": "mirror",
+     "pos": [
+      20.4,
+      7.9
+     ],
+     "r": 90,
+     "label": "Mirror \u2014 change your appearance"
+    },
+    {
+     "kind": "customize",
+     "id": "bedroom_mirror",
+     "pos": [
+      25.0,
+      15.4
+     ],
+     "r": 90,
+     "label": "Mirror \u2014 change your appearance"
+    },
+    {
+     "kind": "bed",
+     "id": "armchair",
+     "pos": [
+      26.6,
+      1.9
+     ],
+     "r": 90,
+     "label": "Sit by the hearth \u2014 rest"
     },
     {
      "kind": "ledger",

@@ -36,6 +36,7 @@ ACCENT = {
     "rosalind": dict(iris="#4a6a5a", smile=0.4, smirk=0.6, mole=True, earrings=True),
     "lysa":     dict(iris="#6a94b4", smile=0.5, earrings=True),
     "celeste":  dict(iris="#5a3a20", smile=0.6, earrings=True),
+    "roisin":   dict(iris="#2f9a3e", smile=0.35, smirk=0.75, freckles=True, earrings=True, brow_raise=True),
     "applicant_0": dict(iris="#5a4030", smile=0.3),
     "applicant_1": dict(iris="#4a3020", smile=0.55),
     "applicant_2": dict(iris="#6a88a8", smile=0.4),
@@ -226,6 +227,8 @@ def hair_front(P, D, look, ex):
     hw, hh, cy = D["hw"], D["hh"], D["cy"]
     fem = look.get("female")
     o = []
+    if st == "bald":
+        return P.spot(ell(CX - hw * 0.3, cy - hh * 0.72, hw * 0.3, hh * 0.1), "#fff4e0", 0.35)
     if st == "bald_fringe":
         for side in (-1, 1):
             pts = [(CX + side * hw * 0.88, cy - hh * 0.5), (CX + side * hw * 1.04, cy - hh * 0.4), (CX + side * hw * 1.06, cy - hh * 0.05),
@@ -573,7 +576,7 @@ def head(P, D, look, A, cid):
     if look.get("hair") == "mohawk":
         hc = P.c("hair", 1)
     bcol = person.mix(hc, "#20140c", 0.15)
-    for side in (-1, 1):
+    for side in ((-1, 1) if not look.get("_nobrows") else ()):
         r = (8 if A.get("brow_raise") and side > 0 else 0)
         o.append(brow(P, CX + side * ex_, ey - eh * 2.6 - (2 if fem else 0), side, ew * 1.15, fem, bcol, r, heavy=b in ("dwarf", "orc") or look.get("_id") == "player"))
     # nose & mouth
@@ -596,6 +599,42 @@ def head(P, D, look, A, cid):
         for side in (-1, 1):
             tx = CX + side * hw * 0.3
             o.append(P.shape(smooth([(tx - 7, ym + 8), (tx + 7, ym + 8), (tx + side * 6, ym - 14), (tx + side * 3, ym - 24), (tx - side * 3, ym - 12)], t=0.3), "ivory", s=2, lw=1.4))
+    return "\n".join(o)
+
+
+def spectacles(P, D, look):
+    hw, hh, cy = D["hw"], D["hh"], D["cy"]
+    ey = cy + hh * 0.02
+    ex_ = hw * 0.42
+    r = hw * 0.27
+    o = []
+    for side in (-1, 1):
+        x = CX + side * ex_
+        o.append(f'<circle cx="{x:.1f}" cy="{ey:.1f}" r="{r:.1f}" fill="#e8f2f0" fill-opacity="0.18"/>')
+        o.append(f'<path d="M{x - r*0.55:.1f},{ey - r*0.2:.1f} l{r*0.5:.1f},{-r*0.45:.1f}" stroke="#ffffff" stroke-width="3" opacity="0.55" stroke-linecap="round"/>')
+        o.append(P.detail(ell(x, ey, r, r), "metal", 2.6))
+        o.append(P.detail(f"M{x + side*r:.1f},{ey - 4:.1f} L{CX + side*hw*1.02:.1f},{ey - 10:.1f}", "metal", 2.0))
+    o.append(P.detail(f"M{CX - ex_ + r:.1f},{ey - 4:.1f} Q{CX:.1f},{ey - 16:.1f} {CX + ex_ - r:.1f},{ey - 4:.1f}", "metal", 2.2))
+    return "\n".join(o)
+
+
+def headscarf(P, D, look):
+    hw, hh, cy = D["hw"], D["hh"], D["cy"]
+    o = []
+    cap = [(CX - hw * 1.12, cy - hh * 0.12), (CX - hw * 1.14, cy - hh * 0.6), (CX - hw * 0.8, cy - hh * 1.06), (CX, cy - hh * 1.2),
+           (CX + hw * 0.8, cy - hh * 1.06), (CX + hw * 1.14, cy - hh * 0.6), (CX + hw * 1.12, cy - hh * 0.12),
+           (CX + hw * 0.92, cy - hh * 0.36), (CX + hw * 0.5, cy - hh * 0.6), (CX, cy - hh * 0.66), (CX - hw * 0.5, cy - hh * 0.6),
+           (CX - hw * 0.92, cy - hh * 0.36)]
+    o.append(P.shape(smooth(cap), "scarf", s=10))
+    o.append(P.detail(f"M{CX - hw*0.9},{cy - hh*0.62} Q{CX},{cy - hh*0.9} {CX + hw*0.9},{cy - hh*0.62} "
+                      f"M{CX - hw*0.6},{cy - hh*0.98} Q{CX - hw*0.1},{cy - hh*0.82} {CX + hw*0.3},{cy - hh*1.1}", "scarf", 0.8, 0.8))
+    # dotted print
+    rnd = random.Random(9)
+    dots = " ".join(f"M{CX + rnd.uniform(-0.85, 0.85)*hw:.1f},{cy - hh*rnd.uniform(0.72, 1.05):.1f} h0.6" for _ in range(22))
+    o.append(f'<path d="{dots}" stroke="{P.c("scarf", 0)}" stroke-width="5" stroke-linecap="round" opacity="0.7"/>')
+    kx, ky = CX + hw * 1.1, cy - hh * 0.3
+    o.append(P.shape(smooth([(kx, ky + 8), (kx + 26, ky + 40), (kx + 22, ky + 92), (kx + 6, ky + 60), (kx - 6, ky + 20)]), "scarf", s=5))
+    o.append(P.shape(ell(kx, ky, 15, 13), "scarf", s=4))
     return "\n".join(o)
 
 
@@ -633,6 +672,10 @@ def portrait_svg(c, st):
         o.append(P.detail(f"M{CX - hw*1.0},{cy - hh*0.5} L{CX + hw*1.0},{cy + hh*0.1}", None, 3.0))
         o.append(P.shape(smooth([(CX - ex_ - 22, cy - 14), (CX - ex_ + 24, cy - 16), (CX - ex_ + 22, cy + 14), (CX - ex_, cy + 22), (CX - ex_ - 22, cy + 10)]), "strap", s=4))
         o.append(P.detail(f"M{CX - ex_ - 18},{cy + 32} l8,6", "skin", 0.8, 0.7))   # scar below the patch
+    if "spectacles" in ex:
+        o.append(spectacles(P, D, look))
+    if "headscarf" in ex:
+        o.append(headscarf(P, D, look))
     if A.get("soot"):
         o.append(f'<ellipse cx="{CX + hw*0.55}" cy="{cy + hh*0.3}" rx="18" ry="9" fill="{st["soot"]}" opacity="0.32" style="filter:blur(3px)"/>')
         o.append(f'<ellipse cx="{CX - hw*0.1}" cy="{cy - hh*0.75}" rx="14" ry="6" fill="{st["soot"]}" opacity="0.2" style="filter:blur(3px)"/>')

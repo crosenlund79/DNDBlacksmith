@@ -192,7 +192,7 @@ def main():
             hp = os.path.join(TMP, f"portrait_{c['id']}.html")
             with open(hp, "w") as f:
                 f.write(build.page(svg, 256, 256))
-            jobs.append(dict(html=hp, png=os.path.join(OUT_PORT, c["id"] + ".png"), w=256, h=256, transparent=True))
+            jobs.append(dict(html=hp, png=artlib.tpath(os.path.join(OUT_PORT, c["id"] + ".png")), w=256, h=256, transparent=True))
     render(jobs)
     if "--no-sheets" not in flags:
         for c in todo:
