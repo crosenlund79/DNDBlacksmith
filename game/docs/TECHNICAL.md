@@ -228,7 +228,26 @@ It is saved with the item, and the results panel can be reopened from the stores
 - **Difficulty** factors live in `expeditions.json → difficulty` and are read at use: `Expeditions.diff()` (enemy, death, death_dc, heal_rate, prices, wages, loot, observe, detail).
 - **UI:** `WantedPanel` (board, `WantedSheet` cards), `DossierPanel`, `ObserverPanel` (`MapView`, `EncounterView`), `DifficultyPanel`. These set `blocks_time = false`; `Game.ui_open` freezes the player while any window is open.
 
+## Iteration 009 architecture notes
+
+- **Content modules:** `tools/data/extra_*.py` add ITEMS, CHARACTERS and PROPS without editing `make_data.py`
+  (helpers in `make_data_helpers.py`). New data files are read with `DB.extra("name")` (cached).
+- **Gating:** `Crafting.station_locked_reason()` asks `Property.station_reason()` (installed in an owned workshop room)
+  and `SkillTree.station_reason()`; `Crafting.recipe_locked_reason()` asks `SkillTree.recipe_reason()`.
+- **Property state** `Game.state["property"]`: `units`, editable `rooms` (rect, unit, kind), `doors` (between, at, w),
+  `stations` {id: {pos, flip}}, `stored`, `next_room`. Edits run on `plan_copy()` and are applied with `commit()`
+  after `validate()`. `Main.rebuild_world()` rebuilds the village from the plan. Old saves (no key) own everything.
+- **Lazily created state keys** (old saves load): `property`, `skilltree`, `items_seen`, `design_plan`, `trade`,
+  `ironfront`, `roisin`, `station_log`, `talk_markers`, `tutorial`, `seen_items`, `player.look`, `player.fatigue`.
+- **Saves** go to `Saves.dir` (default `user://saves/`); tests call `Saves.use_test_dir()`.
+- **Template art:** every generated image is `template_<name>.png`; a same-named file without the prefix overrides it.
+  Iteration 009 art scripts: `make_property_art.py`, `make_ui_icons.py`, `make_checks_ui.py`, `make_trade_art.py`,
+  `make_village_art.py`, `make_ironfront_art.py`, `make_player_looks.py` (plus additions to `make_icons.py`).
+- **Audio inbox:** `assets/audio/inbox/<id>.(ogg|wav)` sits between user overrides and shipped audio.
+
 ## Tests
+
+The permanent suite and the rule for every iteration are described in [`TESTING.md`](TESTING.md).
 
 - `tests/test_runner.tscn` covers dice, quality and rarity, skills, recipe/operation data integrity, beginner-vs-expert difficulty, masterwork legendaries with poor rolls, material stat differences, physical dice records, runestones, hireling allocation and expeditions (including the guaranteed legendary in Borin's first bag), adventurer expeditions and sales, social ripple to relatives, loot containers, and save/load round-trips.
 - `tests/playtest.tscn -- <phase>` drives the real game with synthetic input and saves screenshots to `user://playtest/`. The phases are:

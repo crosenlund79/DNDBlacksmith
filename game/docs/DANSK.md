@@ -42,3 +42,14 @@
 - **Tid:** P pause, −/+ hastighed ×1–×8. Observation pauser aldrig simuleringen.
 
 Alle scripts har en kommentar øverst på engelsk (EN) og dansk (DA). Den tekniske beskrivelse står i `TECHNICAL.md` (engelsk).
+
+## Iteration 009
+
+- **Værkstedet vokser:** smeden ejer kun et hjørne af en stor bygning og køber naborum, der støder op til hans egne.
+  På en tegnet plan kan han rive vægge ned, sætte nye op, lave eller mure døre til og flytte arbejdsstationer;
+  alt kontrolleres, så intet bliver utilgængeligt.
+- **Færdighedstræ:** seks grene og 45 knuder låser opskrifter og stationer op — fra jernsværd til dragepanser.
+- **Handel:** urtekræmmer, havn med handelsskibe og særlige importordrer; eksotiske materialer har rigtige kilder.
+- **Ironfront:** et samlekortspil om "fantastiske" krigsmaskiner, med Blitzkrieg-tilstand, hos Barnaby i kælderen.
+- **Andet:** træthed og hvile, udseende, Róisín på Velvet Lantern, minikort, værktøjslinje, hjælp og historik.
+- **Test:** `./run_tests.sh` kører hele den permanente testsuite (se `TESTING.md`).

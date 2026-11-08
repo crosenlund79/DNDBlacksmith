@@ -456,3 +456,25 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | `board_legends.jpg` | Hall of renown, chronicle and past expeditions |
 | `shop_offers.jpg` | Finds offered at the shop counter |
 | `master_board.jpg` | Master difficulty: departure times and rumours only |
+
+
+## Iteration 009 — The Living Village, Ironfront, workshop expansion, natural progression
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Workshop ownership** | The smith owns a corner of a 30×23-tile building; six neighbouring units can be bought only when they adjoin his rooms. Unowned rooms keep their occupants' furnishings behind locked doors | `property.gd`, `make_layout.py` (`SMITHY_UNITS`, tagged furniture) |
+| **Workshop editing** | On a drawn plan: put up or take down internal walls (rooms stay rectangles), cut or brick up doorways, change a room's use, buy/place/move/turn stations. A half-tile walk grid checks that every owned room, station, the counter and a bed stay reachable from the front door. Stations stand only in workshop rooms (capacity one per 12 tiles²). The world is rebuilt from the plan | `property.gd`, `property_panel.gd`, `world.gd` (`_smithy_view`) |
+| **Skill tree** | 45 nodes in six branches gate every recipe and station. Requirements: skill level, prior nodes, knowledge flags, installed stations, materials held, tuition. Techniques add small quality bonuses; secrets stay hidden | `skilltree.gd`, `make_skilltree.py` |
+| **Progressive content** | 17 new recipes (steel cuirass, bear and wyrm leather, orichalcum, original and combination runes, mithril-plated cuirass, Dragonscale Armour …) and 11 exotic materials with real sources | `make_recipes.py`, `extra_progression.py`, `extra_trade.py` |
+| **Equipment designer** | Plan an item from known type, material, rune and treatment; shows stats and missing requirements; starts the craft and applies rune and treatment afterwards | `designer_panel.gd` |
+| **Skill checks** | First-time how-to cards with practice at tutorial difficulty, auto-closing results, explicit difficulty factors (skill, recipe complexity, station tier, fatigue), an assist setting, gentler Infusion Rack and wheels, a much slower Resonance Pedestal | `crafting.gd` (`check_params`), `scripts/ui/minigames/` |
+| **Customers** | Request cards (item, attribute, material, budget, reward); notices only once seated outside; dismissal at the counter | `shop.gd`, `customer_card.gd` |
+| **Fatigue & appearance** | Energy falls with crafting and waking hours and narrows checks; rest by the hearth, sleep in bed. The smith's looks are customisable (layers recoloured in-engine; default unchanged) | `vitality.gd`, `appearance.gd`, `customize_panel.gd` |
+| **Trade** | Herbalist with daily stock; merchant ships every 3–6 days (spice, ore barge, whaler); special imports with deposits and lead times | `trade.gd`, `make_trade.py` |
+| **Village** | Denser village with woodland boundaries, groves, pond, harbour and estuary, herbalist, Barnaby's house and basement, cooperage, stable, chandler, net loft; grit and clutter; a real day/night curve with lit windows and street lamps; venue ambience | `village_layout.py`, `world.gd` |
+| **Ironfront** | 55-card WWII-as-fantasy card game: three fronts, best of three, commanders, tactics, Blitzkrieg mode, four AI opponents, deck builder, collection, Barnaby's shop, rewards, tutorial | `ironfront.gd`, `ironfront_*.gd`, `make_ironfront.py` |
+| **Róisín** | Romanceable Velvet Lantern worker (red hair, green eyes): stages to marriage, buying out her contract, discreet fades | `roisin.gd`, `extra_village.py` |
+| **Interface** | Illustrated bottom toolbar, minimap with talk markers, map panel, ledger tabs, contextual histories for people/items/stations, guided tutorial, searchable non-spoiling reference | `hud_toolbar.gd`, `village_map_view.gd`, `history.gd`, `tutorial.gd`, `reference.gd` |
+| **Audio** | `assets/audio/inbox/` drop-in folder (override → inbox → shipped); Ironfront march, harbour and pond loops | `audio.gd` |
+
+**Screenshots:** `docs/screenshots/iteration_009/`.

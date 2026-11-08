@@ -23,11 +23,13 @@ The tests are verified with **Godot 4.3.stable.official.77dcf97d8**.
 
 | Test | Command (from `game/`) |
 |---|---|
+| **Everything** (compile check, regression & progression suite, unit tests) | `GODOT=/path/to/godot ./run_tests.sh` (or `run_tests_windows.bat`); `./run_tests.sh smoke` for the fast subset — see `docs/TESTING.md` |
 | Compile check: every script loads with the autoloads present | `godot --headless --path . res://tests/compile_all.tscn` |
-| Unit and regression tests (138) | `godot --headless --path . res://tests/test_runner.tscn` (or `run_tests_windows.bat`) |
+| Regression & progression suite (scenarios A–F, integrity checks) | `godot --headless --path . res://tests/suite/suite.tscn -- full` |
+| Unit and regression tests (383) | `godot --headless --path . res://tests/test_runner.tscn` |
 | Rendered play-test: real main scene, synthetic input, screenshots in `user://playtest/` | `godot --path . res://tests/playtest.tscn -- full`, then `-- reload` in a new process to test save → restart → continue |
 
-Other play-test phases are `smoke`, `stations`, `panels`, `craft`, `iter2`, `slice` and **`village`** (the Living Village acceptance route; follow it with `-- village_reload`). On a machine with no display, wrap the play-tests in `xvfb-run -a -s "-screen 0 1920x1080x24"` and add `--rendering-driver opengl3`.
+Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`, `craft`, `iter2`, `slice`, `village` (follow with `village_reload`) and, for iteration 009, `property`, `skilltree`, `checks`, `trade`, `interface`, `character`, `ironfront` and `village9`. On a machine with no display, wrap the play-tests in `xvfb-run -a -s "-screen 0 1920x1080x24"` and add `--rendering-driver opengl3`.
 
 ## Controls
 
@@ -35,6 +37,7 @@ Other play-test phases are `smoke`, `stations`, `panels`, `craft`, `iter2`, `sli
 |---|---|
 | WASD / arrows | Move (Shift runs) |
 | E / Space | Interact (also stops the skill-check needle) |
+| Bottom toolbar | Inventory, Skill Tree (right-click: skill levels), Hirelings, Adventurers (right-click: Most Wanted), Commissions, Ledger, Crafting (equipment designer), Workshop (property), Map, Help |
 | I | Inventory |
 | H | Hirelings |
 | K | Skills |
@@ -46,8 +49,10 @@ Other play-test phases are `smoke`, `stations`, `panels`, `craft`, `iter2`, `sli
 | L | Ledger and upgrades |
 | Esc | Menu |
 | F5 / F9 | Quick save / quick load |
+| M | Map of Brindlewick |
+| F1 | Help & searchable reference |
 | F3 | Diagnostics overlay |
-| F10 | Developer tools (expeditions, difficulty, time) |
+| F10 | Developer tools: time, any item, gold, skills, property, stations, skill tree, progression presets, trade, Ironfront |
 
 ## The first-day loop
 
@@ -68,6 +73,8 @@ The HUD objective guides you through it:
 
 - [`docs/TECHNICAL.md`](docs/TECHNICAL.md): architecture, systems, data, saves, the asset/audio override system and tests.
 - [`docs/GAMEPLAY.md`](docs/GAMEPLAY.md): what each system does, and what is simplified in this build.
+- [`docs/PLAYGUIDE.md`](docs/PLAYGUIDE.md): how to play, including the iteration 009 route.
+- [`docs/TESTING.md`](docs/TESTING.md): the permanent regression & progression suite and the rule for every iteration.
 - [`docs/DANSK.md`](docs/DANSK.md): Danish summary (dansk resumé).
 
 Every script starts with an English (EN) and Danish (DA) header comment.

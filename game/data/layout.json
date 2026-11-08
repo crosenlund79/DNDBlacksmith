@@ -3412,7 +3412,7 @@
   },
   {
    "id": "herbalist",
-   "name": "Hedgewise Herbalist",
+   "name": "Fennimore's Simples",
    "rect": [
     47,
     17,
@@ -3438,7 +3438,7 @@
    "rooms": [
     {
      "id": "h_shop",
-     "name": "Hedgewise Herbalist",
+     "name": "Fennimore's Simples",
      "rect": [
       0,
       0,

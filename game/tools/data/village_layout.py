@@ -64,9 +64,9 @@ def apply(layout, by_id, room, door, F, home):
                               label="Stairs — up to Barnaby's parlour")])
 
     # ------------------------------------------------------------------ new buildings
-    hb = ensure("herbalist", name="Hedgewise Herbalist", rect=[47, 17, 9, 7], roof="thatch", ridge="h", floor="floor_herb",
+    hb = ensure("herbalist", name="Fennimore's Simples", rect=[47, 17, 9, 7], roof="thatch", ridge="h", floor="floor_herb",
                 doors=[{"side": "s", "at": 3, "w": 2}], chimneys=[[7, 1]])
-    hb.update(rooms=[room("h_shop", "Hedgewise Herbalist", [0, 0, 6, 7], "floor_herb", [1.0, 0.98, 0.92]),
+    hb.update(rooms=[room("h_shop", "Fennimore's Simples", [0, 0, 6, 7], "floor_herb", [1.0, 0.98, 0.92]),
                      room("h_drying", "Drying Room", [6, 0, 3, 7], "floor_wood", None, "wall_plaster")],
               room_doors=[door("h_shop", "h_drying", 4)],
               furniture=[F("herb_counter", 3.0, 2.6), F("jar_shelf", 1.5, 0.42), F("jar_shelf", 4.5, 0.42),

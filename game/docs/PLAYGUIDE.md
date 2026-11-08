@@ -143,6 +143,67 @@ Married, she keeps adventuring:
 
 **Talk:** ask an adventurer about their last expedition — they tell it from the real journal, and mention your weapon if it served them.
 
+## Iteration 009: from a village forge to dragon armour
+
+**You start small.** The Ironhand Smithy is one corner of a large old building: a shopfront, a smoky smithing
+hall with a forge, anvil, crucible, quench trough and grinding wheel, a narrow stock hall and a back room with a cot.
+The rest belongs to your neighbours — Hesketh the cobbler, Marla's laundry, Ilse the weaver, the chandler's store,
+a sealed dye-works vault and the Ashby family's apartment. You can see their rooms through locked doors.
+
+**Learn (Skill Tree — toolbar or the station panel).** Six branches: Traditional Smithing, Mining & Metallurgy,
+Runecrafting, Alchemy, Leatherworking & Enchanted Stitching, and the sealed Arcane Metalworking. Each node shows
+exactly what it needs (skill level, earlier nodes, knowledge, an installed station, materials you have held,
+tuition) and what it unlocks. Skills rise by crafting. Secret recipes stay hidden until you find their notes.
+
+**Equip the workshop (Workshop button, or the deeds on the shelf in your back room).**
+- *Equipment*: buy stations the tree allows; they are delivered to storage.
+- *Workshop layout*: place, move or turn stations; take down or put up internal walls; cut or brick up doorways;
+  change a room's use (workshop or living space). Stations stand only in workshop rooms, a few per room — when the
+  smithing hall is full you need more space. Every change is checked live: every room, station, the counter and a
+  bed must stay reachable from the front door, and the shopfront keeps its walls.
+- *Property*: buy a neighbour's room — only one that adjoins yours. It turns from their home or shop into yours.
+
+**Materials.** The herbalist (beside the inn) sells herbs and a little aether dust each morning.
+At the harbour (south-east) merchant ships call every few days — a spice trader, a dwarven ore barge and a
+far-north whaler with hides and, rarely, dragon scales. The harbourmaster takes **special import** orders for
+anything you have seen or know of: pay 40% now, the rest on delivery. Hirelings bring ore, hides and relics home;
+adventurers offer their finds at your counter.
+
+**The road to dragon armour.** Iron longsword → steelworking → runes (restore an old rune tablet to learn rune lore,
+then create original runes) → mithril and the Arcane Crucible (buy the vault or the Arcane Foundry upgrade) → mithril
+plating → exotic hides and dragon-scale preparation (hold a real dragon scale) → Legendary Arcane Craftsmanship →
+**Dragonscale Armour** (four scales, two bones, wyrm leather and orichalcum).
+
+**Plan before you forge (Crafting button → Equipment Designer).** Pick an item type, a material, a rune and a
+treatment; the designer shows the expected stats and a checklist of what is missing.
+
+**Skill checks** now explain themselves the first time (with a practice run at tutorial difficulty), close by
+themselves after the result, and scale with your skill, the recipe and the station. An *assist* setting in Settings
+makes every check gentler.
+
+**Customers** sit down outside before you are told they are waiting, and say exactly what they want: the item,
+the attribute, the material, the budget and the reward.
+
+**You get tired.** Crafting and long days build fatigue (the Energy bar under the clock); a tired smith's checks
+are harder. Rest by the hearth or in bed. Change your look at the mirror in your quarters (or Esc → Appearance).
+
+**Ironfront.** Barnaby Quill runs the village's craze in his basement war-room (his house on the north lane): a collectible
+card game of "fantastical" machines — Tiger tanks, Spitfires, Katyushas. Build a deck, play standard or
+**Blitzkrieg** against Jory, Barnaby, Pip and Sigrun, win cards and buy packs.
+
+**Help.** The bottom toolbar opens everything; F1 opens a searchable reference (no spoilers); M shows the map; the
+minimap marks people who want a word with you; History buttons show the story of a person, an item or a station.
+
+### A 20-minute test route
+1. New Game → Journeyman. Look around the smithing hall; open the Workshop plan (deeds on the back-room shelf).
+2. Forge an iron longsword (forge → anvil → quench trough → grinding wheel). The first check shows its how-to card.
+3. Open the Skill Tree: learn Simple Blades, Common Ores, Ordinary Alloys (F10 → +1000 gold if needed).
+4. Workshop → Equipment: buy the bellows; Workshop layout: place it in the smithing hall; Apply.
+5. Property: buy Hesketh's Cobblery; layout: put up a wall, cut a doorway, Apply — walk into the new room.
+6. Visit the herbalist and the harbour (F10 → "Ship docks now"); place a special import.
+7. Barnaby's house → stairs → play a game of Ironfront.
+8. Save, quit, Continue: rooms, walls, stations, tree, decks and imports are as you left them.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.
