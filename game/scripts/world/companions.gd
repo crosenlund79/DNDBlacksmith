@@ -2,7 +2,7 @@
 ## EN: For every adventurer whose NPC is visible and who keeps a companion (Companions.of), a small creature
 ##     miniature (creatures/<id>, two 64×64 frames) trots behind them along the path they actually walked (their
 ##     position history), so it goes through doorways and round walls exactly as they did. Ground creatures
-##     trot; flying ones (falcon, moth, drake) bob above a soft shadow. One hook in world.gd adds this node.
+##     trot; flying ones (falcon, moth, drake) sway on their flight-stand and beat their wings. One hook in world.gd adds this node.
 ## DA: Eventyrernes dyr følger dem gennem landsbyen ad den vej, de selv gik.
 class_name CompanionFollowers
 extends Node2D
@@ -89,13 +89,13 @@ class Follower:
 			pts.append(Vector2(cos(t) * 14.0, sin(t) * 5.0))
 		shadow.polygon = pts
 		shadow.color = Color(0.12, 0.07, 0.04, 0.28)
-		shadow.visible = fly
+		shadow.visible = false   # the miniature's own base carries the shadow
 		add_child(shadow)
 		spr = Sprite2D.new()
 		spr.texture = Assets.get_tex(sprite_id, Vector2i(128, 64))
 		spr.hframes = 2
-		spr.offset = Vector2(0, -24)
-		spr.scale = Vector2(1.1, 1.1)
+		spr.offset = Vector2(0, -22)
+		spr.scale = Vector2(1.3, 1.3)
 		add_child(spr)
 		position = keeper.position + Vector2(side * SIDE, 10)
 		trail.append(keeper.position)
@@ -136,10 +136,10 @@ class Follower:
 		spr.frame = int(anim_t) % 2
 		if fly:
 			bob_t += delta
-			spr.offset = Vector2(0, -44 + sin(bob_t * 3.2) * 5.0)
-			shadow.scale = Vector2.ONE * (0.9 + 0.08 * sin(bob_t * 3.2))
+			# flyers stand on a flight-stand miniature: a gentle sway, wings flap by frame
+			spr.offset = Vector2(0, -22 + sin(bob_t * 3.2) * 1.5)
 		else:
-			spr.offset = Vector2(0, -24 - (absf(sin(anim_t * PI)) * 2.0 if moving else 0.0))
+			spr.offset = Vector2(0, -22 - (absf(sin(anim_t * PI)) * 2.0 if moving else 0.0))
 
 	## The point FOLLOW_DIST behind the keeper along the trail, nudged sideways.
 	func _trail_point() -> Vector2:
