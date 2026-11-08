@@ -2865,4 +2865,50 @@ func phase_nav10() -> void:
 	Events.open_panel.emit("map", {})
 	await wait(0.8)
 	await shot("nav10_map_panel")
+
+
+# ======================================================================= iteration 010: textiles & tailoring
+func phase_tailor10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	# the skill tree of a new smith: the Textiles & Tailoring column next to Leatherworking
+	Events.open_panel.emit("skilltree", {})
+	await wait(0.8)
+	var tp0 := panel() as SkillTreePanel
+	expect(tp0 != null, "tailor10: the skill tree opens")
+	if tp0:
+		tp0.canvas.fit_all()
+		await wait(0.3)
+		await shot("tailor10_tree_fit_new")
+		tp0.canvas.zoom = 0.74
+		tp0.canvas.select("ta_scholar")
+		await wait(0.4)
+		await shot("tailor10_tree_tailoring_locked")
+	await close_panel()
+	await grant_full_workshop()
+	for sid in ["loom", "cutting_table", "tailors_bench"]:
+		expect(Property.is_installed(sid), "tailor10: %s stands in the workshop" % sid)
+	# the stations on their display bases in the old store and the leather room
+	await tp(W().station_pos("loom") + Vector2(150, -40))
+	await wait(0.6)
+	await shot("tailor10_workshop_store")
+	await tp(W().station_pos("tailors_bench") + Vector2(-60, -150))
+	await wait(0.6)
+	await shot("tailor10_workshop_leather")
+	for sid in ["loom", "cutting_table", "tailors_bench"]:
+		await close_panel()
+		await use("station", sid)
+		await wait(0.5)
+		var ok: bool = panel() is StationPanel and (panel() as StationPanel).station_id == sid
+		expect(ok, "tailor10: the %s panel opens" % sid)
+		await shot("tailor10_panel_%s" % sid)
+	await close_panel()
+	# the learned tree (dev grant) around the tailoring column
+	Events.open_panel.emit("skilltree", {})
+	await wait(0.8)
+	var tp1 := panel() as SkillTreePanel
+	if tp1:
+		tp1.canvas.select("ta_moon")
+		await wait(0.4)
+		await shot("tailor10_tree_tailoring_learned")
 	await close_panel()

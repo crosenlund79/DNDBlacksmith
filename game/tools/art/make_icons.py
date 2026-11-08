@@ -1274,10 +1274,447 @@ def dragonscale_armor(P):
     return J(b), e
 
 
+# ------------------------------------------------------------- iteration 010: textiles, tailoring and equipment variety
+PAL.setdefault("plum", ("#a8708e", "#6e3a5e", "#3a1a30"))
+PAL.setdefault("woolcloth", ("#9aa8b8", "#5e7088", "#2e3848"))
+PAL.setdefault("felt", ("#b8a088", "#8a7058", "#4a3a2a"))
+PAL.setdefault("moonweave", ("#dce4f4", "#9eacd0", "#4a5478"))
+PAL.setdefault("spider", ("#8a8a90", "#4e4e56", "#1e1e24"))
+PAL.setdefault("warded", ("#e8dcb0", "#b89a50", "#5a4418"))
+PAL.setdefault("canvas", ("#d8c48c", "#a88e50", "#5a4824"))
+PAL.setdefault("sage", ("#9cae8a", "#5e7a52", "#2e3e28"))
+PAL.setdefault("silk", ("#f6e6dc", "#d8aea0", "#7a5048"))
+MOONGLOW = "#c8d8ff"
+
+
+def flax_bundle(P):
+    """A sheaf of retted flax stalks tied at the waist, seed heads at the top."""
+    b = []
+    stalks = " ".join(f"M{64 + dx * 0.25:.1f},{118} Q{64 + dx * 0.4:.1f},{70} {64 + dx:.1f},{18 + abs(dx) * 0.4:.1f}" for dx in range(-26, 28, 4))
+    b.append(lin(stalks, INK, 3.4))
+    b.append(lin(stalks, "#d8c08a", 1.8))
+    b.append(fill(" ".join(ell(64 + dx, 16 + abs(dx) * 0.4, 2.6, 3.2) for dx in range(-26, 28, 4)), "#b89a58"))
+    b.append(lin(" ".join(ell(64 + dx, 16 + abs(dx) * 0.4, 2.6, 3.2) for dx in range(-26, 28, 4)), INK, 0.8))
+    b.append(P.shape(rect(50, 72, 28, 9, 3), "straw", s=1.2, lw=2.2))
+    b.append(lin("M74,80 q8,8 4,18", INK, 2.6) + lin("M74,80 q8,8 4,18", PAL["straw"][1], 1.2))
+    return J(b), ""
+
+
+def wool_fleece(P):
+    """A greasy fleece: a lumpy cloud of curls."""
+    rnd = random.Random(5)
+    pts = []
+    for i in range(14):
+        a = i * math.tau / 14
+        r = 44 + rnd.uniform(-4, 6)
+        pts.append((64 + r * math.cos(a), 66 + r * 0.78 * math.sin(a)))
+    b = [P.shape(smooth(pts), "wax", s=6)]
+    curls = " ".join(f"M{x:.1f},{y:.1f} a4,3.4 0 1,1 6,1" for x, y in [(rnd.uniform(30, 92), rnd.uniform(42, 90)) for _ in range(16)])
+    b.append(lin(curls, PAL["wax"][2], 1.1, 0.8))
+    b.append(fill(ell(54, 54, 16, 10), "#ffffff", 0.35))
+    return J(b), ""
+
+
+def silk_raw(P):
+    """A twisted hank of reeled silk, gold-white, tied with a red thread."""
+    b = []
+    hank = smooth([(20, 50), (40, 36), (64, 34), (90, 40), (110, 56), (96, 70), (64, 66), (34, 74)])
+    b.append(P.shape(hank, "linen", s=4, fill_override="#f4e6b8"))
+    b.append(lin(" ".join(f"M{24 + i * 6},{52 + (i % 2)} Q{60},{40 + i} {104 - i * 2},{58 - (i % 3)}" for i in range(6)), "#c8a868", 0.8, 0.8))
+    tail = smooth([(64, 66), (56, 88), (66, 104), (60, 118), (72, 116), (76, 98), (70, 84), (74, 68)])
+    b.append(P.shape(tail, "linen", s=3, fill_override="#efdcaa"))
+    b.append(P.shape(rect(54, 60, 22, 8, 3), "redp", s=1, lw=1.8))
+    b.append(fill(ell(56, 44, 18, 5), "#ffffff", 0.4))
+    return J(b), ""
+
+
+def spider_silk(P):
+    """Grey strands torn from a nest: a tangle of web with a few dewy beads."""
+    b = []
+    rnd = random.Random(9)
+    web = " ".join(f"M{rnd.uniform(16, 50):.1f},{rnd.uniform(20, 108):.1f} Q{rnd.uniform(40, 88):.1f},{rnd.uniform(30, 100):.1f} {rnd.uniform(78, 114):.1f},{rnd.uniform(20, 108):.1f}" for _ in range(18))
+    b.append(lin(web, INK, 3.0, 0.9))
+    b.append(lin(web, "#c8c8d0", 1.3))
+    b.append(P.shape(ell(64, 64, 14, 11), "spider", s=2))
+    b.append(lin(" ".join(f"M{64 + 16 * math.cos(a):.1f},{64 + 13 * math.sin(a):.1f} L{64 + 36 * math.cos(a):.1f},{64 + 30 * math.sin(a):.1f}" for a in [i * math.tau / 8 for i in range(8)]), "#d8d8e0", 0.9, 0.8))
+    b.append(fill(" ".join(ell(x, y, 1.8) for x, y in [(40, 46), (88, 82), (74, 34), (36, 92)]), "#eef4ff", 0.95))
+    return J(b), ""
+
+
+def yarn_wool(P):
+    """A ball of wool yarn with a loose end."""
+    b = [P.shape(ell(62, 66, 40), "woolcloth", s=6, fill_override="#c8b8a0")]
+    wr = " ".join(f"M{62 + 38 * math.cos(a):.1f},{66 + 38 * math.sin(a):.1f} Q62,66 {62 + 38 * math.cos(a + 2.4):.1f},{66 + 38 * math.sin(a + 2.4):.1f}" for a in [i * 0.55 for i in range(11)])
+    b.append(lin(wr, "#7a6a54", 1.1, 0.75))
+    b.append(lin("M96,86 Q112,98 104,110 Q96,120 116,122", INK, 3.4) + lin("M96,86 Q112,98 104,110 Q96,120 116,122", "#c8b8a0", 1.8))
+    b.append(fill(ell(48, 50, 12, 8), "#ffffff", 0.3))
+    return J(b), ""
+
+
+def cloth_fold(P, role, band=None, glowc=None, weave=True, sheen=0.3, seed=1):
+    """Folded bolt of cloth: three stacked folds, an optional woven band and an optional glow (emit)."""
+    b = []
+    for i, (y, h) in enumerate(((78, 30), (56, 26), (36, 24))):
+        d = smooth([(18, y + 4), (100, y - 6), (112, y + h * 0.5 - 4), (106, y + h - 4), (26, y + h + 4), (14, y + h * 0.55)])
+        b.append(P.shape(d, role, s=3.5))
+        if weave:
+            b.append(P.detail(" ".join(f"M{24 + k * 9},{y + 4 - k * 0.6:.1f} l2,{h - 6}" for k in range(9)), role, 0.3, 0.45))
+        if band:
+            b.append(lin(f"M18,{y + h * 0.55:.1f} L108,{y + h * 0.45 - 4:.1f}", band, 3.2, 0.9))
+    b.append(fill(smooth([(30, 40), (78, 34), (88, 42), (36, 48)]), "#ffffff", sheen))
+    e = ""
+    if glowc:
+        e = glow(P, 64, 64, 46, glowc, 0.4) + lit_marks(P, "M26,48 Q60,40 100,38 M26,70 Q64,60 104,58 M30,92 Q66,84 104,80", glowc, "#ffffff", w=0.8, glow_w=2.6, op=0.7)
+    return J(b), e
+
+
+def cloth_linen(P):
+    return cloth_fold(P, "linen")
+
+
+def cloth_wool(P):
+    return cloth_fold(P, "woolcloth", sheen=0.15)
+
+
+def felt_wool(P):
+    b, e = cloth_fold(P, "felt", weave=False, sheen=0.1)
+    rnd = random.Random(3)
+    b += lin(" ".join(f"M{rnd.uniform(24, 100):.1f},{rnd.uniform(40, 104):.1f} l2,1" for _ in range(30)), PAL["felt"][2], 0.8, 0.6)
+    return b, e
+
+
+def cloth_silk(P):
+    return cloth_fold(P, "silk", band=PAL["gold"][0], weave=False, sheen=0.6)
+
+
+def canvas_oiled(P):
+    b, e = cloth_fold(P, "canvas", sheen=0.45)
+    b += P.shape(ell(98, 104, 9, 12), "glass", s=1.5, lw=1.8) + fill(ell(98, 106, 6, 7), "#b89a40", 0.9)
+    return b, e
+
+
+def padding_quilted(P):
+    sq = poly([(20, 30), (104, 22), (110, 104), (24, 110)])
+    b = [P.shape(sq, "linen", s=6)]
+    cid = "pq_clip"
+    P.defs.append(f'<clipPath id="{cid}"><path d="{sq}"/></clipPath>')
+    grid = " ".join(f"M{x},{10} L{x + 100},{120}" for x in range(-90, 120, 16)) + " " + " ".join(f"M{x},{120} L{x + 100},{10}" for x in range(-90, 120, 16))
+    b.append(f'<g clip-path="url(#{cid})">' + f'<path d="{grid}" fill="none" stroke="#8e8064" stroke-width="1.1" stroke-dasharray="2.4 1.6" opacity="0.9"/></g>')
+    b.append(fill(smooth([(30, 36), (70, 32), (66, 44), (34, 50)]), "#ffffff", 0.3))
+    return J(b), ""
+
+
+def cloth_ethereal(P):
+    return cloth_fold(P, "woolcloth", band="#e8ecf8", glowc=MOONGLOW, sheen=0.2)
+
+
+def cloth_moonweave(P):
+    return cloth_fold(P, "moonweave", band="#f4f8ff", glowc=MOONGLOW, sheen=0.5)
+
+
+def cloth_spidersilk(P):
+    return cloth_fold(P, "spider", band="#9a9aa8", glowc="#9a9ab8", sheen=0.2)
+
+
+def cloth_warded(P):
+    b, e = cloth_fold(P, "moonweave", band=PAL["gold"][1], sheen=0.4)
+    rnd = random.Random(14)
+    d = rune_glyphs(rnd, 60, 48, 7) + " " + ell(60, 48, 12)
+    e = lit_marks(P, d, RUNE_GOLD, "#fff0c0", w=1.3, glow_w=4, op=0.95, blur=2) + glow(P, 60, 48, 18, GILT, 0.35)
+    return b, e
+
+
+# ---- garments
+def _robe_shape():
+    return smooth([(48, 14), (64, 22), (80, 14), (96, 20), (120, 58), (110, 66), (94, 46), (96, 118), (32, 118), (34, 46), (18, 66), (8, 58), (32, 20)])
+
+
+def robe(P, role, trim=None, glowc=None, sigils=False, seed=1):
+    b = [P.shape(_robe_shape(), role, s=7)]
+    b.append(P.detail("M64,24 L64,116 M40,50 Q44,84 38,116 M88,50 Q84,84 90,116", role, 0.7))
+    b.append(fill(smooth([(50, 16), (64, 30), (78, 16), (70, 40), (58, 40)]), "#120c08", 0.7))
+    if trim:
+        b.append(lin("M34,114 Q64,120 94,114", INK, 4.4) + lin("M34,114 Q64,120 94,114", trim, 2.6))
+        b.append(lin("M50,16 L64,30 L78,16 M64,30 L64,112", INK, 3.6) + lin("M50,16 L64,30 L78,16 M64,30 L64,112", trim, 1.8))
+        b.append(lin("M10,60 L20,66 M118,60 L108,66", INK, 3.6) + lin("M10,60 L20,66 M118,60 L108,66", trim, 1.8))
+    b.append(lin("M30,86 L98,86", INK, 4.8) + lin("M30,86 L98,86", PAL["strap"][1] if not trim else trim, 2.6))
+    e = ""
+    if sigils:
+        rnd = random.Random(seed)
+        d = rune_glyphs(rnd, 46, 104, 4.5) + " " + rune_glyphs(rnd, 82, 104, 4.5) + " " + rune_glyphs(rnd, 64, 56, 5.5) + " " + ell(64, 56, 9)
+        e = lit_marks(P, d, glowc or MOONGLOW, "#ffffff", w=1.1, glow_w=3.4, op=0.9, blur=1.6)
+    if glowc:
+        e += glow(P, 64, 70, 44, glowc, 0.28)
+    return J(b), e
+
+
+def robe_novice(P):
+    return robe(P, "woolcloth")
+
+
+def robe_scholar(P):
+    return robe(P, "tunic", trim="#e8ecf8", glowc=MOONGLOW, sigils=True, seed=4)
+
+
+def robe_archmage(P):
+    return robe(P, "plum", trim=PAL["gold"][0], glowc=VIOLET_HOT, sigils=True, seed=7)
+
+
+def tunic_linen(P):
+    sh = smooth([(44, 16), (64, 22), (84, 16), (108, 28), (118, 50), (100, 56), (94, 44), (96, 112), (32, 112), (34, 44), (28, 56), (10, 50), (20, 28)])
+    b = [P.shape(sh, "linen", s=6)]
+    b.append(fill(smooth([(52, 18), (64, 34), (76, 18), (68, 26), (60, 26)]), "#2a1c12", 0.7))
+    b.append(lin("M60,28 l8,3 M60,34 l8,3", INK, 1.2))
+    b.append(f'<path d="M34,104 Q64,110 94,104" fill="none" stroke="#8e8064" stroke-width="1.1" stroke-dasharray="3 2" opacity="0.9"/>')
+    return J(b), ""
+
+
+def gambeson(P):
+    sh = smooth([(40, 16), (56, 20), (64, 30), (72, 20), (88, 16), (110, 30), (112, 64), (100, 64), (98, 116), (30, 116), (28, 64), (16, 64), (18, 30)])
+    b = [P.shape(sh, "canvas", s=7)]
+    cid = "gb_clip"
+    P.defs.append(f'<clipPath id="{cid}"><path d="{sh}"/></clipPath>')
+    quilt = " ".join(f"M10,{y} L118,{y}" for y in range(26, 120, 9))
+    b.append(f'<g clip-path="url(#{cid})"><path d="{quilt}" fill="none" stroke="#5a4824" stroke-width="1.2" stroke-dasharray="2.6 1.6" opacity="0.85"/></g>')
+    b.append(P.detail("M64,30 L64,114", "canvas", 1.0))
+    b.append(fill(" ".join(ell(68, y, 2) for y in range(40, 110, 12)), PAL["bronze"][1]))
+    return J(b), ""
+
+
+def _cloak(P, role, clasp="bronze", lining=None):
+    sh = smooth([(44, 14), (64, 10), (84, 14), (98, 40), (116, 112), (64, 120), (12, 112), (30, 40)])
+    b = [P.shape(sh, role, s=7)]
+    if lining:
+        b.append(fill(smooth([(56, 24), (64, 30), (72, 24), (88, 110), (64, 114), (40, 110)]), lining, 0.9))
+    b.append(P.detail("M40,50 Q36,84 26,112 M88,50 Q92,84 102,112 M64,30 L64,116", role, 0.7))
+    b.append(P.shape(smooth([(40, 16), (64, 26), (88, 16), (84, 30), (64, 36), (44, 30)]), role, s=3))
+    b.append(P.shape(ell(64, 30, 7), clasp, s=1.5, lw=2))
+    return b
+
+
+def cloak_travel(P):
+    b = _cloak(P, "canvas", lining=PAL["felt"][1])
+    b.append(fill(smooth([(36, 40), (52, 36), (40, 92), (24, 100)]), "#ffffff", 0.22))
+    return J(b), ""
+
+
+def cloak_warded(P):
+    b = _cloak(P, "tunic", "silver", lining=PAL["woolcloth"][2])
+    rnd = random.Random(21)
+    d = " ".join(rune_glyphs(rnd, x, y, 4.2) for x, y in [(28, 104), (46, 108), (82, 108), (100, 104)]) + " M22,96 Q64,110 106,96"
+    e = lit_marks(P, d, RUNE_BLUE_G, "#e8f4ff", w=1.2, glow_w=3.6, op=0.95, blur=1.8)
+    return J(b), e
+
+
+def cloak_shadow(P):
+    b = _cloak(P, "spider", "silver", lining="#14121a")
+    b.append(lin("M30,44 Q22,90 16,110 M98,44 Q106,90 112,110", "#9a9ab8", 0.9, 0.6))
+    e = glow(P, 64, 70, 40, "#7a7aa8", 0.25)
+    return J(b), e
+
+
+def hood_wool(P):
+    b = [P.shape(smooth([(22, 116), (24, 64), (36, 30), (64, 12), (92, 30), (104, 64), (106, 116), (82, 108), (64, 112), (46, 108)]), "felt", s=8)]
+    b.append(fill(smooth([(40, 104), (40, 66), (52, 44), (64, 38), (76, 44), (88, 66), (88, 104), (64, 96)]), "#2a1c12", 0.95))
+    b.append(fill(smooth([(46, 98), (48, 70), (58, 52), (64, 50), (70, 52), (80, 70), (82, 98), (64, 92)]), "#16100b", 0.6))
+    b.append(f'<path d="{smooth([(30, 110), (32, 64), (46, 36), (64, 28), (82, 36), (96, 64), (98, 110)], close=False)}" fill="none" stroke="#e8d8b8" stroke-width="1.1" stroke-dasharray="3 2.5" opacity="0.7"/>')
+    return J(b), ""
+
+
+def hood_moonweave(P):
+    b = [P.shape(smooth([(22, 116), (24, 64), (36, 30), (64, 12), (92, 30), (104, 64), (106, 116), (82, 108), (64, 112), (46, 108)]), "moonweave", s=8)]
+    b.append(fill(smooth([(40, 104), (40, 66), (52, 44), (64, 38), (76, 44), (88, 66), (88, 104), (64, 96)]), "#1a1c2c", 0.95))
+    trim = smooth([(36, 108), (38, 64), (50, 40), (64, 34), (78, 40), (90, 64), (92, 108)], close=False)
+    b.append(lin(trim, INK, 4) + lin(trim, "#f4f8ff", 2))
+    rnd = random.Random(31)
+    d = rune_glyphs(rnd, 64, 22, 5) + " " + ell(64, 22, 8.5)
+    e = lit_marks(P, d, MOONGLOW, "#ffffff", w=1.2, glow_w=3.6, op=0.95) + glow(P, 64, 70, 30, MOONGLOW, 0.3)
+    return J(b), e
+
+
+def sash_silk(P):
+    knot = smooth([(54, 50), (74, 48), (78, 64), (58, 68)])
+    band = smooth([(8, 44), (60, 54), (120, 40), (120, 56), (66, 70), (8, 60)])
+    b = [P.shape(band, "plum", s=4)]
+    b.append(P.shape(smooth([(60, 64), (52, 92), (40, 120), (54, 122), (66, 94), (70, 66)]), "plum", s=3))
+    b.append(P.shape(smooth([(70, 64), (82, 90), (96, 114), (108, 108), (90, 86), (76, 62)]), "plum", s=3))
+    b.append(P.shape(knot, "plum", s=2))
+    b.append(lin("M42,118 L54,120 M96,112 L106,108", INK, 3.2) + lin("M42,118 L54,120 M96,112 L106,108", PAL["gold"][0], 1.6))
+    b.append(fill(smooth([(14, 48), (56, 56), (100, 46), (60, 60)]), "#ffffff", 0.3))
+    return J(b), ""
+
+
+def gloves_spellweaver(P):
+    b = glove(P, 42, 44, "plum")
+    rnd = random.Random(12)
+    d = "M48,82 Q62,60 66,30 M62,82 Q70,56 78,26 M74,84 Q80,64 88,40 " + rune_glyphs(rnd, 62, 92, 4.5)
+    e = lit_marks(P, d, MOONGLOW, "#ffffff", w=1.1, glow_w=3.4, op=0.9) + glow(P, 64, 64, 30, EMBER, 0.15)
+    return b, e
+
+
+# ---- swords
+def sword_short(P):
+    b, e = blade_sword(P, "metal", "darkiron", "leather", L=0.74)
+    return rot(f'<g transform="translate(0,-10)">{b}</g>', 45), ""
+
+
+def sword_cutlass(P):
+    b = []
+    blade = smooth([(58, 92), (70, 92), (74, 60), (80, 30), (88, 12), (78, 18), (66, 44), (58, 70)])
+    b.append(P.shape(blade, "metal", s=3))
+    b.append(fill(smooth([(60, 88), (63, 88), (66, 50), (76, 22), (68, 40), (60, 66)]), "#ffffff", 0.35))
+    b.append(P.shape(smooth([(44, 92), (64, 88), (84, 92), (86, 100), (80, 118), (74, 118), (76, 102), (64, 98), (46, 100)]), "bronze", s=2))
+    b.append(P.shape(rect(59.5, 96, 9, 20, 3), "leather", s=1.5))
+    b.append(P.shape(ell(64, 120, 5), "bronze", s=1))
+    return rot(J(b), 40), ""
+
+
+def sword_rapier(P):
+    b = []
+    b.append(P.shape(poly([(62, 84), (66, 84), (65, 8), (64, 2), (63, 8)]), "metal", s=1.5, lw=2))
+    b.append(lin("M64,82 L64,10", "#ffffff", 0.6, 0.6))
+    hilt = "M48,86 Q64,80 80,86 M48,86 Q46,102 60,106 M80,86 Q82,102 68,106"
+    b.append(lin(hilt, INK, 4.6) + lin(hilt, PAL["silver"][1], 2.6))
+    b.append(lin("M52,86 Q48,74 58,70", INK, 3.6) + lin("M52,86 Q48,74 58,70", PAL["silver"][1], 1.8))
+    b.append(P.shape(rect(60, 88, 8, 20, 3), "wood", s=1.2))
+    b.append(lin(" ".join(f"M60,{92 + i * 4} L68,{94 + i * 4}" for i in range(4)), PAL["silver"][0], 0.9))
+    b.append(P.shape(ell(64, 112, 5.5), "silver", s=1))
+    return rot(J(b), 45), ""
+
+
+def sword_great(P):
+    b = []
+    b.append(P.shape(poly([(55, 76), (73, 76), (72, 14), (64, 0), (56, 14)]), "metal", s=3))
+    b.append(P.detail("M64,72 L64,16", "metal", 1.0, 0.9))
+    b.append(fill(poly([(58, 72), (62, 72), (62, 16), (58, 18)]), "#ffffff", 0.35))
+    b.append(P.shape(rect(30, 76, 68, 8, 3), "darkiron", s=2))
+    b.append(P.shape(ell(30, 80, 5), "darkiron", s=1) + P.shape(ell(98, 80, 5), "darkiron", s=1))
+    b.append(P.shape(rect(59, 84, 10, 34, 3), "leather", s=2))
+    b.append(P.detail(" ".join(f"M59,{88 + i * 5} L69,{91 + i * 5}" for i in range(6)), "leather", 0.6))
+    b.append(P.shape(ell(64, 122, 6), "darkiron", s=1))
+    return rot(J(b), 45), ""
+
+
+# ---- axes and hammers
+def axe_hatchet(P):
+    b, e = axe_hand(P)
+    return f'<g transform="translate(64,64) scale(0.78) translate(-64,-60)">{b}</g>', e
+
+
+def axe_battle(P):
+    b = [P.shape(rect(59, 10, 9, 110, 4), "wood", s=2), P.shape(rect(58, 98, 11, 18, 3), "leather", s=1.5)]
+    head = smooth([(66, 18), (84, 10), (106, 2), (114, 30), (108, 60), (92, 50), (80, 40), (66, 42)])
+    b.append(P.shape(head, "metal", s=3))
+    b.append(P.detail("M106,6 Q118,30 108,56", "metal", 0.7, 0.8))
+    b.append(P.shape(smooth([(60, 20), (46, 22), (40, 30), (46, 38), (60, 38)]), "metal", s=2))
+    b.append(P.shape(rect(55, 14, 16, 30, 3), "darkiron", s=1.5))
+    return rot(J(b), 20), ""
+
+
+def axe_great(P):
+    b = [P.shape(rect(59, 8, 10, 116, 4), "wood", s=2), P.shape(rect(58, 96, 12, 24, 3), "leather", s=1.5)]
+    for sg in (1, -1):
+        head = smooth([(64 + sg * 4, 16), (64 + sg * 26, 6), (64 + sg * 46, 0), (64 + sg * 52, 30), (64 + sg * 46, 60), (64 + sg * 26, 52), (64 + sg * 4, 44)])
+        b.append(P.shape(head, "metal", s=3))
+        b.append(P.detail(f"M{64 + sg * 46},{4} Q{64 + sg * 56},30 {64 + sg * 46},{56}", "metal", 0.7, 0.8))
+    b.append(P.shape(rect(55, 12, 18, 36, 3), "darkiron", s=1.5))
+    b.append(P.shape(poly([(60, 12), (68, 12), (64, 2)]), "darkiron", s=1))
+    return rot(J(b), 25), ""
+
+
+def hammer_war(P):
+    b = [P.shape(rect(59, 30, 10, 92, 4), "wood", s=2), P.shape(rect(58, 98, 12, 20, 3), "leather", s=1.5)]
+    b.append(P.shape(rect(36, 14, 48, 24, 4), "metal", s=3))
+    b.append(P.shape(rect(26, 16, 14, 20, 2), "metal", s=2))
+    b.append(P.shape(poly([(84, 18), (112, 26), (84, 34)]), "metal", s=2))
+    b.append(P.shape(poly([(60, 14), (68, 14), (64, 0)]), "darkiron", s=1))
+    b.append(fill(rect(40, 18, 20, 6, 2), "#ffffff", 0.3))
+    return rot(J(b), 30), ""
+
+
+# ---- armour and shields
+def armor_hide(P):
+    sh = smooth([(40, 18), (54, 22), (64, 34), (74, 22), (88, 18), (104, 30), (100, 60), (98, 110), (64, 116), (30, 110), (28, 60), (24, 30)])
+    b = [P.shape(sh, "brown", s=7)]
+    b.append(P.detail("M64,36 L64,112 M40,60 Q50,70 44,96 M88,60 Q78,70 84,96", "brown", 0.8))
+    b.append(lin(" ".join(f"M60,{y} L68,{y + 5} M68,{y} L60,{y + 5}" for y in range(42, 104, 12)), PAL["straw"][1], 1.2))
+    fur = " ".join(f"M{x},{20 + abs(x - 64) * 0.2:.1f} l{(x % 3) - 1},-6" for x in range(30, 100, 4))
+    b.append(lin(fur, INK, 2.4) + lin(fur, PAL["hide"][0], 1.1))
+    return J(b), ""
+
+
+def armor_studded(P):
+    b, e = jerkin_leather(P)
+    studs = [(x, y) for y in range(40, 104, 12) for x in (40, 50, 78, 88)]
+    b += fill(" ".join(ell(x, y, 2.6) for x, y in studs), PAL["metal"][1]) + lin(" ".join(ell(x, y, 2.6) for x, y in studs), INK, 0.9)
+    b += fill(" ".join(ell(x - 0.8, y - 0.8, 0.9) for x, y in studs), "#ffffff", 0.7)
+    return b, e
+
+
+def plate_half(P):
+    b, bp = _cuirass(P, "metal", "bronze")
+    b.append(P.detail("M64,32 L64,104", "metal", 0.9))
+    for sg in (-1, 1):   # tassets
+        b.append(P.shape(poly([(64 + sg * 6, 100), (64 + sg * 28, 92), (64 + sg * 32, 116), (64 + sg * 8, 122)]), "metal", s=2))
+        b.append(P.detail(f"M{64 + sg * 7},{108} L{64 + sg * 30},{102}", "metal", 0.6))
+    b.append(fill(smooth([(44, 36), (56, 36), (58, 70), (50, 88), (42, 64)]), "#ffffff", 0.3))
+    return J(b), ""
+
+
+def plate_full(P):
+    b, bp = _cuirass(P, "metal", "gold")
+    b.append(P.detail("M64,32 L64,104", "metal", 1.0))
+    for sg in (-1, 1):   # layered pauldrons and tassets
+        for k in range(3):
+            b.append(P.shape(smooth([(64 + sg * (24 + k * 4), 16 + k * 8), (64 + sg * (52 + k * 2), 22 + k * 8), (64 + sg * (56 + k), 38 + k * 8), (64 + sg * (36 + k * 3), 34 + k * 8)]), "metal", s=2))
+        b.append(P.shape(poly([(64 + sg * 6, 100), (64 + sg * 28, 92), (64 + sg * 32, 116), (64 + sg * 8, 122)]), "metal", s=2))
+    b.append(lin(smooth([(40, 26), (64, 32), (88, 26)], close=False), PAL["gold"][1], 2.4))
+    b.append(fill(smooth([(44, 40), (56, 40), (58, 70), (50, 88), (42, 64)]), "#ffffff", 0.32))
+    return J(b), ""
+
+
+def shield_buckler(P):
+    b = [P.shape(ell(64, 64, 34), "darkiron", s=5)]
+    b.append(lin(ell(64, 64, 30), PAL["metal"][0], 1.2, 0.7))
+    b.append(P.shape(ell(64, 64, 13), "metal", s=3))
+    b.append(fill(ell(59, 59, 4, 3), "#ffffff", 0.5))
+    b.append(fill(" ".join(ell(64 + 26 * math.cos(a), 64 + 26 * math.sin(a), 1.6) for a in [i * math.tau / 8 for i in range(8)]), PAL["metal"][0]))
+    return J(b), ""
+
+
+def shield_tower(P):
+    sh = rect(30, 6, 68, 116, 10)
+    b = [P.shape(sh, "metal", s=8)]
+    b.append(P.shape(rect(36, 12, 56, 104, 7), "cloth", s=4))
+    b.append(lin("M64,14 L64,114 M38,60 L90,60", PAL["gold"][1], 3.2, 0.95))
+    b.append(fill(" ".join(ell(x, y, 2) for x in (34, 94) for y in range(14, 120, 16)), PAL["metal"][0]))
+    b.append(P.shape(ell(64, 60, 8), "gold", s=1.2))
+    return J(b), ""
+
+
+# ---- bows
+def bow_short(P):
+    b = bow(P, 30, 98, 24, 9, role="wood", grip="leather", nock="wood", string="#e8dcc0")
+    return rot(f'<g transform="translate(6,0)">{b}</g>', 45), ""
+
+
+def bow_recurve(P):
+    b = bow(P, 10, 118, 22, 10, role="yew", grip="leather", nock="horn", string="#f0e6cc", back_stripe=PAL["brown"][2])
+    tips = "M52,10 q-10,-2 -12,8 M52,118 q-10,2 -12,-8"
+    b += lin(tips, INK, 5) + lin(tips, PAL["yew"][1], 3)
+    return rot(f'<g transform="translate(6,0)">{b}</g>', 45), ""
+
+
+def bow_warbow(P):
+    b = bow(P, 0, 128, 18, 9, role="sapwood", grip="cloth", nock="horn", string="#f4f8ff", back_stripe=PAL["silver"][1], fine=True)
+    e = lit_marks(P, "M53,4 L53,124", MOONGLOW, "#ffffff", w=0.8, glow_w=3, op=0.85)
+    return rot(f'<g transform="translate(6,0)">{b}</g>', 45), rot(f'<g transform="translate(6,0)">{e}</g>', 45)
+
+
 ICONS = {k: v for k, v in globals().items() if callable(v)}
 
 
-SCALE = dict(bow_hunting=1.28, gem_garnet=1.08, gem_moonstone=1.06, relic_unknown_arms=1.06,
+SCALE = dict(axe_great=0.84, bow_short=1.22, sword_great=0.94, hammer_war=0.94, axe_battle=0.94, bow_hunting=1.28, gem_garnet=1.08, gem_moonstone=1.06, relic_unknown_arms=1.06,
              ring_silver=1.3, mace_flanged=1.12, dagger=1.15, herb_emberleaf=1.12, herb_moonwort=1.12, axe_hand=1.08,
              amulet_silver=1.08, runestone_blank=1.1, runestone_ember=1.1, runestone_ward=1.1, runestone_frost=1.1)
 

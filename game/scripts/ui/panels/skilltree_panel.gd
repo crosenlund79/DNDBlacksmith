@@ -1,5 +1,5 @@
 ## SkillTreePanel — the Blacksmith's Skill Tree drawn as an inked parchment chart.
-## EN: Six branches as labelled columns; nodes are inked medallions joined by prerequisite lines
+## EN: Branches as labelled columns; nodes are inked medallions joined by prerequisite lines
 ##     (gilt once learned). States: learned (gilt), available (glowing, "Learn"), locked (grey, padlock),
 ##     secret ("???" once a predecessor is known, otherwise not drawn). Mouse wheel zooms, dragging pans,
 ##     hovering or clicking a node shows its description, exact requirements (✓/✗) and what it unlocks.
@@ -323,9 +323,12 @@ class TreeCanvas extends Control:
 
 	func world_size() -> Vector2:
 		var maxy := 0.0
+		var maxx := 5.0
 		for n in SkillTree.nodes():
 			maxy = maxf(maxy, float(n["y"]))
-		return Vector2(ORIGIN.x * 2.0 + 5.0 * COL_W, ORIGIN.y + maxy * ROW_H + 120.0)
+		for b in SkillTree.branches():
+			maxx = maxf(maxx, float(b["x"]))   # iteration 010: a seventh column (Textiles & Tailoring)
+		return Vector2(ORIGIN.x * 2.0 + maxx * COL_W, ORIGIN.y + maxy * ROW_H + 120.0)
 
 	func state_of(id: String) -> String:
 		if not states.has(id):

@@ -40,6 +40,10 @@ stations = [
  st("leather_vat", "Leather Treatment Vat", "stitching", [22.6, 7.2], [112, 112], "Cures raw hides into supple, durable leather.", C(1, 0.45, 40), sfx="water"),
  st("embroidery_frame", "Arcane Embroidery Frame", "stitching", [18.2, 9.8], [112, 112], "Embroiders protective sigils into textiles and leather.", C(2, 0.7, 26), unlock={"skill": ["enchanted_stitching", 3]}, sfx="stitch", fx=["thread_glow"]),
  st("fitting_mannequin", "Enchanted Fitting Mannequin", "stitching", [20.8, 9.9], [80, 96], "Fits and balances finished garments so enchantments sit true.", C(1, 0.55, 32), unlock={"skill": ["enchanted_stitching", 3]}, sfx="stitch"),
+ # iteration 010: textiles & tailoring (positions in the smithy come from make_layout.py station_pos)
+ st("loom", "Weaving Loom", "stitching", [14.0, 20.6], [128, 112], "Weaves thread and yarn into linen, wool and silk cloth — and, by moonlight, moonweave and spidersilk.", C(2, 0.55, 30), sfx="spin"),
+ st("cutting_table", "Pattern Cutting Table", "stitching", [17.4, 20.6], [128, 80], "Lays out paper patterns and cuts cloth on the bias with long shears.", C(1, 0.6, 32), sfx="stitch"),
+ st("tailors_bench", "Tailor's Bench", "stitching", [17.9, 17.2], [112, 80], "Sews, quilts and hems garments: tunics, robes, cloaks and gambesons.", C(2, 0.55, 34), sfx="stitch"),
 ]
 W("stations.json", stations)
 
@@ -187,16 +191,16 @@ W("destinations.json", [
 ])
 W("suppliers.json", {
  "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",
- "village": [["ore_iron", 6], ["coal", 3], ["leather_hide", 7], ["thread_linen", 4], ["reagent_salt", 7]],
+ "village": [["ore_iron", 6], ["coal", 3], ["leather_hide", 7], ["thread_linen", 4], ["reagent_salt", 7], ["flax_bundle", 4], ["wool_fleece", 5]],
  "supplier_herbalist": [["herb_emberleaf", 8], ["herb_moonwort", 8], ["reagent_salt", 6], ["yew_stave", 16]],
- "supplier_highmarsh": [["ingot_steel", 30], ["ore_silver", 18], ["thread_ethereal", 48], ["gem_garnet", 40], ["gem_sapphire", 52], ["ore_mithril", 110]]
+ "supplier_highmarsh": [["ingot_steel", 30], ["ore_silver", 18], ["thread_ethereal", 48], ["silk_raw", 30], ["gem_garnet", 40], ["gem_sapphire", 52], ["ore_mithril", 110]]
 })
 W("loot_tables.json", {
  "_doc": "rolls: number of items; entries: [item_id, weight, [min,max] qty]; rarity_bias raises chances of rare/legendary equipment rolls.",
- "mine": {"rolls": [3, 5], "entries": [["ore_iron", 40, [2, 5]], ["coal", 30, [2, 5]], ["ore_copper", 12, [1, 3]], ["ore_silver", 8, [1, 2]], ["runestone_blank", 7, [1, 1]], ["gem_garnet", 5, [1, 1]], ["gem_moonstone", 3, [1, 1]], ["ore_mithril", 2, [1, 1]], ["relic_map", 1, [1, 1]], ["ore_orichalcum", 0.6, [1, 1]]], "skill_entries": {"3": [["gem_sapphire", 4, [1, 1]]], "5": [["ore_mithril", 4, [1, 2]], ["ore_orichalcum", 1.5, [1, 1]]]}},
- "deep_mine": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_silver", 20, [1, 3]], ["runestone_blank", 18, [1, 2]], ["ore_adamantine", 8, [1, 2]], ["gem_sapphire", 8, [1, 1]], ["gem_starstone", 3, [1, 1]], ["starmetal_fragment", 3, [1, 1]], ["equip:weapon", 6, [1, 1]], ["relic_unknown_arms", 4, [1, 1]], ["relic_crown_shard", 2, [1, 1]], ["ore_orichalcum", 5, [1, 2]], ["troll_hide", 1.5, [1, 1]], ["wyvern_hide", 1, [1, 1]]], "rarity_bias": 25, "skill_entries": {"6": [["gem_starstone", 6, [1, 1]]]}},
- "forest": {"rolls": [3, 4], "entries": [["herb_emberleaf", 30, [1, 3]], ["herb_moonwort", 30, [1, 3]], ["leather_hide", 25, [1, 2]], ["yew_stave", 15, [1, 2]], ["thread_linen", 10, [1, 2]], ["equip:any", 5, [1, 1]], ["herb_bloodroot", 8, [1, 2]], ["herb_frostcap", 5, [1, 2]], ["herb_silverleaf", 4, [1, 1]], ["bear_pelt", 4, [1, 1]]]},
- "trade": {"rolls": [2, 4], "entries": [["reagent_salt", 25, [1, 3]], ["thread_linen", 20, [2, 4]], ["thread_ethereal", 8, [1, 1]], ["leather_cured", 20, [1, 2]], ["coal", 20, [2, 4]], ["equip:any", 7, [1, 1]], ["troll_hide", 1.5, [1, 1]]]},
+ "mine": {"rolls": [3, 5], "entries": [["ore_iron", 40, [2, 5]], ["coal", 30, [2, 5]], ["ore_copper", 12, [1, 3]], ["ore_silver", 8, [1, 2]], ["runestone_blank", 7, [1, 1]], ["gem_garnet", 5, [1, 1]], ["gem_moonstone", 3, [1, 1]], ["ore_mithril", 2, [1, 1]], ["relic_map", 1, [1, 1]], ["ore_orichalcum", 0.6, [1, 1]], ["spider_silk", 2, [1, 1]]], "skill_entries": {"3": [["gem_sapphire", 4, [1, 1]]], "5": [["ore_mithril", 4, [1, 2]], ["ore_orichalcum", 1.5, [1, 1]]]}},
+ "deep_mine": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_silver", 20, [1, 3]], ["runestone_blank", 18, [1, 2]], ["ore_adamantine", 8, [1, 2]], ["gem_sapphire", 8, [1, 1]], ["gem_starstone", 3, [1, 1]], ["starmetal_fragment", 3, [1, 1]], ["equip:weapon", 6, [1, 1]], ["relic_unknown_arms", 4, [1, 1]], ["relic_crown_shard", 2, [1, 1]], ["ore_orichalcum", 5, [1, 2]], ["troll_hide", 1.5, [1, 1]], ["wyvern_hide", 1, [1, 1]], ["spider_silk", 5, [1, 2]]], "rarity_bias": 25, "skill_entries": {"6": [["gem_starstone", 6, [1, 1]]]}},
+ "forest": {"rolls": [3, 4], "entries": [["herb_emberleaf", 30, [1, 3]], ["herb_moonwort", 30, [1, 3]], ["leather_hide", 25, [1, 2]], ["yew_stave", 15, [1, 2]], ["thread_linen", 10, [1, 2]], ["equip:any", 5, [1, 1]], ["herb_bloodroot", 8, [1, 2]], ["herb_frostcap", 5, [1, 2]], ["herb_silverleaf", 4, [1, 1]], ["bear_pelt", 4, [1, 1]], ["flax_bundle", 8, [1, 3]], ["wool_fleece", 4, [1, 2]]]},
+ "trade": {"rolls": [2, 4], "entries": [["reagent_salt", 25, [1, 3]], ["thread_linen", 20, [2, 4]], ["thread_ethereal", 8, [1, 1]], ["leather_cured", 20, [1, 2]], ["coal", 20, [2, 4]], ["equip:any", 7, [1, 1]], ["troll_hide", 1.5, [1, 1]], ["wool_fleece", 12, [1, 3]], ["flax_bundle", 8, [1, 3]], ["silk_raw", 3, [1, 1]]]},
  "barrow": {"rolls": [3, 5], "entries": [["relic_coin", 20, [1, 2]], ["relic_idol", 10, [1, 1]], ["runestone_blank", 12, [1, 2]], ["equip:any", 24, [1, 1]], ["relic_unknown_arms", 9, [1, 1]], ["relic_unknown_tablet", 8, [1, 1]], ["relic_unknown_reliquary", 6, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["ore_silver", 12, [1, 2]], ["wyvern_hide", 1.5, [1, 1]]], "rarity_bias": 15, "skill_entries": {"4": [["relic_unknown_reliquary", 6, [1, 1]]]}},
  "relic_reveal": {"rolls": [1, 1], "entries": [["equip:ancient", 40, [1, 1]], ["starmetal_fragment", 18, [1, 2]], ["gem_starstone", 10, [1, 1]], ["gem_moonstone", 12, [1, 2]], ["recipe_scroll", 20, [1, 1]]], "rarity_bias": 30},
  "gratitude": {"rolls": [1, 1], "entries": [["relic_unknown_reliquary", 40, [1, 1]], ["relic_unknown_arms", 30, [1, 1]], ["gem_starstone", 15, [1, 1]], ["recipe_scroll", 15, [1, 1]]]},

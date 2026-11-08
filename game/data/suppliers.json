@@ -20,6 +20,14 @@
   [
    "reagent_salt",
    7
+  ],
+  [
+   "flax_bundle",
+   4
+  ],
+  [
+   "wool_fleece",
+   5
   ]
  ],
  "supplier_herbalist": [
@@ -52,6 +60,10 @@
   [
    "thread_ethereal",
    48
+  ],
+  [
+   "silk_raw",
+   30
   ],
   [
    "gem_garnet",

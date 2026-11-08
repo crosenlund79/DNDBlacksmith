@@ -123,6 +123,16 @@
    "type": "multihit",
    "targets": 4
   },
+  "loom": {
+   "type": "multihit",
+   "targets": 6
+  },
+  "cutting_table": {
+   "type": "edge"
+  },
+  "tailors_bench": {
+   "type": "ring"
+  },
   "mortar_station": {
    "type": "rings",
    "dir": "in",
@@ -256,6 +266,41 @@
    "durability": 2.0,
    "difficulty": 4,
    "rarity_bonus": 20
+  },
+  "cloth": {
+   "name": "Linen & Wool",
+   "stat": 1.0,
+   "durability": 0.85,
+   "difficulty": 0,
+   "rarity_bonus": 0
+  },
+  "silk": {
+   "name": "Silk",
+   "stat": 1.12,
+   "durability": 0.9,
+   "difficulty": 1,
+   "rarity_bonus": 5
+  },
+  "moonweave": {
+   "name": "Moonweave & Ethereal Thread",
+   "stat": 1.22,
+   "durability": 1.0,
+   "difficulty": 2,
+   "rarity_bonus": 8
+  },
+  "spidersilk": {
+   "name": "Spidersilk",
+   "stat": 1.2,
+   "durability": 1.3,
+   "difficulty": 2,
+   "rarity_bonus": 8
+  },
+  "warded_cloth": {
+   "name": "Warded Cloth",
+   "stat": 1.32,
+   "durability": 1.15,
+   "difficulty": 3,
+   "rarity_bonus": 12
   }
  }
 }
