@@ -261,18 +261,20 @@ func work_spot(sid: String) -> Dictionary:
 	return {"pos": _free_near(c + (cands[2][0] as Vector2)), "face": "n"}
 
 
-## Clear floor for a miniature: walkable, clear of walls and footprints, and not over another station's picture.
+## Clear floor for a miniature: walkable, clear of walls and footprints, and its standing figure (about 44×86 px above
+## the feet) not over another station's picture or base.
 func _spot_ok(p: Vector2, own := "") -> bool:
 	var nav := PlayerNav.of(w)
 	if nav != null and not (nav.walkable(p) and nav.clear_at(p, 16.0)):
 		return false
+	var body := Rect2(p + Vector2(-22, -80), Vector2(44, 86))
 	for sid_v in (Property.st()["stations"] as Dictionary).keys():
 		var sid := str(sid_v)
 		if sid == own or not Property.is_installed(sid):
 			continue
 		var size: Array = DB.station(sid).get("size", [96, 96])
 		var sz := Vector2(float(size[0]), float(size[1]))
-		if Rect2(w.station_pos(sid) - sz * 0.5, sz).grow(14.0).has_point(p):
+		if Rect2(w.station_pos(sid) - sz * 0.5, Vector2(sz.x, sz.y * 1.2)).grow(6.0).intersects(body):
 			return false
 	return true
 

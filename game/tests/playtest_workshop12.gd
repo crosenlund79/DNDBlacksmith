@@ -249,5 +249,5 @@ func run(p: Node) -> void:
 		if n5 and n5.visible:
 			shown += 1
 	pt.expect(shown == 2, "workshop12: both back in the smithy after loading (%d)" % shown)
-	await _view("w12_after_load", w.station_pos("anvil") + Vector2(40, -40), 1.2, Vector2(260, 220))
+	await _view("w12_after_load", _w().bpos("smithy", 5.2, 3.4), 1.2, Vector2(0, 330))   # the world was rebuilt by the load
 	Saves.delete("w12_playtest")
