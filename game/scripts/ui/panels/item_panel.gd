@@ -277,7 +277,7 @@ func _event_row(e: Dictionary) -> Control:
 	var place := str(e.get("place", ""))
 	if place != "":
 		if ItemStory.has_world_map() and place != "brindlewick":
-			links.add_child(_link("⌖ " + ItemStory.place_name(place), func(): _go("world_map", {"id": place, "place": place})))
+			links.add_child(_link("⌖ " + ItemStory.place_name(place), func(): _go("world_map", {"site": place})))
 		else:
 			links.add_child(UIKit.label("⌖ " + ItemStory.place_name(place), 16, "body_italic", Color("#5e421c")))
 	if links.get_child_count() > 0:

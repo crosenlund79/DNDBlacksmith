@@ -86,7 +86,7 @@ func test_craft_to_reunion() -> void:
 	check(line != "", "it speaks at the grinding wheel: “%s”" % line)
 	check(ItemSpirit.speak(w, "repair", true) == "", "a cooldown keeps it from chattering")
 	Settings.values[ItemSpirit.VOICE_KEY] = false
-	check(ItemSpirit.quiet_reason(w) != "", "muted (or resting), it says nothing")
+	eq(ItemSpirit.quiet_reason(w), "muted", "muted, it says nothing")
 	Settings.values[ItemSpirit.VOICE_KEY] = true
 	# 10. everything survives a reload
 	var n_ev := Lore.of_item(uid).size()

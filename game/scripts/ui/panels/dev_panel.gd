@@ -236,6 +236,10 @@ func _iter9_tools() -> void:
 		["Open the Hall of Fame", func(): Events.open_panel.emit("hall_of_fame", {"id": "smithy"})],
 		["Open quick travel", func(): Events.open_panel.emit("quick_travel", {})],
 		["Ironfront: replay the invitation", func(): Ironfront.invite_new(); _say("Barnaby's invitation is back")]])
+	_section("Iteration 011 — the world remembers", [
+		["Open the world map", func(): Events.open_panel.emit("world_map", {})],
+		["A stranger brings an old Ironhand blade", func(): _say("A stranger is on the way" if not ItemStory.stranger_visit().is_empty() else "No lost blade circulates yet (or no free seat)")],
+		["Wake the first smith-made adventurer weapon", func(): _dev_awaken()]])
 	_section("Representative progression states", [
 		["New-game progression (keep the world)", func(): _preset("new")],
 		["Mid-game: three workshops, skills 6", func(): _preset("mid")],
@@ -255,6 +259,17 @@ func _dev_epic() -> void:
 		if str(w.get("crafted_by", "")).begins_with("Brannoc"):
 			var ok := Recognition.grant_epic(w, "a test deed in the developer tools", str(a["id"]))
 			_say("Epic granted to %s's %s" % [a["name"], w.get("name", "")] if ok else "Could not grant Epic")
+			return
+	_say("No adventurer carries a smith-made weapon yet")
+
+
+func _dev_awaken() -> void:
+	for a in Adv.all().values():
+		var w: Dictionary = a.get("equipment", {}).get("weapon", {})
+		if Provenance.is_mine(w):
+			ItemSpirit.awaken(w, "deed")
+			_say("%s stirs (%s)" % [Items.display_name(w), ItemSpirit.type_name(str(ItemSpirit.spirit(w).get("type", "")))] if ItemSpirit.awake(w) else "It would not wake")
+			Events.open_panel.emit("item", {"uid": int(w.get("uid", -1)), "tab": "Overview"})
 			return
 	_say("No adventurer carries a smith-made weapon yet")
 

@@ -237,6 +237,26 @@ who leaves wildflowers on your step for the vase in your quarters.
 **New in the village:** the travelling caravan (north road), the Three Brass Balls pawnshop, Maren Tallowgate's rival forge, the Salt Anvil, and the Hales' menagerie (companion creatures for adventurers), horses
 and cows, signs on every building, worn roads and street lamps. **Ironfront:** Barnaby invites you on day one.
 
+## Iteration 011: the world remembers
+
+**The world map (G, or right-click the Map button).** The lands about Brindlewick on parchment: every site the
+adventurers have found, its danger, what lives there, what is left to gather, and its history. A unique master
+slain stays dead — the map shows the lair cleared, and only a weaker successor may move in weeks later.
+
+**Every piece has a story.** Right-click any weapon or armour to inspect it: the Overview shows your Ironhand mark,
+the day and place it was forged, materials and craftsmanship; the Story tab lists every sale, battle, repair and
+deed with links to the adventurers and places involved. Another smith's work keeps their mark.
+
+**Names and Epic.** A blade that kills a legend earns a name of its own; a piece that does something remarkable
+becomes Epic (its rarity unchanged). Famous creations hang on the Hall of Fame, the village talks about them, and
+customers may commission "one just like it".
+
+**A Familiar Creation.** When something you made comes back — for repair, for sale, as an heirloom of a fallen
+adventurer or in a recovered chest — you recognise it, once, and see where it has been.
+
+**Talking items.** Very rarely a piece wakes after a real event and starts to comment on the work at your bench.
+Settings → Gameplay: *Item voices* on/off and *rare/normal* frequency.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.

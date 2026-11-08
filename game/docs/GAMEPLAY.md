@@ -498,3 +498,17 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Windows installer** | Exported, packaged with NSIS, installed and self-checked on Windows in CI, published as a release | `.github/workflows/windows-installer.yml` |
 
 **Screenshots:** `docs/screenshots/iteration_010/`.
+
+## Iteration 011 — the world remembers
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Shared world memory** | Every significant happening (forging, sale, battle, discovery, death, repair, naming) is ONE Lore event with a stable id; items, adventurers and places hold only the ids, so every history reads the same record. Routine events are light and pruned when the world grows old; anything an item still points at, and everything important, is kept | `lore.gd` |
+| **Provenance & maker's marks** | Every equipment instance keeps its uid, its maker and mark (permanent through repair, reforging, enchanting and resale), materials, craftsmanship, original rarity, the chain of owners and its events. Other smiths (Maren Tallowgate's Salt Anvil, barrow-kings, Ironroot dwarves, journeymen) have their own marks. Old saves migrate on first touch | `provenance.gd`, `marks/template_*` |
+| **Persistent world sites** | Eight discoverable sites (forest, mines, road, barrows, deep halls, Raven's Hold bandit stronghold, the Sunken Temple, Drake's Crag) each keep threat, resources that deplete and regrow, inhabitants, lost gear, notes and their own history. A slain unique master never returns — at most a weaker, announced successor. Adventurers choose destinations by strength, class and temperament. Parchment world map (G) | `world_sites.gd`, `world_map_panel.gd`, `extra_world011.py` |
+| **Item stories, names, Epic** | A boss kill, many survivals or a long campaign earn a blade an authored name once (never re-rolled). Legendary is rarity, Epic is earned — both possible. Famous creations on the Hall of Fame, rumours, village reactions, fame commissions; sharpening and reforging services; strangers bring old Ironhand blades in for repair | `item_story.gd`, `workshop_services.gd`, `item_panel.gd` |
+| **A Familiar Creation** | When a notable piece the smith made comes back (repair, sale, inheritance, recovered chest) a card shows its journey and deeds — once per occasion, remembered across saves | `familiar_card.gd` |
+| **Inheritance** | A fallen adventurer's gear passes to a companion who can use it, comes home in a recovered chest, or is buried with them — always the same instance, never duplicated | `adventurers.gd` (`bequeath`) |
+| **Equipment personalities** | Rare pieces (cursed, arcane, destined, or woken by a real deed) gain one of several temperaments and say authored lines filled with their own history; per-item and global cooldowns, deterministic choice, a mute switch and a frequency setting, optional whisper sound. No AI service | `personality.gd`, `spirit_voice.gd`, `data/personalities.json` |
+
+**Screenshots:** `docs/screenshots/iteration_011/`.

@@ -59,6 +59,8 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 | Esc | Menu |
 | F5 / F9 | Quick save / quick load |
 | M | Map of Brindlewick |
+| G | World map (persistent sites, their state and history) |
+| Right-click an item | Inspect it: maker's mark, owners, its story |
 | F1 | Help & searchable reference |
 | F3 | Diagnostics overlay |
 | F10 | Developer tools: time, any item, gold, skills, property, stations, skill tree, progression presets, trade, Ironfront |
