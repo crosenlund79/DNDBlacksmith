@@ -1110,6 +1110,7 @@ static func finish_reward(m: Dictionary) -> Dictionary:
 			Chronicle.add("social", "Brannoc beat %s at Ironfront in Barnaby's basement." % o.get("name", opp), {"npc": opp})
 	if m.get("tutorial", false):
 		st()["tutorial_done"] = true
+		_close_invite()
 	m["reward"] = out
 	return out
 
@@ -1130,3 +1131,39 @@ static func barnaby_lore() -> String:
 	var n := int(st().get("lore", 0))
 	st()["lore"] = n + 1
 	return LORE[n % LORE.size()]
+
+
+
+# ------------------------------------------------------------------ the invitation (a new game)
+## A new game: Barnaby slips an invitation under the smithy door — come to the basement, learn the rules and
+## play an introductory match. A talk marker on the minimap points to him until the match is played.
+static func invite_new() -> void:
+	st()["invite"] = "pending"
+	TalkMarkers.flag("barnaby", "invites you to an introductory game of Ironfront")
+	Game.journal("A note under the door, in a careful hand: \"Master Ironhand — would you do me the honour of a game of IRONFRONT? Basement of my house, north lane, any evening. Helmets provided. — B. Quill\"")
+	Chronicle.add("social", "Barnaby Quill invited the new smith to an introductory game of Ironfront.", {"npc": "barnaby"})
+	var tree := Game.get_tree()
+	if tree:
+		tree.create_timer(6.0).timeout.connect(func():
+			if invite_pending():
+				Events.toast.emit("A note under the door: Barnaby Quill invites you to a game of Ironfront (his house, north lane).", "info"))
+
+
+static func invite_pending() -> bool:
+	return str(st().get("invite", "")) == "pending"
+
+
+## Barnaby's introduction when you answer the invitation.
+static func intro_text() -> String:
+	return "\"You came! Splendid. Helmet — here, regulations. Now: Ironfront. Picture machines no wizard ever dreamed of — " + \
+		"steel beetles that breathe thunder, iron birds that dive and shriek, wagons that fire a hundred arrows of flame at once. " + \
+		"The Sherman, the Tiger, the Spitfire! Three fronts — Infantry, Armour, Air. You play a card or you pass; once you pass, " + \
+		"you're out until the round ends. Best of three rounds. Shall I walk you through a first match? I'll coach — you'll have it in no time.\""
+
+
+static func _close_invite() -> void:
+	if invite_pending():
+		st()["invite"] = "done"
+		TalkMarkers.clear("barnaby")
+		Chronicle.add("social", "Brannoc played his first game of Ironfront in Barnaby's basement.", {"npc": "barnaby"}, true)
+		Social.change("barnaby", 8.0, 10.0, "ironfront_intro", "The smith accepted my invitation and played Ironfront with me!")

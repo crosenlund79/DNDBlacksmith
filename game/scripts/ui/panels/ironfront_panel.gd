@@ -31,12 +31,19 @@ func _init(args: Dictionary = {}) -> void:
 	super._init("Ironfront — Barnaby's War-Room", 1880, 1040)
 	blocks_time = true
 	page = str(args.get("page", "menu"))
+	_intro = bool(args.get("tutorial", false))
+
+
+var _intro := false
 
 
 func _ready() -> void:
 	super._ready()
 	Ironfront.st()
 	_show(page)
+	if _intro:
+		# answering Barnaby's invitation: straight into the coached introductory match
+		call_deferred("_start", "barnaby", "standard", true)
 
 
 func close() -> void:

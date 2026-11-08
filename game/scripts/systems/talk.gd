@@ -79,6 +79,11 @@ static func options(npc: String, area: String) -> Array:
 			if stage == "courting":
 				out.append({"id": "propose", "label": "Propose (offer a silver band)"})
 	if npc == "barnaby":   # Ironfront host
+		if Ironfront.invite_pending():
+			if bool(Ironfront.st().get("intro_heard", false)):
+				out.insert(0, {"id": "ironfront_teach", "label": "Yes — teach me (introductory match)"})
+			else:
+				out.insert(0, {"id": "ironfront_intro", "label": "About your invitation…"})
 		out.append({"id": "ironfront_play", "label": "Play a game of Ironfront"})
 		out.append({"id": "ironfront_ask", "label": "Ask about Ironfront"})
 	if npc == "hilde":
@@ -125,6 +130,12 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": "\"Splendid! Helmet on — regulations.\"", "action": "close"}
 		"ironfront_ask":
 			return {"text": Ironfront.barnaby_lore()}
+		"ironfront_intro":
+			Ironfront.st()["intro_heard"] = true
+			return {"text": Ironfront.intro_text()}
+		"ironfront_teach":
+			Events.open_panel.emit.call_deferred("ironfront", {"id": npc, "tutorial": true})
+			return {"text": "\"Marvellous! Sit, sit. You'll be the Allies — I'll be the Axis, and I'll go gently.\"", "action": "close"}
 		"serve":
 			return {"text": "", "action": "shop"}
 		"refund":

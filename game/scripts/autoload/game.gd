@@ -77,6 +77,7 @@ func new_game(difficulty := "journeyman") -> void:
 	Expeditions.init_world()
 	Property.init_new()
 	SkillTree.init_new()
+	Ironfront.invite_new()
 	journal("Day 1. The forge is cold, Borin is restless and Mira Pell keeps glancing at the shop window.")
 	Log.info("New game created")
 
