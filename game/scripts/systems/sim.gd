@@ -10,6 +10,7 @@ extends RefCounted
 
 static func on_hour(_day: int, h: int) -> void:
 	Hire.work_hour(h)
+	Vitality.on_hour()
 	Shop.customer_hour(h)
 	Expeditions.on_hour(h)
 	if h == 9:

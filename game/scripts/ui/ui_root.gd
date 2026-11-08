@@ -9,6 +9,8 @@ static var instance: UIRoot
 var hud: Control
 var clock_label: Label
 var gold_label: Label
+var energy_bar: ProgressBar
+var energy_label: Label
 var objective_label: RichTextLabel
 var prompt_label: Label
 var toast_box: VBoxContainer
@@ -32,6 +34,7 @@ func _ready() -> void:
 	Events.gold_changed.connect(func(_g): _refresh_hud())
 	Events.time_changed.connect(func(_d, _m): _refresh_hud())
 	Events.objective_changed.connect(func(_t): _refresh_hud())
+	Events.fatigue_changed.connect(func(_f): _refresh_hud())
 	Events.request_fade.connect(fade)
 	Events.legendary_found.connect(func(_it): legendary_flash())
 	Events.skill_level_up.connect(_on_level_up)
@@ -69,6 +72,19 @@ func _build_hud() -> void:
 	objective_label = UIKit.rich("", 20)
 	objective_label.custom_minimum_size = Vector2(430, 0)
 	v.add_child(clock_label)
+	# energy (Vitality): a slim bar under the clock, coloured as fatigue builds
+	var er := UIKit.hbox(8)
+	er.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	energy_label = UIKit.label("", 18, "body_italic")
+	energy_bar = UIKit.bar(100.0, 100.0, 150)
+	energy_bar.custom_minimum_size = Vector2(150, 12)
+	energy_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	energy_bar.show_percentage = false
+	energy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	er.add_child(UIKit.label("Energy", 18, "body_bold"))
+	er.add_child(energy_bar)
+	er.add_child(energy_label)
+	v.add_child(er)
 	v.add_child(gold_label)
 	v.add_child(objective_label)
 	tl.add_child(v)
@@ -157,6 +173,13 @@ func _refresh_hud() -> void:
 	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name(), Game.time_string(),
 		"  ‖ paused" if Game.paused else ("  ▸×%d" % Game.speed if Game.speed > 1 else "")]
 	gold_label.text = "%d gold" % Game.gold()
+	energy_bar.value = Vitality.energy()
+	var fb := Vitality.band()
+	energy_label.text = fb
+	var ecol: Color = {"Fresh": Color("#4e6a2e"), "Steady": Color("#6a6a2e"), "Tired": Color("#9a6a1e"),
+		"Weary": Color("#a4441e"), "Exhausted": UIKit.RUBRIC}.get(fb, UIKit.INK)
+	energy_bar.modulate = Color.WHITE if fb in ["Fresh", "Steady"] else ecol.lightened(0.35)
+	energy_label.add_theme_color_override("font_color", ecol)
 	var obj := Objectives.text()
 	objective_label.visible = obj != "" and Settings.get_value("gameplay/show_hints", true)
 	objective_label.text = "[color=#7e2418]❧[/color] [i]%s[/i]" % obj

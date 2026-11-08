@@ -632,8 +632,46 @@ class Fig:
         if "scalp_scar" in ex:
             self.add(lin(f"M{hx-rx*0.15:.1f},{hy-ry*0.95:.1f} l{rx*0.42:.1f},{ry*0.45:.1f}", "#8a4a3a", 1.4))
             self.add(lin(f"M{hx-rx*0.05:.1f},{hy-ry*0.85:.1f} l3,-1.6 M{hx+rx*0.1:.1f},{hy-ry*0.7:.1f} l3,-1.6", "#8a4a3a", 0.8))
+        if "spectacles" in ex:
+            self.spectacles_front(hx, ey, rx)
+        if "headscarf" in ex:
+            self.headscarf(hx, hy, rx, ry, "S")
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "S")
+
+    # -- optional head pieces (player appearance choices)
+    def spectacles_front(self, hx, ey, rx):
+        for sd in (-1, 1):
+            x = hx + sd * rx * 0.38
+            self.add(f'<ellipse cx="{x:.1f}" cy="{ey:.1f}" rx="3.9" ry="3.5" fill="#eef4f0" fill-opacity="0.35" stroke="{INK}" stroke-width="1.1"/>')
+            self.add(lin(f"M{x + sd*3.9:.1f},{ey-0.6:.1f} L{hx + sd*rx*0.98:.1f},{ey-1.6:.1f}", INK, 0.9, 0.9))
+            self.add(fill(ell(x - 1.4, ey - 1.3, 1.0, 0.7), "#ffffff", 0.8))
+        self.add(lin(f"M{hx - rx*0.38 + 3.9:.1f},{ey-0.8:.1f} Q{hx:.1f},{ey-2.6:.1f} {hx + rx*0.38 - 3.9:.1f},{ey-0.8:.1f}", INK, 1.0))
+
+    def headscarf(self, hx, hy, rx, ry, view):
+        if view == "S":
+            cap = smooth([(hx - rx * 1.1, hy - ry * 0.2), (hx - rx * 1.06, hy - ry * 0.75), (hx - rx * 0.6, hy - ry * 1.12), (hx, hy - ry * 1.2),
+                          (hx + rx * 0.6, hy - ry * 1.12), (hx + rx * 1.06, hy - ry * 0.75), (hx + rx * 1.1, hy - ry * 0.2),
+                          (hx + rx * 0.7, hy - ry * 0.4), (hx, hy - ry * 0.5), (hx - rx * 0.7, hy - ry * 0.4)], t=0.45)
+            self.sh(cap, "scarf", s=2.2)
+            self.det(f"M{hx-rx*0.8:.1f},{hy-ry*0.62:.1f} Q{hx:.1f},{hy-ry*0.78:.1f} {hx+rx*0.8:.1f},{hy-ry*0.62:.1f}", "scarf", 0.7, 0.8)
+            kx, ky = hx + rx * 1.02, hy - ry * 0.4
+            self.sh(ell(kx, ky, 3.6, 3.2), "scarf", s=1)
+            self.sh(smooth([(kx, ky + 2), (kx + 5, ky + 8), (kx + 4, ky + 14), (kx + 1, ky + 9)], t=0.4), "scarf", s=1, lw=1.4)
+        elif view == "E":
+            cap = smooth([(hx + rx * 0.7, hy - ry * 0.5), (hx + rx * 0.5, hy - ry * 1.1), (hx - rx * 0.3, hy - ry * 1.18), (hx - rx * 1.1, hy - ry * 0.5),
+                          (hx - rx * 1.1, hy + ry * 0.1), (hx - rx * 0.4, hy - ry * 0.25), (hx + rx * 0.2, hy - ry * 0.42)], t=0.45)
+            self.sh(cap, "scarf", s=2.2)
+            kx, ky = hx - rx * 1.05, hy - ry * 0.1
+            self.sh(ell(kx, ky, 3.4, 3.2), "scarf", s=1)
+            self.sh(smooth([(kx, ky + 2), (kx - 5 - self.step, ky + 9), (kx - 3 - self.step, ky + 15), (kx + 1, ky + 8)], t=0.4), "scarf", s=1, lw=1.4)
+        else:
+            self.sh(ell(hx, hy - ry * 0.3, rx * 1.1, ry * 0.92), "scarf", s=2.4)
+            self.det(f"M{hx-rx*0.7:.1f},{hy-ry*0.7:.1f} Q{hx:.1f},{hy-ry*0.2:.1f} {hx+rx*0.7:.1f},{hy-ry*0.7:.1f}", "scarf", 0.7, 0.8)
+            kx, ky = hx, hy + ry * 0.45
+            self.sh(ell(kx, ky, 3.8, 3.2), "scarf", s=1)
+            for sd in (-1, 1):
+                self.sh(smooth([(kx, ky + 2), (kx + sd * 5, ky + 9), (kx + sd * 3, ky + 15), (kx - sd * 1, ky + 8)], t=0.4), "scarf", s=1, lw=1.4)
 
     def hair_front(self, hx, hy, rx, ry, hair):
         P = self.P
@@ -664,6 +702,8 @@ class Fig:
                             (hx + 4.5, hy - ry * 1.05), (hx + 3, hy - ry * 0.5)], t=0.4), "hair", s=1.5)
             self.add(fill(smooth([(hx - rx * 0.9, hy - ry * 0.35), (hx - rx * 0.6, hy - ry * 0.9), (hx + rx * 0.6, hy - ry * 0.9),
                                   (hx + rx * 0.9, hy - ry * 0.35), (hx, hy - ry * 0.55)]), f"url(#{P.hatch_id})", 0.35))
+        elif hair == "bald":
+            self.add(fill(ell(hx - rx * 0.35, hy - ry * 0.6, rx * 0.25, ry * 0.15), "#fff6e4", 0.45))
         elif hair == "bald_fringe":
             for sd in (-1, 1):
                 self.sh(smooth([(hx + sd * rx * 1.04, hy - ry * 0.3), (hx + sd * rx * 0.86, hy - ry * 0.42), (hx + sd * rx * 0.8, hy + ry * 0.1),
@@ -843,12 +883,15 @@ class Fig:
             self.sh(smooth([(hx - rx * 1.25, hy + ry * 0.5), (hx - rx * 1.15, hy - ry * 0.7), (hx, hy - ry * 1.25), (hx + rx * 1.15, hy - ry * 0.7),
                             (hx + rx * 1.25, hy + ry * 0.5), (hx + rx * 0.5, hy + ry * 1.3), (hx, hy + ry * 1.6), (hx - rx * 0.5, hy + ry * 1.3)], t=0.45), "hoodc", s=3)
             return
-        skin_head = hair in ("bald_fringe", "mohawk")
+        skin_head = hair in ("bald_fringe", "mohawk", "bald")
         self.sh(ell(hx, hy - ry * 0.05, rx * (1.0 if skin_head else 1.06), ry * (1.0 if skin_head else 1.04)),
                 "skin" if skin_head else "hair", s=3)
         if hair == "bald_fringe":
             self.sh(smooth([(hx - rx * 1.04, hy - ry * 0.3), (hx, hy + ry * 0.05), (hx + rx * 1.04, hy - ry * 0.3), (hx + rx * 0.9, hy + ry * 0.5),
                             (hx, hy + ry * 0.75), (hx - rx * 0.9, hy + ry * 0.5)], t=0.45), "hair", s=1.5)
+            if "scalp_scar" in ex:
+                self.add(lin(f"M{hx+rx*0.2:.1f},{hy-ry*0.8:.1f} l{-rx*0.4:.1f},{ry*0.4:.1f}", "#8a4a3a", 1.2))
+        elif hair == "bald":
             if "scalp_scar" in ex:
                 self.add(lin(f"M{hx+rx*0.2:.1f},{hy-ry*0.8:.1f} l{-rx*0.4:.1f},{ry*0.4:.1f}", "#8a4a3a", 1.2))
         elif hair == "mohawk":
@@ -860,6 +903,8 @@ class Fig:
             self.det(f"M{hx-5},{hy-ry*0.5:.1f} q5,-3 10,0", "hair", 0.6)
         else:
             self.det(f"M{hx:.1f},{hy-ry*0.95:.1f} Q{hx-rx*0.2:.1f},{hy:.1f} {hx-rx*0.1:.1f},{hy+ry*0.8:.1f}", "hair", 0.6, 0.7)
+        if "headscarf" in ex:
+            self.headscarf(hx, hy, rx, ry, "N")
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "N")
 
@@ -1181,6 +1226,9 @@ class Fig:
         elif hair == "mohawk":
             self.sh(smooth([(hx + rx * 0.6, hy - ry * 0.85), (hx + rx * 0.2, hy - ry - 9), (hx - rx * 0.6, hy - ry - 6), (hx - rx * 1.05, hy - ry * 0.3),
                             (hx - rx * 0.7, hy - ry * 0.55), (hx, hy - ry * 0.9)], t=0.4), "hair", s=1.5)
+        elif hair == "bald":
+            if "scalp_scar" in ex:
+                self.add(lin(f"M{hx-rx*0.1:.1f},{hy-ry*0.95:.1f} l{rx*0.4:.1f},{ry*0.35:.1f}", "#8a4a3a", 1.3))
         elif hair == "bald_fringe":
             self.sh(smooth([(hx - rx * 1.02, hy - ry * 0.4), (hx - rx * 0.2, hy - ry * 0.05), (hx - rx * 0.1, hy + ry * 0.35), (hx - rx * 0.85, hy + ry * 0.62)], t=0.45), "hair", s=1.2)
             if "scalp_scar" in ex:
@@ -1221,6 +1269,11 @@ class Fig:
                 self.sh(rect(hx + rx * 0.45 + sw - 4, hy + ln + 3.4 * 6.0 - 1, 8, 3.4, 1), "metal", s=0.6)
             else:
                 self.det(f"M{hx+rx*0.5:.1f},{hy+ry*0.8:.1f} L{hx+rx*0.5+sw:.1f},{hy+ln*0.85:.1f}", "beard", 0.6, 0.7)
+        if "spectacles" in ex:
+            self.add(f'<ellipse cx="{hx+rx*0.7:.1f}" cy="{ey:.1f}" rx="2.2" ry="3.4" fill="#eef4f0" fill-opacity="0.35" stroke="{INK}" stroke-width="1.1"/>')
+            self.add(lin(f"M{hx+rx*0.6:.1f},{ey-1:.1f} L{hx-rx*0.15:.1f},{ey-0.6:.1f}", INK, 0.9, 0.9))
+        if "headscarf" in ex:
+            self.headscarf(hx, hy, rx, ry, "E")
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "E")
         if "pauldron" in ex:

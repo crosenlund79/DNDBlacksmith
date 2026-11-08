@@ -718,5 +718,40 @@
   },
   "sprite": "chars/applicant_5",
   "portrait": "portraits/applicant_5"
+ },
+ {
+  "id": "roisin",
+  "name": "Róisín",
+  "kind": "companion",
+  "look": {
+   "build": "slim",
+   "female": true,
+   "skin": "#f2d4bc",
+   "hair": "long",
+   "hair_col": "#cc3e12",
+   "beard": "none",
+   "armor": "robe",
+   "shirt": "#2c5a3e",
+   "cloak": null,
+   "back": "none",
+   "hand": "none",
+   "extras": []
+  },
+  "sprite": "chars/roisin",
+  "portrait": "portraits/roisin",
+  "age": 29,
+  "title": "Companion at the Velvet Lantern",
+  "personality": "Sharp-witted sailor's daughter who hates being underestimated; mends broken clockwork for fun; saving to buy out her contract and open a tea house.",
+  "home": "inn_upstairs",
+  "likes": [
+   "herb_moonwort",
+   "herb_emberleaf",
+   "gem_moonstone",
+   "relic_coin",
+   "amulet_silver"
+  ],
+  "dislikes": [
+   "ale_mug"
+  ]
  }
 ]

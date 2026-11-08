@@ -1,4 +1,14 @@
 {
+  "amb/harbour_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
+  "amb/pond_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
   "amb/tavern_loop": {
     "bus": "Ambience",
     "duration": 30.0,
@@ -22,6 +32,11 @@
   "music/hearth_day": {
     "bus": "Music",
     "duration": 91.429,
+    "loop": true
+  },
+  "music/ironfront": {
+    "bus": "Music",
+    "duration": 80.0,
     "loop": true
   },
   "music/tavern": {

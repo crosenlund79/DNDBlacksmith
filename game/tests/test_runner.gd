@@ -36,6 +36,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_living_village()
+	_character()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -562,6 +563,110 @@ func _saves() -> void:
 		"saves: crafted items keep their record of the work")
 	check(not leg.is_empty() and leg[0].get("star", false), "saves: crafted legendary survives save/load with its star")
 	Saves.delete("test_slot")
+
+
+## Character worker (iteration 009): appearance, fatigue, Róisín, the audio inbox.
+func _character() -> void:
+	# --- appearance: default look is the shipped art; a custom look composites and survives save/load
+	var def := Appearance.default_look()
+	check(Appearance.is_default(Appearance.look()), "look: a new game starts with Brannoc's own look")
+	check(Appearance.custom_tex("chars/player") == null, "look: the default look uses the shipped sheet")
+	var lk := def.duplicate(true)
+	lk["hair"] = "long"
+	lk["hair_col"] = "copper"
+	lk["beard"] = "short"
+	lk["skin"] = "olive"
+	lk["extras"] = ["spectacles", "headscarf"]
+	Appearance.set_look(lk)
+	var sheet := Assets.get_tex("chars/player")
+	var por := Assets.get_tex("portraits/player")
+	check(sheet != null and sheet.get_width() == 768 and sheet.get_height() == 512, "look: custom sheet composited at 768x512")
+	check(por != null and por.get_width() == 256 and Appearance.custom_tex("portraits/player") == por, "look: custom portrait composited")
+	check(Appearance.normalise({"hair": "nonsense", "extras": ["eyepatch", "wings"]})["hair"] == def["hair"]
+		and Appearance.normalise({"extras": ["eyepatch", "wings"]})["extras"] == ["eyepatch"], "look: invalid choices fall back")
+	check(Appearance.cycle(def, "hair", 1)["hair"] != def["hair"] and Appearance.toggle_extra(def, "eyepatch")["extras"].size() == def["extras"].size() - 1,
+		"look: stepping and toggling options")
+	check(Saves.save("char_look_slot"), "look: save")
+	Appearance.set_look(def)
+	check(Saves.load_slot("char_look_slot"), "look: load")
+	var back := Appearance.look()
+	check(back["hair"] == "long" and back["hair_col"] == "copper" and back["skin"] == "olive" and (back["extras"] as Array).has("headscarf"),
+		"look: appearance choice persists through save/load")
+	Saves.delete("char_look_slot")
+	Game.state["player"].erase("look")
+	check(Appearance.is_default(Appearance.look()), "look: an old save without a look gets the default")
+	# --- fatigue
+	Game.state["player"].erase("fatigue")
+	check(Vitality.fatigue() == 0.0 and Vitality.work_factor() == 1.0, "fatigue: missing key means fresh")
+	var f0 := Vitality.fatigue()
+	_craft("leather_belt", 80.0, {"fortune": 50})
+	var f1 := Vitality.fatigue()
+	check(f1 > f0, "fatigue: crafting steps tire you (%.1f)" % f1)
+	Game.state["player"]["resting_until"] = -1
+	Game.advance_minutes(180)
+	check(Vitality.fatigue() >= f1 + 4.0, "fatigue: waking hours add up (%.1f)" % Vitality.fatigue())
+	Vitality.set_fatigue(30.0)
+	check(Vitality.work_factor() == 1.0, "fatigue: no penalty below 40")
+	Vitality.set_fatigue(70.0)
+	var wf70 := Vitality.work_factor()
+	Vitality.set_fatigue(100.0)
+	check(wf70 < 1.0 and absf(Vitality.work_factor() - 0.75) < 0.001 and Vitality.work_factor() < wf70, "fatigue: work_factor declines to 0.75 at 100")
+	Vitality.rest(60, false)
+	check(Vitality.fatigue() == 75.0, "fatigue: an hour's rest restores some")
+	Game.advance_minutes(60)
+	check(Vitality.fatigue() == 75.0, "fatigue: resting hours do not add fatigue")
+	Vitality.add_fatigue(-200.0)
+	check(Vitality.fatigue() == 0.0, "fatigue: clamped at fresh")
+	Vitality.set_fatigue(64.0)
+	check(Saves.save("char_fatigue_slot") and Saves.load_slot("char_fatigue_slot") and absf(Vitality.fatigue() - 64.0) < 0.01, "fatigue: persists through save/load")
+	Saves.delete("char_fatigue_slot")
+	Vitality.sleep(0)
+	check(Vitality.fatigue() == 0.0, "fatigue: sleeping in the bed resets it")
+	# --- Róisín: friend → dating through her talk options, over a few days
+	check(not DB.character("roisin").is_empty() and Assets.has_tex("chars/roisin") and Assets.has_tex("portraits/roisin"), "roisin: defined with miniature and portrait")
+	var ids := Talk.options("roisin", "inn_upstairs").map(func(o): return o["id"])
+	check(ids.has("r_tea") and ids.has("talk") and not ids.has("r_walk"), "roisin: first options are talk and tea")
+	check(Roisin.stage() == "acquaintance", "roisin: starts as an acquaintance")
+	Game.state["gold"] = 500
+	if Game.count("ingot_steel") < 1:
+		Game.add_item(Items.make("ingot_steel", {"qty": 1}), false)
+	var guard := 0
+	while Roisin.stage() != "dating" and guard < 10:
+		guard += 1
+		for o in ["talk", "r_tea", "r_work", "r_clock", "r_gift_herb_moonwort"]:
+			var avail := Talk.options("roisin", "inn_upstairs").map(func(x): return x["id"])
+			if avail.has(o):
+				Talk.choose("roisin", o, "inn_upstairs")
+		Game.state["day"] = int(Game.state["day"]) + 1
+	check(Roisin.stage() == "dating" and Social.romance("roisin") == "dating", "roisin: reaches dating through talk, tea and the sea-clock (%d days)" % guard)
+	check(Roisin.st()["clock"] and Social.has_memory("roisin", "sea_clock"), "roisin: the sea-clock story beat is remembered")
+	Game.state["minute"] = 20 * 60
+	ids = Talk.options("roisin", "inn_upstairs").map(func(o): return o["id"])
+	check(ids.has("r_walk") and ids.has("r_evening") and not ids.has("evening"), "roisin: dating opens the harbour walk and private evenings")
+	var ev := Talk.choose("roisin", "r_evening", "inn_upstairs")
+	check(ev.has("fade") and int(ev.get("minutes", 0)) > 0, "roisin: intimacy is a discreet fade")
+	# --- audio inbox: override → inbox → shipped, and context aliases
+	var saved_inbox := Audio.inbox_root
+	Audio.inbox_root = "user://test_inbox/"
+	DirAccess.make_dir_recursive_absolute("user://test_inbox/sfx")
+	var paths := Audio.candidate_paths("sfx/ui_click")
+	check(paths.find("user://test_inbox/sfx/ui_click.wav") < paths.find("res://assets/audio/sfx/ui_click.wav")
+		and paths.find("user://overrides/audio/sfx/ui_click.wav") < paths.find("user://test_inbox/sfx/ui_click.wav"), "audio: override, then inbox, then shipped")
+	check(Audio.resolve_path("sfx/ui_click") == "res://assets/audio/sfx/ui_click.wav", "audio: shipped sound without an inbox file")
+	var src := FileAccess.open("res://assets/audio/sfx/ui_click.wav", FileAccess.READ)
+	var raw := PackedByteArray()
+	if src:
+		raw = src.get_buffer(src.get_length())
+	else:
+		raw = FileAccess.get_file_as_bytes(ProjectSettings.globalize_path("res://assets/audio/sfx/ui_click.wav"))
+	var dst := FileAccess.open("user://test_inbox/sfx/ui_click.wav", FileAccess.WRITE)
+	dst.store_buffer(raw)
+	dst.close()
+	check(Audio.resolve_path("sfx/ui_click") == "user://test_inbox/sfx/ui_click.wav", "audio: the inbox file wins over the shipped one")
+	check(Audio.resolve_path("amb/harbour") != "" and Audio.resolve_path("music/ironfront") != "" and Audio.resolve_path("amb/pond") != "",
+		"audio: harbour, pond and Ironfront contexts resolve")
+	DirAccess.remove_absolute("user://test_inbox/sfx/ui_click.wav")
+	Audio.inbox_root = saved_inbox
 
 
 ## Everyone home, rested and ready to leave today.

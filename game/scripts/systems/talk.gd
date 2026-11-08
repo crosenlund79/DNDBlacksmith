@@ -16,6 +16,8 @@ static func npc_name(npc: String) -> String:
 
 
 static func greeting(npc: String) -> String:
+	if npc == Roisin.ID:
+		return Roisin.greeting()
 	var lines: Array = DB.dialogue.get("greet", {}).get(Social.band(npc), ["\"Hm?\""])
 	var t: String = lines.pick_random()
 	var married := Social.spouse() == npc
@@ -42,6 +44,8 @@ static func greeting(npc: String) -> String:
 
 
 static func options(npc: String, area: String) -> Array:
+	if npc == Roisin.ID:
+		return Roisin.options(area)
 	var out := []
 	var c := DB.character(npc)
 	var kind: String = c.get("kind", "hireling")
@@ -76,6 +80,7 @@ static func options(npc: String, area: String) -> Array:
 				out.append({"id": "propose", "label": "Propose (offer a silver band)"})
 	if npc == "hilde":
 		out.append({"id": "ale", "label": "Buy a round for the room (6 g)"})
+		out.append({"id": "meal", "label": "A hot meal by the fire (3 g)"})
 	if area == "inn" and (npc == "hilde" or (not a.is_empty() and a["status"] in ["in_town", "injured"])):
 		out.append({"id": "tabletalk", "label": "Sit in on the table talk"})
 		if npc != "hilde":
@@ -90,6 +95,10 @@ static func options(npc: String, area: String) -> Array:
 
 
 static func choose(npc: String, opt: String, area: String) -> Dictionary:
+	if npc == Roisin.ID:
+		var rr := Roisin.choose(opt, area)
+		if not rr.is_empty():
+			return rr
 	var e := Social.ensure(npc)
 	var c := DB.character(npc)
 	var a := Adv.get_a(npc)
@@ -146,6 +155,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 				Social.change(npc, 2.0, 3.0)
 				return {"text": DB.dialogue["romance"]["drink_no"]}
 			e["dates"] = int(e.get("dates", 0)) + 1
+			Vitality.refresh(5.0)
 			Social.change(npc, 7.0, 6.0, "date_" + str(Game.day()), "Shared a quiet drink with Brannoc.")
 			if int(e["dates"]) >= 2 and Social.romance(npc) == "none":
 				Social.set_romance(npc, "dating")
@@ -153,6 +163,13 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": DB.dialogue["romance"]["drink_ok"] + InnLife.maybe_keepsake(npc), "fade": "An hour by the fire…", "minutes": 60}
 		"walk":
 			return {"text": InnLife.walk(npc), "fade": "The long way home, by the water…", "minutes": 60}
+		"meal":
+			if not Game.can_afford(3):
+				return {"text": "Your purse is too light."}
+			Game.add_gold(-3, "inn", "A hot meal at the Wyvern")
+			Vitality.refresh(12.0)
+			Social.change("hilde", 1.0, 2.0)
+			return {"text": "Hilde sets down mutton stew, black bread and a heel of cheese. \"Eat. You look like a horseshoe somebody forgot in the rain.\"\n[i]You feel a little steadier.[/i]", "fade": "A slow meal by the fire…", "minutes": 30}
 		"tabletalk":
 			Social.change(npc, 1.0, 2.0)
 			return {"text": InnLife.table_talk()}
@@ -185,6 +202,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			if not Game.can_afford(6):
 				return {"text": "Your purse is too light."}
 			Game.add_gold(-6, "inn", "A round at the Wyvern")
+			Vitality.refresh(4.0)
 			for ad in Adv.in_town():
 				Social.change(ad["id"], 2.0, 3.0)
 			Social.change("hilde", 2.0, 2.0)

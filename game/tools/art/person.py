@@ -70,6 +70,9 @@ def make_palette(base_pal, look):
         pal["cloak"] = tri(look["cloak"], 0.08)
     # a hood / hood_down uses the cloak colour, or a darkened shirt
     pal["hoodc"] = pal["cloak"] if look.get("cloak") else tri(mix(look.get("shirt", "#6a5a40"), "#2a2018", 0.25), 0.08)
+    if look.get("apron_col"):
+        pal["apron"] = tri(look["apron_col"], 0.08)
+    pal["scarf"] = tri(look.get("scarf_col") or "#7e3a2c", 0.08)
     pal["ivory"] = ("#fbf4e2", "#eee2c4", "#9a8c6c")
     pal["chain"] = ("#d4d2ca", "#9e9c92", "#55544a")
     return pal

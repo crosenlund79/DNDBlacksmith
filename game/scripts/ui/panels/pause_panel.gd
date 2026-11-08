@@ -5,13 +5,14 @@ extends UIWindow
 
 
 func _init() -> void:
-	super._init("Ember & Ash", 520, 700)
+	super._init("Ember & Ash", 520, 760)
 
 
 func _ready() -> void:
 	super._ready()
 	for e in [["Resume", close], ["Save game", func(): Events.open_panel.emit("saves", {"mode": "save"})],
 			["Load game", func(): Events.open_panel.emit("saves", {"mode": "load"})],
+			["Appearance", func(): Events.open_panel.emit("customize", {})],
 			["Settings", func(): Events.open_panel.emit("settings", {})],
 			["Difficulty — %s" % str(Expeditions.diff().get("name", "")), func(): Events.open_panel.emit("difficulty", {})],
 			["Return to main menu", func(): close(); get_tree().root.get_node("Main").call("to_menu")],

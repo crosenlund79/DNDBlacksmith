@@ -1237,6 +1237,8 @@ func spot_for(id: String) -> String:
 			return "well" if h >= 8 and h < 16 else ("square_4" if h < 20 else "")
 		"rosalind":
 			return "lantern_3"
+		"roisin":
+			return Roisin.spot(spots.has("lantern_roisin"))
 		"lysa":
 			return "lantern_1"
 		"celeste":

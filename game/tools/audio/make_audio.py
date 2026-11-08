@@ -1696,6 +1696,107 @@ def m_title(rng):
 # ----------------------------------------------------------------------------
 # output / verification
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# iteration 009 contexts: the harbour, the pond, Ironfront (the basement wargame)
+# ----------------------------------------------------------------------------
+@sound("amb/harbour_loop", bus="Ambience")
+def a_harbour(rng):
+    """Slow swell and wash against the quay, rigging creaks, a halyard tapping a mast, distant gulls."""
+    L = N(30.0)
+    T = 30.0
+    t = tt(L)
+    surf = ffilt(rng.standard_normal(L), lambda f: r_lp(f, 900, 2) * r_hp(f, 60, 1), circular=True)
+    surf /= np.std(surf)
+    swell = 0.55 + 0.45 * np.sin(TAU * 4 / T * t + 1.0) ** 2 * (0.7 + 0.3 * np.sin(TAU * 3 / T * t))
+    y = 0.16 * surf * swell
+    hiss = ffilt(rng.standard_normal(L), lambda f: r_bp(f, 2600, 0.8), circular=True)
+    y += 0.03 * hiss / np.std(hiss) * swell ** 3
+    ev = np.zeros(L)
+    for s0 in np.arange(1.2, T, 3.7):        # halyard tapping the mast
+        if rng.uniform() < 0.7:
+            for k in range(int(rng.integers(1, 3))):
+                ping = modal(N(0.5), [(1180, 1.0, 0.05), (2650, 0.4, 0.03), (420, 0.5, 0.08)])
+                add_circ(ev, 0.05 * ping, N(s0 + k * 0.42 + rng.uniform(0, 0.1)))
+    for s0 in [3.0, 13.5, 22.0]:             # rigging / hull creaks
+        add_circ(ev, 0.05 * creak(rng, rng.uniform(0.6, 1.1), 90, 60, rough=0.5), N(s0))
+    for s0 in [7.5, 19.0, 26.5]:             # gulls, far off
+        for k in range(int(rng.integers(2, 4))):
+            d = rng.uniform(0.18, 0.32)
+            m = N(d)
+            tm = tt(m)
+            f = 1650 * (1 + 0.35 * np.sin(np.pi * tm / d)) * rng.uniform(0.9, 1.1)
+            ph = TAU * np.cumsum(f) / SR
+            o = (np.sin(ph) + 0.3 * np.sin(2 * ph) + 0.1 * np.sin(3 * ph)) * np.sin(np.pi * tm / d) ** 2
+            add_circ(ev, 0.03 * o, N(s0 + k * 0.38))
+    ev = reverb(ev, 0.45, circular=True, t60=1.8)
+    return y + ev
+
+
+@sound("amb/pond_loop", bus="Ambience")
+def a_pond(rng):
+    """Still water: reeds in a light breeze, lapping, frogs, a dragonfly, the odd fish rising."""
+    L = N(30.0)
+    T = 30.0
+    t = tt(L)
+    reeds = ffilt(rng.standard_normal(L), lambda f: r_bp(f, 1800, 0.7), circular=True)
+    reeds = reeds / np.std(reeds) * np.clip(0.6 + 0.5 * smooth(rng, L, 0.15), 0.05, None)
+    y = 0.035 * reeds
+    ev = np.zeros(L)
+    s = 0.3
+    while s < T - 0.3:                        # soft lapping at the bank
+        add_circ(ev, 0.05 * bubble(rng.uniform(260, 420), 0.05, rise=0.05), N(s))
+        s += rng.uniform(0.5, 1.4)
+    for s0 in [2.0, 9.0, 17.5, 24.0]:         # frogs: a short croak train
+        f0 = rng.uniform(140, 190)
+        for k in range(int(rng.integers(2, 5))):
+            d = 0.14
+            m = N(d)
+            tm = tt(m)
+            src = glottal(np.full(m, f0) * (1 - 0.1 * tm / d), m, 1.0)
+            cro = ffilt(src, lambda f: r_bp(f, 700, 3) + 0.6 * r_bp(f, 1500, 4)) * np.sin(np.pi * tm / d) ** 1.5
+            add_circ(ev, 0.05 * cro / (np.max(np.abs(cro)) + 1e-9), N(s0 + k * 0.24))
+    for s0 in [5.5, 20.0]:                    # a fish rises: plop + ripples
+        add_circ(ev, 0.09 * bubble(520, 0.09, rise=0.2), N(s0))
+        add_circ(ev, 0.04 * bubble(340, 0.12, rise=0.1), N(s0 + 0.12))
+    d = 2.4                                   # a dragonfly passes
+    m = N(d)
+    tm = tt(m)
+    buzz = np.sin(TAU * 34 * tm) * ffilt(rng.standard_normal(m), lambda f: r_bp(f, 3200, 2))
+    add_circ(ev, 0.03 * buzz / np.std(buzz) * np.sin(np.pi * tm / d) ** 2, N(12.0))
+    ev = reverb(ev, 0.3, circular=True, t60=1.2)
+    return y + ev
+
+
+@sound("music/ironfront", bus="Music")
+def m_ironfront(rng):
+    """Ironfront: a tense, measured war-table tune — low drum ostinato, plucked minor riff, a fiddle line."""
+    pc = Piece("music/ironfront", 50, AEOLIAN, 96, 4, 32)
+    r = pc.rng
+    plan = [0, 0, 5, 4] * 2 + [0, 3, 4, 4, 5, 3, 4, 0] + [0, 0, 5, 4] * 2 + [3, 3, 4, 4, 0, 5, 4, 0]
+    rhythms = [[1, 0.5, 0.5, 2], [1.5, 0.5, 1, 1], [1, 1, 2], [0.5, 0.5, 1, 2]]
+    cads = [[1, 1, 2], [2, 2], [1.5, 0.5, 2]]
+    melA, motif = section_melody(r, plan[8:16], 4, (0, 2), rhythms, cads, -2, 8, 4)
+    melB, _ = section_melody(r, plan[24:32], 4, (0, 2), rhythms, cads, -2, 9, 2, motif=vary_motif(r, motif))
+    render_melody(pc, "fiddle", melA, 8, fiddle, 0.6, 0.95, 0, (0, 2))
+    render_melody(pc, "fiddle", melB, 24, fiddle, 0.65, 0.95, 0, (0, 2))
+    for bar, root in enumerate(plan):
+        # plucked riff: root, fifth, root, minor third above
+        for i, k in enumerate([root - 14, root - 10, root - 7, root - 12, root - 7, root - 5, root - 7, root - 10]):
+            v = (0.85 if i in (0, 4) else 0.45) * r.uniform(0.9, 1.08)
+            pc.add("lute", pc.at(bar, i * 0.5), lute_note(mtof(pc.midi(k)), 0.7, v, r), 0.004)
+        # war drum: dum . dum-dum . | dum . tek tek
+        pat = [("dum", 1.0, 0), ("dum", 0.6, 1.5), ("dum", 0.8, 2), ("tek", 0.4, 3), ("tek", 0.5, 3.5)]
+        if bar % 8 == 7:
+            pat = [("dum", 1.0, 0), ("tek", 0.5, 1), ("dum", 0.8, 2), ("dum", 0.8, 2.5), ("dum", 0.9, 3), ("dum", 1.0, 3.5)]
+        for kind, v, pos in pat:
+            pc.add("drum", pc.at(bar, pos), frame_drum(r, v * r.uniform(0.88, 1.08), kind, dur=0.8), 0.004)
+    drone(pc, "drone", [38, 45], 0.4, bright=600, buzz=0.08)
+    y = mix_down(pc, {"fiddle": 0.4, "lute": 0.6, "drum": 0.7, "drone": 0.3},
+                 {"fiddle": 0.35, "lute": 0.25, "drum": 0.25, "drone": 0.2}, t60=1.6, wet=0.3,
+                 posts={"lute": LUTE_POST, "fiddle": FIDDLE_POST})
+    return soft_limit(y, 0.72)
+
+
 def finalize(x, loop, peak_db):
     x = np.asarray(x, float)
     x = hp(x, 25, order=2, circular=loop)
