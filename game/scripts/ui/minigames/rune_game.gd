@@ -95,7 +95,7 @@ func _tick(delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	if event is InputEventMouseMotion:
 		mouse_active = true

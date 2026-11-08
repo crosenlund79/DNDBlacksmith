@@ -20,6 +20,10 @@ var feedback := ""
 var feedback_col := Color.WHITE
 var feedback_t := 0.0
 var flash := 0.0
+var overlay: CheckOverlay
+var suspended := false
+var started := false
+var practice := false
 
 
 func _init(a: Dictionary) -> void:
@@ -27,13 +31,33 @@ func _init(a: Dictionary) -> void:
 	count = int(a.get("count", 1))
 	speed = float(a.get("speed", 0.55))
 	zone = float(a.get("zone", 34.0))
+	practice = bool(a.get("practice", false))
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 
 func _ready() -> void:
 	Game.block_time(true)
-	_next()
+	overlay = CheckOverlay.new(self, args)
+	add_child(overlay)
+	if Minigames.should_auto_tutorial(args):
+		overlay.open_tutorial(true)
+	else:
+		begin()
+
+
+func begin() -> void:
+	if not started:
+		started = true
+		_next()
+
+
+func set_suspended(on: bool) -> void:
+	suspended = on
+
+
+func can_help() -> bool:
+	return running
 
 
 func _exit_tree() -> void:
@@ -49,7 +73,7 @@ func _next() -> void:
 
 
 func _process(delta: float) -> void:
-	if running:
+	if running and not suspended:
 		# clamp the step so a frame hitch can never jump the needle past the zone
 		var d := speed * 360.0 * minf(delta, 0.05)
 		angle += d
@@ -63,6 +87,8 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if suspended or (overlay != null and overlay.eats(event)):
+		return
 	var press: bool = event.is_action_pressed("interact") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 	if press and running:
 		get_viewport().set_input_as_handled()
@@ -91,22 +117,29 @@ func _resolve(missed: bool) -> void:
 		Audio.play("sfx/check_good")
 	else:
 		Audio.play("sfx/check_poor")
+	overlay.pulse(CheckOverlay.hit_color(q), 1.0 if q >= 95.0 or q < 50.0 else 0.6)
 	var station := str(args.get("station", ""))
-	Events.station_worked.emit(station, q)
+	if not practice:
+		Events.station_worked.emit(station, q)
 	var sfx := str(DB.station(station).get("sfx", ""))
 	if sfx.begins_with("hammer"):
 		Audio.play("sfx/hammer_%d" % randi_range(1, 3) if sfx == "hammer" else "sfx/hammer_arcane", -3.0)
 	elif sfx != "":
 		Audio.play("sfx/" + sfx, -5.0)
-	await get_tree().create_timer(0.75).timeout
-	if results.size() < count:
+	var last := results.size() >= count
+	await get_tree().create_timer(0.55 if last else 0.75).timeout
+	if not is_inside_tree():
+		return
+	if not last:
 		_next()
-	else:
-		await get_tree().create_timer(0.35).timeout
-		var cb: Callable = args.get("on_done", Callable())
-		queue_free()
-		if cb.is_valid():
-			cb.call(results)
+		return
+	# the closing banner: grade and percentage for a moment, then the flow continues by itself
+	overlay.show_result(results)
+	await overlay.result_closed
+	var cb: Callable = args.get("on_done", Callable())
+	queue_free()
+	if cb.is_valid():
+		cb.call(results)
 
 
 func _draw() -> void:

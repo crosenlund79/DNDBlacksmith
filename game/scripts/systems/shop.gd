@@ -205,6 +205,158 @@ static func raise_dispute(npc: String, it: Dictionary) -> void:
 	Events.customers_changed.emit()
 
 
+# ------------------------------------------------------------------ explicit customer requests
+## What each slot is judged by, and which materials a customer would like it made from.
+const SLOT_STAT := {"weapon": "attack", "ring": "magic", "amulet": "magic"}
+
+
+## "a pair of boots", "an amulet", "a weapon" — for request sentences.
+static func slot_phrase(slot: String) -> String:
+	match slot:
+		"boots", "gloves":
+			return "a pair of " + slot
+		"armor":
+			return "a suit of armour"
+		"amulet":
+			return "an amulet"
+	return "a " + slot
+
+
+static func stat_for_slot(slot: String) -> String:
+	return str(SLOT_STAT.get(slot, "protection"))
+
+
+static func preferred_materials(level: int, slot: String) -> Array:
+	if slot in ["boots", "gloves", "belt"]:
+		return ["leather"]
+	if slot in ["ring", "amulet"]:
+		return ["silver", "gems"]
+	return ["steel", "mithril"] if level >= 5 else ["iron", "steel"]
+
+
+static func customer(npc: String) -> Dictionary:
+	for c in customers():
+		if c["npc"] == npc:
+			return c
+	return {}
+
+
+## Fills in an adventurer customer's explicit wish (slot, stat, minimum, property, materials).
+## Stored on the customer when they set out; old saves get it computed on demand.
+static func _equipment_wish(c: Dictionary, a: Dictionary) -> void:
+	var slot := str(c.get("slot", ""))
+	if slot == "":
+		slot = str(a.get("needs", ""))
+	if slot == "":
+		slot = Adv._weakest_slot(a)
+	c["slot"] = slot
+	var stat := str(c.get("stat", stat_for_slot(slot)))
+	c["stat"] = stat
+	if not c.has("min"):
+		c["min"] = Items.stat(a.get("equipment", {}).get(slot, {}), stat) + 1
+	if not c.has("prop"):
+		c["prop"] = str(a.get("wants_prop", "")) if slot == "weapon" else ""
+	if not c.has("materials"):
+		c["materials"] = preferred_materials(int(a.get("level", 1)), slot)
+
+
+## The customer's request as data for a card: {kind, npc, name, headline, slot, item_def, stat, min,
+## prop, materials, budget, reward, reward_text, deadline, priority, note, summary}. Works for any
+## waiting customer (repair / goods / browse / dispute) and for adventurers you are only talking to.
+static func request(c: Dictionary) -> Dictionary:
+	var npc := str(c.get("npc", ""))
+	var want := str(c.get("want", "browse"))
+	var r := {"kind": want, "npc": npc, "name": Talk.npc_name(npc)}
+	match want:
+		"repair":
+			var it: Dictionary = c.get("item", {})
+			r["item_def"] = str(it.get("def", ""))
+			r["slot"] = Items.slot(it) if not it.is_empty() else ""
+			r["headline"] = "Repair: %s" % it.get("name", "gear")
+			var st: Dictionary = it.get("stats", {})
+			if st.has("durability_max"):
+				r["condition"] = "durability %d / %d" % [int(st.get("durability", 0)), int(st["durability_max"])]
+			if it.get("broken", false):
+				r["condition"] = "broken"
+			r["reward"] = int(c.get("pay", 10))
+			r["reward_text"] = "about %d g, more for fine work" % int(c.get("pay", 10))
+		"goods":
+			var d := str(c.get("looking_for", "potion_healing"))
+			r["item_def"] = d
+			r["headline"] = "Wants: %s" % DB.item(d).get("name", "a draught")
+			r["budget"] = int(c.get("budget", 40))
+			r["reward_text"] = "pays your price, up to %d g" % int(c.get("budget", 40))
+		"dispute":
+			r["headline"] = "Dispute: their %s failed them" % c.get("item_name", "gear")
+			r["reward_text"] = "wants %d g back" % int(c.get("refund", 20))
+		_:
+			var a := Adv.get_a(npc)
+			r["kind"] = "equipment"
+			if a.is_empty():
+				r["headline"] = "Browsing your wares"
+			else:
+				_equipment_wish(c, a)
+				r["slot"] = c["slot"]
+				r["stat"] = c["stat"]
+				r["min"] = int(c["min"])
+				r["prop"] = str(c.get("prop", ""))
+				r["materials"] = c["materials"]
+				r["budget"] = int(a.get("gold", 0))
+				var sl := str(c["slot"])
+				r["headline"] = ("Wants better %s" % ("armour" if sl == "armor" else sl)) if sl in ["boots", "gloves", "armor"] else ("Wants a better %s" % sl)
+				r["reward_text"] = "pays your display price, remembers fine work" if Social.spouse() != npc else "your wife: gear is free"
+	r["summary"] = request_summary(r)
+	return r
+
+
+## A commission as a request card (same look as the counter).
+static func order_request(o: Dictionary) -> Dictionary:
+	var a := Adv.get_a(str(o["npc"]))
+	var tier := int(o.get("tier", 1))
+	var mats: Array = preferred_materials(int(a.get("level", 1)), str(o["slot"]))
+	if tier == 2:
+		mats = ["steel", "mithril"]
+	elif tier == 3:
+		mats = ["mithril", "starsteel"]
+	elif tier >= 4:
+		mats = ["adamantine"]
+	var stat := str(o["stat"])
+	var bonus: Dictionary = o.get("bonus", {})
+	var r := {"kind": "commission", "npc": str(o["npc"]), "name": Talk.npc_name(str(o["npc"])), "slot": str(o["slot"]), "stat": stat,
+		"min": int(o["min"]), "prop": "", "materials": mats, "material_required": tier >= 2, "reward": int(o["reward"]),
+		"deadline": int(o["deadline"]), "priority": str(o.get("priority", "")), "headline": "Commission: %s" % o["slot"],
+		"note": str(o.get("note", "")), "reward_text": "%d g" % int(o["reward"])}
+	if not bonus.is_empty():
+		r["reward_text"] += " + %d g bonus for %s" % [int(bonus.get("gold", 0)), bonus.get("text", "")]
+	r["summary"] = request_summary(r)
+	return r
+
+
+## One line for toasts and lists: "a weapon (attack 7+, frost; iron or steel; budget 120 g)".
+static func request_summary(r: Dictionary) -> String:
+	match str(r.get("kind", "")):
+		"repair":
+			return "a repair of their %s (pays about %d g)" % [str(r.get("headline", "")).trim_prefix("Repair: "), int(r.get("reward", 0))]
+		"goods":
+			return "%s (budget %d g)" % [DB.item(str(r.get("item_def", ""))).get("name", "a draught"), int(r.get("budget", 0))]
+		"dispute":
+			return "to settle a dispute: %s" % r.get("reward_text", "")
+	if not r.has("slot"):
+		return "to look at your wares"
+	var attrs := "%s ≥ %d" % [r["stat"], int(r.get("min", 0))]
+	if str(r.get("prop", "")) != "" and r["prop"] != r["stat"]:
+		attrs += ", " + str(r["prop"])
+	var mats: Array = r.get("materials", [])
+	var out := "%s (%s; %s" % [slot_phrase(str(r["slot"])), attrs, " or ".join(PackedStringArray(mats))]
+	if r.has("budget"):
+		out += "; budget %d g)" % int(r["budget"])
+	elif r.has("reward"):
+		out += "; reward %d g)" % int(r["reward"])
+	else:
+		out += ")"
+	return out
+
+
 ## Customers who have physically arrived and sat down in the waiting area.
 static func waiting() -> Array:
 	return customers().filter(func(c): return c.get("present", true))
@@ -273,11 +425,14 @@ static func _add_customer(npc: String, want: String) -> void:
 		var a := Adv.get_a(npc)
 		c["budget"] = int(a.get("gold", 0))
 		c["looking_for"] = a.get("needs", "")
+		if not a.is_empty():
+			_equipment_wish(c, a)
 	customers().append(c)
 	Events.customers_changed.emit()
 
 
-## Called by the world when the customer's figure reaches its seat. Announces them once.
+## Called by the world when the customer's figure reaches its seat (VillageWorld._on_npc_arrived).
+## This is the ONLY place a waiting customer is announced: setting out (_add_customer) is silent.
 static func mark_arrived(npc: String, notify := true) -> void:
 	for c in customers():
 		if c["npc"] == npc and not c.get("present", false):
@@ -285,7 +440,7 @@ static func mark_arrived(npc: String, notify := true) -> void:
 			c["seated"] = Game.day() * 24 + Game.hour()
 			if notify:
 				Audio.play("sfx/door_bell", -4.0)
-				Events.toast.emit("%s is waiting outside the shop." % DB.character(npc).get("name", npc), "info")
+				Events.toast.emit("%s is waiting at your shop: wants %s." % [Talk.npc_name(npc), request(c)["summary"]], "info")
 			Events.customers_changed.emit()
 
 

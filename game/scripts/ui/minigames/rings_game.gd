@@ -64,7 +64,7 @@ func _tick(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	if confirm_pressed(event):
 		get_viewport().set_input_as_handled()

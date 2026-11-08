@@ -64,7 +64,7 @@ func _tick(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	if confirm_pressed(event):
 		get_viewport().set_input_as_handled()
@@ -74,10 +74,13 @@ func _input(event: InputEvent) -> void:
 			if int(tg[2]) == 0 and absf(angle - float(tg[0])) <= float(tg[1]):
 				tg[2] = 1
 				Audio.play("sfx/check_great", -6.0, 1.0 + 0.08 * hits())
-				Events.station_worked.emit(str(args.get("station", "")), 100.0)
+				cue(true)
+				if not practice:
+					Events.station_worked.emit(str(args.get("station", "")), 100.0)
 				return
 		misses.append(angle)
-		Audio.play("sfx/check_poor", -8.0)
+		Audio.play("sfx/check_poor", -6.0)
+		cue(false)
 
 
 func _resolve() -> void:

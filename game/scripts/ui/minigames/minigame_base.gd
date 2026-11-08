@@ -27,6 +27,10 @@ var feedback_t := 0.0
 var flash := 0.0
 var finished := false
 var t := 0.0
+var overlay: CheckOverlay
+var suspended := false        # a how-to card or a practice run is open on top
+var started := false
+var practice := false         # a tutorial-difficulty practice run: no consequences
 
 
 func _init(a: Dictionary, c := {}) -> void:
@@ -38,11 +42,32 @@ func _init(a: Dictionary, c := {}) -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
+	practice = bool(a.get("practice", false))
 
 
 func _ready() -> void:
 	Game.block_time(true)
-	_start_round()
+	overlay = CheckOverlay.new(self, args)
+	add_child(overlay)
+	if Minigames.should_auto_tutorial(args):
+		overlay.open_tutorial(true)
+	else:
+		begin()
+
+
+## Starts the first round (once); called directly or when the how-to card is closed.
+func begin() -> void:
+	if not started:
+		started = true
+		_start_round()
+
+
+func set_suspended(on: bool) -> void:
+	suspended = on
+
+
+func can_help() -> bool:
+	return started and not finished
 
 
 func _exit_tree() -> void:
@@ -63,7 +88,7 @@ func _process(delta: float) -> void:
 	if feedback_t > 0.0:
 		feedback_t -= delta
 	flash = maxf(0.0, flash - delta * 2.5)
-	if not finished:
+	if not finished and not suspended and started:
 		_tick(minf(delta, 0.05))
 	queue_redraw()
 
@@ -73,7 +98,16 @@ func _tick(_delta: float) -> void:
 
 
 func confirm_pressed(event: InputEvent) -> bool:
+	if suspended or not started or (overlay != null and overlay.eats(event)):
+		return false
 	return event.is_action_pressed("interact") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+
+
+## Short visual + audio cue for a single hit or miss inside a round (multi-hit sections, etc.).
+func cue(good: bool) -> void:
+	if overlay:
+		overlay.pulse(Color("#f0d060") if good else Color("#e0402a"), 0.6)
+	flash = maxf(flash, 0.5 if good else 0.0)
 
 
 ## Continuous precision → craftsmanship: error relative to tolerance, same curve as the ring.
@@ -107,24 +141,32 @@ func finish_round(q: float, label := "") -> void:
 		Audio.play("sfx/check_good")
 	else:
 		Audio.play("sfx/check_poor")
+	if overlay:
+		overlay.pulse(CheckOverlay.hit_color(q), 1.0 if q >= 95.0 or q < 50.0 else 0.6)
 	var station := str(args.get("station", ""))
-	Events.station_worked.emit(station, q)
+	if not practice:
+		Events.station_worked.emit(station, q)
 	var sfx := str(DB.station(station).get("sfx", ""))
-	if sfx != "":
-		Audio.play("sfx/" + ("hammer_1" if sfx == "hammer" else sfx), -6.0)
+	if sfx.begins_with("hammer"):
+		Audio.play("sfx/hammer_%d" % randi_range(1, 3) if sfx == "hammer" else "sfx/hammer_arcane", -6.0)
+	elif sfx != "":
+		Audio.play("sfx/" + sfx, -6.0)
 	finished = true
-	await get_tree().create_timer(0.8).timeout
+	var last := results.size() >= count
+	await get_tree().create_timer(0.55 if last else 0.8).timeout
 	if not is_inside_tree():
 		return
-	if results.size() < count:
+	if not last:
 		finished = false
 		_start_round()
-	else:
-		await get_tree().create_timer(0.3).timeout
-		var cb: Callable = args.get("on_done", Callable())
-		queue_free()
-		if cb.is_valid():
-			cb.call(results)
+		return
+	# the closing banner: grade and percentage for a moment, then the flow continues by itself
+	overlay.show_result(results)
+	await overlay.result_closed
+	var cb: Callable = args.get("on_done", Callable())
+	queue_free()
+	if cb.is_valid():
+		cb.call(results)
 
 
 # ------------------------------------------------------------------ shared drawing

@@ -46,22 +46,26 @@ func _customers() -> void:
 	if people.is_empty():
 		body.add_child(UIKit.label("Nobody is waiting outside. Customers come during opening hours (9:00–18:00) and take a seat by the door; adventurers in town often drop by.", 22, "body_italic"))
 		return
+	body.add_child(UIKit.label("Waiting at the shop (%d of %d seats)" % [Shop.waiting().size(), Shop.SEATS], 26, "heading"))
 	for npc in people:
 		var row := UIKit.hbox(16)
 		row.add_child(UIKit.portrait("portraits/" + npc, 112))
-		var v := UIKit.vbox(6)
+		var v := UIKit.vbox(8)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var a := Adv.get_a(npc)
-		var cu := {}
-		for c in Shop.customers():
-			if c["npc"] == npc:
-				cu = c
+		var cu := Shop.customer(npc)
+		var waiting: bool = not cu.is_empty() and cu.get("present", true)
+		# the explicit request card: what they want, attributes, materials, budget and reward
+		var req := Shop.request(cu if not cu.is_empty() else {"npc": npc, "want": "browse"})
+		var who := UIKit.rich("[b]%s[/b]%s" % [Talk.npc_name(npc), (" · %s %s, level %d · %d gold" % [Adv.rating_text(a), a["cls"], a["level"], a["gold"]]) if not a.is_empty() else ""], 21)
+		v.add_child(who)
+		v.add_child(CustomerCard.build(req))
+		var actions := HFlowContainer.new()
+		actions.add_theme_constant_override("h_separation", 8)
+		actions.add_theme_constant_override("v_separation", 6)
 		if cu.get("want", "") == "repair":
-			v.add_child(UIKit.rich("[b]%s[/b] wants their [b]%s[/b] repaired (pays about %d g)." % [Talk.npc_name(npc), cu["item"]["name"], cu["pay"]], 22))
-			v.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
+			actions.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
 		elif cu.get("want", "") == "goods":
-			v.add_child(UIKit.rich("[b]%s[/b] wants a [b]%s[/b] (can spend about %d g)." % [Talk.npc_name(npc), DB.item(cu["looking_for"]).get("name", "draught"), int(cu["budget"])], 22))
-			var gh := UIKit.hbox(8)
 			var anyg := false
 			for it in Game.inventory():
 				if DB.item(it["def"]).get("type", "") == "potion" and it["def"] != "ale_mug":
@@ -69,35 +73,41 @@ func _customers() -> void:
 						var err2 := Shop.sell_goods(npc, int(it["uid"]))
 						Events.toast.emit(err2 if err2 != "" else "%s pays and leaves happy." % Talk.npc_name(npc), "bad" if err2 != "" else "good")
 						_build(), 0)
-					gh.add_child(b2)
+					actions.add_child(b2)
 					anyg = true
 			if not anyg:
-				gh.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
-			v.add_child(gh)
+				actions.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
 		elif cu.get("want", "") == "dispute":
-			v.add_child(UIKit.rich("[b]%s[/b] is disputing your %s — talk to them outside to settle it." % [Talk.npc_name(npc), cu.get("item_name", "work")], 22))
+			actions.add_child(UIKit.label("Talk to them outside to settle it.", 20, "body_italic"))
 		elif not a.is_empty():
 			var married: bool = Social.spouse() == npc
-			v.add_child(UIKit.rich("[b]%s[/b], %s %s (level %d) · %d gold%s\nNeeds: [i]%s[/i]" % [a["name"], Adv.rating_text(a), a["cls"], a["level"], a["gold"],
-				" · [color=#7e2418]your wife — gear is free[/color]" if married else "", a.get("needs", "") if a.get("needs", "") != "" else "nothing urgent"], 22))
-			var offers := UIKit.hbox(8)
 			var any := false
 			for it in Game.inventory():
 				if not Items.is_equipment(it) or (not it.get("for_sale", false) and not married):
 					continue
 				var why := Adv.purchase_check(a, it, Shop.price_of(it))
-				var b := UIKit.button("%s — %s" % [Items.display_name(it), "free" if married else "%d g" % Shop.price_of(it)], func():
+				var fits: bool = Items.slot(it) == str(req.get("slot", "")) and Items.stat(it, str(req.get("stat", ""))) >= int(req.get("min", 0))
+				var b := UIKit.button("%s%s — %s" % ["✓ " if fits and why == "" else "", Items.display_name(it), "free" if married else "%d g" % Shop.price_of(it)], func():
 					var err := Shop.sell_to(npc, int(it["uid"]))
 					Events.toast.emit(err if err != "" else "%s takes %s." % [a["name"], ("the " + str(it["name"])) if not str(it["name"]).contains(",") else str(it["name"])], "bad" if err != "" else "good")
 					_build(), 0)
 				b.disabled = why != ""
-				b.tooltip_text = why
+				b.tooltip_text = why if why != "" else ("Matches the request." if fits else "")
 				b.add_theme_color_override("font_color", Items.color(it, false))
-				offers.add_child(b)
+				actions.add_child(b)
 				any = true
 			if not any:
-				offers.add_child(UIKit.label("Nothing on display suits them. Put equipment on display from your stores [I].", 20, "body_italic"))
-			v.add_child(offers)
+				actions.add_child(UIKit.label("Nothing on display suits them. Put equipment on display from your stores [I].", 20, "body_italic"))
+		if waiting and cu.get("want", "") != "dispute":
+			var dis := UIKit.button("Ask them to come back another time", func():
+				Shop.dismiss_customer(npc)
+				Events.toast.emit("%s gets up from the bench and heads off." % Talk.npc_name(npc), "info")
+				if npc_focus == npc:
+					npc_focus = ""
+				_build(), 0)
+			dis.tooltip_text = "Frees their seat; they don't mind much."
+			actions.add_child(dis)
+		v.add_child(actions)
 		row.add_child(v)
 		body.add_child(row)
 		body.add_child(UIKit.divider())
