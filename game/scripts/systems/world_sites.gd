@@ -421,7 +421,8 @@ static func on_boss_down(e: Dictionary, n: Dictionary, rec: Dictionary, killer: 
 		var lo: Array = info(rid).get("successor_days", [30, 45])
 		b["next_at"] = randi_range(int(lo[0]), int(lo[1])) * (1 if unique else 2)   # world days until a successor
 		s["threat"] = 0.0
-		s["resources"][str(n["id"])] = 0.0   # the hoard goes home with the victors
+		if n.has("id"):
+			s["resources"][str(n["id"])] = 0.0   # the hoard goes home with the victors
 	var who := str(a.get("name", "")) if not a.is_empty() else _names(_party_ids(rec))
 	var text := ""
 	if not a.is_empty():
@@ -447,7 +448,7 @@ static func on_boss_down(e: Dictionary, n: Dictionary, rec: Dictionary, killer: 
 		items.push_front(w)
 	var ev := Lore.record("slew", text, {"actors": actors, "items": items, "place": rid, "importance": 3 if unique else 2,
 		"data": {"enemy": str(rec["enemies"][0].get("id", "")) if not (rec["enemies"] as Array).is_empty() else "",
-			"killer": str(a.get("id", "")), "weapon_uid": int(w.get("uid", -1)) if not w.is_empty() else -1, "unique": unique, "exp": e["id"], "node": n["id"]}})
+			"killer": str(a.get("id", "")), "weapon_uid": int(w.get("uid", -1)) if not w.is_empty() else -1, "unique": unique, "exp": e["id"], "node": str(n.get("id", ""))}})
 	rec["lore_event"] = ev
 	# the news feed keeps its "victory" kind (boards read it); the entry points at the one event
 	var refs := {"party": e["party"], "exp": e["id"], "dest": rid, "place": rid, "event": ev}

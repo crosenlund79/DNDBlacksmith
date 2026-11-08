@@ -29,7 +29,7 @@ func test_identity_through_life() -> void:
 		return
 	var uid := int(it["uid"])
 	check(Provenance.is_mine(it) and str(Provenance.maker(it).get("mark", "")) == "ironhand", "the Ironhand mark is struck at forging")
-	check(Provenance.owner_id(it) == "smith", "the smith owns it first")
+	check(Provenance.owner_id(it) == "smith" and str(Provenance.owners(it)[0].get("how", "")) == "forged", "the smith owns it first — the chain begins at the anvil")
 	check(Lore.of_item(uid).size() >= 1 and str(Lore.of_item(uid)[0]["kind"]) == "forged", "its story begins with the forging")
 	# sold to an adventurer
 	var a: Dictionary = Adv.all().values()[0]

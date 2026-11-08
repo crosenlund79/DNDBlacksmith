@@ -1221,15 +1221,8 @@ static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
 	var w := Game.find_uid_anywhere(int(killer.get("weapon_uid", -1)))
 	if a.is_empty() or w.is_empty():
 		return
-	# exceptional work earns a name of its own
-	if not w.has("title") and str(w.get("crafted_by", "")).begins_with("Brannoc"):
-		var bane: String = BANE.get("spider" if boss_name.contains("Brood") else foe_kind, "Banebringer")
-		w["title"] = "The " + bane
-		w["base_name"] = w.get("name", "")
-		w["name"] = "The %s" % bane
-		Items.add_history(w, "Named “The %s” after the deed." % bane)
-		Chronicle.add("legend", "The blade %s forged — now called The %s — felled %s." % ["Brannoc", bane, boss_name], {"adv": a["id"], "item": str(w["uid"])}, true)
-		Events.toast.emit("Your work has a name now: The %s (%s's blade)." % [bane, a["name"]], "legendary")
+	# exceptional work earns a name of its own (ItemStory: authored, deterministic, recorded once, never re-rolled)
+	ItemStory.on_boss_kill(w, str(a["id"]), boss_name, foe_kind, str(region(e["dest"])["name"]), str(e["dest"]))
 	Recognition.on_boss_down(str(a["id"]), w, boss_name, str(region(e["dest"])["name"]))   # Hall of Fame + Epic
 	# an unexpected hero: a green adventurer, the smith's gear, a mighty foe
 	if int(a["level"]) <= 3 and str(w.get("crafted_by", "")).begins_with("Brannoc") and not a.get("unexpected_hero", false):

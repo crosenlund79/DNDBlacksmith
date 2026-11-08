@@ -31,6 +31,7 @@ static func on_day(day: int) -> void:
 	Shop.expire_offers()
 	Trade.on_day()
 	Commerce.on_day()
+	ItemStory.on_day()   # earned names, fame commissions, the circulating pool
 	if day % 7 == 1:
 		Hire.refresh_applicants()
 	_social_events()

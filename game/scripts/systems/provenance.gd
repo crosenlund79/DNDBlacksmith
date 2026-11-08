@@ -100,6 +100,10 @@ static func forged(it: Dictionary) -> void:
 	if not applies(it):
 		return
 	set_maker(it, SMITH_ID, SMITH_NAME, SMITH_MARK, SMITH_PLACE)
+	# a fresh piece: the lazy migration may have opened a placeholder "held" entry — the chain begins at the anvil
+	var ow: Array = st(it)["owners"]
+	if ow.size() == 1 and str(ow[0].get("id", "")) == SMITH_ID and str(ow[0].get("how", "")) == "held":
+		ow.clear()
 	_open_owner(it, SMITH_ID, "forged")
 	var q := float(it.get("quality", 0.0))
 	var rich := q >= 105.0 or str(it.get("rarity", "")) in ["rare", "legendary"]

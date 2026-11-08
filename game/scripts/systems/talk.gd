@@ -42,6 +42,11 @@ static func greeting(npc: String) -> String:
 						t += "\n[i]They are looking for a better %s.[/i]" % cu["looking_for"]
 	if Shop.refuses(npc) and not married:
 		t += "\n[i]They make it plain they would rather not deal with you.[/i]"
+	# village talk about the smith's named pieces (ItemStory) — now and then, at most once a day per person
+	if ItemStory.has_rumours() and int(ItemStory.st()["rumours_told"].get(npc, -1)) != Game.day() and npc not in Commerce.NPCS and randf() < 0.35:
+		var ru := ItemStory.rumour_line(npc)
+		if ru != "":
+			t += "\n" + ru
 	return t
 
 
@@ -101,6 +106,7 @@ static func options(npc: String, area: String) -> Array:
 	if not a.is_empty() or kind in ["villager", "companion"]:
 		out.append({"id": "gift", "label": "Give a small gift (a healing draught)"})
 	out.append_array(Commerce.talk_options(npc))
+	out.append_array(ItemStory.talk_options(npc))   # "Ask about Wolfbane — its travels"
 	out.append({"id": "bye", "label": "Farewell"})
 	return out
 
@@ -113,6 +119,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 	var cr := Commerce.talk_choose(npc, opt)
 	if not cr.is_empty():
 		return cr
+	var ir := ItemStory.talk_choose(npc, opt)
+	if not ir.is_empty():
+		return ir
 	var e := Social.ensure(npc)
 	var c := DB.character(npc)
 	var a := Adv.get_a(npc)
@@ -197,7 +206,8 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": "Hilde sets down mutton stew, black bread and a heel of cheese. \"Eat. You look like a horseshoe somebody forgot in the rain.\"\n[i]You feel a little steadier.[/i]", "fade": "A slow meal by the fire…", "minutes": 30}
 		"tabletalk":
 			Social.change(npc, 1.0, 2.0)
-			return {"text": InnLife.table_talk()}
+			var ru2 := ItemStory.rumour_line(npc)
+			return {"text": InnLife.table_talk() + (("\n\n" + ru2) if ru2 != "" else "")}
 		"dice":
 			return {"text": InnLife.knucklebones(npc)}
 		"court":

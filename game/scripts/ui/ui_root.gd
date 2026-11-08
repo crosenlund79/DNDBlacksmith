@@ -438,7 +438,15 @@ func _route(id: String, args: Dictionary) -> void:
 		"help":
 			open(HelpPanel.new(args))
 		"history":
-			open(HistoryPanel.new(str(args.get("kind", "")), str(args.get("id", ""))))
+			if str(args.get("kind", "")) == "item" and Items.is_equipment(ItemStory.find(int(str(args.get("id", "-1"))))):
+				_overlay(ItemPanel.new(int(str(args.get("id", "-1")))), true)
+			else:
+				open(HistoryPanel.new(str(args.get("kind", "")), str(args.get("id", ""))))
+		"item":
+			# the item inspection opens over whatever panel asked for it (shop, sheet, stores) and returns to it
+			_overlay(ItemPanel.new(int(args.get("uid", -1)), str(args.get("tab", "Overview"))), true)
+		"familiar":
+			_overlay(FamiliarCard.new(args), false)
 		"map":
 			open(MapPanel.new())
 		"world_map":
@@ -463,6 +471,18 @@ func _route(id: String, args: Dictionary) -> void:
 			open(DossierPanel.new(str(args["id"])))
 		"observe":
 			open(ObserverPanel.new(str(args["id"])))
+
+
+## Opens a window over the current panel without closing it (ItemPanel, FamiliarCard). hide_under: the panel below
+## is hidden while the overlay is open and shown again when it closes.
+func _overlay(p: Control, hide_under: bool) -> void:
+	var under := current
+	if hide_under and is_instance_valid(under):
+		under.visible = false
+	p.tree_exited.connect(func():
+		if is_instance_valid(under) and not under.is_queued_for_deletion():
+			under.visible = true)
+	panel_host.add_child(p)
 
 
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.

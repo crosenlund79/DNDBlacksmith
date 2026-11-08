@@ -270,7 +270,9 @@ static func tooltip(it: Dictionary) -> String:
 	lines.append("[font_size=26][color=#%s]%s[/color][/font_size]" % [c, display_name(it)])
 	if it.has("epic"):
 		lines.append(Recognition.epic_line(it))
-	if it.has("title"):
+	if it.has("named"):
+		lines.append("[i][color=#%s]“%s” — %s, named on day %d: %s[/color][/i]" % [c, it["named"].get("name", ""), def(it).get("name", ""), int(it["named"].get("day", 0)), it["named"].get("why", "")])
+	elif it.has("title"):
 		lines.append("[i][color=#%s]%s, once called %s[/color][/i]" % [c, def(it).get("name", ""), it.get("base_name", "")])
 	if it.get("broken", false):
 		lines.append("[color=#ff9a80]Broken — every stat at half strength; needs the grinding wheel and anvil[/color]")
@@ -318,7 +320,11 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append("[color=#c09070][i]Unidentified — study it to learn what it is.[/i][/color]")
 	if it.get("trade", false):
 		lines.append("[color=#a89a80][i]Set aside for the next trade run.[/i][/color]")
-	if it.get("crafted_by", "") != "":
+	if is_equipment(it) and (it.has("prov") or str(it.get("crafted_by", "")) != ""):
+		var mk := Provenance.maker(it)
+		lines.append("[color=#a89a80][i]Made by %s — %s%s[/i][/color]" % [mk.get("name", it.get("crafted_by", "")), Provenance.mark(it).get("name", ""),
+			(", day %d" % int(mk.get("day", 0))) if int(mk.get("day", 0)) > 0 else ""])
+	elif it.get("crafted_by", "") != "":
 		lines.append("[color=#a89a80][i]Made by %s[/i][/color]" % it["crafted_by"])
 	for hst in it.get("history", []).slice(maxi(0, it.get("history", []).size() - 4)):
 		lines.append("[color=#c8b898][i]Day %d — %s[/i][/color]" % [int(hst["day"]), hst["text"]])
@@ -326,4 +332,6 @@ static func tooltip(it: Dictionary) -> String:
 	if desc != "":
 		lines.append("[i][color=#c8b898]%s[/color][/i]" % desc)
 	lines.append("[color=#dab470]Value %d g[/color]" % value(it))
+	if is_equipment(it) and int(it.get("uid", -1)) > 0:
+		lines.append("[color=#8a7a60][font_size=15]Right-click to inspect its story[/font_size][/color]")
 	return "\n".join(lines)

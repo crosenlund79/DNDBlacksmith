@@ -41,6 +41,7 @@ func _ready() -> void:
 		var card := CustomerCard.build(Shop.request(cu))
 		v.add_child(card)
 		v.move_child(card, text.get_index() + 1)
+		(func(): ItemStory.at_counter(npc)).call_deferred()   # a piece from your own forge on the counter: "A Familiar Creation"
 	_options()
 
 

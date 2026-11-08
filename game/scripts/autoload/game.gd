@@ -201,6 +201,7 @@ func add_item(item: Dictionary, notify := true) -> void:
 		return
 	SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material"
 	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov"):
+		ItemStory.on_returned(item, str(item.get("_arrives_how", "received")))   # "A Familiar Creation"
 		Provenance.transfer(item, "smith", str(item.get("_arrives_how", "received")), "brindlewick")
 	item.erase("_arrives_how")
 	var inv := inventory()

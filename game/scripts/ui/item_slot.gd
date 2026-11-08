@@ -9,6 +9,7 @@ var item: Dictionary = {}
 var selected := false
 var hidden_item := false   # used by the loot reveal ("?")
 var size_px := 72.0
+var inspectable := true    # right-click opens the item's story (ItemPanel); off inside the panel itself
 
 
 func _init(it := {}, px := 72.0) -> void:
@@ -31,6 +32,11 @@ func _on_hover() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		clicked.emit(item)
+		accept_event()
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT and inspectable \
+			and not item.is_empty() and not hidden_item and Items.is_equipment(item) and int(item.get("uid", -1)) > 0:
+		UIRoot.hide_tooltip()
+		Events.open_panel.emit("item", {"uid": int(item["uid"])})
 		accept_event()
 
 
@@ -73,6 +79,10 @@ func _draw() -> void:
 		var f2 := Assets.font("body_bold")
 		draw_string_outline(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color("#efe4cc"))
 		draw_string(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#20140c"))
+	if size_px >= 48.0 and int(item.get("qty", 1)) <= 1 and Provenance.is_mine(item):
+		# the smith's own work: the Ironhand mark, struck small in the corner
+		var ms := clampf(size_px * 0.3, 18.0, 30.0)
+		draw_texture_rect(Assets.get_tex("marks/ironhand", Vector2i(32, 32)), Rect2(3, size_px - ms - 3, ms, ms), false, Color(1, 1, 1, 0.92))
 	if item.get("for_sale", false):
 		draw_texture_rect(Assets.get_tex("icons/gold", Vector2i(32, 32)), Rect2(2, 2, 20, 20), false)
 
