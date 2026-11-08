@@ -31,7 +31,7 @@ func _ready() -> void:
 		if not only.is_empty() and not only.has(cname):
 			continue
 		var script: Script = load(path)
-		if script == null:
+		if script == null or not script.can_instantiate():
 			_result("FAIL", cname, "load", ["the case script does not compile"])
 			continue
 		var smoke: Array = script.get_script_constant_map().get("SMOKE", [])
