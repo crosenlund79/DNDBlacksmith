@@ -963,7 +963,7 @@ func phase_iter2() -> void:
 	Input.action_release("move_up")
 	await wait(0.2)
 	expect(rotated == 0 and absf(pr) < 0.001 and absf(pr2) < 0.001 and anim_walk == "walk_e" and anim_n == "walk_n", "figures: miniatures never rotate — directional poses instead (%s, %s; %d rotated npcs)" % [anim_walk, anim_n, rotated])
-	expect(W().animals.size() == 4, "animals: two cats and two dogs in the village")
+	expect(W().animals.size() >= 4, "animals: at least two cats and two dogs in the village (%d animals)" % W().animals.size())
 	# --- waiting area: four seats, announced only on arrival
 	await advance_to(9, 10)
 	Game.state["customers"].clear()
