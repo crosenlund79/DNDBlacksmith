@@ -1538,6 +1538,7 @@ func phase_village9() -> void:
 		expect(W().spot_ids.has(sp), "village9: spot %s on the nav graph" % sp)
 	for k in [["harbour", "harbour"], ["herbalist", "herbalist"], ["ironfront", "table"]]:
 		expect(not find_entry(k[0], k[1]).is_empty(), "village9: interactable %s/%s" % k)
+	note("village9: %d y-sorted nodes, %d lights, %.1f fps" % [W().ysort.get_child_count(), W().night_lights.size(), Engine.get_frames_per_second()])
 	# doorsteps join the street without cutting through another building
 	var crossings := []
 	for b in DB.layout["buildings"]:
