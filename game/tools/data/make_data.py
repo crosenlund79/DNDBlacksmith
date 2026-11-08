@@ -187,7 +187,17 @@ W("destinations.json", [
  {"id": "barrow_fields", "name": "Barrow Fields", "exit": "south", "kind": "relics", "days": [2, 3], "danger": 4, "skill": "relic_hunting", "loot": "barrow", "desc": "Burial mounds full of grave-goods, sealed relics — and the things that guard them.",
   "threats": [T("barrow wights", "undead", 26, 10, "fire", "frost"), T("a grave guardian", "construct", 30, 12, "frost"), T("restless dead", "undead", 22, 9, "fire")]},
  {"id": "deep_ironroot", "name": "Deep Ironroot", "exit": "north", "kind": "mining", "days": [3, 4], "danger": 6, "skill": "mining", "loot": "deep_mine", "desc": "Below the old workings. Mithril, adamantine, starstone — and whatever drove the dwarves out.", "requires_flag": "delve_map",
-  "threats": [T("a stone golem", "construct", 40, 16, "frost", "fire"), T("shadow crawlers", "spirit", 34, 12, "fire", "physical"), T("a dwarf-king's revenant", "undead", 44, 16, "fire", "frost")]}
+  "threats": [T("a stone golem", "construct", 40, 16, "frost", "fire"), T("shadow crawlers", "spirit", 34, 12, "fire", "physical"), T("a dwarf-king's revenant", "undead", 44, 16, "fire", "frost")]},
+ # world worker (iteration 011): sites adventurers discover (requires_flag is set when the site is discovered)
+ {"id": "ravens_hold", "name": "Raven's Hold", "exit": "east", "kind": "trade", "days": [2, 3], "danger": 4, "skill": "travelling", "loot": "trade", "requires_flag": "site_ravens_hold",
+  "desc": "A bandit hillfort on the crags north of the Highmarsh road. Plunder, hounds and crossbows.",
+  "threats": [T("hold crossbowmen", "bandit", 20, 8), T("war-hounds", "beast", 16, 7, "fire"), T("Black Maud's guard", "bandit", 26, 10)]},
+ {"id": "sunken_temple", "name": "The Sunken Temple", "exit": "west", "kind": "relics", "days": [2, 3], "danger": 4, "skill": "relic_hunting", "loot": "barrow", "requires_flag": "site_sunken_temple",
+  "desc": "A drowned temple in the south-western marsh. Relics under the water — and the drowned who keep them.",
+  "threats": [T("drowned acolytes", "undead", 22, 8, "fire", "frost"), T("a temple serpent", "beast", 26, 10, "frost"), T("the Oracle's voice", "spirit", 30, 10, "magic")]},
+ {"id": "drakes_crag", "name": "Drake's Crag", "exit": "north", "kind": "mining", "days": [3, 4], "danger": 6, "skill": "mining", "loot": "mine", "requires_flag": "site_drakes_crag",
+  "desc": "A smoking crag in the north-western mountains: obsidian, ore cracked by drake-fire, and a drake.",
+  "threats": [T("crag harpies", "beast", 20, 8, "fire"), T("ashen drakelings", "beast", 30, 12, "frost", "fire"), T("drake-fire", "hazard", 36, 16)]}
 ])
 W("suppliers.json", {
  "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",

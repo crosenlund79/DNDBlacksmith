@@ -11,12 +11,15 @@ class_name Lore
 
 const CAP := 4000            # routine events beyond this are pruned (oldest, unimportant, unreferenced first)
 const ICONS := {
-	"forged": "icons/hammer", "sold": "icons/coin", "bought": "icons/coin", "given": "icons/coin", "found": "icons/chest",
-	"looted": "icons/chest", "inherited": "icons/candle", "recovered": "icons/candle", "repaired": "icons/hammer",
-	"reforged": "icons/hammer", "enchanted": "icons/rune", "treated": "icons/potion", "battle": "icons/sword",
-	"slew": "icons/sword", "survived": "icons/shield", "discovery": "icons/map", "named": "icons/star", "epic": "icons/star",
-	"lost": "icons/skull", "destroyed": "icons/skull", "death": "icons/skull", "returned": "icons/home", "pawned": "icons/coin",
-	"commission": "icons/scroll", "cleared": "icons/map", "reunion": "icons/home",
+	# existing sprites only (no new art): the history view shows these beside each entry
+	"forged": "ui/act_hammer", "sold": "icons/purse_gift", "bought": "icons/purse_gift", "given": "icons/purse_gift",
+	"found": "icons/chest_recovered", "looted": "icons/bag_traveller", "inherited": "ui/act_candle", "recovered": "icons/chest_recovered",
+	"repaired": "ui/act_hammer", "reforged": "ui/act_hammer", "sharpened": "ui/act_hammer", "enchanted": "icons/runestone_ember",
+	"treated": "icons/potion_healing", "battle": "ui/stat_damage", "slew": "icons/sword_iron", "survived": "ui/stat_defence",
+	"discovery": "icons/relic_map", "named": "icons/star", "epic": "icons/star", "deed": "icons/star", "awakened": "ui/ic_talk",
+	"lost": "ui/warn_broken", "destroyed": "ui/warn_broken", "death": "ui/act_candle", "returned": "ui/ic_home", "pawned": "icons/purse_gift",
+	"redeemed": "icons/purse_gift", "commission": "icons/recipe_scroll", "cleared": "icons/relic_map", "reunion": "ui/ic_home",
+	"note": "ui/ic_history", "threat": "ui/warn_worn", "arrival": "ui/act_road",
 }
 
 
@@ -40,7 +43,7 @@ static func record(kind: String, text: String, opts := {}) -> String:
 			uids.append(u)
 	var e := {"id": id, "t": Game.now(), "day": Game.day(), "time": Game.time_string(), "kind": kind, "text": text,
 		"actors": (opts.get("actors", []) as Array).duplicate(), "items": uids, "place": str(opts.get("place", "")),
-		"importance": int(opts.get("importance", 1)), "icon": str(opts.get("icon", ICONS.get(kind, "icons/scroll"))),
+		"importance": int(opts.get("importance", 1)), "icon": str(opts.get("icon", ICONS.get(kind, "ui/ic_history"))),
 		"data": (opts.get("data", {}) as Dictionary).duplicate(true)}
 	s["events"][id] = e
 	(s["order"] as Array).append(id)
@@ -157,4 +160,11 @@ static func _all_items() -> Array:
 			out.append(h["equipment"][s2])
 	for o in Game.state.get("offers", []):
 		out.append(o.get("item", {}))
+	# gear lying where its owner fell, waiting to be found (world sites)
+	for sid in Game.state.get("world_sites", {}):
+		for l in Game.state["world_sites"][sid].get("lost", []):
+			out.append(l.get("item", {}))
+	for c in Game.state.get("returns", []):
+		for it3 in c.get("contents", []):
+			out.append(it3)
 	return out.filter(func(x): return x is Dictionary and not (x as Dictionary).is_empty())

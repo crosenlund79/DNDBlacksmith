@@ -3259,3 +3259,91 @@ func phase_spirit11() -> void:
 	expect(said == "", "spirit11: muted, the piece says nothing")
 	Settings.set_value(ItemSpirit.VOICE_KEY, voices_before)
 	Settings.set_value(ItemSpirit.FREQ_KEY, freq_before)
+
+# ======================================================================= iteration 011: the world map
+## The world remembers (world worker): the parchment world map with discovered sites, fog over unknown ones,
+## a cleared site, lost gear at a site, parties on the road and at a site, and a site's page with its history.
+func phase_world11() -> void:
+	await click("New Game")
+	await wait(2.5)
+	# a few places become known: one by rumour, one found by explorers
+	WorldSites.reveal("ravens_hold", "rumour")
+	var advs: Array = Adv.all().values()
+	for a in advs:
+		Expeditions.ensure(a)
+	var heroes: Array = advs.slice(0, 4)
+	WorldSites.reveal("sunken_temple", "explored", [heroes[0]["id"], heroes[1]["id"]])
+	# a strong party clears the Whisperwood: the Alpha falls for good
+	for a in heroes:
+		a["level"] = 14
+		a["hp_max"] = Expeditions.hp_max(a)
+		a["status"] = "in_town"
+	var ids: Array = heroes.map(func(a): return str(a["id"]))
+	var e := Expeditions.start({"id": "p_w11", "members": ids, "leader": ids[0], "dest": "whisperwood", "goal": "explore"})
+	var hollow := Expeditions.node_of("whisperwood", "hollow")
+	for i in 10:
+		if not WorldSites.boss_alive("whisperwood"):
+			break
+		for a in heroes:
+			a["status"] = "away"
+			a["hp"] = a["hp_max"]
+		Expeditions.fight(e, hollow)
+	expect(not WorldSites.boss_alive("whisperwood"), "world11: the Whisperwood Alpha is slain")
+	Expeditions.active().erase(e["id"])
+	for a in heroes:
+		a["status"] = "in_town"
+		a.erase("exp")
+	# a fallen adventurer's gear lies at the barrows
+	var fallen: Dictionary = advs[5]
+	fallen["status"] = "missing"
+	Expeditions._reveal_fate(fallen, {"dest": "barrow_fields", "node": "ossuary", "since": Game.day(), "alive": false, "exp": "exp_w11", "searched": false}, "")
+	expect(not WorldSites.lost("barrow_fields").is_empty(), "world11: lost gear lies at the Barrow Fields")
+	# two parties out: one on the road to Raven's Hold, one at work on the Highmarsh road
+	var p1 := Expeditions.start({"id": "p_w11a", "members": [ids[0], ids[1]], "leader": ids[0], "dest": "ravens_hold", "goal": "explore"})
+	var p2 := Expeditions.start({"id": "p_w11b", "members": [ids[2], ids[3]], "leader": ids[2], "dest": "highmarsh_road", "goal": "explore"})
+	p1["leg"]["t1"] = Game.now() + 120
+	p1["leg"]["t0"] = Game.now() - 120
+	Expeditions.step(p2)
+	# the map, by its key
+	await press("panel_world_map")
+	await wait(1.0)
+	expect(panel() is WorldMapPanel, "world11: G opens the world map")
+	var vs := get_viewport().get_visible_rect().size
+	if panel():
+		var r := panel().get_global_rect()
+		expect(r.position.y >= -1 and r.end.y <= vs.y + 1 and r.position.x >= -1 and r.end.x <= vs.x + 1, "world11: the map fits the screen %s" % r)
+	await shot("w11_world_map")
+	var wp := panel() as WorldMapPanel
+	if wp == null:
+		return
+	# a cleared site's page
+	wp.select("whisperwood")
+	await wait(0.6)
+	await shot("w11_site_cleared")
+	expect(WorldSites.status_word("whisperwood") == "cleared", "world11: Whisperwood shows as cleared")
+	# the barrows: lost equipment known to lie there
+	wp.select("barrow_fields")
+	await wait(0.6)
+	await shot("w11_site_lost_gear")
+	# a party at a site, with a link to its observer
+	wp.select("highmarsh_road")
+	await wait(0.6)
+	await shot("w11_site_party")
+	expect(await click("Observe", wp), "world11: the site links to the active expedition's observer")
+	await wait(1.0)
+	expect(panel() is ObserverPanel, "world11: the observer opens from the site")
+	await shot("w11_observer")
+	await close_panel()
+	# a new region's map in the observer: the party bound for Raven's Hold
+	Events.open_panel.emit("observe", {"id": str(p1["id"])})
+	await wait(1.0)
+	await shot("w11_observer_ravens_hold")
+	await close_panel()
+	# the village map links here too
+	await press("panel_map")
+	await wait(0.8)
+	expect(await click("The world beyond", panel()), "world11: the village map links to the world map")
+	await wait(0.8)
+	expect(panel() is WorldMapPanel, "world11: world map from the village map")
+	await shot("w11_world_map_again")
+	await close_panel()

@@ -18,7 +18,7 @@ const BUTTONS := [
 	["ledger", "Ledger", "ui/tb_ledger", "panel_ledger", "shop", {"tab": "ledger"}, "", {}, "Accounts, status of the business, journal and upgrades."],
 	["designer", "Crafting", "ui/tb_designer", "", "designer", {}, "", {}, "Design a piece and plan its work."],
 	["property", "Workshop", "ui/tb_property", "", "property", {}, "", {}, "Your rooms, stations and furnishings."],
-	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "", {}, "The village of Brindlewick, its people and its roads."],
+	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "world_map", {}, "The village of Brindlewick, its people and its roads. Right-click (or G) for the world map."],
 	["help", "Help", "ui/tb_help", "panel_help", "help", {}, "", {}, "Controls, rules and the reference guide. Restart the tutorial here."],
 ]
 

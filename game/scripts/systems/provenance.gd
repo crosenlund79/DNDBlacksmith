@@ -236,6 +236,6 @@ static func story(it: Dictionary) -> Array:
 			if str(e.get("text", "")) == str(h.get("text", "")):
 				dup = true
 		if not dup:
-			out.append({"id": "", "day": int(h.get("day", 0)), "t": int(h.get("day", 0)) * 1440, "kind": "note", "text": str(h.get("text", "")), "icon": "icons/scroll", "items": [int(it.get("uid", -1))], "actors": [], "place": ""})
+			out.append({"id": "", "day": int(h.get("day", 0)), "t": int(h.get("day", 0)) * 1440, "kind": "note", "text": str(h.get("text", "")), "icon": "ui/ic_history", "items": [int(it.get("uid", -1))], "actors": [], "place": ""})
 	out.sort_custom(func(a, b): return int(a.get("t", 0)) < int(b.get("t", 0)))
 	return out

@@ -251,6 +251,244 @@
    "resist": "frost",
    "power": 74,
    "desc": ""
+  },
+  {
+   "id": "bandit_archer",
+   "name": "Hold Crossbowman",
+   "kind": "humanoid",
+   "hp": 12,
+   "atk": 5,
+   "dmg": "1d8+1",
+   "ac": 13,
+   "xp": 16,
+   "weak": "",
+   "resist": "",
+   "power": 13,
+   "desc": "Shoots from behind the palisade, then runs."
+  },
+  {
+   "id": "war_hound",
+   "name": "Hold War-hound",
+   "kind": "beast",
+   "hp": 12,
+   "atk": 4,
+   "dmg": "1d6+2",
+   "ac": 12,
+   "xp": 12,
+   "weak": "fire",
+   "resist": "",
+   "power": 10,
+   "desc": "Spiked collar, cropped ears, no fear."
+  },
+  {
+   "id": "black_maud",
+   "name": "Black Maud, Warlord of Raven's Hold",
+   "kind": "humanoid",
+   "hp": 54,
+   "atk": 7,
+   "dmg": "2d6+3",
+   "ac": 16,
+   "xp": 140,
+   "weak": "",
+   "resist": "",
+   "power": 52,
+   "desc": "She took the Hold from the king's men and has kept it eleven winters."
+  },
+  {
+   "id": "drowned",
+   "name": "Drowned Acolyte",
+   "kind": "undead",
+   "hp": 16,
+   "atk": 4,
+   "dmg": "1d8+1",
+   "ac": 12,
+   "xp": 18,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 13,
+   "desc": "Temple servants who never left when the waters came."
+  },
+  {
+   "id": "temple_serpent",
+   "name": "Temple Serpent",
+   "kind": "beast",
+   "hp": 26,
+   "atk": 5,
+   "dmg": "1d10+2",
+   "ac": 14,
+   "xp": 36,
+   "weak": "frost",
+   "resist": "",
+   "power": 24,
+   "desc": "Thick as a man's waist; it guards the pool it was fed in."
+  },
+  {
+   "id": "drowned_oracle",
+   "name": "The Drowned Oracle",
+   "kind": "spirit",
+   "hp": 58,
+   "atk": 7,
+   "dmg": "2d8+2",
+   "ac": 15,
+   "xp": 150,
+   "weak": "magic",
+   "resist": "",
+   "power": 54,
+   "desc": "She still answers questions. Nobody likes the answers."
+  },
+  {
+   "id": "harpy",
+   "name": "Crag Harpy",
+   "kind": "beast",
+   "hp": 14,
+   "atk": 5,
+   "dmg": "1d6+2",
+   "ac": 14,
+   "xp": 18,
+   "weak": "fire",
+   "resist": "",
+   "power": 13,
+   "desc": "Shrieks first, dives second."
+  },
+  {
+   "id": "drakeling",
+   "name": "Ashen Drakeling",
+   "kind": "beast",
+   "hp": 18,
+   "atk": 5,
+   "dmg": "1d8+2",
+   "ac": 14,
+   "xp": 26,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 18,
+   "desc": "A drake's whelp: small, hot-blooded and mean."
+  },
+  {
+   "id": "cinderjaw",
+   "name": "Cinderjaw, the Old Drake",
+   "kind": "beast",
+   "hp": 96,
+   "atk": 8,
+   "dmg": "2d10+4",
+   "ac": 17,
+   "xp": 280,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 92,
+   "desc": "Older than the village. Its breath melts the snow on the crag."
+  },
+  {
+   "id": "young_alpha",
+   "name": "Greyfang, the Young Alpha",
+   "kind": "beast",
+   "hp": 30,
+   "atk": 5,
+   "dmg": "2d6+1",
+   "ac": 13,
+   "xp": 60,
+   "weak": "fire",
+   "resist": "",
+   "power": 28,
+   "desc": "The old Alpha's get, grown into the hollow."
+  },
+  {
+   "id": "brood_daughter",
+   "name": "A Brood-Daughter",
+   "kind": "beast",
+   "hp": 32,
+   "atk": 5,
+   "dmg": "2d6",
+   "ac": 13,
+   "xp": 65,
+   "weak": "fire",
+   "resist": "",
+   "power": 30,
+   "desc": "One of the Brood Mother's eggs that did not burn."
+  },
+  {
+   "id": "toll_sergeant",
+   "name": "Sergeant Hask of the Toll",
+   "kind": "humanoid",
+   "hp": 30,
+   "atk": 5,
+   "dmg": "1d10+2",
+   "ac": 14,
+   "xp": 60,
+   "weak": "",
+   "resist": "",
+   "power": 28,
+   "desc": "Vell's old sergeant, collecting the toll again."
+  },
+  {
+   "id": "wight_steward",
+   "name": "The Wight-Steward",
+   "kind": "undead",
+   "hp": 42,
+   "atk": 6,
+   "dmg": "2d6+2",
+   "ac": 15,
+   "xp": 100,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 40,
+   "desc": "The Wight-Lord's servant, keeping the barrow for a master who will not return."
+  },
+  {
+   "id": "hollow_warden",
+   "name": "The Hollow Warden",
+   "kind": "construct",
+   "hp": 55,
+   "atk": 7,
+   "dmg": "2d8+2",
+   "ac": 16,
+   "xp": 150,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 52,
+   "desc": "A dwarf-built guardian that woke when its king fell."
+  },
+  {
+   "id": "corvin",
+   "name": "Corvin Blackfeather",
+   "kind": "humanoid",
+   "hp": 36,
+   "atk": 6,
+   "dmg": "1d10+3",
+   "ac": 15,
+   "xp": 80,
+   "weak": "",
+   "resist": "",
+   "power": 36,
+   "desc": "Maud's lieutenant, regrouping what is left of her band."
+  },
+  {
+   "id": "oracle_echo",
+   "name": "The Oracle's Echo",
+   "kind": "spirit",
+   "hp": 38,
+   "atk": 6,
+   "dmg": "2d6+1",
+   "ac": 14,
+   "xp": 90,
+   "weak": "magic",
+   "resist": "",
+   "power": 36,
+   "desc": "What is left of the Oracle's voice in the water."
+  },
+  {
+   "id": "smoulderwing",
+   "name": "Smoulderwing, a Young Drake",
+   "kind": "beast",
+   "hp": 52,
+   "atk": 7,
+   "dmg": "2d8+2",
+   "ac": 16,
+   "xp": 150,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 50,
+   "desc": "Cinderjaw's last whelp, grown into the lair."
   }
  ],
  "regions": {
@@ -1015,6 +1253,447 @@
      "desc": ""
     }
    ]
+  },
+  "ravens_hold": {
+   "name": "Raven's Hold",
+   "travel_h": [
+    3,
+    4
+   ],
+   "theme": "bandit stronghold: palisades, hounds, plunder",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The goat track",
+     "kind": "entry",
+     "x": 100,
+     "y": 620,
+     "links": [
+      "scree"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "scree",
+     "name": "Scree slope",
+     "kind": "path",
+     "x": 290,
+     "y": 520,
+     "links": [
+      "kennels",
+      "lookout"
+     ],
+     "enemies": [],
+     "dc": 11,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "lookout",
+     "name": "Ruined lookout",
+     "kind": "chest",
+     "x": 330,
+     "y": 250,
+     "links": [
+      "wall"
+     ],
+     "enemies": [],
+     "dc": 13,
+     "loot": "trade",
+     "tier": 2,
+     "desc": "An old royal watch-post; the bandits stash their take in it."
+    },
+    {
+     "id": "kennels",
+     "name": "The kennels",
+     "kind": "encounter",
+     "x": 560,
+     "y": 560,
+     "links": [
+      "wall",
+      "storehouse"
+     ],
+     "enemies": [
+      [
+       "war_hound",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "wall",
+     "name": "The broken wall",
+     "kind": "encounter",
+     "x": 620,
+     "y": 290,
+     "links": [
+      "yard"
+     ],
+     "enemies": [
+      [
+       "bandit_archer",
+       2
+      ],
+      [
+       "bandit",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "storehouse",
+     "name": "Plunder store",
+     "kind": "chest",
+     "x": 860,
+     "y": 590,
+     "links": [
+      "yard"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "reward",
+     "tier": 2,
+     "desc": "Barrels, bolts of cloth and a caravan's worth of steel."
+    },
+    {
+     "id": "yard",
+     "name": "The muster yard",
+     "kind": "trap",
+     "x": 880,
+     "y": 380,
+     "links": [
+      "keep"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "",
+     "tier": 1,
+     "desc": "Caltrops in the mud and a tripwire bell."
+    },
+    {
+     "id": "keep",
+     "name": "Black Maud's hall",
+     "kind": "boss",
+     "x": 1130,
+     "y": 260,
+     "links": [],
+     "enemies": [
+      [
+       "black_maud",
+       1
+      ],
+      [
+       "bandit_archer",
+       1
+      ],
+      [
+       "bandit",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "reward",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "sunken_temple": {
+   "name": "The Sunken Temple",
+   "travel_h": [
+    3,
+    4
+   ],
+   "theme": "a drowned ruin in the marsh: the dead, serpents, relics",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The reed path",
+     "kind": "entry",
+     "x": 110,
+     "y": 360,
+     "links": [
+      "causeway"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "causeway",
+     "name": "Broken causeway",
+     "kind": "path",
+     "x": 300,
+     "y": 380,
+     "links": [
+      "pool",
+      "court",
+      "lotus"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "pool",
+     "name": "Silted shrine",
+     "kind": "shrine",
+     "x": 330,
+     "y": 150,
+     "links": [
+      "court"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "lotus",
+     "name": "Lotus beds",
+     "kind": "resource",
+     "x": 430,
+     "y": 600,
+     "links": [
+      "serpent"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "herbs_wild",
+     "tier": 1,
+     "desc": "Pale lotus and bloodroot grow in the warm temple water."
+    },
+    {
+     "id": "court",
+     "name": "Flooded court",
+     "kind": "encounter",
+     "x": 580,
+     "y": 340,
+     "links": [
+      "serpent",
+      "door"
+     ],
+     "enemies": [
+      [
+       "drowned",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "serpent",
+     "name": "Serpent pool",
+     "kind": "encounter",
+     "x": 780,
+     "y": 590,
+     "links": [
+      "sanctum"
+     ],
+     "enemies": [
+      [
+       "temple_serpent",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "gift",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "door",
+     "name": "The tide door",
+     "kind": "puzzle",
+     "x": 820,
+     "y": 170,
+     "links": [
+      "sanctum"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "sanctum",
+     "name": "The Oracle's sanctum",
+     "kind": "boss",
+     "x": 1120,
+     "y": 350,
+     "links": [],
+     "enemies": [
+      [
+       "drowned_oracle",
+       1
+      ],
+      [
+       "drowned",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "barrow",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "drakes_crag": {
+   "name": "Drake's Crag",
+   "travel_h": [
+    4,
+    5
+   ],
+   "theme": "a drake's mountain: harpies, drakelings, a hoard",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The shepherd's climb",
+     "kind": "entry",
+     "x": 640,
+     "y": 660,
+     "links": [
+      "ledge"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "ledge",
+     "name": "Windy ledge",
+     "kind": "path",
+     "x": 600,
+     "y": 520,
+     "links": [
+      "obsidian",
+      "nests"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "obsidian",
+     "name": "Obsidian scree",
+     "kind": "resource",
+     "x": 320,
+     "y": 470,
+     "links": [
+      "bones"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "mine",
+     "tier": 2,
+     "desc": "Glassy black stone and ore cracked out by the drake's heat."
+    },
+    {
+     "id": "nests",
+     "name": "Harpy nests",
+     "kind": "encounter",
+     "x": 900,
+     "y": 520,
+     "links": [
+      "bones",
+      "vents"
+     ],
+     "enemies": [
+      [
+       "harpy",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "bones",
+     "name": "Field of bones",
+     "kind": "chest",
+     "x": 360,
+     "y": 220,
+     "links": [
+      "hoard"
+     ],
+     "enemies": [],
+     "dc": 13,
+     "loot": "barrow",
+     "tier": 2,
+     "desc": "Knights and sheep alike; some of the knights still have their purses."
+    },
+    {
+     "id": "vents",
+     "name": "Ash vents",
+     "kind": "encounter",
+     "x": 960,
+     "y": 270,
+     "links": [
+      "hoard"
+     ],
+     "enemies": [
+      [
+       "drakeling",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "beast_wyvern",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "hoard",
+     "name": "Cinderjaw's lair",
+     "kind": "boss",
+     "x": 650,
+     "y": 120,
+     "links": [],
+     "enemies": [
+      [
+       "cinderjaw",
+       1
+      ],
+      [
+       "drakeling",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "deep_boss",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
   }
  },
  "archetypes": {
@@ -1296,5 +1975,385 @@
    260,
    "Living Legend"
   ]
- ]
+ ],
+ "sites": {
+  "whisperwood": {
+   "type": "forest",
+   "pos": [
+    400,
+    470
+   ],
+   "known": true,
+   "near": [],
+   "boss": "hollow",
+   "successor": [
+    [
+     "young_alpha",
+     1
+    ],
+    [
+     "wolf",
+     2
+    ]
+   ],
+   "successor_days": [
+    30,
+    44
+   ],
+   "growth": 0.05,
+   "likes": {
+    "cls": [
+     "Ranger",
+     "Barbarian"
+    ],
+    "trait": [
+     "cautious"
+    ]
+   },
+   "desc": "Old oak forest west of the village: herb glades, a ruined watchtower and the hollow where the Alpha dens.",
+   "folk": [
+    "herb-wives and trappers",
+    "a hermit at the wayshrine"
+   ],
+   "cond": {
+    "growing": "The wolf packs are growing bold.",
+    "regroup": "Wolves howl again along the deer trail.",
+    "cleared": "The Alpha's hollow lies empty; the packs scatter without a leader.",
+    "successor": "A young alpha has taken the hollow."
+   }
+  },
+  "ironroot_mine": {
+   "type": "mine",
+   "pos": [
+    770,
+    270
+   ],
+   "known": true,
+   "near": [],
+   "boss": "nest",
+   "successor": [
+    [
+     "brood_daughter",
+     1
+    ],
+    [
+     "spider",
+     2
+    ]
+   ],
+   "successor_days": [
+    26,
+    40
+   ],
+   "growth": 0.07,
+   "likes": {
+    "cls": [
+     "Fighter",
+     "Barbarian"
+    ],
+    "trait": [
+     "greedy",
+     "steady"
+    ]
+   },
+   "desc": "The broken quarry north of the village: dwarf-cut galleries, goblins, ore — and a spider nest in the deep end.",
+   "folk": [
+    "goblin scavengers",
+    "old miners who still come for coal"
+   ],
+   "cond": {
+    "growing": "The spider brood is growing.",
+    "regroup": "Goblins have crept back into the camp.",
+    "cleared": "The nest was burned out; only husks hang in the gallery.",
+    "successor": "A brood-daughter spins in the old nest."
+   }
+  },
+  "highmarsh_road": {
+   "type": "road",
+   "pos": [
+    1190,
+    500
+   ],
+   "known": true,
+   "near": [],
+   "boss": "captain",
+   "successor": [
+    [
+     "toll_sergeant",
+     1
+    ],
+    [
+     "bandit",
+     2
+    ]
+   ],
+   "successor_days": [
+    22,
+    34
+   ],
+   "growth": 0.06,
+   "likes": {
+    "cls": [
+     "Rogue",
+     "Bard"
+    ],
+    "trait": [
+     "greedy",
+     "brave"
+    ]
+   },
+   "desc": "The trade road east to Highmarsh: a toll bridge, a bog, a troll's ford and Vell's hideout.",
+   "folk": [
+    "carters and pedlars",
+    "the Highmarsh toll-keepers"
+   ],
+   "cond": {
+    "growing": "Bandits are thick on the road; carters travel only in convoys.",
+    "regroup": "The bandits are regrouping at the toll bridge.",
+    "cleared": "Vell's hideout stands empty; the carters breathe again.",
+    "successor": "Vell's old sergeant collects the toll again."
+   }
+  },
+  "barrow_fields": {
+   "type": "barrow",
+   "pos": [
+    830,
+    830
+   ],
+   "known": true,
+   "near": [],
+   "boss": "lord",
+   "successor": [
+    [
+     "wight_steward",
+     1
+    ],
+    [
+     "skeleton",
+     2
+    ]
+   ],
+   "successor_days": [
+    34,
+    50
+   ],
+   "growth": 0.05,
+   "likes": {
+    "cls": [
+     "Cleric",
+     "Paladin",
+     "Wizard"
+    ],
+    "trait": [
+     "devout"
+    ]
+   },
+   "desc": "Burial mounds south of the village: grave rows, a rune door, the relic vault and the Wight-Lord's barrow.",
+   "folk": [
+    "a gravedigger's family",
+    "relic-hunters from away"
+   ],
+   "cond": {
+    "growing": "The dead walk in numbers on the grave rows.",
+    "regroup": "Fresh tracks lead out of the open graves.",
+    "cleared": "The Wight-Lord's barrow lies broken open and silent.",
+    "successor": "The crypt was sealed again — something keeps it now."
+   }
+  },
+  "deep_ironroot": {
+   "type": "deep",
+   "pos": [
+    1010,
+    150
+   ],
+   "known": false,
+   "gate": "delve_map",
+   "near": [],
+   "boss": "hall",
+   "successor": [
+    [
+     "hollow_warden",
+     1
+    ],
+    [
+     "shadow",
+     1
+    ]
+   ],
+   "successor_days": [
+    40,
+    60
+   ],
+   "growth": 0.04,
+   "likes": {
+    "cls": [
+     "Wizard",
+     "Fighter",
+     "Paladin"
+    ],
+    "trait": [
+     "brave",
+     "greedy"
+    ]
+   },
+   "desc": "Below the old workings: crystal caverns, the golem forge and the Dwarf-King's hall. Found with the delve map.",
+   "folk": [
+    "nobody living"
+   ],
+   "cond": {
+    "growing": "Shadows crowd the rift.",
+    "regroup": "The golem forge glows again.",
+    "cleared": "The Dwarf-King's hall is quiet; his crown-seat stands empty.",
+    "successor": "A warden of stone walks the Dwarf-King's hall."
+   }
+  },
+  "ravens_hold": {
+   "type": "stronghold",
+   "pos": [
+    1400,
+    270
+   ],
+   "known": false,
+   "near": [
+    "highmarsh_road"
+   ],
+   "boss": "keep",
+   "successor": [
+    [
+     "corvin",
+     1
+    ],
+    [
+     "bandit",
+     2
+    ]
+   ],
+   "successor_days": [
+    24,
+    36
+   ],
+   "growth": 0.08,
+   "likes": {
+    "cls": [
+     "Rogue",
+     "Fighter"
+    ],
+    "trait": [
+     "greedy",
+     "reckless"
+    ]
+   },
+   "desc": "A hillfort on the crags north of the Highmarsh road, taken from the king's men by Black Maud's band.",
+   "folk": [
+    "Black Maud's band",
+    "captives taken on the road"
+   ],
+   "cond": {
+    "growing": "Maud's band grows; new faces at the palisade.",
+    "regroup": "The bandits are regrouping behind the wall.",
+    "cleared": "The Hold's hall is empty; ravens sit on the broken gate.",
+    "successor": "Corvin Blackfeather is regrouping the band in the Hold."
+   }
+  },
+  "sunken_temple": {
+   "type": "temple",
+   "pos": [
+    330,
+    790
+   ],
+   "known": false,
+   "near": [
+    "whisperwood",
+    "barrow_fields"
+   ],
+   "boss": "sanctum",
+   "successor": [
+    [
+     "oracle_echo",
+     1
+    ],
+    [
+     "drowned",
+     2
+    ]
+   ],
+   "successor_days": [
+    30,
+    46
+   ],
+   "growth": 0.05,
+   "likes": {
+    "cls": [
+     "Cleric",
+     "Wizard",
+     "Bard"
+    ],
+    "trait": [
+     "devout",
+     "cautious"
+    ]
+   },
+   "desc": "A drowned temple in the south-western marsh; its court and sanctum stand half under water.",
+   "folk": [
+    "drowned acolytes",
+    "marsh-folk who leave offerings"
+   ],
+   "cond": {
+    "growing": "The drowned rise thicker each night.",
+    "regroup": "Something stirs in the flooded court again.",
+    "cleared": "The sanctum water lies still; the Oracle is silent.",
+    "successor": "An echo of the Oracle whispers in the sanctum."
+   }
+  },
+  "drakes_crag": {
+   "type": "crag",
+   "pos": [
+    420,
+    160
+   ],
+   "known": false,
+   "near": [
+    "ironroot_mine",
+    "whisperwood"
+   ],
+   "boss": "hoard",
+   "successor": [
+    [
+     "smoulderwing",
+     1
+    ],
+    [
+     "drakeling",
+     1
+    ]
+   ],
+   "successor_days": [
+    45,
+    70
+   ],
+   "growth": 0.04,
+   "likes": {
+    "cls": [
+     "Barbarian",
+     "Paladin",
+     "Fighter"
+    ],
+    "trait": [
+     "brave",
+     "reckless"
+    ]
+   },
+   "desc": "A smoking crag in the north-western mountains where an old drake sleeps on a hoard.",
+   "folk": [
+    "harpies",
+    "goatherds who will not go above the treeline"
+   ],
+   "cond": {
+    "growing": "Drakelings hatch in the ash vents.",
+    "regroup": "Harpies are back on the nests.",
+    "cleared": "Cinderjaw's lair is cold; its hoard is gone.",
+    "successor": "A young drake has taken the old lair."
+   }
+  }
+ }
 }

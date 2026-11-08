@@ -441,6 +441,8 @@ func _route(id: String, args: Dictionary) -> void:
 			open(HistoryPanel.new(str(args.get("kind", "")), str(args.get("id", ""))))
 		"map":
 			open(MapPanel.new())
+		"world_map":
+			open(WorldMapPanel.new(args))
 		"customize":
 			open(CustomizePanel.new())
 		"pawn":
@@ -466,7 +468,7 @@ func _route(id: String, args: Dictionary) -> void:
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
 const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
 	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
-	"quick_travel": "quick_travel", "cancel": "pause"}
+	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map"}
 
 
 static func panel_for_action(action: String) -> String:

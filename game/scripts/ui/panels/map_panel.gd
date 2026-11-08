@@ -34,6 +34,7 @@ func _ready() -> void:
 	side.add_child(UIKit.scroll(wants, 250))
 	side.add_child(UIKit.label("Hover a figure for its name.", 17, "body_italic"))
 	side.add_child(InkIcons.button("ic_travel", "Quick travel [%s]" % Settings.key_label("quick_travel"), func(): Events.open_panel.emit("quick_travel", {}), 0))
+	side.add_child(InkIcons.button("tb_map", "The world beyond [%s]" % Settings.key_label("panel_world_map"), func(): Events.open_panel.emit("world_map", {}), 0))
 	var w := get_tree().get_first_node_in_group("world") as VillageWorld
 	if w and w.area != "village" and w.buildings.has(w.area):
 		var bname := str(w.buildings[w.area].get("name", w.area))
