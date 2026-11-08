@@ -20,6 +20,9 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var phase: String = args[0] if args.size() > 0 else "smoke"
 	current_phase = phase
+
+	# first-time skill-check how-to cards would pause the scripted checks of the older phases
+	Minigames.auto_tutorials = phase.begins_with("checks")
 	await get_tree().create_timer(1.5).timeout
 	await call("phase_" + phase)
 	note("DONE phase %s — %d failures" % [phase, fails])
@@ -966,14 +969,14 @@ func phase_iter2() -> void:
 	for npc in tried:
 		Shop._add_customer(npc, "repair")
 	expect(Shop.customers().size() == 4, "waiting: at most four customers (%d of 5 accepted)" % Shop.customers().size())
-	var early := toasts.filter(func(t): return str(t[1]).contains("waiting outside"))
+	var early := toasts.filter(func(t): return str(t[1]).contains("is waiting at your shop"))
 	expect(early.is_empty() and Shop.waiting().is_empty(), "waiting: nobody announced before they arrive")
 	W()._update_schedules()
 	var waited := 0.0
 	while Shop.waiting().size() < 4 and waited < 60.0:
 		await wait(1.0)
 		waited += 1.0
-	var ann := toasts.filter(func(t): return str(t[1]).contains("waiting outside"))
+	var ann := toasts.filter(func(t): return str(t[1]).contains("is waiting at your shop"))
 	expect(Shop.waiting().size() == 4 and ann.size() == 4, "waiting: %d seated after %.0fs, %d announcements (one each, on arrival)" % [Shop.waiting().size(), waited, ann.size()])
 	await tp(W().spots["wait_seat_1"] + Vector2(0, -150))
 	W().camera.zoom = Vector2(1.25, 1.25)
@@ -1669,3 +1672,215 @@ func phase_trade() -> void:
 	expect(Game.count("ore_orichalcum") == cnt + 2, "trade: delivery collected into the inventory")
 	await shot("trade_harbour_collected")
 	await close_panel()
+
+
+# ======================================================================= iteration 9: skill checks & customers
+## The open top-level check (ring or minigame) in the UI host, if any.
+func _check_host() -> Control:
+	for c in U().panel_host.get_children():
+		if (c is SkillCheckPanel or c is MinigameBase) and not c.is_queued_for_deletion():
+			return c
+	return null
+
+
+func _overlay_of(host: Control) -> CheckOverlay:
+	for c in host.get_children():
+		if c is CheckOverlay:
+			return c
+	return null
+
+
+## Plays one ring check instance (top-level or a practice run inside a card) aiming for the centre.
+func _play_ring(sc: SkillCheckPanel, frac := 0.0) -> void:
+	var guard := 0.0
+	var played := 0
+	while is_instance_valid(sc) and played < sc.count and guard < 20.0:
+		if sc.running and not sc.suspended:
+			var off := fposmod(sc.zone_center - sc.angle, 360.0) - frac * sc.zone * 0.5
+			var step := sc.speed * 360.0 * minf(get_process_delta_time(), 0.05)
+			if off >= 0.0 and off < step * 1.5:
+				await press("interact")
+				played += 1
+				continue
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+
+
+func phase_checks() -> void:
+	Events.toast.connect(_on_toast)
+	var seen_before: Variant = Settings.get_value(Minigames.SEEN_KEY, [])
+	var assist_before: bool = bool(Settings.get_value("gameplay/check_assist", false))
+	Minigames.reset_tutorials()
+	Settings.set_value("gameplay/check_assist", false)
+	await click("New Game")
+	await wait(2.5)
+	# --- start the iron longsword at the forge: the ring's how-to card opens first
+	await use("station", "forge")
+	expect(panel() is StationPanel, "checks: forge station panel")
+	var begin: Button = null
+	for b in _buttons(panel()):
+		if b.text == "Begin" and _row_text(b).begins_with("Iron Longsword "):
+			begin = b
+	expect(begin != null, "checks: Begin for the iron longsword")
+	if begin == null:
+		return
+	begin.pressed.emit()
+	await wait(0.6)
+	var host := _check_host()
+	var ov := _overlay_of(host) if host else null
+	expect(host is SkillCheckPanel and ov != null and ov.card != null, "checks: first ring check opens with its how-to card")
+	await shot("chk_tutorial_card_ring")
+	# --- practice at tutorial difficulty: no consequences
+	var ops_before := int(Crafting.job().get("op_index", Crafting.job().get("step", 0)))
+	expect(await click("Practice (tutorial difficulty)"), "checks: practice button")
+	await wait(0.4)
+	var prac: SkillCheckPanel = null
+	for c in host.get_children():
+		if c is SkillCheckPanel:
+			prac = c
+	expect(prac != null and prac.practice and prac.zone > (host as SkillCheckPanel).zone * 1.3, "checks: practice runs the ring with a much wider zone (%.0f° vs %.0f°)" % [prac.zone if prac else 0.0, (host as SkillCheckPanel).zone])
+	await wait(0.5)
+	await shot("chk_practice_run")
+	if prac:
+		await _play_ring(prac, 0.1)
+		await wait(0.5)
+		await shot("chk_practice_result")
+		var w := 0.0
+		while is_instance_valid(prac) and w < 4.0:
+			await wait(0.2)
+			w += 0.2
+	expect(ov.card != null and ov.card.visible and Crafting.current_station() == "forge", "checks: back on the card after practice; the craft has not moved on")
+	await shot("chk_tutorial_after_practice")
+	# --- the real check, then the auto-closing result banner
+	await click("Start the check")
+	await wait(0.3)
+	expect(Minigames.tutorial_seen("ring"), "checks: 'Don't show again' remembered for the ring")
+	var sc := host as SkillCheckPanel
+	await _play_ring(sc, 0.05)
+	await wait(0.75)
+	expect(is_instance_valid(sc) and ov.result_t > 0.0, "checks: result banner shows the grade")
+	await shot("chk_result_autoclose")
+	var waited := 0.0
+	while is_instance_valid(sc) and not sc.is_queued_for_deletion() and waited < 4.0:
+		await wait(0.1)
+		waited += 0.1
+	expect(not is_instance_valid(sc) or sc.is_queued_for_deletion(), "checks: the result closed by itself after %.1f s" % waited)
+	expect(Crafting.current_station() == "anvil", "checks: the craft continued to the next operation (%s)" % Crafting.current_station())
+	# --- the rest of the sword through the real stations
+	var guard := 0
+	while Crafting.active() and not Crafting.job().get("awaiting_dice", false) and guard < 12:
+		guard += 1
+		var st := Crafting.current_station()
+		if _check_host() == null:
+			await close_panel()
+			await use("station", st)
+			await click(str(Crafting.current_op().get("op", "")))
+			await wait(0.5)
+		var h := _check_host()
+		if h == null:
+			continue
+		var o := _overlay_of(h)
+		if o and o.card != null:
+			await shot("chk_tutorial_card_" + Minigames.mechanic({"station": st}))
+			await click("Start the check")
+			await wait(0.3)
+		if h is MinigameBase:
+			await play_minigame(true, "chk_minigame_" + st)
+		else:
+			await play_checks(true, 0.1)
+		var w2 := 0.0
+		while _check_host() != null and w2 < 5.0:
+			await wait(0.2)
+			w2 += 0.2
+	expect(Crafting.job().get("awaiting_dice", false), "checks: all operations of the iron longsword performed")
+	await wait(0.6)
+	if panel() is DicePanel:
+		if (panel() as DicePanel).mode != "auto":
+			await click("Digital dice")
+			await wait(0.3)
+		await click("Roll the dice")
+		await wait(1.8)
+		await click("Finish the piece")
+		await wait(1.4)
+	expect(panel() is CraftResultPanel, "checks: the sword is finished")
+	if panel() is CraftResultPanel:
+		var it: Dictionary = (panel() as CraftResultPanel).item
+		note("  sword → %s q %.1f%% %s" % [it.get("name"), float(it.get("quality", 0)), it.get("rarity")])
+		it["for_sale"] = true
+	await close_panel()
+	await close_panel()
+	# --- a customer sets out (silently) and is announced only once seated
+	await advance_to(10, 5)
+	Game.state["customers"].clear()
+	toasts.clear()
+	var adv := ""
+	for a in Adv.in_town():
+		adv = str(a["id"])
+		break
+	if adv == "":
+		adv = "martha"
+	Shop._add_customer(adv, "browse" if adv != "martha" else "goods")
+	Shop._add_customer("tobin", "repair")
+	W()._update_schedules()
+	await wait(0.5)
+	var early := toasts.filter(func(t): return str(t[1]).contains("is waiting at your shop"))
+	expect(early.is_empty() and Shop.waiting().is_empty(), "customers: no 'waiting' notice while they are still on the way")
+	var ww := 0.0
+	while Shop.waiting().size() < 2 and ww < 60.0:
+		await wait(1.0)
+		ww += 1.0
+	var ann := toasts.filter(func(t): return str(t[1]).contains("is waiting at your shop: wants"))
+	expect(Shop.waiting().size() == 2 and ann.size() == 2, "customers: %d seated after %.0f s, %d arrival notices" % [Shop.waiting().size(), ww, ann.size()])
+	for t in ann:
+		note("  toast: " + str(t[1]))
+	await tp(W().spots["wait_seat_1"] + Vector2(0, -150))
+	await wait(0.3)
+	await wait(0.4)
+	await shot("chk_customer_waiting")
+	if await talk_to(adv):
+		await shot("chk_customer_dialogue_card")
+		await close_panel()
+	# --- the counter: request cards and per-customer dismissal
+	Events.open_panel.emit("shop", {"tab": "customers"})
+	await wait(0.6)
+	expect(panel() is ShopPanel, "customers: counter panel opens")
+	await shot("chk_counter_panel")
+	var n_before := Shop.waiting().size()
+	expect(await click("Ask them to come back another time"), "customers: dismissal offered at the counter")
+	await wait(0.4)
+	expect(Shop.waiting().size() == n_before - 1, "customers: dismissed from the counter (%d → %d)" % [n_before, Shop.waiting().size()])
+	await shot("chk_counter_after_dismiss")
+	await close_panel()
+	# --- a commission in the orders panel
+	if adv != "martha":
+		Shop.create_order(adv)
+	Events.open_panel.emit("orders", {})
+	await wait(0.6)
+	await shot("chk_orders_panel")
+	await close_panel()
+	# --- the "?" button and the assist option
+	Settings.set_value("gameplay/check_assist", true)
+	var c := Crafting.check_params("resonance_pedestal")
+	Events.open_panel.emit("skillcheck", {"station": "resonance_pedestal", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Resonance test"})
+	await wait(0.4)
+	var mh := _check_host()
+	var mo := _overlay_of(mh) if mh else null
+	if mo and mo.card != null:
+		await shot("chk_tutorial_card_multihit")
+		await click("Start the check")
+		await wait(1.2)
+	if mo:
+		mo.help_btn.pressed.emit()
+		await wait(0.4)
+		expect(mo.card != null and (mh as MinigameBase).suspended, "checks: '?' reopens the how-to card and pauses the check")
+		await shot("chk_help_button_card")
+		await click("Back to the check")
+		await wait(0.2)
+	await play_minigame(true, "chk_multihit_assist")
+	await wait(2.5)
+	Events.open_panel.emit("settings", {})
+	await wait(0.6)
+	await shot("chk_settings_assist")
+	await close_panel()
+	Settings.set_value("gameplay/check_assist", assist_before)
+	Settings.set_value(Minigames.SEEN_KEY, seen_before)

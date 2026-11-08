@@ -90,7 +90,7 @@ func _tick(delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		var c := size * 0.5 + Vector2(0, -14)
@@ -121,7 +121,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	if event.is_action_pressed("interact"):
 		get_viewport().set_input_as_handled()
@@ -129,7 +129,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _pump() -> void:
-	if finished:
+	if finished or suspended or not started:
 		return
 	Audio.play("sfx/bellows", -2.0)
 	var q := live_quality()

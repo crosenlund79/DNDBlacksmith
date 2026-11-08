@@ -36,6 +36,12 @@ func _ready() -> void:
 	h.add_child(v)
 	content.add_child(h)
 	text.text = Talk.greeting(npc)
+	# a waiting customer states plainly what they want (the same card as at the counter)
+	var cu := Shop.customer(npc)
+	if not cu.is_empty() and cu.get("present", true):
+		var card := CustomerCard.build(Shop.request(cu))
+		v.add_child(card)
+		v.move_child(card, text.get_index() + 1)
 	_options()
 
 

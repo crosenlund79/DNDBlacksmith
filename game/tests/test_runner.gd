@@ -41,6 +41,8 @@ func _ready() -> void:
 	_loot()
 	_living_village()
 	_trade()
+
+	_checks_and_customers()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -660,6 +662,81 @@ func _trade() -> void:
 	for t2 in ["beast_bear", "beast_troll", "beast_wyvern", "herbs_wild", "deep_boss"]:
 		check(reg_loot.has(t2), "trade: expedition nodes use loot table %s" % t2)
 	check(DB.loot["deep_boss"]["entries"].any(func(x): return x[0] == "dragon_scale"), "trade: the Deep Ironroot boss can drop dragon scale")
+
+## Skill-check difficulty (Crafting.check_params factors, assist, tweaks) and customer requests/arrival.
+func _checks_and_customers() -> void:
+	var sk := Game.player_skills()
+	var old_lvl := int(sk["smithing"]["lvl"])
+	sk["smithing"]["lvl"] = 1
+	var low := Crafting.check_params("anvil", "iron_longsword")
+	sk["smithing"]["lvl"] = 8
+	var high := Crafting.check_params("anvil", "iron_longsword")
+	sk["smithing"]["lvl"] = old_lvl
+	check(float(high["zone"]) > float(low["zone"]) and float(high["speed"]) < float(low["speed"]), "checks: higher skill widens the zone (%.1f > %.1f) and slows the needle" % [high["zone"], low["zone"]])
+	var simple := Crafting.check_params("anvil", "hand_axe")
+	var hard := Crafting.check_params("anvil", "steel_bastard_sword")
+	check(float(hard["zone"]) < float(simple["zone"]) and float(hard["speed"]) > float(simple["speed"]), "checks: harder recipe narrows the zone and speeds the needle")
+	var many := Crafting.check_params("anvil", "steel_longsword")
+	var few := Crafting.check_params("anvil", "hand_axe")
+	check(float(many["factors"]["complexity"]) > float(few["factors"]["complexity"]), "checks: more operations count as more complex (%.2f > %.2f)" % [many["factors"]["complexity"], few["factors"]["complexity"]])
+	var arc := Crafting.check_params("arcane_anvil", "iron_longsword")
+	var cls := Crafting.check_params("anvil", "iron_longsword")
+	check(float(arc["factors"]["tier"]) > float(cls["factors"]["tier"]) and float(arc["zone"]) < float(cls["zone"]) and float(arc["speed"]) > float(cls["speed"]), "checks: arcane stations are narrower and faster than classic ones")
+	# tweak targets
+	var res := Crafting.check_params("resonance_pedestal", "ember_runestone")
+	var res_base := float(DB.station("resonance_pedestal")["check"]["speed"])
+	var sweep_now := 340.0 / (float(res["speed"]) * 1.45 * 360.0)
+	var sweep_before := 340.0 / (res_base * 1.45 * 360.0)
+	check(sweep_now > sweep_before * 1.4 and sweep_now > 1.2, "checks: resonance pedestal sweep is much slower (%.2f s, was ≈%.2f s)" % [sweep_now, sweep_before])
+	var inf := Crafting.check_params("infusion_rack", "healing_draught")
+	var f: Dictionary = inf["factors"]
+	check(float(f["tune_zone"]) > 1.0 and float(f["tune_speed"]) < 1.0, "checks: infusion rack is slightly easier (zone ×%.2f, speed ×%.2f)" % [f["tune_zone"], f["tune_speed"]])
+	for st in ["grinding_wheel", "rune_polishing_wheel"]:
+		var g: Dictionary = Crafting.check_params(st)["factors"]
+		check(float(g["tune_zone"]) > 1.0 and float(g["tune_zone"]) < 1.25, "checks: %s slightly easier" % st)
+	# tutorial difficulty: practice and the assist setting
+	var norm := Crafting.check_params("anvil", "iron_longsword", -1, {"assist": false})
+	var tut := Crafting.tutorial_params("anvil", "iron_longsword")
+	check(float(tut["zone"]) > float(norm["zone"]) * 1.3 and float(tut["speed"]) < float(norm["speed"]) * 0.8, "checks: tutorial difficulty is clearly easier")
+	var was: bool = bool(Settings.get_value("gameplay/check_assist", false))
+	Settings.values["gameplay/check_assist"] = true
+	var assisted := Crafting.check_params("anvil", "iron_longsword")
+	Settings.values["gameplay/check_assist"] = was
+	check(bool(assisted["assist"]) and float(assisted["zone"]) > float(norm["zone"]), "checks: the assist option widens the zone")
+	check(is_equal_approx(float(norm["factors"]["fatigue"]), 1.0 - Crafting.FATIGUE_ZONE * (1.0 - Vitality.work_factor())), "checks: fatigue hook folded into the zone")
+	check(Minigames.mechanic({"station": "anvil"}) == "ring" and Minigames.mechanic({"station": "resonance_pedestal"}) == "multihit" and Minigames.tutorial("edge")["keys"] != "", "checks: every mechanic has a how-to card")
+	check(float(Minigames.practice_args({"station": "bellows", "zone": 30, "speed": 0.6})["zone"]) > float(Crafting.check_params("bellows")["zone"]), "checks: practice runs at tutorial difficulty")
+	# customers: explicit requests, and no announcement until they sit down
+	var saved_customers: Array = Shop.customers().duplicate()
+	Shop.customers().clear()
+	var heard: Array = []
+	var listener := func(t: String, _k: String): heard.append(t)
+	Events.toast.connect(listener)
+	Shop._add_customer("martha", "goods")
+	var waiting_toast := heard.any(func(t): return str(t).contains("waiting"))
+	check(not waiting_toast and Shop.waiting().is_empty() and not Shop.customers().is_empty(), "customers: setting out is silent; not waiting before arrival")
+	Shop.mark_arrived("martha")
+	check(heard.any(func(t): return str(t).contains("is waiting at your shop: wants")) and Shop.waiting().size() == 1, "customers: announced with their wish once seated")
+	var req := Shop.request(Shop.customer("martha"))
+	check(req["kind"] == "goods" and req.has("budget") and str(req["summary"]).contains("budget"), "customers: goods request states item and budget")
+	Shop.dismiss_customer("martha")
+	check(Shop.customer("martha").is_empty(), "customers: dismissal frees the seat")
+	var advs := Adv.in_town()
+	if not advs.is_empty():
+		var aid := str(advs[0]["id"])
+		Shop._add_customer(aid, "browse")
+		var cu := Shop.customer(aid)
+		var r2 := Shop.request(cu)
+		check(cu.has("slot") and cu.has("stat") and cu.has("min") and cu.has("materials") and str(r2["summary"]).contains("≥"), "customers: adventurer states slot, attribute minimum and materials (%s)" % r2["summary"])
+		Shop.remove_customer(aid)
+		var o := Shop.create_order(aid)
+		if not o.is_empty():
+			var orq := Shop.order_request(o)
+			check(orq["kind"] == "commission" and orq.has("deadline") and orq.has("reward") and orq["slot"] == o["slot"], "customers: commissions use the same request card data")
+			Shop.orders().erase(o)
+	Events.toast.disconnect(listener)
+	Shop.customers().clear()
+	Shop.customers().append_array(saved_customers)
 
 
 func _saves() -> void:

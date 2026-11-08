@@ -18,6 +18,8 @@ var values := {
 	"gameplay/dice_mode": "auto",     # auto | physical
 	"gameplay/show_hints": true,
 	"gameplay/time_scale": 1.0,
+	"gameplay/check_assist": false,           # skill checks at tutorial difficulty (wider zones, slower)
+	"gameplay/check_tutorials_seen": [],      # mechanics whose how-to card the player has dismissed
 	"debug/overlay": false,
 }
 

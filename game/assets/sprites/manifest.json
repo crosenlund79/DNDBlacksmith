@@ -998,6 +998,26 @@
    1920,
    1080
   ],
+  "ui/template_need_attack.png": [
+   64,
+   64
+  ],
+  "ui/template_need_deadline.png": [
+   64,
+   64
+  ],
+  "ui/template_need_dispute.png": [
+   64,
+   64
+  ],
+  "ui/template_need_magic.png": [
+   64,
+   64
+  ],
+  "ui/template_need_protection.png": [
+   64,
+   64
+  ],
   "ui/template_panel_dark.png": [
    256,
    256
@@ -1041,6 +1061,42 @@
   "ui/template_tooltip_bg.png": [
    128,
    128
+  ],
+  "ui/template_tut_align.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_edge.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_eye.png": [
+   64,
+   64
+  ],
+  "ui/template_tut_key.png": [
+   64,
+   64
+  ],
+  "ui/template_tut_multihit.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_ring.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_rings.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_rune.png": [
+   360,
+   260
+  ],
+  "ui/template_tut_star.png": [
+   64,
+   64
   ],
   "ui/template_wanted_board.png": [
    1600,

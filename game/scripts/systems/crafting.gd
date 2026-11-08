@@ -181,31 +181,88 @@ static func skill_for_station(station_id: String) -> String:
 	return DISCIPLINE_SKILL.get(DB.station(station_id).get("discipline", "classic"), "smithing")
 
 
-## Check parameters for a station. With a recipe, its difficulty is weighed against the skill:
-## a beginner gets a narrow zone and a fast needle, an expert a wide zone and a slow one.
-static func check_params(station_id: String, recipe_id := "", checks := -1) -> Dictionary:
+# ------------------------------------------------------------------ skill-check difficulty
+## Station tier: the more exotic the discipline, the less forgiving its checks (zone ÷, speed ×).
+const STATION_TIER := {"classic": 1.0, "stitching": 1.0, "alchemy": 1.04, "runecraft": 1.07, "arcane": 1.14}
+## Hand-tuned per-station corrections on top of the data (zone ×, speed ×; > 1 zone = easier).
+const STATION_TUNING := {
+	"infusion_rack": {"zone": 1.15, "speed": 0.88},         # slightly easier multi-hit
+	"resonance_pedestal": {"speed": 0.5},                   # was far too fast: half the sweep speed
+	"grinding_wheel": {"zone": 1.12, "speed": 0.9},         # slightly easier edge control
+	"rune_polishing_wheel": {"zone": 1.12, "speed": 0.9},
+}
+## Tutorial difficulty: used by practice runs, and everywhere when the player turns on the assist.
+const ASSIST := {"zone": 1.55, "speed": 0.62}
+## Fatigue: at work factor 0 the zone shrinks by this much (linear; a fresh smith loses nothing).
+const FATIGUE_ZONE := 0.22
+## Recipe complexity: each operation beyond three tightens the work a little (bounded).
+const COMPLEXITY_PER_OP := 0.02
+const COMPLEXITY_RANGE := Vector2(0.96, 1.12)
+
+
+static func assist_on() -> bool:
+	return bool(Settings.get_value("gameplay/check_assist", false))
+
+
+## Check parameters for a station. EN: built from explicit factors so it reads like a recipe:
+##   zone  = (base_zone × skill_zone + per_level + upgrades) ÷ complexity ÷ tier × tuning × fatigue × assist
+##   speed = base_speed × skill_speed × complexity × tier × tuning × assist
+## where skill weighs the recipe's difficulty against the relevant skill level (a beginner gets a
+## narrow zone and a fast needle, an expert a wide zone and a slow one). `factors` in the result
+## lists every multiplier for tooltips and tests. Quality itself is untouched: the minigames only
+## turn these into tolerances and paces. opts: {"assist": bool} forces / suppresses the assist.
+## DA: Prøvens zone og fart fra tydelige faktorer: færdighed mod sværhed, opskriftens kompleksitet,
+##     stationens niveau, finjustering, træthed og evt. hjælp (tutorial-sværhed).
+static func check_params(station_id: String, recipe_id := "", checks := -1, opts := {}) -> Dictionary:
 	var c: Dictionary = DB.station(station_id).get("check", {"count": 1, "speed": 0.55, "zone": 34, "weight": 1.0})
 	var sk := cfg("skill")
 	var skill := skill_for_station(station_id)
 	var lvl := Game.player_level(skill)
+	var f := {}
+	# 1. skill against difficulty (recipe difficulty includes its material)
 	var diff := float(difficulty(recipe_id)) if recipe_id != "" else 2.0
 	var gap := diff - float(lvl)
-	var zone := float(c.get("zone", 34)) * clampf(1.0 - float(sk.get("difficulty_zone", 0.06)) * gap, 0.55, 1.45) \
-		+ float(sk.get("zone_per_level", 1.4)) * lvl
-	var ease := minf(float(sk.get("speed_ease_per_level", 0.015)) * lvl, float(sk.get("speed_ease_max", 0.3)))
-	var speed := float(c.get("speed", 0.55)) * (1.0 - ease) * clampf(1.0 + float(sk.get("difficulty_speed", 0.05)) * gap, 0.75, 1.4)
+	f["skill_zone"] = clampf(1.0 - float(sk.get("difficulty_zone", 0.06)) * gap, 0.55, 1.45)
+	var per_level_zone := float(sk.get("zone_per_level", 1.4)) * lvl
+	var level_ease := minf(float(sk.get("speed_ease_per_level", 0.015)) * lvl, float(sk.get("speed_ease_max", 0.3)))
+	f["skill_speed"] = (1.0 - level_ease) * clampf(1.0 + float(sk.get("difficulty_speed", 0.05)) * gap, 0.75, 1.4)
+	# 2. recipe complexity: number of operations
+	var n_ops := operations(recipe_id).size() if recipe_id != "" else 3
+	f["complexity"] = clampf(1.0 + COMPLEXITY_PER_OP * (n_ops - 3), COMPLEXITY_RANGE.x, COMPLEXITY_RANGE.y)
+	# 3. workstation tier and hand tuning
+	f["tier"] = float(STATION_TIER.get(str(DB.station(station_id).get("discipline", "classic")), 1.0))
+	var tune: Dictionary = STATION_TUNING.get(station_id, {})
+	f["tune_zone"] = float(tune.get("zone", 1.0))
+	f["tune_speed"] = float(tune.get("speed", 1.0))
+	# 4. the smith's condition
+	var wf := clampf(Vitality.work_factor(), 0.0, 1.0)
+	f["fatigue"] = 1.0 - FATIGUE_ZONE * (1.0 - wf)
+	# 5. assist / tutorial difficulty
+	var assist: bool = bool(opts.get("assist", assist_on()))
+	f["assist_zone"] = float(ASSIST["zone"]) if assist else 1.0
+	f["assist_speed"] = float(ASSIST["speed"]) if assist else 1.0
+	var upgrade_zone := 0.0
 	var upg: Dictionary = sk.get("upgrade_zone", {})
 	for u in upg:
 		var pair: Array = upg[u]
 		if pair[0] == skill and Game.has_upgrade(u):
-			zone += float(pair[1])
+			upgrade_zone += float(pair[1])
+	var zone: float = (float(c.get("zone", 34)) * float(f["skill_zone"]) + per_level_zone + upgrade_zone) \
+		/ float(f["complexity"]) / float(f["tier"]) * float(f["tune_zone"]) * float(f["fatigue"]) * float(f["assist_zone"])
+	var speed: float = float(c.get("speed", 0.55)) * float(f["skill_speed"]) * float(f["complexity"]) * float(f["tier"]) \
+		* float(f["tune_speed"]) * float(f["assist_speed"])
 	return {
 		"count": checks if checks > 0 else int(c.get("count", 1)),
 		"speed": speed,
-		"zone": clampf(zone, 14.0, 90.0),
+		"zone": clampf(zone, 12.0, 90.0),
 		"weight": float(c.get("weight", 1.0)),
-		"skill": skill, "level": lvl, "difficulty": diff,
+		"skill": skill, "level": lvl, "difficulty": diff, "assist": assist, "factors": f,
 	}
+
+
+## Practice / tutorial parameters for a station: the normal check at tutorial difficulty.
+static func tutorial_params(station_id: String, recipe_id := "") -> Dictionary:
+	return check_params(station_id, recipe_id, 1, {"assist": true})
 
 
 ## Parameters for the current operation of the active job.

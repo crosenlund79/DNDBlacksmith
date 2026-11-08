@@ -26,7 +26,8 @@ func _ready() -> void:
 		sl.value_changed.connect(func(v): Settings.set_value(key, v))
 		row.add_child(sl)
 		content.add_child(row)
-	for t in [["display/fullscreen", "Fullscreen"], ["display/vsync", "V-Sync"], ["gameplay/show_hints", "Show objective hints"]]:
+	for t in [["display/fullscreen", "Fullscreen"], ["display/vsync", "V-Sync"], ["gameplay/show_hints", "Show objective hints"],
+			["gameplay/check_assist", "Assist: skill checks at tutorial difficulty (wider zones, slower motion)"]]:
 		var cb := CheckBox.new()
 		cb.text = t[1]
 		cb.button_pressed = bool(Settings.get_value(t[0], false))
@@ -42,6 +43,12 @@ func _ready() -> void:
 	ob.item_selected.connect(func(i): Settings.set_value("gameplay/dice_mode", "physical" if i == 1 else "auto"))
 	dm.add_child(ob)
 	content.add_child(dm)
+	var tut := UIKit.hbox()
+	tut.add_child(UIKit.label("Skill-check how-to cards:", 22))
+	tut.add_child(UIKit.button("Show them again", func():
+		Minigames.reset_tutorials()
+		Events.toast.emit("The skill-check how-to cards will show again.", "info"), 220))
+	content.add_child(tut)
 	var ts := UIKit.hbox()
 	ts.add_child(UIKit.label("Day length:", 22))
 	var ob2 := OptionButton.new()
