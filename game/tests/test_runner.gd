@@ -36,6 +36,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_living_village()
+	_interface()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -546,6 +547,103 @@ func _loot() -> void:
 	check(items.size() >= 3, "loot: barrow table rolls items")
 	var c := Loot.make_container("bag_traveller", items, "test")
 	check(c["contents"].size() == items.size(), "loot: container keeps fixed contents")
+
+
+## Interface: history collectors, the reference guide's search and spoiler rules, tutorial steps,
+## talk markers and the ledger's balance series.
+func _interface() -> void:
+	# --- histories: a station log after crafting, the item's record, an NPC after a sale and a gift
+	Game.add_item(Items.make("ingot_iron", {"qty": 6}), false)
+	Game.add_item(Items.make("coal", {"qty": 6}), false)
+	Game.add_item(Items.make("leather_cured", {"qty": 3}), false)
+	var it := _craft("iron_longsword", 92.0, {"edge": 6, "temper": 5, "fortune": 60})
+	check(not it.is_empty(), "interface: crafted a sword for the history tests")
+	var st := str(it.get("craft", {}).get("ops", [{}])[0].get("station", "forge"))
+	var se := History.station_entries(st)
+	check(not se.is_empty() and int(se[0].get("item", 0)) == int(it["uid"]) and float(se[0]["q"]) > 0.0, "interface: station log records the piece, quality and day")
+	check(Game.state.has("station_log") and (Game.state["station_log"][st] as Array).size() <= History.STATION_CAP, "interface: station log lives in Game.state and is capped")
+	var ie := History.item_entries(it)
+	check(ie.any(func(e): return e["kind"] == "craft" and str(e["text"]).contains("Crafted")), "interface: item history includes the craft record")
+	# sell it to the first adventurer in town who would buy it (fresh purse, nothing better worn)
+	it["for_sale"] = true
+	var buyer := ""
+	for ad in Adv.all().values():
+		if str(ad.get("status", "")) == "dead":
+			continue
+		ad["gold"] = 5000
+		ad["status"] = "in_town"
+		ad.get("equipment", {}).erase("weapon")
+		if Adv.purchase_check(ad, it, Shop.price_of(it)) == "":
+			buyer = str(ad["id"])
+			break
+	var err := Shop.sell_to(buyer, int(it["uid"])) if buyer != "" else "no buyer"
+	check(err == "", "interface: test sale to %s (%s)" % [buyer, err])
+	check(History.owner_chain(it).size() >= 2 and History.owner_chain(it)[1] == Talk.npc_name(buyer), "interface: owner chain follows the sale (%s)" % " → ".join(History.owner_chain(it)))
+	check(History.npc_entries(buyer).any(func(e): return e["kind"] == "trade"), "interface: NPC history shows the purchase from the ledger")
+	Talk.choose("martha", "gift", "village") if Game.count("potion_healing") > 0 else Social.change("martha", 6.0, 3.0, "gift_" + str(Game.day()), "Brannoc gave me a healing draught.")
+	check(History.npc_entries("martha").any(func(e): return e["kind"] in ["gift", "memory"]), "interface: NPC history shows memories and gifts")
+	Chronicle.add("victory", "Test deed by Garrick.", {"adv": "garrick"})
+	check(History.npc_entries("garrick").any(func(e): return str(e["text"]).contains("Test deed")), "interface: NPC history reads the Chronicle by reference")
+	check(not History.find_item(int(it["uid"])).is_empty(), "interface: find_item locates a sold piece on its new owner")
+	# --- reference guide: search and spoilers
+	var all := Reference.entries()
+	check(all.size() > 30 and Reference.TABS.size() == 10, "interface: reference guide has entries in ten sections")
+	var hits := Reference.search("anvil")
+	check(not hits.is_empty() and hits.size() < all.size() and hits.all(func(e): return (str(e["title"]) + str(e["body"]) + str(e["keys"])).to_lower().contains("anvil")),
+		"interface: reference search filters (%d of %d)" % [hits.size(), all.size()])
+	var secret := ""
+	var secret_flag := ""
+	for r in DB.recipes.values():
+		if str(r.get("requires_flag", "")) != "":
+			secret = str(r["name"])
+			secret_flag = str(r["requires_flag"])
+	var had_flag := Game.has_flag(secret_flag) if secret_flag != "" else false
+	if secret_flag != "":
+		Game.state["flags"][secret_flag] = false
+	all = Reference.entries()
+	check(secret != "" and not all.any(func(e): return e["tab"] == "recipes" and e["title"] == secret), "interface: undiscovered secret recipe '%s' is hidden" % secret)
+	check(secret == "" or Reference.search(secret).filter(func(e): return e["tab"] == "recipes").is_empty(), "interface: search does not reveal the secret recipe")
+	if secret_flag != "":
+		Game.state["flags"][secret_flag] = true
+		check(Reference.search(secret).any(func(e): return e["tab"] == "recipes"), "interface: a discovered recipe appears in the guide")
+		Game.state["flags"][secret_flag] = had_flag
+	check(not Reference.item_visible("ore_adamantine") or Reference.seen().has("ore_adamantine"), "interface: rare materials stay hidden until seen")
+	Game.add_item(Items.make("ore_adamantine"), false)
+	Reference.note_seen()
+	check(Reference.item_visible("ore_adamantine"), "interface: a rare material appears once it has been in your stores")
+	check(not Reference.tab_entries("recipes").is_empty() and not Reference.tab_entries("ironfront").is_empty(), "interface: recipes and rules sections are filled")
+	# --- tutorial: steps complete on the real events
+	Tutorial.wire()
+	Tutorial.restart()
+	check(Tutorial.current()["id"] == "move", "interface: tutorial starts with movement")
+	Tutorial.on_moved(300.0)
+	check(Tutorial.is_done("move") and Tutorial.current()["id"] == "interact", "interface: walking completes the first step")
+	Events.open_panel.emit("station", {"id": "anvil"})
+	check(Tutorial.is_done("interact"), "interface: opening a station counts as interacting")
+	Events.station_worked.emit("anvil", 90.0)
+	check(Tutorial.is_done("craft"), "interface: a worked station check completes the crafting step")
+	Events.item_crafted.emit({})
+	check(Tutorial.is_done("dice"), "interface: finishing a piece completes the dice step")
+	Game.add_gold(12, "repairs", "Test repair")
+	check(Tutorial.is_done("customer"), "interface: being paid by a customer completes the customer step")
+	Events.open_panel.emit("skills", {})
+	Events.hireling_departed.emit("borin", "north")
+	Events.open_panel.emit("wanted", {})
+	check(Tutorial.is_done("skills") and Tutorial.is_done("hirelings") and Tutorial.is_done("adventurers"), "interface: skills, hirelings and adventurer steps advance")
+	Events.open_panel.emit("property", {})
+	check(Tutorial.current().is_empty() and not Tutorial.enabled(), "interface: the last step finishes and switches the tutorial off")
+	Tutorial.restart()
+	Tutorial.skip_step()
+	check(Tutorial.current()["id"] == "interact", "interface: steps can be skipped")
+	Tutorial.set_enabled(false)
+	check(Tutorial.current().is_empty(), "interface: tutorial can be hidden")
+	# --- talk markers
+	TalkMarkers.flag("tobin", "Wants to show you something")
+	check(TalkMarkers.wants_to_talk("tobin") != "", "interface: systems can flag NPCs who want to talk")
+	TalkMarkers.clear("tobin")
+	check(TalkMarkers.wants_to_talk("tobin") == "", "interface: talk flags clear")
+	var ser := ShopPanel._balance_series(7)
+	check(ser.size() == 7 and int(ser[6][1]) == Game.gold(), "interface: ledger gold trend ends at the current purse")
 
 
 func _saves() -> void:

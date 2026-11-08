@@ -35,6 +35,8 @@ const DEFAULT_KEYS := {
 	"panel_adventurers": [KEY_J],
 	"panel_ledger": [KEY_L],
 	"panel_orders": [KEY_O],
+	"panel_map": [KEY_M],
+	"panel_help": [KEY_F1],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"debug_overlay": [KEY_F3],

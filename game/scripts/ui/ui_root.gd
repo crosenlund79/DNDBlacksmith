@@ -21,6 +21,15 @@ var flash_rect: ColorRect
 var debug_label: Label
 var panel_host: Control
 var current: Control
+var current_id := ""
+var minimap: VillageMapView
+var minimap_caption: Label
+var toolbar: HudToolbar
+var tutorial_card: TutorialCard
+var _last_player_pos := Vector2.INF
+var _poll := 0.0
+
+const MINIMAP_SIZE := Vector2(330, 222)
 
 
 func _ready() -> void:
@@ -36,6 +45,9 @@ func _ready() -> void:
 	Events.legendary_found.connect(func(_it): legendary_flash())
 	Events.skill_level_up.connect(_on_level_up)
 	Events.close_panels.connect(close_current)
+	Events.inventory_changed.connect(Reference.note_seen)
+	Tutorial.wire()
+	Reference.note_seen()
 	_refresh_hud()
 
 
@@ -73,22 +85,47 @@ func _build_hud() -> void:
 	v.add_child(objective_label)
 	tl.add_child(v)
 	hud.add_child(tl)
-	# top-right: hotkeys
-	var keys := UIKit.label("[I] Inventory  [H] Hirelings  [K] Skills  [J] Adventurers  [B] Most Wanted  [O] Orders  [L] Ledger  [P] Pause  [−/+] Speed  [Esc] Menu", 18, "body", Color("#efe4cc"))
-	keys.add_theme_color_override("font_outline_color", Color("#20140c"))
-	keys.add_theme_constant_override("outline_size", 6)
-	keys.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	keys.position = Vector2(-1180, 20)
-	keys.size = Vector2(1160, 30)
-	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	hud.add_child(keys)
+	# top-right: minimap (click for the village map)
+	minimap = VillageMapView.new(true)
+	minimap.name = "Minimap"
+	minimap.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	minimap.position = Vector2(-20 - MINIMAP_SIZE.x, 18)
+	minimap.size = MINIMAP_SIZE
+	minimap.clicked.connect(func(): _on_open_panel("map", {}))
+	minimap.mouse_entered.connect(func(): show_tooltip("[b]Map[/b]  [color=#e8cc84][%s][/color]\n[i]Click for the village map. Speech marks: someone wants a word.[/i]" % Settings.key_label("panel_map")))
+	minimap.mouse_exited.connect(hide_tooltip)
+	hud.add_child(minimap)
+	minimap_caption = UIKit.label("", 18, "heading_italic", Color("#efe4cc"))
+	minimap_caption.add_theme_color_override("font_outline_color", Color("#20140c"))
+	minimap_caption.add_theme_constant_override("outline_size", 6)
+	minimap_caption.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	minimap_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	minimap_caption.position = Vector2(-20 - MINIMAP_SIZE.x, 22 + MINIMAP_SIZE.y)
+	minimap_caption.size = Vector2(MINIMAP_SIZE.x, 26)
+	hud.add_child(minimap_caption)
+	# bottom centre: the illustrated toolbar
+	toolbar = HudToolbar.new()
+	toolbar.name = "Toolbar"
+	toolbar.anchor_left = 0.5
+	toolbar.anchor_right = 0.5
+	toolbar.anchor_top = 1.0
+	toolbar.anchor_bottom = 1.0
+	toolbar.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toolbar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	toolbar.offset_bottom = -6
+	toolbar.offset_top = -6
+	hud.add_child(toolbar)
+	# left: the tutorial card
+	tutorial_card = TutorialCard.new()
+	tutorial_card.position = Vector2(20, 250)
+	hud.add_child(tutorial_card)
 	# prompt
 	prompt_label = UIKit.label("", 26, "heading", Color("#efe4cc"))
 	prompt_label.add_theme_color_override("font_outline_color", Color("#20140c"))
 	prompt_label.add_theme_constant_override("outline_size", 8)
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	prompt_label.position = Vector2(-500, -120)
+	prompt_label.position = Vector2(-500, -172)   # above the toolbar
 	prompt_label.size = Vector2(1000, 40)
 	hud.add_child(prompt_label)
 	# area banner
@@ -104,8 +141,8 @@ func _build_hud() -> void:
 	# toasts
 	toast_box = UIKit.vbox(6)
 	toast_box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	toast_box.position = Vector2(-560, -420)
-	toast_box.size = Vector2(540, 400)
+	toast_box.position = Vector2(-536, -420)      # clear of the toolbar (it ends near x 1355 at 1920)
+	toast_box.size = Vector2(516, 400)
 	toast_box.alignment = BoxContainer.ALIGNMENT_END
 	toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(toast_box)
@@ -162,7 +199,11 @@ func _refresh_hud() -> void:
 	objective_label.text = "[color=#7e2418]❧[/color] [i]%s[/i]" % obj
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_poll += delta
+	if _poll >= 0.25:
+		_poll = 0.0
+		_poll_world()
 	if tooltip_panel.visible:
 		var mp := get_viewport().get_mouse_position()
 		var vs := get_viewport().get_visible_rect().size
@@ -178,6 +219,25 @@ func _process(_delta: float) -> void:
 			Game.ui_blockers, Log.error_count, Assets.missing.size(), "\n".join(Log.lines.slice(max(0, Log.lines.size() - 6)))]
 
 
+## A few times a second: feed the tutorial the distance walked and caption the minimap.
+func _poll_world() -> void:
+	var w := get_tree().get_first_node_in_group("world") as VillageWorld
+	if w == null or w.player == null or Game.state.is_empty():
+		return
+	var p := w.player.position
+	if _last_player_pos != Vector2.INF:
+		Tutorial.on_moved(minf(p.distance_to(_last_player_pos), 200.0))
+	_last_player_pos = p
+	var cap := "Brindlewick"
+	if w.area != "village" and w.buildings.has(w.area):
+		cap = str(w.buildings[w.area].get("name", w.area))
+		for rm in w.buildings[w.area].get("rooms", []):
+			if rm["id"] == w.room:
+				cap += " · " + str(rm.get("name", ""))
+	minimap_caption.text = cap
+	tutorial_card.refresh()
+
+
 func toast(text: String, kind := "info") -> void:
 	if kind == "area":
 		area_banner.text = text
@@ -191,7 +251,7 @@ func toast(text: String, kind := "info") -> void:
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var col: String = {"good": "#9ad890", "bad": "#ff9a80", "legendary": "#ffa050", "info": "#efe4cc"}.get(kind, "#efe4cc")
 	var r := UIKit.rich("[color=%s]%s[/color]" % [col, text], 20, true)
-	r.custom_minimum_size = Vector2(480, 0)
+	r.custom_minimum_size = Vector2(456, 0)
 	p.add_child(r)
 	toast_box.add_child(p)
 	# remove_child first: queue_free() alone keeps the node counted until the frame ends,
@@ -249,7 +309,17 @@ func close_current() -> void:
 		else:
 			current.queue_free()
 	current = null
+	current_id = ""
 	hide_tooltip()
+
+
+## Is the panel `id` (with these args, for the shop's tab) the one on screen?
+func current_is(id: String, args := {}) -> bool:
+	if not is_instance_valid(current) or current_id != id:
+		return false
+	if id == "shop" and args.has("tab"):
+		return current is ShopPanel and (current as ShopPanel).tab == str(args["tab"])
+	return true
 
 
 func open(panel: Control) -> void:
@@ -263,10 +333,18 @@ func open(panel: Control) -> void:
 func _on_panel_closed(panel: Control) -> void:
 	if current == panel:
 		current = null
+		current_id = ""
 	hide_tooltip()
 
 
 func _on_open_panel(id: String, args: Dictionary) -> void:
+	var before := current
+	_route(id, args)
+	if current != before and is_instance_valid(current):
+		current_id = id
+
+
+func _route(id: String, args: Dictionary) -> void:
 	match id:
 		"prompt":
 			var t: String = args.get("text", "")
@@ -386,7 +464,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_on_open_panel(map[action], {})
 			return
-	if event.is_action_pressed("panel_ledger"):
+	if event.is_action_pressed("panel_map"):
+		get_viewport().set_input_as_handled()
+		_on_open_panel("map", {})
+	elif event.is_action_pressed("panel_help"):
+		get_viewport().set_input_as_handled()
+		_on_open_panel("help", {})
+	elif event.is_action_pressed("panel_ledger"):
 		_on_open_panel("shop", {"tab": "ledger"})
 	elif event.is_action_pressed("quick_save"):
 		if Saves.save("quicksave"):

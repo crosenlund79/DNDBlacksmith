@@ -37,6 +37,7 @@ func _build() -> void:
 	if why != "":
 		info.add_child(UIKit.label("Locked — " + why, 22, "body_bold", UIKit.RUBRIC))
 	head.add_child(info)
+	head.add_child(UIKit.button("History", func(): Events.open_panel.emit("history", {"kind": "station", "id": station_id}), 120))
 	content.add_child(head)
 	content.add_child(UIKit.divider())
 	var body := UIKit.vbox(10)

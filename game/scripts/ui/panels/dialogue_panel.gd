@@ -35,6 +35,7 @@ func _ready() -> void:
 	v.add_child(opts)
 	h.add_child(v)
 	content.add_child(h)
+	v.add_child(UIKit.button("☙ Your history together", func(): Events.open_panel.emit("history", {"kind": "npc", "id": npc}), 0))
 	text.text = Talk.greeting(npc)
 	_options()
 
