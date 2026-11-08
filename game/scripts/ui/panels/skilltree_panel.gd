@@ -295,6 +295,7 @@ class TreeCanvas extends Control:
 	var pressed := false
 	var t := 0.0
 	var flash := {}           # node id -> seconds since learned
+	var states := {}          # node id -> state, recomputed once per frame
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -325,8 +326,13 @@ class TreeCanvas extends Control:
 			maxy = maxf(maxy, float(n["y"]))
 		return Vector2(ORIGIN.x * 2.0 + 5.0 * COL_W, ORIGIN.y + maxy * ROW_H + 120.0)
 
+	func state_of(id: String) -> String:
+		if not states.has(id):
+			states[id] = SkillTree.node_state(id)
+		return states[id]
+
 	func visible_node(n: Dictionary) -> bool:
-		if SkillTree.node_state(n["id"]) != "hidden":
+		if state_of(n["id"]) != "hidden":
 			return true
 		for p in n["requires"].get("nodes", []):
 			if SkillTree.is_unlocked(str(p)):
@@ -424,6 +430,7 @@ class TreeCanvas extends Control:
 
 	# ---------------------------------------------------------------- drawing
 	func _draw() -> void:
+		states.clear()
 		var ws := world_size()
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#e9dcc0"))
 		# branch columns and header banners
@@ -527,7 +534,7 @@ class TreeCanvas extends Control:
 
 	func _node(n: Dictionary, fb: Font) -> void:
 		var id: String = n["id"]
-		var st := SkillTree.node_state(id)
+		var st := state_of(id)
 		var c := scr(world(n))
 		var r := R * zoom
 		var tex: Texture2D = null

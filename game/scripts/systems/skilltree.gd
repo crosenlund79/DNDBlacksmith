@@ -28,11 +28,14 @@ static func branches() -> Array:
 	return data().get("branches", [])
 
 
+static var _index := {}
+
+
 static func node(id: String) -> Dictionary:
-	for n in nodes():
-		if n["id"] == id:
-			return n
-	return {}
+	if _index.is_empty():
+		for n in nodes():
+			_index[n["id"]] = n
+	return _index.get(id, {})
 
 
 static func branch(id: String) -> Dictionary:
