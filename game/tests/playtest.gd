@@ -2448,3 +2448,84 @@ func phase_skilltree() -> void:
 	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
 	await shot("st_tree_secret")
 	await close_panel()
+
+
+# ======================================================================= iteration 010: the village (signs, roofs, roads, lamps, animals, venues)
+func _v10_inside(bid: String) -> void:
+	var door: Vector2 = W().spots[bid + "_door_out"]
+	await tp(door - (door - (W().buildings[bid]["rect"] as Rect2).get_center()).normalized() * 150.0)
+	await wait(0.9)
+	expect(W().area == bid, "village10: inside %s (%s)" % [bid, W().area])
+
+
+## Signs beside every door, weathered roofs, roads worn into the ground, street lamps by night, horses and cows,
+## animals that keep out of walls, and the new venues outside and in.
+func phase_village10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(11, 0)
+	var T := 64.0
+	await _v9_view("v10_map_day", Vector2(48 * T, 32 * T), 0.3)
+	await _v9_view("v10_map_north", Vector2(40 * T, 13 * T), 0.5)
+	await _v9_view("v10_map_south", Vector2(56 * T, 48 * T), 0.5)
+	# signs
+	expect(W().get_meta("v10_signs", []).size() == DB.layout["buildings"].size(), "village10: a sign at every building")
+	for bid in ["smithy", "inn", "grocery", "herbalist", "chandler", "cooperage", "stable", "house_oswin"]:
+		await _v9_view("v10_sign_" + bid, W().spots[bid + "_door_out"] + Vector2(0, 40), 1.4)
+	# roads up close: the square's rim, a junction, ruts on the main road, a lane between cottages
+	await _v9_view("v10_road_square_rim", Vector2(51.5 * T, 30.5 * T), 1.2)
+	await _v9_view("v10_road_junction", Vector2(20.5 * T, 30.0 * T), 1.0)
+	await _v9_view("v10_road_ruts", Vector2(44 * T, 31.2 * T), 1.6)
+	await _v9_view("v10_road_lane", Vector2(78.5 * T, 33.5 * T), 1.0)
+	# livestock
+	var horses := 0
+	var cows := 0
+	for an in W().animals:
+		horses += int((an as AnimalActor).kind == "horse")
+		cows += int((an as AnimalActor).kind == "cow")
+	expect(horses >= 2 and cows >= 3, "village10: %d horses and %d cows at grass" % [horses, cows])
+	await _v9_view("v10_horses", Vector2(17.5 * T, 17.3 * T), 1.1)
+	await _v9_view("v10_cows", Vector2(4.6 * T, 36.4 * T), 1.1)
+	# the cats along the smithy's north wall and by the square, after a good while of wandering
+	for an in W().animals:
+		for i in 1500:
+			(an as AnimalActor).step(0.1)
+	var inside := 0
+	for an in W().animals:
+		for bid in W().buildings:
+			if not W().buildings[bid]["area"] and (W().buildings[bid]["rect"] as Rect2).grow(-2).has_point((an as Node2D).position):
+				inside += 1
+	expect(inside == 0, "village10: no animal wandered into a building (%d)" % inside)
+	var cat: Node2D = null
+	for an in W().animals:
+		if (an as AnimalActor).kind == "cat" and (cat == null or (an as Node2D).position.distance_to(Vector2(31 * T, 33 * T)) < cat.position.distance_to(Vector2(31 * T, 33 * T))):
+			cat = an
+	await _v9_view("v10_cat_by_walls", cat.position + Vector2(0, -40), 1.4)
+	# the new venues, outside and in
+	await _v9_view("v10_pawnshop_out", W().spots["pawnshop_door_out"] + Vector2(0, 60), 1.0)
+	await _v10_inside("pawnshop")
+	await shot("v10_pawnshop_in")
+	expect(not find_entry("pawn", "pawn").is_empty(), "village10: the pawnbroker's counter is an interactable")
+	await _v9_view("v10_rival_out", W().spots["rival_forge_door_out"] + Vector2(0, -60), 1.0)
+	await _v10_inside("rival_forge")
+	await shot("v10_rival_in")
+	await _v9_view("v10_hale_out", Vector2(12.0 * T, 8.0 * T), 0.8)
+	await _v10_inside("hale_cottage")
+	await shot("v10_hale_in")
+	# the caravan camp, with and without its wagon
+	Village10.set_caravan(W(), false)
+	await _v9_view("v10_camp_empty", W().spots["caravan_camp"] + Vector2(0, -40), 1.0)
+	Village10.set_caravan(W(), true)
+	expect(not find_entry("caravan", "caravan").is_empty(), "village10: the caravan's interactable appears with the wagon")
+	await _v9_view("v10_camp_caravan", W().spots["caravan_camp"] + Vector2(0, -40), 1.0)
+	# the square's ceremony stage, and the graveyard's plots
+	await _v9_view("v10_square_stage", W().spots["square_podium"] + Vector2(0, -60), 1.0)
+	expect(not find_entry("hall_of_fame", "square").is_empty(), "village10: the square's honours board is an interactable")
+	await _v9_view("v10_graveyard", W().spots["graveyard_3"] + Vector2(0, -40), 1.1)
+	# street lamps by night
+	await advance_to(22, 30)
+	await _v9_view("v10_square_night", Vector2(58 * T, 30 * T), 0.7)
+	await _v9_view("v10_lane_night", Vector2(36 * T, 12 * T), 0.8)
+	await _v9_view("v10_camp_night", W().spots["caravan_camp"] + Vector2(0, -40), 0.9)
+	await _v9_view("v10_map_night", Vector2(48 * T, 32 * T), 0.3)
+	Village10.set_caravan(W(), false)

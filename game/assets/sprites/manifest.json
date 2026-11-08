@@ -114,6 +114,10 @@
    72,
    72
   ],
+  "props/template_arcane_enclosure.png": [
+   176,
+   128
+  ],
   "props/template_arcane_glyph_decal.png": [
    192,
    192
@@ -166,6 +170,10 @@
    160,
    36
   ],
+  "props/template_bestiary_desk.png": [
+   128,
+   56
+  ],
   "props/template_bookshelf.png": [
    128,
    40
@@ -178,6 +186,10 @@
    64,
    56
   ],
+  "props/template_bunting.png": [
+   320,
+   56
+  ],
   "props/template_bush.png": [
    80,
    80
@@ -186,6 +198,10 @@
    80,
    80
   ],
+  "props/template_campfire.png": [
+   72,
+   72
+  ],
   "props/template_candle.png": [
    24,
    24
@@ -193,6 +209,14 @@
   "props/template_candle_rack.png": [
    128,
    40
+  ],
+  "props/template_caravan_pennant.png": [
+   80,
+   40
+  ],
+  "props/template_caravan_wagon.png": [
+   224,
+   144
   ],
   "props/template_card_binders.png": [
    128,
@@ -214,6 +238,10 @@
    72,
    56
   ],
+  "props/template_chicken_coop.png": [
+   112,
+   96
+  ],
   "props/template_chopping_block.png": [
    48,
    52
@@ -234,6 +262,10 @@
    96,
    96
   ],
+  "props/template_creature_cages.png": [
+   128,
+   48
+  ],
   "props/template_crop_rows.png": [
    192,
    128
@@ -241,6 +273,10 @@
   "props/template_cupboard.png": [
    112,
    48
+  ],
+  "props/template_curio_shelf.png": [
+   128,
+   40
   ],
   "props/template_desk_ledger.png": [
    144,
@@ -257,6 +293,10 @@
   "props/template_diorama_table.png": [
    160,
    96
+  ],
+  "props/template_display_case.png": [
+   96,
+   56
   ],
   "props/template_display_table.png": [
    128,
@@ -282,9 +322,21 @@
    96,
    64
   ],
+  "props/template_feed_scatter.png": [
+   64,
+   48
+  ],
   "props/template_felt_table.png": [
    288,
    176
+  ],
+  "props/template_fence_gate_h.png": [
+   64,
+   24
+  ],
+  "props/template_fence_gate_v.png": [
+   24,
+   64
   ],
   "props/template_fence_h.png": [
    64,
@@ -318,6 +370,10 @@
    80,
    64
   ],
+  "props/template_grave_plot.png": [
+   72,
+   48
+  ],
   "props/template_gravestone.png": [
    40,
    48
@@ -325,6 +381,10 @@
   "props/template_harbour_booth.png": [
    128,
    112
+  ],
+  "props/template_hay_rack.png": [
+   80,
+   48
   ],
   "props/template_haybale.png": [
    64,
@@ -406,6 +466,10 @@
    64,
    48
   ],
+  "props/template_log_seat.png": [
+   96,
+   40
+  ],
   "props/template_loot_pile.png": [
    64,
    48
@@ -458,9 +522,17 @@
    128,
    40
   ],
+  "props/template_pawn_counter.png": [
+   192,
+   56
+  ],
   "props/template_pew.png": [
    160,
    40
+  ],
+  "props/template_podium_board.png": [
+   128,
+   64
   ],
   "props/template_potting_bench.png": [
    128,
@@ -474,6 +546,10 @@
    96,
    56
   ],
+  "props/template_rabbit_hutch.png": [
+   96,
+   72
+  ],
   "props/template_reeds.png": [
    64,
    64
@@ -481,6 +557,22 @@
   "props/template_refuse_heap.png": [
    80,
    64
+  ],
+  "props/template_rival_anvil.png": [
+   80,
+   48
+  ],
+  "props/template_rival_counter.png": [
+   160,
+   56
+  ],
+  "props/template_rival_display.png": [
+   160,
+   40
+  ],
+  "props/template_rival_forge.png": [
+   128,
+   96
   ],
   "props/template_rock_a.png": [
    64,
@@ -546,7 +638,47 @@
    256,
    64
   ],
+  "props/template_sign_barnaby.png": [
+   80,
+   48
+  ],
+  "props/template_sign_carpenter.png": [
+   80,
+   48
+  ],
+  "props/template_sign_chandler.png": [
+   80,
+   48
+  ],
+  "props/template_sign_chapel.png": [
+   80,
+   48
+  ],
+  "props/template_sign_cooper.png": [
+   80,
+   48
+  ],
+  "props/template_sign_cottage_a.png": [
+   80,
+   48
+  ],
+  "props/template_sign_cottage_b.png": [
+   80,
+   48
+  ],
+  "props/template_sign_farm.png": [
+   80,
+   48
+  ],
   "props/template_sign_grocer.png": [
+   80,
+   48
+  ],
+  "props/template_sign_harbour.png": [
+   80,
+   48
+  ],
+  "props/template_sign_herbalist.png": [
    80,
    48
   ],
@@ -554,7 +686,31 @@
    80,
    48
   ],
+  "props/template_sign_laundry.png": [
+   80,
+   48
+  ],
+  "props/template_sign_menagerie.png": [
+   80,
+   48
+  ],
+  "props/template_sign_netloft.png": [
+   80,
+   48
+  ],
+  "props/template_sign_pawn.png": [
+   80,
+   48
+  ],
+  "props/template_sign_rival.png": [
+   80,
+   48
+  ],
   "props/template_sign_smithy.png": [
+   80,
+   48
+  ],
+  "props/template_sign_stable.png": [
    80,
    48
   ],
@@ -565,6 +721,10 @@
   "props/template_spill_decal.png": [
    96,
    72
+  ],
+  "props/template_square_stage.png": [
+   288,
+   176
   ],
   "props/template_stairs_down.png": [
    96,
@@ -598,6 +758,14 @@
    32,
    32
   ],
+  "props/template_street_lamp.png": [
+   64,
+   128
+  ],
+  "props/template_street_lamp_glow.png": [
+   64,
+   128
+  ],
   "props/template_stump.png": [
    48,
    48
@@ -613,6 +781,10 @@
   "props/template_tank_shelf.png": [
    128,
    40
+  ],
+  "props/template_tether_post.png": [
+   32,
+   32
   ],
   "props/template_thread_spools.png": [
    72,
@@ -1178,6 +1350,10 @@
    704,
    576
   ],
+  "roofs/template_hale_cottage.png": [
+   448,
+   320
+  ],
   "roofs/template_herbalist.png": [
    576,
    448
@@ -1221,6 +1397,14 @@
   "roofs/template_net_loft.png": [
    384,
    256
+  ],
+  "roofs/template_pawnshop.png": [
+   448,
+   320
+  ],
+  "roofs/template_rival_forge.png": [
+   576,
+   384
   ],
   "roofs/template_smithy.png": [
    1920,
