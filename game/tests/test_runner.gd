@@ -36,6 +36,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_living_village()
+	_ironfront()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -546,6 +547,111 @@ func _loot() -> void:
 	check(items.size() >= 3, "loot: barrow table rolls items")
 	var c := Loot.make_container("bag_traveller", items, "test")
 	check(c["contents"].size() == items.size(), "loot: container keeps fixed contents")
+
+
+## Ironfront: deck validator, AI-vs-AI matches (standard and Blitzkrieg), card conservation,
+## rewards and deck persistence across save/load.
+func _ironfront() -> void:
+	Game.state.erase("ironfront")
+	var st := Ironfront.st()
+	check(not st["decks"].is_empty() and Ironfront.validate_deck(Ironfront.active_deck(), st["collection"]).is_empty(),
+		"ironfront: starter deck is valid and owned")
+	check(Ironfront.all_cards().size() >= 40 and Ironfront.all_cards().size() <= 55, "ironfront: 40-55 distinct cards (%d)" % Ironfront.all_cards().size())
+	var bad := Ironfront.active_deck().duplicate(true)
+	bad["cards"] = {"rifle_squad": 3}
+	check(not Ironfront.validate_deck(bad).is_empty(), "ironfront: validator rejects a too-small deck")
+	var mixed := Ironfront.active_deck().duplicate(true)
+	mixed["cards"]["tiger"] = 1
+	check(Ironfront.validate_deck(mixed).any(func(e): return str(e).contains("faction")), "ironfront: validator rejects off-faction cards")
+	var greedy := Ironfront.active_deck().duplicate(true)
+	greedy["cards"]["sherman"] = 4
+	check(not Ironfront.validate_deck(greedy).is_empty(), "ironfront: validator enforces copy limits")
+	var big := Ironfront.active_deck().duplicate(true)
+	big["cards"]["rangers"] = 2
+	check(Ironfront.validate_deck(big).is_empty() and not Ironfront.validate_deck(big, st["collection"]).is_empty(),
+		"ironfront: validator checks owned copies only when given a collection")
+	for o: Dictionary in Ironfront.opponents():
+		check(Ironfront.validate_deck(o["deck"]).is_empty(), "ironfront: %s's deck is valid" % o["id"])
+	# full AI-vs-AI matches in both modes, several seeds and pairings
+	var opps := Ironfront.opponents()
+	var all_ok := true
+	var outcomes := {0: 0, 1: 0, 2: 0}
+	for mode in ["standard", "blitz"]:
+		for seed in [1, 2, 3, 7, 11, 42]:
+			var a: Dictionary = opps[seed % opps.size()]
+			var b: Dictionary = opps[(seed + 1) % opps.size()]
+			var m := Ironfront.new_match(a["deck"], b["deck"], mode, seed, {"ai": [a["ai"], b["ai"]], "names": [a["name"], b["name"]]})
+			var uids := Ironfront.all_uids(m)
+			uids.sort()
+			var n0 := uids.size()
+			var guard := 0
+			var conserved := true
+			while not m["over"] and guard < 400:
+				guard += 1
+				var side := int(m["turn"])
+				var mv := Ironfront.ai_move(m, side)
+				if not Ironfront.apply(m, side, mv):
+					all_ok = false
+					break
+				var now := Ironfront.all_uids(m)
+				now.sort()
+				if now != uids:
+					conserved = false
+			var rounds: Array = m["rounds"]
+			var ok: bool = m["over"] and int(m["winner"]) in [0, 1, 2] and conserved and Ironfront.all_uids(m).size() == n0
+			ok = ok and (rounds.size() == 1 if mode == "blitz" else rounds.size() >= 2 and rounds.size() <= 3)
+			for r: Dictionary in rounds:
+				ok = ok and int(r["winner"]) in [0, 1, 2] and r["scores"].size() == 2
+			if not ok:
+				all_ok = false
+				print("ironfront match failed: ", mode, " seed ", seed, " over=", m["over"], " rounds=", rounds, " conserved=", conserved)
+			outcomes[int(m["winner"])] = int(outcomes[int(m["winner"])]) + 1
+	check(all_ok, "ironfront: 12 AI-vs-AI matches (standard + Blitzkrieg) finish, every round resolves, no card lost or duplicated")
+	check(int(outcomes[0]) > 0 and int(outcomes[1]) > 0, "ironfront: both sides win sometimes (%s)" % str(outcomes))
+	var m1 := Ironfront.simulate(opps[0]["deck"], opps[1]["deck"], "standard", 5)
+	var m2 := Ironfront.simulate(opps[0]["deck"], opps[1]["deck"], "standard", 5)
+	check(m1["rounds"] == m2["rounds"] and m1["winner"] == m2["winner"], "ironfront: matches are deterministic per seed")
+	# the AI passes when the opponent has passed and it is ahead
+	var m3 := Ironfront.new_match(opps[0]["deck"], opps[1]["deck"], "standard", 9)
+	m3["turn"] = 0
+	Ironfront.apply(m3, 0, {"type": "pass"})
+	var mv1 := Ironfront.ai_move(m3, 1)
+	check(mv1["type"] != "pass", "ironfront: AI plays when the opponent passed on 0-0")
+	Ironfront.apply(m3, 1, mv1)
+	check(int(m3["turn"]) == 1 and Ironfront.ai_move(m3, 1)["type"] == "pass", "ironfront: AI passes once ahead of a passed opponent")
+	# weather, entrench and artillery behave
+	var m4 := Ironfront.new_match(opps[1]["deck"], opps[0]["deck"], "standard", 3)
+	var tiger := {"uid": 9001, "id": "tiger", "str": 10, "shield": true}
+	var p4 := {"uid": 9002, "id": "panzer_iv", "str": 5, "shield": false}
+	m4["sides"][0]["rows"]["arm"] = [tiger, p4]
+	m4["weather"]["arm"] = true
+	check(Ironfront.eff(m4, 0, "arm", tiger) == 10 and Ironfront.eff(m4, 0, "arm", p4) == 1, "ironfront: mud sets armour to 1, entrenched Tiger ignores it")
+	# rewards add cards and gold
+	var before := Ironfront.collection_size()
+	var gold0 := Game.gold()
+	var won := {"over": true, "winner": 0, "opp": "sigrun", "mode": "standard"}
+	var rw := Ironfront.finish_reward(won)
+	check(rw["cards"].size() == 2 and Ironfront.collection_size() == before + 2 and Game.gold() > gold0, "ironfront: a win over a tier-3 opponent grants 2 cards and gold")
+	check(Ironfront.finish_reward(won) == rw and Ironfront.collection_size() == before + 2, "ironfront: rewards apply once")
+	check(int(Ironfront.record("sigrun")["w"]) == 1, "ironfront: wins are recorded per opponent")
+	var lost := Ironfront.finish_reward({"over": true, "winner": 1, "opp": "jory", "mode": "standard"})
+	check(lost["result"] == "loss" and int(lost["gold"]) > 0 and int(Ironfront.record("jory")["l"]) == 1, "ironfront: a loss pays a consolation")
+	check(Ironfront.grant_card("tiger2", "expedition") and Ironfront.owned("tiger2") >= 1, "ironfront: grant_card adds a special card")
+	check(Ironfront.card(Ironfront.random_card("special")).get("special", false), "ironfront: random_card('special') returns a special")
+	check(not Ironfront.grant_card("no_such_card", "test"), "ironfront: grant_card rejects unknown ids")
+	# deck edits persist across save/load
+	var d := Ironfront.active_deck().duplicate(true)
+	d["name"] = "Test Brigade"
+	d["cards"]["rifle_squad"] = 2
+	var idx := Ironfront.save_deck(-1, d)
+	Ironfront.set_active(idx)
+	check(Saves.save("ironfront_test_slot"), "ironfront: save written")
+	Game.state["ironfront"]["decks"] = []
+	check(Saves.load_slot("ironfront_test_slot"), "ironfront: save read")
+	var ds := Ironfront.decks()
+	check(ds.size() == idx + 1 and ds[idx]["name"] == "Test Brigade" and int(ds[idx]["cards"]["rifle_squad"]) == 2
+		and int(Ironfront.st()["active"]) == idx and Ironfront.owned("tiger2") >= 1, "ironfront: decks, active deck and collection survive save/load")
+	Saves.delete("ironfront_test_slot")
 
 
 func _saves() -> void:

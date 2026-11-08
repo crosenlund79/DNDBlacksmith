@@ -1,0 +1,1273 @@
+{
+ "cards": [
+  {
+   "id": "rifle_squad",
+   "name": "Rifle Squad",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 3,
+   "abilities": [],
+   "rarity": "common",
+   "art": "inf_m1",
+   "flavor": "Men in tin bowls who carry thunder-sticks. They sing about girls they left behind.",
+   "group": "rifle_squad"
+  },
+  {
+   "id": "tommies",
+   "name": "Tommy Section",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 4,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "tommies"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_brodie",
+   "flavor": "They wear soup plates for hats and stop the war for tea. Nobody laughs twice.",
+   "group": "tommies"
+  },
+  {
+   "id": "airborne",
+   "name": "Airborne Paratroopers",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 4,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "airborne"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_para",
+   "flavor": "They step out of the sky beneath silk mushrooms, as if heaven had a back door.",
+   "group": "airborne"
+  },
+  {
+   "id": "rangers",
+   "name": "Rangers",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "assault",
+     "n": 2
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "inf_m1",
+   "flavor": "Climbed a sea-cliff under fire with ropes and ladders. Asked what was next.",
+   "group": "rangers"
+  },
+  {
+   "id": "commandos",
+   "name": "Commandos",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "assault",
+     "n": 3
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "inf_beret",
+   "flavor": "Green berets, blackened faces and very quiet boots.",
+   "group": "commandos"
+  },
+  {
+   "id": "combat_medic",
+   "name": "Combat Medic",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "medic"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_medic",
+   "flavor": "Carries no sword at all, only bandages and a terrible bravery.",
+   "group": "combat_medic"
+  },
+  {
+   "id": "forward_observer",
+   "name": "Forward Observer",
+   "faction": "allies",
+   "type": "unit",
+   "row": "inf",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "spotter"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_observer",
+   "flavor": "Squints through a brass far-glass and whispers to a box that answers.",
+   "group": "forward_observer"
+  },
+  {
+   "id": "sherman",
+   "name": "Sherman M4",
+   "faction": "allies",
+   "type": "unit",
+   "row": "arm",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "tank_sherman",
+   "flavor": "Tall as a hay-wain and twice as common. There is always another one.",
+   "group": "sherman"
+  },
+  {
+   "id": "churchill",
+   "name": "Churchill",
+   "faction": "allies",
+   "type": "unit",
+   "row": "arm",
+   "str": 7,
+   "abilities": [
+    {
+     "k": "entrench"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "tank_churchill",
+   "flavor": "Slow as a sermon and armoured like a cathedral door.",
+   "group": "churchill"
+  },
+  {
+   "id": "m7_priest",
+   "name": "M7 Priest",
+   "faction": "allies",
+   "type": "unit",
+   "row": "arm",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "artillery",
+     "n": 4,
+     "row": "inf"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "spg_priest",
+   "flavor": "Named for its pulpit. Its sermons land three miles away.",
+   "group": "m7_priest"
+  },
+  {
+   "id": "jeep",
+   "name": "Willys Jeep",
+   "faction": "allies",
+   "type": "unit",
+   "row": "arm",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "supply"
+    }
+   ],
+   "rarity": "common",
+   "art": "car_jeep",
+   "flavor": "A horseless cart that goes anywhere and brings back everything.",
+   "group": "jeep"
+  },
+  {
+   "id": "spitfire",
+   "name": "Spitfire Mk IX",
+   "faction": "allies",
+   "type": "unit",
+   "row": "air",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "air_spitfire",
+   "flavor": "Wings shaped like a beech leaf; it sings as it turns.",
+   "group": "spitfire"
+  },
+  {
+   "id": "mustang",
+   "name": "P-51 Mustang",
+   "faction": "allies",
+   "type": "unit",
+   "row": "air",
+   "str": 7,
+   "abilities": [
+    {
+     "k": "rally",
+     "n": 1
+    }
+   ],
+   "rarity": "rare",
+   "art": "air_mustang",
+   "flavor": "A silver hawk that flies the bombers all the way there and all the way home.",
+   "group": "mustang"
+  },
+  {
+   "id": "dakota",
+   "name": "C-47 Dakota",
+   "faction": "allies",
+   "type": "unit",
+   "row": "air",
+   "str": 3,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "airborne"
+    }
+   ],
+   "rarity": "common",
+   "art": "air_dakota",
+   "flavor": "A flying barn. The paratroopers come out of the side door.",
+   "group": "dakota"
+  },
+  {
+   "id": "lancaster",
+   "name": "Avro Lancaster",
+   "faction": "allies",
+   "type": "unit",
+   "row": "air",
+   "str": 8,
+   "abilities": [
+    {
+     "k": "barrage",
+     "n": 2,
+     "row": "inf"
+    }
+   ],
+   "rarity": "rare",
+   "art": "air_lancaster",
+   "flavor": "Four engines roaring like a forge on a windy night.",
+   "group": "lancaster"
+  },
+  {
+   "id": "grenadiers",
+   "name": "Grenadiers",
+   "faction": "axis",
+   "type": "unit",
+   "row": "inf",
+   "str": 4,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "grenadiers"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_stahlhelm",
+   "flavor": "Coal-scuttle helmets and greatcoats to the shin.",
+   "group": "grenadiers"
+  },
+  {
+   "id": "fallschirmjager",
+   "name": "Fallschirmjäger",
+   "faction": "axis",
+   "type": "unit",
+   "row": "inf",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "entrench"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "inf_para_axis",
+   "flavor": "Dropped from the clouds, then dug into a mountain monastery and would not leave.",
+   "group": "fallschirmjager"
+  },
+  {
+   "id": "mg42",
+   "name": "MG 42 Team",
+   "faction": "axis",
+   "type": "unit",
+   "row": "inf",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "assault",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_mg",
+   "flavor": "Sounds like a loom tearing linen. Men call it the bone-saw.",
+   "group": "mg42"
+  },
+  {
+   "id": "field_surgeon",
+   "name": "Field Surgeon",
+   "faction": "axis",
+   "type": "unit",
+   "row": "inf",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "medic"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_medic",
+   "flavor": "Stitches faster than a sail-maker.",
+   "group": "field_surgeon"
+  },
+  {
+   "id": "panzerfaust",
+   "name": "Panzerfaust Troop",
+   "faction": "axis",
+   "type": "unit",
+   "row": "inf",
+   "str": 3,
+   "abilities": [
+    {
+     "k": "artillery",
+     "n": 3,
+     "row": "arm"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_tube",
+   "flavor": "A fist on a stick that punches through a castle gate. Once.",
+   "group": "panzerfaust"
+  },
+  {
+   "id": "panzer_iv",
+   "name": "Panzer IV",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "tank_p4",
+   "flavor": "The workhorse. Skirts of iron plate hang along its flanks like barding.",
+   "group": "panzer_iv"
+  },
+  {
+   "id": "panther",
+   "name": "Panther",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 8,
+   "abilities": [],
+   "rarity": "uncommon",
+   "art": "tank_panther",
+   "flavor": "Sloped like a roof in snow country; its long gun reaches the next parish.",
+   "group": "panther"
+  },
+  {
+   "id": "tiger",
+   "name": "Tiger I",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 10,
+   "abilities": [
+    {
+     "k": "entrench"
+    }
+   ],
+   "rarity": "rare",
+   "art": "tank_tiger",
+   "flavor": "A steel beetle that breathes thunder. Villagers say it eats bridges.",
+   "group": "tiger"
+  },
+  {
+   "id": "stug",
+   "name": "StuG III",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "entrench"
+    }
+   ],
+   "rarity": "common",
+   "art": "spg_stug",
+   "flavor": "A low iron toad with a gun for a tongue, waiting in the hedgerow.",
+   "group": "stug"
+  },
+  {
+   "id": "flak88",
+   "name": "88 mm Flak",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "artillery",
+     "n": 4,
+     "row": "air"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "gun_88",
+   "flavor": "Built to swat sky-dragons; equally happy to swat iron ones.",
+   "group": "flak88"
+  },
+  {
+   "id": "halftrack",
+   "name": "Sd.Kfz. 251 Half-track",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 3,
+   "abilities": [
+    {
+     "k": "supply"
+    }
+   ],
+   "rarity": "common",
+   "art": "car_halftrack",
+   "flavor": "Wheels at the front, a mill-belt at the back, and a squad in its belly.",
+   "group": "halftrack"
+  },
+  {
+   "id": "bf109",
+   "name": "Messerschmitt Bf 109",
+   "faction": "axis",
+   "type": "unit",
+   "row": "air",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "air_bf109",
+   "flavor": "A narrow grey falcon with square-clipped wings.",
+   "group": "bf109"
+  },
+  {
+   "id": "stuka",
+   "name": "Ju 87 Stuka",
+   "faction": "axis",
+   "type": "unit",
+   "row": "air",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "artillery",
+     "n": 4,
+     "row": "arm"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "air_stuka",
+   "flavor": "Folds its bent wings and falls screaming like a stooping hawk.",
+   "group": "stuka"
+  },
+  {
+   "id": "ju52",
+   "name": "Ju 52 Transport",
+   "faction": "axis",
+   "type": "unit",
+   "row": "air",
+   "str": 3,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "fallschirmjager"
+    }
+   ],
+   "rarity": "common",
+   "art": "air_ju52",
+   "flavor": "Corrugated like a washboard, three-engined, patient as a mule.",
+   "group": "ju52"
+  },
+  {
+   "id": "rifle_company",
+   "name": "Rifle Company",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "inf",
+   "str": 3,
+   "abilities": [
+    {
+     "k": "reinforce",
+     "group": "rifle_company"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_ssh",
+   "flavor": "There are always more of them coming over the snow.",
+   "group": "rifle_company"
+  },
+  {
+   "id": "guards",
+   "name": "Guards Rifles",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "inf",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "inf_ssh",
+   "flavor": "Earned the word Guards in the ruins of a city on the Volga.",
+   "group": "guards"
+  },
+  {
+   "id": "snipers",
+   "name": "Sniper Pair",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "inf",
+   "str": 4,
+   "abilities": [
+    {
+     "k": "assault",
+     "n": 3
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "inf_sniper",
+   "flavor": "Two patient shadows and a rifle with a glass eye.",
+   "group": "snipers"
+  },
+  {
+   "id": "field_nurse",
+   "name": "Field Nurse",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "inf",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "medic"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_medic",
+   "flavor": "Drags men twice her weight out of the fire, singing.",
+   "group": "field_nurse"
+  },
+  {
+   "id": "razvedchiki",
+   "name": "Razvedchiki Scouts",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "inf",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "spotter"
+    }
+   ],
+   "rarity": "common",
+   "art": "inf_scout",
+   "flavor": "White smocks in white snow. You will not see them.",
+   "group": "razvedchiki"
+  },
+  {
+   "id": "t34",
+   "name": "T-34/85",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "arm",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "tank_t34",
+   "flavor": "Wide tracks for the mud, sloped plate for the shells. The tractor-works make one an hour.",
+   "group": "t34"
+  },
+  {
+   "id": "kv1",
+   "name": "KV-1",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "arm",
+   "str": 8,
+   "abilities": [
+    {
+     "k": "entrench"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "tank_kv1",
+   "flavor": "A moving keep. Shot glances off it like hail off a church bell.",
+   "group": "kv1"
+  },
+  {
+   "id": "katyusha",
+   "name": "Katyusha",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "arm",
+   "str": 4,
+   "abilities": [
+    {
+     "k": "barrage",
+     "n": 2,
+     "row": "inf"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "gun_katyusha",
+   "flavor": "A wagon of organ pipes that sings fire. The other side calls it Stalin's organ.",
+   "group": "katyusha"
+  },
+  {
+   "id": "studebaker",
+   "name": "Studebaker Truck",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "arm",
+   "str": 2,
+   "abilities": [
+    {
+     "k": "supply"
+    }
+   ],
+   "rarity": "common",
+   "art": "car_truck",
+   "flavor": "Came across the sea with flour, boots and a thousand cans of meat.",
+   "group": "studebaker"
+  },
+  {
+   "id": "il2",
+   "name": "Il-2 Sturmovik",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "air",
+   "str": 6,
+   "abilities": [
+    {
+     "k": "artillery",
+     "n": 3,
+     "row": "arm"
+    }
+   ],
+   "rarity": "uncommon",
+   "art": "air_il2",
+   "flavor": "A flying tank. Its bathtub of armour shrugs off arrows and worse.",
+   "group": "il2"
+  },
+  {
+   "id": "yak3",
+   "name": "Yak-3",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "air",
+   "str": 5,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "common",
+   "art": "air_yak",
+   "flavor": "Light as a swift and as quick to turn.",
+   "group": "yak3"
+  },
+  {
+   "id": "tiger2",
+   "name": "Tiger II",
+   "faction": "axis",
+   "type": "unit",
+   "row": "arm",
+   "str": 12,
+   "abilities": [
+    {
+     "k": "elite"
+    }
+   ],
+   "rarity": "special",
+   "art": "tank_tiger2",
+   "flavor": "Found crated in a barrow-mound: a beetle the size of a chapel.",
+   "group": "tiger2",
+   "special": true
+  },
+  {
+   "id": "me262",
+   "name": "Me 262",
+   "faction": "axis",
+   "type": "unit",
+   "row": "air",
+   "str": 9,
+   "abilities": [
+    {
+     "k": "combined",
+     "n": 2
+    }
+   ],
+   "rarity": "special",
+   "art": "air_me262",
+   "flavor": "A falcon with no propeller at all. It screams past before the thunder arrives.",
+   "group": "me262",
+   "special": true
+  },
+  {
+   "id": "mosquito",
+   "name": "de Havilland Mosquito",
+   "faction": "allies",
+   "type": "unit",
+   "row": "air",
+   "str": 7,
+   "abilities": [
+    {
+     "k": "spotter"
+    },
+    {
+     "k": "artillery",
+     "n": 3,
+     "row": "arm"
+    }
+   ],
+   "rarity": "special",
+   "art": "air_mosquito",
+   "flavor": "Made of wood, like a good cart, and faster than anything with feathers.",
+   "group": "mosquito",
+   "special": true
+  },
+  {
+   "id": "is2",
+   "name": "IS-2",
+   "faction": "soviet",
+   "type": "unit",
+   "row": "arm",
+   "str": 11,
+   "abilities": [
+    {
+     "k": "elite"
+    }
+   ],
+   "rarity": "special",
+   "art": "tank_is2",
+   "flavor": "Its gun fires a shell the weight of a ten-year-old child.",
+   "group": "is2",
+   "special": true
+  },
+  {
+   "id": "mud",
+   "name": "Mud Season",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "weather",
+   "rarity": "common",
+   "art": "tac_mud",
+   "flavor": "Spring thaw turns every road into porridge. Iron wagons sink to the axles.",
+   "row_target": "arm"
+  },
+  {
+   "id": "fog",
+   "name": "Channel Fog",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "weather",
+   "rarity": "common",
+   "art": "tac_fog",
+   "flavor": "Grey wool over the sea. No bird of iron flies today.",
+   "row_target": "air"
+  },
+  {
+   "id": "frost",
+   "name": "Hard Frost",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "weather",
+   "rarity": "common",
+   "art": "tac_frost",
+   "flavor": "So cold the grease freezes in the rifles and the men freeze to the grease.",
+   "row_target": "inf"
+  },
+  {
+   "id": "smoke",
+   "name": "Smoke Screen",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "clear",
+   "rarity": "common",
+   "art": "tac_smoke",
+   "flavor": "Canisters that hiss white clouds: whatever blinded the field is gone."
+  },
+  {
+   "id": "air_superiority",
+   "name": "Air Superiority",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "air_superiority",
+   "rarity": "uncommon",
+   "art": "tac_air",
+   "flavor": "Own the sky and the rest follows. Clears fog; your Air units gain +2 this round."
+  },
+  {
+   "id": "pincer",
+   "name": "Pincer Movement",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "pincer",
+   "rarity": "rare",
+   "art": "tac_pincer",
+   "flavor": "Two arrows on the map close like a smith's tongs."
+  },
+  {
+   "id": "codebreakers",
+   "name": "Bletchley Park Codebreakers",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "codebreakers",
+   "rarity": "rare",
+   "art": "tac_codebreakers",
+   "flavor": "Clever folk in a country house, reading the enemy's letters before he does."
+  },
+  {
+   "id": "fortitude",
+   "name": "Operation Fortitude",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "decoy",
+   "rarity": "uncommon",
+   "art": "tac_fortitude",
+   "flavor": "An army of painted canvas and rubber tanks, inflated by four men and a bicycle pump."
+  },
+  {
+   "id": "doctrine",
+   "name": "Blitzkrieg Doctrine",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "doctrine",
+   "rarity": "uncommon",
+   "art": "tac_doctrine",
+   "flavor": "Speed, surprise, iron. Your Armour gains +2 this round (+3 in Blitzkrieg)."
+  },
+  {
+   "id": "barrage",
+   "name": "Rolling Barrage",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "barrage",
+   "rarity": "uncommon",
+   "art": "tac_barrage",
+   "flavor": "A wall of shells that walks across the field a few yards ahead of the infantry."
+  },
+  {
+   "id": "enigma",
+   "name": "Enigma Machine",
+   "faction": "neutral",
+   "type": "tactic",
+   "row": "",
+   "str": 0,
+   "abilities": [],
+   "effect": "codebreakers",
+   "rarity": "special",
+   "art": "tac_enigma",
+   "flavor": "A typewriter with brass wheels that scrambles every letter. This one was dug out of a ruin.",
+   "draw": 1,
+   "special": true
+  }
+ ],
+ "commanders": [
+  {
+   "id": "supreme_commander",
+   "name": "The Supreme Commander",
+   "faction": "allies",
+   "effect": "clear_draw",
+   "text": "Clear all weather and draw a card."
+  },
+  {
+   "id": "air_marshal",
+   "name": "The Air Marshal",
+   "faction": "allies",
+   "effect": "boost_air",
+   "text": "Your Air units gain +2 this round."
+  },
+  {
+   "id": "field_marshal",
+   "name": "The Field Marshal",
+   "faction": "axis",
+   "effect": "boost_arm",
+   "text": "Your Armour units gain +2 this round."
+  },
+  {
+   "id": "chief_of_intelligence",
+   "name": "The Chief of Intelligence",
+   "faction": "axis",
+   "effect": "reveal_draw",
+   "text": "Reveal the opponent's hand for the round and draw a card."
+  },
+  {
+   "id": "front_commander",
+   "name": "The Front Commander",
+   "faction": "soviet",
+   "effect": "summon_inf",
+   "text": "Call up to two Infantry units from your deck onto the field."
+  },
+  {
+   "id": "general_winter",
+   "name": "General Winter",
+   "faction": "soviet",
+   "effect": "frost_enemy",
+   "text": "Hard Frost on the Infantry row; your own Infantry is entrenched against it."
+  }
+ ],
+ "factions": {
+  "allies": {
+   "name": "Western Allies",
+   "color": "#5e6a3e",
+   "text": "Many tanks, many planes, much tea."
+  },
+  "axis": {
+   "name": "Axis",
+   "color": "#5a5e62",
+   "text": "Few, heavy and terrible machines."
+  },
+  "soviet": {
+   "name": "Soviets",
+   "color": "#7a3a2c",
+   "text": "Endless companies and very hard frost."
+  },
+  "neutral": {
+   "name": "Tactics",
+   "color": "#7a6440",
+   "text": "Any deck may use them."
+  }
+ },
+ "deck_rules": {
+  "min": 22,
+  "max": 30,
+  "min_units": 14,
+  "copies": {
+   "common": 3,
+   "uncommon": 2,
+   "rare": 1,
+   "special": 1
+  }
+ },
+ "starter_deck": {
+  "name": "Barnaby's Loaner (Allies)",
+  "faction": "allies",
+  "commander": "supreme_commander",
+  "cards": {
+   "rifle_squad": 3,
+   "tommies": 3,
+   "airborne": 2,
+   "combat_medic": 1,
+   "forward_observer": 1,
+   "commandos": 1,
+   "sherman": 3,
+   "jeep": 2,
+   "churchill": 1,
+   "m7_priest": 1,
+   "dakota": 2,
+   "spitfire": 2,
+   "mud": 1,
+   "fog": 1,
+   "smoke": 1
+  }
+ },
+ "starter_extra": {
+  "rifle_company": 3,
+  "t34": 2,
+  "yak3": 2,
+  "razvedchiki": 1,
+  "studebaker": 1,
+  "field_nurse": 1,
+  "grenadiers": 2,
+  "panzer_iv": 2,
+  "bf109": 1,
+  "frost": 1
+ },
+ "opponents": [
+  {
+   "id": "jory",
+   "name": "Jory Thatch",
+   "tier": 1,
+   "unlock": "",
+   "portrait": "portraits/jory",
+   "title": "Farmer, plays on market days",
+   "style": "Cautious. Plays his strongest cards early and rarely bluffs.",
+   "greet": "\"I don't hold with iron wagons, mind. But the frost card, now — that's honest weather.\"",
+   "ai": {
+    "skill": 0.35,
+    "bluff": 0.05,
+    "greed": 0.7
+   },
+   "deck": {
+    "name": "Jory's Snow Company",
+    "faction": "soviet",
+    "commander": "general_winter",
+    "cards": {
+     "rifle_company": 3,
+     "guards": 1,
+     "field_nurse": 3,
+     "razvedchiki": 2,
+     "katyusha": 1,
+     "t34": 3,
+     "studebaker": 3,
+     "yak3": 3,
+     "frost": 2,
+     "smoke": 1
+    }
+   }
+  },
+  {
+   "id": "barnaby",
+   "name": "Barnaby Quill",
+   "tier": 2,
+   "unlock": "",
+   "portrait": "portraits/barnaby",
+   "title": "Host of the basement war-room",
+   "style": "Knows every card. Holds tactics back for the right moment and enjoys a bluff.",
+   "greet": "\"Ah! A challenger! Mind the Tiger, she's freshly painted. Helmet on — regulations.\"",
+   "ai": {
+    "skill": 0.85,
+    "bluff": 0.2,
+    "greed": 0.45
+   },
+   "deck": {
+    "name": "Barnaby's Panzer Lehr",
+    "faction": "axis",
+    "commander": "field_marshal",
+    "cards": {
+     "grenadiers": 3,
+     "mg42": 2,
+     "panzerfaust": 2,
+     "field_surgeon": 1,
+     "panzer_iv": 3,
+     "stug": 2,
+     "panther": 2,
+     "tiger": 1,
+     "halftrack": 2,
+     "flak88": 1,
+     "bf109": 2,
+     "stuka": 1,
+     "ju52": 1,
+     "mud": 1,
+     "fog": 1,
+     "doctrine": 1,
+     "fortitude": 1
+    }
+   }
+  },
+  {
+   "id": "pip",
+   "name": "Pip Underbough",
+   "tier": 2,
+   "unlock": "wins:1",
+   "portrait": "portraits/pip",
+   "title": "Bard, card-sharp, liar",
+   "style": "Bluffs constantly, passes early, loves tricks and codebreakers.",
+   "greet": "\"Shall we make it interesting? No? Pity. I'll be Montgomery, you be confused.\"",
+   "ai": {
+    "skill": 0.8,
+    "bluff": 0.25,
+    "greed": 0.5
+   },
+   "deck": {
+    "name": "Pip's Airborne Caper",
+    "faction": "allies",
+    "commander": "air_marshal",
+    "cards": {
+     "m7_priest": 2,
+     "airborne": 3,
+     "commandos": 2,
+     "rangers": 2,
+     "forward_observer": 2,
+     "combat_medic": 1,
+     "sherman": 3,
+     "churchill": 2,
+     "dakota": 2,
+     "spitfire": 2,
+     "mustang": 1,
+     "codebreakers": 1,
+     "fortitude": 1,
+     "fog": 1,
+     "smoke": 1,
+     "air_superiority": 1
+    }
+   }
+  },
+  {
+   "id": "sigrun",
+   "name": "Sigrun Halvard",
+   "tier": 3,
+   "unlock": "beat:barnaby",
+   "portrait": "portraits/sigrun",
+   "title": "Shield-maiden who plays for keeps",
+   "style": "Aggressive and exact. Counts every point and never wastes a card.",
+   "greet": "\"Barnaby says you beat him. Show me.\"",
+   "ai": {
+    "skill": 1.0,
+    "bluff": 0.15,
+    "greed": 0.35
+   },
+   "deck": {
+    "name": "Sigrun's Iron Wall",
+    "faction": "soviet",
+    "commander": "front_commander",
+    "cards": {
+     "rifle_company": 3,
+     "guards": 2,
+     "snipers": 2,
+     "field_nurse": 1,
+     "razvedchiki": 2,
+     "t34": 3,
+     "kv1": 2,
+     "katyusha": 2,
+     "studebaker": 1,
+     "il2": 2,
+     "yak3": 2,
+     "pincer": 1,
+     "barrage": 1,
+     "frost": 1,
+     "smoke": 1
+    }
+   }
+  }
+ ],
+ "shop": {
+  "pack_price": 60,
+  "pack_size": 5,
+  "pack_odds": {
+   "common": 0.68,
+   "uncommon": 0.25,
+   "rare": 0.07
+  },
+  "single_price": {
+   "common": 15,
+   "uncommon": 35,
+   "rare": 90
+  },
+  "sell_singles": 6
+ },
+ "rewards": {
+  "gold_win": [
+   0,
+   20,
+   35,
+   55
+  ],
+  "gold_loss": 8,
+  "cards_win": [
+   0,
+   1,
+   1,
+   2
+  ],
+  "tier_odds": {
+   "1": {
+    "common": 0.8,
+    "uncommon": 0.18,
+    "rare": 0.02
+   },
+   "2": {
+    "common": 0.6,
+    "uncommon": 0.32,
+    "rare": 0.08
+   },
+   "3": {
+    "common": 0.4,
+    "uncommon": 0.42,
+    "rare": 0.18
+   }
+  }
+ },
+ "blitz": {
+  "hand": 8,
+  "plays": 7,
+  "momentum_plays": 2,
+  "momentum": 2,
+  "assault_bonus": 1
+ },
+ "rules": {
+  "abilities": {
+   "spotter": "Spotter — reveals two cards in the opponent's hand.",
+   "artillery": "Artillery N — hits the strongest enemy unit in the named row for N.",
+   "barrage": "Barrage N — hits every enemy unit in the named row for N.",
+   "entrench": "Entrench — ignores weather and the next hit from artillery, assault or a pincer.",
+   "combined": "Combined Arms N — +N while you hold a unit in another row.",
+   "supply": "Supply Line — draw a card.",
+   "reinforce": "Reinforce — calls the rest of its company (or its passengers) out of your deck.",
+   "medic": "Medic — returns your strongest fallen unit to your hand.",
+   "assault": "Assault N — strikes the weakest enemy unit in the same row for N.",
+   "rally": "Rally N — every other unit in its row gains +N.",
+   "elite": "Elite — immune to weather, tactics and damage; never boosted."
+  },
+  "tactics": {
+   "weather": "Weather — every non-elite unit in that row, on both sides, counts as 1.",
+   "clear": "Clears all weather.",
+   "air_superiority": "Clears fog; your Air units gain +2 this round.",
+   "pincer": "Destroys the strongest enemy unit (all ties) if it has 8 or more strength.",
+   "codebreakers": "Reveals the opponent's whole hand for the round and steals one random card from it.",
+   "decoy": "Play onto one of your units: it returns to your hand and the decoy takes its place at 0.",
+   "doctrine": "Your Armour gains +2 this round (+3 in Blitzkrieg).",
+   "barrage": "Hits every enemy unit in their most crowded row for 2.",
+   "draw": "Draw two cards."
+  }
+ }
+}
