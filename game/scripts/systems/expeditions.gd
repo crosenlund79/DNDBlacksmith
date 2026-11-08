@@ -166,9 +166,8 @@ static func weapon_profile(a: Dictionary) -> Dictionary:
 	var qb := int((float(w.get("quality", 70)) - 70.0) / 20.0) if not w.is_empty() else 0
 	var aff := 2 if prefers.has(wt) else 0
 	var to_hit := main + int(a["level"]) / 2 + aff + qb + (2 if wt == "bow" and a["cls"] == "Ranger" else 0)
+	# Items.stat already weakens worn pieces and halves broken ones
 	var atk := float(Items.stat(w, "attack") + coat(w, "attack")) if not w.is_empty() else 3.0
-	if w.get("broken", false):
-		atk *= 0.5
 	return {"item": w, "wtype": wt, "to_hit": to_hit, "base": atk * 0.55 + main, "qb": qb, "aff": aff, "main": main}
 
 
@@ -241,6 +240,8 @@ static func on_hour(h: int) -> void:
 	match h:
 		6:
 			form_parties()
+		11:
+			Adv.gear_hour()
 		7:
 			prepare_parties()
 		8:
@@ -605,7 +606,7 @@ static func _best(e: Dictionary, skill: String) -> Dictionary:
 	var best := {}
 	for id in _standing(e):
 		var a := Adv.get_a(id)
-		if has_skill(a, skill) and (best.is_empty() or int(a["level"]) > int(best["level"])):
+		if (has_skill(a, skill) or (skill == "scouting" and total(a, "scouting") > 0)) and (best.is_empty() or int(a["level"]) > int(best["level"])):
 			best = a
 	return best
 
@@ -613,6 +614,8 @@ static func _best(e: Dictionary, skill: String) -> Dictionary:
 static func _check(a: Dictionary, at: String, dc: int, skill := "") -> Dictionary:
 	var roll := Dice.roll("1d20")
 	var mod := attr(a, at) + int(a["level"]) / 2 + (3 if skill != "" and has_skill(a, skill) else 0) - int(float(a.get("fatigue", 0)) / 34.0)
+	if skill == "scouting":
+		mod += total(a, "scouting") / 2   # a keen-nosed companion, a ranger's cloak…
 	var tot := int(roll["total"]) + mod
 	return {"ok": tot >= dc, "roll": int(roll["total"]), "mod": mod, "total": tot, "dc": dc,
 		"txt": "d20 %d %+d = %d vs %d" % [int(roll["total"]), mod, tot, dc]}
@@ -716,7 +719,7 @@ static func traveller(e: Dictionary, n: Dictionary) -> int:
 ## Rolls loot into the expedition's pack; returns the names (difficulty and tier raise the odds).
 static func _loot(e: Dictionary, table: String, tier: int) -> Array:
 	var items := Loot.roll_table(table, (tier - 1) * 8.0 + (float(diff().get("loot", 1.0)) - 1.0) * 30.0, tier * 2)
-	items = items.slice(0, mini(items.size(), 1 + tier))
+	items = items.slice(0, mini(items.size(), 1 + tier + _carry(e) / 4))
 	var names := []
 	for it in items:
 		it["found"] = {"day": Game.day(), "where": region(e["dest"]).get("name", ""), "exp": e["id"]}
@@ -769,6 +772,10 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 			var alive := foes.filter(func(f): return f["hp"] > 0)
 			if alive.is_empty():
 				break
+			if companion_strike(a, alive, rec, t):
+				alive = foes.filter(func(f): return f["hp"] > 0)
+				if alive.is_empty():
+					break
 			if has_skill(a, "inspire") and not inspired:
 				inspired = true
 				rec["actions"].append({"t": t, "kind": "inspire", "actor": a["name"], "txt": "%s struck up a battle-song: +1 to hit for all" % a["name"]})
@@ -840,7 +847,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 	var names := foes.map(func(f): return f["name"])
 	if won:
 		e["xp"] = int(e.get("xp", 0)) + xp
-		var purse := int(round(xp / 3.0 * float(diff().get("loot", 1.0))))
+		var purse := int(round(xp / 3.0 * float(diff().get("loot", 1.0)) * (1.0 + _carry(e) * 0.03)))
 		e["gold"] = int(e["gold"]) + purse
 		var got := _loot(e, str(n.get("loot", "")), int(n.get("tier", 1))) if str(n.get("loot", "")) != "" else []
 		rec["loot"] = got
@@ -860,6 +867,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 			a["morale"] = maxf(0.0, float(a["morale"]) - 15.0)
 	# the fallen: death saves depend on difficulty
 	_down_checks(e, rec)
+	companion_heal(e, rec)
 	if rec["outcome"] == "retreat":
 		e["outcome"] = "retreated"
 		_force_home(e)
@@ -984,23 +992,99 @@ static func _enemy_attack(f: Dictionary, v: Dictionary, rec: Dictionary, t: int)
 	rec["actions"].append(act)
 
 
+## Wear from one fight, on every piece that was used: the weapon per swing, gloves on the grip,
+## armour and helmet per blow taken, a shield per blow it blocked, boots and belt a little.
 static func _wear(a: Dictionary, rec: Dictionary) -> void:
 	if a.get("status", "") != "away":
 		return
-	var w: Dictionary = a["equipment"].get("weapon", {})
-	var stw: Dictionary = w.get("stats", {})
-	var swings: int = rec["actions"].filter(func(x): return x.get("actor", "") == a["name"] and x.get("kind", "") == "attack").size()
-	if stw.has("durability") and swings > 0:
-		stw["durability"] = maxi(0, int(stw["durability"]) - swings * 2)
-		if int(stw["durability"]) == 0 and not w.get("broken", false):
-			w["broken"] = true
-			Items.add_history(w, "Broke in %s's hands at %s." % [a["name"], rec["node_name"]])
-			rec["actions"].append({"t": int(rec.get("duration", 10)), "kind": "break", "actor": a["name"], "txt": "%s's %s broke!" % [a["name"], w.get("name", "weapon")]})
-	var arm: Dictionary = a["equipment"].get("armor", {})
-	var sta: Dictionary = arm.get("stats", {})
-	var hits: int = rec["actions"].filter(func(x): return x.get("target", "") == a["name"] and x.get("kind", "") == "enemy" and x.get("hit", false)).size()
-	if sta.has("durability") and hits > 0:
-		sta["durability"] = maxi(0, int(sta["durability"]) - hits * 3)
+	var acts: Array = rec["actions"]
+	var swings: int = acts.filter(func(x): return x.get("actor", "") == a["name"] and x.get("kind", "") == "attack").size()
+	var hits: int = acts.filter(func(x): return x.get("target", "") == a["name"] and x.get("kind", "") == "enemy" and x.get("hit", false)).size()
+	var blocks: int = acts.filter(func(x): return x.get("target", "") == a["name"] and x.get("kind", "") == "enemy" and not x.get("hit", false)).size()
+	var wear := {"weapon": swings * 2, "armor": hits * 3, "shield": blocks * 2 + hits, "helmet": hits, "gloves": int((swings + 1) / 2.0),
+		"boots": 1, "belt": 1 if hits > 0 else 0}
+	for slot in wear:
+		wear_item(a, slot, int(wear[slot]), rec)
+
+
+## Boots and belts wear on the road.
+static func trip_wear(a: Dictionary) -> void:
+	wear_item(a, "boots", randi_range(3, 6))
+	wear_item(a, "belt", randi_range(1, 3))
+
+
+## Takes `n` durability from the piece in `slot`; it breaks at zero (recorded in the fight and its history).
+static func wear_item(a: Dictionary, slot: String, n: int, rec := {}) -> bool:
+	var it: Dictionary = a["equipment"].get(slot, {})
+	var st: Dictionary = it.get("stats", {})
+	if n <= 0 or not st.has("durability"):
+		return false
+	st["durability"] = maxi(0, int(st["durability"]) - n)
+	if int(st["durability"]) == 0 and not it.get("broken", false):
+		it["broken"] = true
+		var where := str(rec.get("node_name", "on the road"))
+		Items.add_history(it, "Broke in %s's %s at %s." % [a["name"], "hands" if slot in ["weapon", "shield", "gloves"] else "use", where])
+		if not rec.is_empty():
+			rec["actions"].append({"t": int(rec.get("duration", 10)), "kind": "break", "actor": a["name"], "txt": "%s's %s broke!" % [a["name"], it.get("name", slot)]})
+		return true
+	return false
+
+
+## The creature in the companion slot strikes too: a small extra attack written into the combat log
+## under its own name. Returns true if it attacked.
+static func companion_strike(a: Dictionary, alive: Array, rec: Dictionary, t: int) -> bool:
+	var c: Dictionary = a["equipment"].get("companion", {})
+	var atk := Items.stat(c, "attack")
+	if c.is_empty() or atk <= 0 or alive.is_empty():
+		return false
+	var tgt: Dictionary = alive[0]
+	for f in alive:
+		if int(f["hp"]) < int(tgt["hp"]):
+			tgt = f
+	var cname := companion_name(c)
+	var roll := int(Dice.roll("1d20")["total"])
+	var to_hit := 2 + int(atk / 3.0) + int(int(a["level"]) / 4.0)
+	var hit := roll + to_hit >= int(tgt["ac"]) or roll == 20
+	var act := {"t": t, "kind": "companion", "actor": cname, "owner": a["name"], "actor_id": a["id"], "target": tgt["name"], "target_key": tgt["key"],
+		"roll": roll, "mod": to_hit, "total": roll + to_hit, "vs": int(tgt["ac"]), "hit": hit, "companion_uid": c.get("uid", -1)}
+	if hit:
+		var d4 := int(Dice.roll("1d4")["total"])
+		var dmg := maxi(1, d4 + int(round(atk * 0.5)))
+		tgt["hp"] = int(tgt["hp"]) - dmg
+		act["dmg"] = dmg
+		act["hp_after"] = maxi(0, int(tgt["hp"]))
+		act["parts"] = [["1d4", d4], ["companion attack %d ×0.5" % atk, dmg - d4]]
+		act["txt"] = "%s (%s's companion) struck %s: %d damage%s" % [cname, a["name"], tgt["name"], dmg, " — slain" if int(tgt["hp"]) <= 0 else ""]
+	else:
+		act["txt"] = "%s (%s's companion) lunged at %s and missed (d20 %d %+d = %d vs %d)" % [cname, a["name"], tgt["name"], roll, to_hit, roll + to_hit, int(tgt["ac"])]
+	rec["actions"].append(act)
+	return true
+
+
+static func companion_name(c: Dictionary) -> String:
+	return str(c.get("creature_name", Items.display_name(c)))
+
+
+## After a fight, a companion with healing tends its owner's wounds.
+static func companion_heal(e: Dictionary, rec: Dictionary) -> void:
+	for id in _standing(e):
+		var a := Adv.get_a(id)
+		var c: Dictionary = a["equipment"].get("companion", {})
+		var h := Items.stat(c, "heal")
+		if h <= 0 or int(a["hp"]) >= int(a["hp_max"]):
+			continue
+		var before := int(a["hp"])
+		a["hp"] = mini(int(a["hp_max"]), before + h)
+		rec["actions"].append({"t": int(rec.get("duration", 10)), "kind": "heal", "actor": companion_name(c), "target": a["name"], "heal": int(a["hp"]) - before,
+			"hp_after": int(a["hp"]), "txt": "%s tended %s after the fight (+%d)" % [companion_name(c), a["name"], int(a["hp"]) - before]})
+
+
+## What the standing party can carry beyond the usual (companions and gear with a `carry` stat).
+static func _carry(e: Dictionary) -> int:
+	var c := 0
+	for id in _standing(e):
+		c += total(Adv.get_a(id), "carry")
+	return c
 
 
 static func _key_moment(rec: Dictionary) -> String:
@@ -1253,6 +1337,7 @@ static func finish(e: Dictionary) -> void:
 	for id in alive:
 		Events.adventurer_returned.emit(id, DB.destinations.get(e["dest"], {}).get("exit", "north"))
 		var a := Adv.get_a(id)
+		trip_wear(a)
 		a["needs"] = Adv._weakest_slot(a)
 		Adv.plan_next(a)
 		# the broken blade: back for repairs, and maybe something better
@@ -1262,6 +1347,7 @@ static func finish(e: Dictionary) -> void:
 			if Shop.open_orders().filter(func(o): return o["npc"] == id).is_empty():
 				Shop.create_order(id, "weapon", "My %s broke at %s. Mend it — or make me something that won't." % [w.get("name", "blade"), reg["name"]])
 			Chronicle.add("chain", "%s came home with a broken %s." % [a["name"], w.get("name", "blade")], {"adv": id, "item": str(w.get("uid", ""))})
+		Adv.after_expedition(a, reg["name"])
 	Audio.play("sfx/door_bell", -6.0)
 	_archive(e)
 

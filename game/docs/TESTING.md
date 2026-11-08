@@ -43,6 +43,7 @@ dice, so runs are deterministic.
 | `t_ironfront` | **Scenario E.** A full match against the AI, rewards, a new deck made active, persistence; Blitzkrieg |
 | `t_social` | **Scenario F.** Family ripple, memories, gifts, fatigue from crafting and its effect, rest and sleep, finds offered at the counter, the herbalist, persistence |
 | `t_trade` | Import orders from deposit to delivery, ships visit and their schedule persists |
+| `t_adventurers` | Durability falls in real fights (weapon, armour, shield, boots) and on the road, worn and broken gear lowers combat numbers and damage dealt, a missing slot is filled from the display, broken gear leads to a repair request or commission, a poor adventurer saves, class preferences read from item data, the companion slot strikes/guards/scouts/heals/carries, and the new state persists |
 | `t_integrity` | Broken references (recipes, stations, loot, ships, tree), tree shape (unique ids, prerequisites exist, no cycles, every recipe and station learned from exactly one node, every station purchasable, every required knowledge findable), every required material has a source, every room can eventually be bought and the whole building is reachable, commissions never ask for more than a craftable piece can give |
 
 ## Bugs the suite has already caught (kept as regressions)

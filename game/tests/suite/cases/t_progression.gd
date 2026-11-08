@@ -173,10 +173,18 @@ func acquire(def: String, n: int, depth := 0) -> String:
 				return acquire(def, n, depth + 1)
 			_day()
 			waited += 1
-	# 5. hireling expeditions (ores, coal, relics)
+	# 5. finds offered at the shop counter by returning adventurers
+	for o in Shop.offers().duplicate():
+		if str(o["item"].get("def", "")) == def and Game.count(def) < n:
+			_income(int(o["price"]))
+			Shop.accept_offer(str(o["id"]))
+	if Game.count(def) >= n:
+		_say("bought %s offered at the counter" % def)
+		return ""
+	# 6. hireling expeditions (ores, coal, relics)
 	for dest in ["highmarsh_road", "ironroot_mine", "barrow_fields", "whisperwood"]:
 		var g := 0
-		while Game.count(def) < n and g < 12:
+		while Game.count(def) < n and g < 30:
 			g += 1
 			if not _expedition(dest, def):
 				break

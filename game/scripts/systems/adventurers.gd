@@ -49,6 +49,15 @@ static func ensure(a: Dictionary) -> Dictionary:
 		a["log"] = []
 	if not a.has("history"):
 		a["history"] = []
+	# iteration 010: gear wants, plans and ambitions (older saves gain them lazily)
+	if not a.has("shopping"):
+		a["shopping"] = []
+	if not a.has("ambitions"):
+		a["ambitions"] = []
+	if not a.has("gear_log"):
+		a["gear_log"] = []
+	if not a.has("saving_for"):
+		a["saving_for"] = {}
 	return a
 
 
@@ -197,6 +206,9 @@ static func morning_departures() -> void:
 
 static func on_day() -> void:
 	for a in all().values():
+		ensure(a)
+		if a["status"] == "in_town":
+			evaluate_gear(a)
 		match a["status"]:
 			"away":
 				if a.has("exp"):
@@ -461,6 +473,8 @@ static func purchase_check(a: Dictionary, it: Dictionary, price: int) -> String:
 	var married: bool = Social.spouse() == a["id"]
 	if Shop.refuses(a["id"]):
 		return "won't buy from you"
+	if affinity(a, it) <= 0.0:
+		return "has no use for that"
 	if not married and int(a["gold"]) < price:
 		return "can't afford it"
 	var fair := Items.value(it) * (1.15 + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
@@ -481,8 +495,459 @@ static func give_item(a: Dictionary, it: Dictionary, price: int) -> void:
 	it["owner"] = a["id"]
 	if a["needs"] == s:
 		a["needs"] = ""
+	_clear_want(a, s, "equipped %s" % it.get("name", "it"))
 	var q := float(it.get("quality", 70))
 	var good: bool = q >= 85.0 or it.get("rarity") in ["rare", "legendary", "unique", "set"]
 	Social.change(a["id"], (8.0 if good else 3.0) + (6.0 if price == 0 else 0.0), 6.0,
 		"equipped_" + str(it["uid"]), "Brannoc equipped me with %s." % it["name"])
 	Events.adventurers_changed.emit()
+
+
+# ======================================================================= gear: wants, plans, purchases
+## EN: Every day in town an adventurer looks over their gear — empty slots their class would fill,
+##     broken or badly worn pieces, pieces too weak for their level or plans — and decides, by purse,
+##     class and ambition: buy from the smith's display, ask for a repair, place a commission, buy
+##     elsewhere (hook), or save up and keep going out with what they have. The list is kept in
+##     `shopping` and shown on the character sheet; decisions go to the Chronicle and `gear_log`.
+##     Items are judged data-driven by slot, type, stats and tags (cloth/robe/heavy/bow…), never by id.
+## DA: Hver dag i byen vurderer eventyreren sit udstyr og beslutter: købe, reparere, bestille, købe
+##     andetsteds eller spare op. Listen gemmes i `shopping` og vises på karakterarket.
+
+## How much each slot matters in a judgement of strength (also scales the level target).
+const SLOT_WEIGHT := {"weapon": 1.0, "armor": 1.0, "shield": 0.6, "helmet": 0.4, "gloves": 0.3, "boots": 0.3, "belt": 0.2,
+	"ring": 0.45, "amulet": 0.55, "companion": 0.5}
+## Slots a class leaves empty on purpose (bows and spells want both hands free).
+const CLASS_SKIP := {"Wizard": ["shield"], "Ranger": ["shield"], "Rogue": ["shield"], "Barbarian": ["shield"], "Bard": ["shield"]}
+const WHY_ORDER := {"broken": 0, "missing": 1, "worn": 2, "inferior": 3, "extra": 4, "companion": 5}
+const WHY_WORD := {"broken": "broken", "missing": "nothing in this slot", "worn": "badly worn", "inferior": "too weak for their level",
+	"extra": "would like one", "companion": "wants a companion"}
+const PLAN_WORD := {"buy": "means to buy it from your display", "repair": "wants it repaired at your forge", "commission": "will commission one from you",
+	"commissioned": "has a commission open with you", "elsewhere": "may look elsewhere", "save": "is saving up", "watch": "is watching your display", "requested": "asked you for a repair"}
+
+
+## Every slot equipment can use: the standard list plus any slot new item data introduces.
+static func all_slots() -> Array:
+	var out: Array = Items.SLOTS.duplicate()
+	for id in DB.items:
+		var sl: Variant = DB.items[id].get("slot")
+		if sl is String and sl != "" and not out.has(sl):
+			out.append(sl)
+	return out
+
+
+static func _def_tags(it: Dictionary) -> Array:
+	return Items.def(it).get("tags", [])
+
+
+static func _type(it: Dictionary) -> String:
+	return str(Items.def(it).get("type", ""))
+
+
+static func is_heavy(it: Dictionary) -> bool:
+	var tg := _def_tags(it)
+	return _type(it) in ["armor_metal", "armor_heavy"] or tg.has("heavy") or tg.has("plate")
+
+
+static func is_cloth(it: Dictionary) -> bool:
+	var tg := _def_tags(it)
+	var t := _type(it)
+	for k in ["cloth", "robe", "linen", "silk", "tunic", "hood", "cloak"]:
+		if tg.has(k) or t.contains(k):
+			return true
+	return str(it.get("def", "")).contains("robe") or str(it.get("def", "")).contains("hood")
+
+
+static func is_bow(it: Dictionary) -> bool:
+	return _def_tags(it).has("bow") or Items.wtype(it) == "bow"
+
+
+## How well an item suits the adventurer's class (0 = would not use it, 1 = fine, >1 = favoured).
+static func affinity(a: Dictionary, it: Dictionary) -> float:
+	var s := Items.slot(it)
+	if s == "":
+		return 0.0
+	var cls := str(a.get("cls", ""))
+	if (CLASS_SKIP.get(cls, []) as Array).has(s):
+		return 0.0
+	var caster := CASTERS.has(cls)
+	var f := 1.0
+	match s:
+		"weapon":
+			var wt := "bow" if is_bow(it) else Items.wtype(it)
+			var prefers: Array = Expeditions.arch(a).get("prefers", [])
+			f = 1.35 if prefers.has(wt) else (0.6 if caster else 0.8)
+			if cls == "Ranger" and wt == "bow":
+				f = 1.6
+		"armor":
+			if is_heavy(it):
+				f = float({"Fighter": 1.4, "Paladin": 1.4, "Barbarian": 0.7, "Cleric": 0.9, "Ranger": 0.4, "Rogue": 0.3, "Bard": 0.3, "Wizard": 0.0}.get(cls, 0.8))
+			elif is_cloth(it):
+				f = float({"Wizard": 1.5, "Cleric": 1.3, "Bard": 1.2, "Rogue": 0.8, "Ranger": 0.8, "Fighter": 0.4, "Paladin": 0.4, "Barbarian": 0.6}.get(cls, 0.8))
+			else:
+				f = float({"Ranger": 1.3, "Rogue": 1.3, "Barbarian": 1.2, "Bard": 1.1, "Cleric": 0.9, "Wizard": 0.5, "Fighter": 0.8, "Paladin": 0.7}.get(cls, 1.0))
+		"helmet":
+			if is_cloth(it):
+				f = 1.3 if caster or cls == "Rogue" else 0.8
+			else:
+				f = 0.4 if cls == "Wizard" else (1.2 if cls in ["Fighter", "Paladin"] else 0.9)
+		"shield":
+			f = 1.3 if cls in ["Fighter", "Paladin"] else 0.9
+		"ring", "amulet":
+			f = 1.3 if caster or cls == "Paladin" else 1.0
+	if f > 0.0 and caster and Items.stat(it, "magic") > 0:
+		f += 0.2
+	return f
+
+
+## The slots this adventurer gradually aims to fill: their class essentials first, then the rest.
+static func desired_slots(a: Dictionary) -> Array:
+	var out: Array = (CLASS_WANTS.get(a.get("cls", ""), ["weapon"]) as Array).duplicate()
+	for s in all_slots():
+		if s == "companion" or out.has(s) or (CLASS_SKIP.get(a.get("cls", ""), []) as Array).has(s):
+			continue
+		out.append(s)
+	if not a.get("equipment", {}).get("companion", {}).is_empty() or wants_companion(a):
+		out.append("companion")
+	return out
+
+
+## Filled desired slots / desired slots (the roster's gear-completeness meter).
+static func completeness(a: Dictionary) -> Vector2i:
+	var want := desired_slots(a)
+	var have := 0
+	for s in want:
+		if not a.get("equipment", {}).get(s, {}).is_empty():
+			have += 1
+	return Vector2i(have, want.size())
+
+
+## Pieces needing attention: {"broken": n, "worn": n}.
+static func wear_warnings(a: Dictionary) -> Dictionary:
+	var out := {"broken": 0, "worn": 0}
+	for s in a.get("equipment", {}):
+		var it: Dictionary = a["equipment"][s]
+		if it.get("broken", false):
+			out["broken"] += 1
+		elif Items.durability_frac(it) < 0.35:
+			out["worn"] += 1
+	return out
+
+
+## What a sound piece for this slot should score at this level.
+static func level_target(a: Dictionary, slot: String) -> float:
+	return float(SLOT_WEIGHT.get(slot, 0.4)) * (10.0 + int(a.get("level", 1)) * 4.0)
+
+
+## Rich enough, well equipped, and nothing at the forge: time for a creature companion.
+static func wants_companion(a: Dictionary) -> bool:
+	if not a.get("equipment", {}).get("companion", {}).is_empty():
+		return false
+	if int(a.get("level", 1)) < 3 or int(a.get("gold", 0)) < 220 + int(a.get("level", 1)) * 25:
+		return false
+	for s in CLASS_WANTS.get(a.get("cls", ""), ["weapon"]):
+		var it: Dictionary = a["equipment"].get(s, {})
+		if it.is_empty() or it.get("broken", false):
+			return false
+	return true
+
+
+## Hook for buying from the rival smith, the pawnshop or the caravan. Does nothing (returns false)
+## until the lead wires it to the Commerce system; return true when a purchase was made.
+static func buy_elsewhere(a: Dictionary, want := {}) -> bool:
+	# a creature companion from the Hales, when they want one and can afford it
+	if str(want.get("slot", "")) == "companion" or (want.is_empty() and wants_companion(a)):
+		var o := Commerce.creature_offer_for(a)
+		if not o.is_empty() and not Commerce.creature_buy_for(a, o).is_empty():
+			return true
+		if str(want.get("slot", "")) == "companion":
+			return false
+	# otherwise, now and then, the Salt Anvil across the village
+	if randf() < float(Commerce.rival_cfg().get("adv_chance", 0.5)):
+		return not Commerce.rival_buy_for(a).is_empty()
+	return false
+
+
+## What the adventurer needs, most urgent first: [{slot, why}].
+static func gear_needs(a: Dictionary) -> Array:
+	var out := []
+	var core: Array = CLASS_WANTS.get(a.get("cls", ""), ["weapon"])
+	for s in desired_slots(a):
+		var it: Dictionary = a["equipment"].get(s, {})
+		var why := ""
+		if it.is_empty():
+			why = "companion" if s == "companion" else ("missing" if core.has(s) else "extra")
+		elif it.get("broken", false):
+			why = "broken"
+		elif Items.durability_frac(it) < 0.35:
+			why = "worn"
+		elif Items.score(it) < level_target(a, s) * 0.6 or (s == "weapon" and str(a.get("wants_prop", "")) != "" and Items.stat(it, str(a["wants_prop"])) <= 0):
+			why = "inferior"
+		if why != "":
+			out.append({"slot": s, "why": why})
+	out.sort_custom(func(x, y): return int(WHY_ORDER[x["why"]]) < int(WHY_ORDER[y["why"]]))
+	return out
+
+
+static func repair_cost(it: Dictionary) -> int:
+	return 10 + int(Items.value(it) * 0.06)
+
+
+static func commission_cost(a: Dictionary) -> int:
+	return 26 + int(a.get("level", 1)) * 12
+
+
+## Could the smith make something for this slot that this class would use?
+static func can_commission(a: Dictionary, slot: String) -> bool:
+	if slot == "companion":
+		return false
+	for r in DB.recipes.values():
+		var d := DB.item(str(r.get("output", "")))
+		if str(d.get("slot", "")) == slot and affinity(a, {"def": str(r["output"])}) > 0.0:
+			return true
+	return false
+
+
+## A rough price for a decent piece in this slot (the saving goal).
+static func price_estimate(a: Dictionary, slot: String) -> int:
+	var best := 0
+	var lv := int(a.get("level", 1))
+	for id in DB.items:
+		var d: Dictionary = DB.items[id]
+		if str(d.get("slot", "")) != slot or affinity(a, {"def": id}) <= 0.0:
+			continue
+		var v := int(d.get("value", 0))
+		# the dearest piece they could reasonably aim for at their level
+		if v <= 60 + lv * 45 and v > best:
+			best = v
+	return maxi(15, int(best * 1.05))
+
+
+## The best piece on the smith's display this adventurer would buy for `slot` ({} if none).
+static func best_stock(a: Dictionary, slot: String) -> Dictionary:
+	var best := {}
+	var best_v := 0.0
+	for it in Shop.stock():
+		if Items.slot(it) != slot:
+			continue
+		if purchase_check(a, it, Shop.price_of(it)) != "":
+			continue
+		var v := Items.score(it) * affinity(a, it)
+		# not a step down from the piece they own (as it was when sound), and fit for their level
+		var cur: Dictionary = a["equipment"].get(slot, {})
+		if not cur.is_empty() and Items.score(it) <= Items.score(cur) / maxf(0.5, Items.condition(cur)):
+			continue
+		if v < level_target(a, slot) * 0.35:
+			continue
+		if v > best_v:
+			best_v = v
+			best = it
+	return best
+
+
+## Decides what to do about one need. Returns the plan entry {slot, why, plan, goal, note, uid?}.
+static func decide(a: Dictionary, need: Dictionary) -> Dictionary:
+	var slot: String = need["slot"]
+	var why: String = need["why"]
+	var cur: Dictionary = a["equipment"].get(slot, {})
+	var gold := int(a.get("gold", 0))
+	var e := {"slot": slot, "why": why, "plan": "save", "goal": 0, "note": ""}
+	var has_order := not Shop.open_orders().filter(func(o): return o["npc"] == a["id"] and o["slot"] == slot).is_empty()
+	if has_order:
+		e["plan"] = "commissioned"
+		e["note"] = "waiting on the commission"
+		return e
+	# mend what is worth mending
+	if why in ["broken", "worn"] and Items.score(cur) / maxf(0.5, Items.condition(cur)) >= level_target(a, slot) * 0.4:
+		var cost := repair_cost(cur)
+		e["goal"] = cost
+		if gold >= cost:
+			e["plan"] = "repair"
+			e["note"] = "a repair costs about %d g" % cost
+		else:
+			e["note"] = "can't pay for the repair yet (%d / %d g) — going out with it as it is" % [gold, cost]
+		return e
+	var st := best_stock(a, slot)
+	if not st.is_empty():
+		e["plan"] = "buy"
+		e["uid"] = int(st["uid"])
+		e["goal"] = Shop.price_of(st)
+		e["note"] = "%s on your display (%d g)" % [Items.display_name(st), Shop.price_of(st)]
+		return e
+	var cc := commission_cost(a)
+	if (why in ["broken", "missing"] or (why == "inferior" and gold >= cc * 2)) and can_commission(a, slot) and gold >= cc + 10 \
+			and Shop.open_orders().filter(func(o): return o["npc"] == a["id"]).is_empty() and not Shop.refuses(a["id"]):
+		e["plan"] = "commission"
+		e["goal"] = cc
+		e["note"] = "nothing suitable on display; can afford a commission (about %d g)" % cc
+		return e
+	if slot == "companion" or (gold >= 40 and (hash(str(a["id"]) + slot) + int(Game.day() / 5)) % 7 == 0):
+		e["plan"] = "elsewhere"
+		e["note"] = "may try the other traders in the village"
+		return e
+	var goal := price_estimate(a, slot)
+	e["goal"] = goal
+	if gold >= goal:
+		e["plan"] = "watch"
+		e["note"] = "has the coin (%d g); watching your display" % gold
+	else:
+		e["note"] = "saving for it (%d / %d g)" % [gold, goal]
+	return e
+
+
+## Daily: look over the gear, keep the shopping list and ambitions current. Changes are logged.
+static func evaluate_gear(a: Dictionary) -> void:
+	ensure(a)
+	if a.get("status", "") == "dead":
+		return
+	var old := {}
+	for e in a["shopping"]:
+		old[str(e["slot"])] = e
+	var list := []
+	var commissioning := false
+	for need in gear_needs(a):
+		var e := decide(a, need)
+		# one commission at a time: later wants wait for it
+		if e["plan"] == "commission":
+			if commissioning:
+				e["plan"] = "save"
+				e["goal"] = price_estimate(a, str(e["slot"]))
+				e["note"] = "after the first commission"
+			commissioning = true
+		var prev: Dictionary = old.get(e["slot"], {})
+		e["since"] = int(prev.get("since", Game.day())) if prev.get("why", "") == e["why"] else Game.day()
+		# a repair already asked for stays asked for while they wait at the counter
+		if prev.get("plan", "") == "requested" and e["plan"] == "repair" and not Shop.customer(a["id"]).is_empty():
+			e["plan"] = "requested"
+		if (prev.get("plan", "") != e["plan"] or prev.get("why", "") != e["why"]) and e["why"] != "extra":
+			_gear_note(a, "%s: %s — %s." % [_slot_name(e["slot"]), WHY_WORD[e["why"]], PLAN_WORD.get(e["plan"], e["plan"])],
+				e["plan"] == "save" and e["why"] in ["broken", "missing"])
+		list.append(e)
+	a["shopping"] = list
+	# the thing they save for: the most urgent unaffordable want
+	a["saving_for"] = {}
+	for e in list:
+		if e["plan"] == "save" and int(e.get("goal", 0)) > 0:
+			a["saving_for"] = {"slot": e["slot"], "goal": int(e["goal"]), "since": int(e["since"])}
+			break
+	a["ambitions"] = ambitions(a)
+
+
+## Career goals in plain words (also persisted on the adventurer for the sheet).
+static func ambitions(a: Dictionary) -> Array:
+	var out := []
+	var lv := int(a.get("level", 1))
+	var prop := str(a.get("wants_prop", ""))
+	if prop != "":
+		var dn: String = DB.destinations.get(str(a.get("next_dest", "")), {}).get("name", "the wilds")
+		out.append("Wants a %s weapon for %s" % [prop, dn])
+	var sv: Dictionary = a.get("saving_for", {})
+	if not sv.is_empty():
+		out.append("Saving for %s (%d / %d g)" % [Shop.slot_phrase(str(sv["slot"])) if sv["slot"] != "companion" else "a companion creature", int(a.get("gold", 0)), int(sv["goal"])])
+	var c := completeness(a)
+	if c.x < c.y:
+		out.append("Wants every slot filled (%d of %d)" % [c.x, c.y])
+	var w: Dictionary = a.get("equipment", {}).get("weapon", {})
+	if lv >= 5 and Items.tier(w) < 3:
+		out.append("Dreams of a mithril blade")
+	elif lv >= 3 and Items.tier(w) < 2:
+		out.append("Wants a steel weapon worthy of their skill")
+	if wants_companion(a):
+		out.append("Can afford a creature companion and means to find one")
+	var titles: Array = Expeditions.cfg().get("renown_titles", [])
+	for t in titles:
+		if int(a.get("renown", 0)) < int(t[0]):
+			out.append("Hopes to be spoken of as “%s” (renown %d / %d)" % [str(t[1]), int(a.get("renown", 0)), int(t[0])])
+			break
+	return out
+
+
+## 11:00 in town — act on the most urgent plan: visit the forge to buy, ask for a repair,
+## place a commission, or try elsewhere. One errand a day.
+static func gear_hour() -> void:
+	for a in all().values():
+		ensure(a)
+		if a.get("status", "") != "in_town" or int(a.get("gear_day", -1)) == Game.day():
+			continue
+		if a["shopping"].is_empty():
+			continue
+		a["gear_day"] = Game.day()
+		act_on_plans(a)
+
+
+## Carries out the first actionable plan; returns what happened ("" = nothing).
+static func act_on_plans(a: Dictionary) -> String:
+	for e in a["shopping"].duplicate():
+		match str(e["plan"]):
+			"buy":
+				var it := Game.find_uid(int(e.get("uid", -1)))
+				if it.is_empty() or not it.get("for_sale", false):
+					continue
+				var nm := Items.display_name(it)
+				var price := Shop.price_of(it)
+				if Shop.sell_to(a["id"], int(e["uid"])) == "":
+					_gear_note(a, "Visited the forge and bought %s for %d g." % [nm, price], true)
+					Events.toast.emit("%s bought %s from your display (+%d g)." % [a["name"], nm, price], "good")
+					evaluate_gear(a)
+					return "bought"
+			"repair":
+				if not Shop.customer(a["id"]).is_empty():
+					continue
+				var before := Shop.customers().size()
+				Shop._add_customer(a["id"], "repair_own")
+				if Shop.customers().size() > before:
+					e["plan"] = "requested"
+					_gear_note(a, "Set out for the forge to have the %s repaired." % a["equipment"][e["slot"]].get("name", e["slot"]), false)
+					return "repair"
+			"commission":
+				var why_txt := "I have nothing for my %s yet." % _slot_name(e["slot"]).to_lower() if e["why"] == "missing" \
+					else "My %s is %s. Make me something better." % [_slot_name(e["slot"]).to_lower(), WHY_WORD.get(e["why"], "lacking")]
+				var o := Shop.create_order(a["id"], str(e["slot"]), why_txt)
+				if not o.is_empty():
+					e["plan"] = "commissioned"
+					e["order"] = str(o["id"])
+					_gear_note(a, "Commissioned %s from the smith (%s)." % [Shop.slot_phrase(str(e["slot"])), Shop.PRIORITY.get(o.get("priority", ""), {}).get("name", "")], true)
+					return "commission"
+			"elsewhere":
+				if buy_elsewhere(a, e):
+					evaluate_gear(a)
+					return "elsewhere"
+	return ""
+
+
+static func _clear_want(a: Dictionary, slot: String, why := "") -> void:
+	if not a.has("shopping"):
+		return
+	var kept := (a["shopping"] as Array).filter(func(e): return str(e["slot"]) != slot)
+	if kept.size() != (a["shopping"] as Array).size() and why != "" and a.has("gear_log"):
+		a["gear_log"].append({"day": Game.day(), "text": "%s: %s." % [_slot_name(slot), why]})
+	a["shopping"] = kept
+	if str(a.get("saving_for", {}).get("slot", "")) == slot:
+		a["saving_for"] = {}
+
+
+static func _slot_name(slot: String) -> String:
+	return str(Items.SLOT_LABEL.get(slot, slot.capitalize()))
+
+
+## A gear decision: kept on the adventurer (capped) and, when notable, in the Chronicle.
+static func _gear_note(a: Dictionary, text: String, chronicle := true) -> void:
+	if not a.has("gear_log"):
+		a["gear_log"] = []
+	a["gear_log"].append({"day": Game.day(), "text": text})
+	while a["gear_log"].size() > 14:
+		a["gear_log"].pop_front()
+	if chronicle:
+		Chronicle.add("gear", "%s — %s" % [a["name"], text], {"adv": a["id"]})
+
+
+## After an expedition: broken pieces noted, the gear looked over at once.
+static func after_expedition(a: Dictionary, where: String) -> void:
+	ensure(a)
+	for s in a["equipment"]:
+		var it: Dictionary = a["equipment"][s]
+		if not it.get("broken", false):
+			it.erase("broken_noted")
+		elif s != "weapon" and not it.get("broken_noted", false):
+			it["broken_noted"] = true
+			Chronicle.add("chain", "%s came home from %s with a broken %s." % [a["name"], where, it.get("name", s)], {"adv": a["id"], "item": str(it.get("uid", ""))})
+	evaluate_gear(a)

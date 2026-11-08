@@ -1302,6 +1302,26 @@
    384,
    320
   ],
+  "ui/template_attr_con.png": [
+   96,
+   96
+  ],
+  "ui/template_attr_dex.png": [
+   96,
+   96
+  ],
+  "ui/template_attr_int.png": [
+   96,
+   96
+  ],
+  "ui/template_attr_str.png": [
+   96,
+   96
+  ],
+  "ui/template_attr_wis.png": [
+   96,
+   96
+  ],
   "ui/template_button_disabled.png": [
    192,
    56
@@ -1317,6 +1337,38 @@
   "ui/template_button_pressed.png": [
    192,
    56
+  ],
+  "ui/template_cls_barbarian.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_bard.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_cleric.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_fighter.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_paladin.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_ranger.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_rogue.png": [
+   96,
+   96
+  ],
+  "ui/template_cls_wizard.png": [
+   96,
+   96
   ],
   "ui/template_corner_ornament.png": [
    96,
@@ -1378,6 +1430,10 @@
    256,
    256
   ],
+  "ui/template_paperdoll.png": [
+   360,
+   560
+  ],
   "ui/template_parchment_vignette.png": [
    1920,
    1080
@@ -1390,6 +1446,10 @@
    44,
    44
   ],
+  "ui/template_renown.png": [
+   96,
+   96
+  ],
   "ui/template_skillcheck_ring.png": [
    384,
    384
@@ -1397,6 +1457,10 @@
   "ui/template_slot.png": [
    72,
    72
+  ],
+  "ui/template_slot_companion.png": [
+   96,
+   96
   ],
   "ui/template_slot_select.png": [
    72,
@@ -1409,6 +1473,50 @@
   "ui/template_stamp_missing.png": [
    220,
    80
+  ],
+  "ui/template_stat_damage.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_defence.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_fatigue.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_fire.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_frost.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_gear.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_hp.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_magic.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_morale.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_tohit.png": [
+   96,
+   96
+  ],
+  "ui/template_stat_ward.png": [
+   96,
+   96
   ],
   "ui/template_station_marker.png": [
    48,
@@ -1513,6 +1621,14 @@
   "ui/template_wanted_sheet.png": [
    300,
    400
+  ],
+  "ui/template_warn_broken.png": [
+   96,
+   96
+  ],
+  "ui/template_warn_worn.png": [
+   96,
+   96
   ],
   "ui/template_wax_seal.png": [
    64,
