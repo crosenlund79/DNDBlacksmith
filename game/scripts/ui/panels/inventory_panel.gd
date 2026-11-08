@@ -90,6 +90,8 @@ func _detail() -> void:
 	detail.add_child(p)
 	if it.has("craft"):
 		detail.add_child(UIKit.button("Read the record of the work", func(): Events.open_panel.emit("craft_result", {"item": it, "fresh": false}), 0))
+	if it.has("craft") or not it.get("history", []).is_empty():
+		detail.add_child(UIKit.button("History of this piece", func(): Events.open_panel.emit("history", {"kind": "item", "id": str(it["uid"])}), 0))
 	if Regions.is_unidentified(it):
 		detail.add_child(UIKit.button("Study the relic (at the cleansing basin)", func(): _study(int(it["uid"])), 0))
 	if it["def"] == "recipe_scroll":

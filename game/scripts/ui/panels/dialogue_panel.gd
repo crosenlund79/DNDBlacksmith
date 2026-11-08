@@ -26,7 +26,10 @@ func _ready() -> void:
 	var hl := Hire.get_h(npc)
 	if not hl.is_empty():
 		pid = "portraits/" + str(hl["look"])
-	h.add_child(UIKit.portrait(pid, 220))
+	var pv := UIKit.vbox(6)
+	pv.add_child(UIKit.portrait(pid, 220))
+	pv.add_child(UIKit.button("History", func(): Events.open_panel.emit("history", {"kind": "npc", "id": npc}), 0))
+	h.add_child(pv)
 	var v := UIKit.vbox(10)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text = UIKit.rich("", 24)

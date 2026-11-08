@@ -137,6 +137,7 @@ static func buy_unit(uid: String) -> String:
 	Chronicle.add("property", "Brannoc bought %s from %s — it will become %s." % [u["name"], u.get("occupant", "its owner"), u.get("becomes", "part of the workshop")], {"unit": uid}, true)
 	Game.journal("Bought %s for %d gold." % [u["name"], price])
 	Events.toast.emit("%s is yours. Rearrange it under Property & Workshop." % u["name"], "good")
+	Tutorial.complete("progress")
 	return ""
 
 
@@ -416,6 +417,7 @@ static func buy_station(station_id: String) -> String:
 	(st()["stored"] as Array).append(station_id)
 	Chronicle.add("property", "Brannoc bought a %s for the workshop." % DB.station(station_id).get("name", station_id), {"station": station_id})
 	Events.toast.emit("%s delivered — place it in the workshop." % DB.station(station_id).get("name", station_id), "good")
+	Tutorial.complete("progress")
 	return ""
 
 

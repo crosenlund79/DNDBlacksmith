@@ -1058,6 +1058,58 @@
    48,
    48
   ],
+  "ui/template_tb_adventurers.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_designer.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_help.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_hirelings.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_inventory.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_ledger.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_map.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_orders.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_property.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_skilltree.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_socket.png": [
+   96,
+   96
+  ],
+  "ui/template_tb_wanted.png": [
+   96,
+   96
+  ],
+  "ui/template_toolbar_bar.png": [
+   512,
+   128
+  ],
   "ui/template_tooltip_bg.png": [
    128,
    128
