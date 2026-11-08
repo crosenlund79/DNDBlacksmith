@@ -567,6 +567,22 @@ func test_repair_for_customer() -> void:
 	check(Lore.of_item(int(w["uid"])).any(func(e): return str(e["kind"]) == "repaired" and str(e["text"]).contains(str(a["name"]))), "the repair names the apprentice")
 
 
+func test_repair_own_stores() -> void:
+	var a: Dictionary = _setup(1)[0]
+	_skills(a, "novice", {"smithing": 1})
+	var it := Items.make("sword_iron", {"quality": 70.0})
+	it["stats"]["durability"] = 1
+	Game.add_item(it, false)
+	check(Apprentices.worn_in_stores().has(it), "the worn sword is offered for repair")
+	var t := Apprentices.add_task("repair", {"target": int(it["uid"])})
+	check(not t.has("error"), "repair queued for a piece in the stores (%s)" % t.get("error", ""))
+	_to_shift()
+	_run_until_done(t, 600)
+	eq(str(t["state"]), "done", "mended")
+	check(int(it["stats"]["durability"]) > 1, "durability restored (%d)" % int(it["stats"]["durability"]))
+	check(not Game.find_uid(int(it["uid"])).is_empty(), "still the same piece in the stores")
+
+
 func test_commission_fulfilment() -> void:
 	var a: Dictionary = _setup(1)[0]
 	_skills(a, "apprentice", {"smithing": 3})
