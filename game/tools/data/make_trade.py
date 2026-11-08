@@ -19,6 +19,7 @@ HERBALIST = {
         ["herb_emberleaf", 8, [4, 8]], ["herb_moonwort", 8, [4, 8]], ["reagent_salt", 6, [3, 6]],
         ["herb_bloodroot", 11, [3, 6]], ["herb_frostcap", 12, [2, 5]], ["herb_silverleaf", 16, [2, 4]],
         ["yew_stave", 17, [1, 3]], ["reagent_aether_dust", 78, [1, 2]],
+        ["flax_bundle", 4, [3, 8]],
     ],
     "lines": [
         "\"Bloodroot for the bleeding, frostcap for the fever, and silverleaf when neither works.\"",
@@ -37,7 +38,7 @@ SHIPS = {
         "stock": [
             ["reagent_aether_dust", 1.5, [2, 5], 1.0], ["reagent_wyrm_ash", 1.6, [1, 3], 0.7], ["herb_silverleaf", 1.3, [4, 8], 0.9],
             ["herb_frostcap", 1.3, [3, 6], 0.7], ["herb_bloodroot", 1.3, [4, 8], 0.7], ["reagent_salt", 1.2, [6, 10], 0.8],
-            ["thread_ethereal", 1.5, [2, 4], 0.6], ["gem_sapphire", 1.4, [1, 2], 0.5], ["gem_garnet", 1.4, [1, 3], 0.5],
+            ["thread_ethereal", 1.5, [2, 4], 0.6], ["silk_raw", 1.4, [2, 6], 0.8], ["gem_sapphire", 1.4, [1, 2], 0.5], ["gem_garnet", 1.4, [1, 3], 0.5],
         ],
         "equipment": [["amulet_silver", 1.6, 0.4], ["ring_silver", 1.6, 0.4], ["coating_flame", 1.4, 0.4]],
         "ironfront_chance": 0.35,
@@ -78,8 +79,9 @@ IMPORT_TIERS = {
 }
 _IMPORT_LIST = {
     "common": ["ingot_steel", "ore_silver", "leather_cured", "thread_ethereal", "herb_bloodroot", "herb_frostcap", "herb_silverleaf",
-               "herb_emberleaf", "herb_moonwort", "reagent_salt", "yew_stave", "gem_garnet", "gem_sapphire", "gem_moonstone", "bear_pelt"],
-    "rare": ["ore_mithril", "ore_adamantine", "reagent_aether_dust", "troll_hide", "runestone_blank"],
+               "herb_emberleaf", "herb_moonwort", "reagent_salt", "yew_stave", "gem_garnet", "gem_sapphire", "gem_moonstone", "bear_pelt",
+               "silk_raw", "wool_fleece", "flax_bundle"],
+    "rare": ["ore_mithril", "ore_adamantine", "reagent_aether_dust", "troll_hide", "runestone_blank", "spider_silk"],
     "exotic": ["ore_orichalcum", "wyvern_hide", "reagent_wyrm_ash", "gem_starstone"],
     "legendary": ["dragon_scale", "dragon_bone"],
 }

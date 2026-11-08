@@ -583,11 +583,11 @@ func _skilltree() -> void:
 	var by := {}
 	for n in SkillTree.nodes():
 		by[n["id"]] = n
-	check(SkillTree.branches().size() == 6, "skilltree: six branches")
+	check(SkillTree.branches().size() == 7, "skilltree: seven branches (iteration 010 adds Textiles & Tailoring)")
 	var sizes := []
 	for b in SkillTree.branches():
 		sizes.append(SkillTree.branch_nodes(b["id"]).size())
-	check(sizes.all(func(x): return x >= 5 and x <= 9), "skilltree: every branch has 5-9 nodes %s" % [sizes])
+	check(sizes.all(func(x): return x >= 5 and x <= 12), "skilltree: every branch has 5-12 nodes %s" % [sizes])
 	var bad := []
 	for n in SkillTree.nodes():
 		for p in n["requires"].get("nodes", []):

@@ -2743,5 +2743,2133 @@
   "requires": {},
   "desc": "Legendary armour of true dragon scale on a dragon-bone frame. It never leaves the forge below rare.",
   "min_rarity": "rare"
+ },
+ {
+  "id": "spin_flax",
+  "name": "Spin Linen Thread",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Hackle the flax and spin it on a drop spindle",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "stitching_table"
+  ],
+  "inputs": {
+   "flax_bundle": 2
+  },
+  "output": "thread_linen",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 10
+  },
+  "requires": {},
+  "desc": "Combed flax, a drop spindle and patience: plain linen thread."
+ },
+ {
+  "id": "spin_wool",
+  "name": "Card & Spin Wool Yarn",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Card the fleece",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "stitching_table",
+    "op": "Spin the yarn on a drop spindle",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "stitching_table",
+   "stitching_table"
+  ],
+  "inputs": {
+   "wool_fleece": 2
+  },
+  "output": "yarn_wool",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 12
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "weave_linen",
+  "name": "Weave Linen Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "loom",
+    "op": "Warp the loom",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "loom",
+    "op": "Weave plain linen",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "loom",
+   "loom"
+  ],
+  "inputs": {
+   "thread_linen": 3
+  },
+  "output": "cloth_linen",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "weave_wool",
+  "name": "Weave Woollen Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "loom",
+    "op": "Warp the loom",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "loom",
+    "op": "Weave a tight twill",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "loom",
+   "loom"
+  ],
+  "inputs": {
+   "yarn_wool": 3
+  },
+  "output": "cloth_wool",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 16
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "full_felt",
+  "name": "Full & Felt Wool",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Full the fleece in hot soapy water",
+    "checks": 2,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat"
+  ],
+  "inputs": {
+   "wool_fleece": 2
+  },
+  "output": "felt_wool",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 12
+  },
+  "requires": {},
+  "desc": "Hot water, soap and a great deal of trampling: fleece mats into felt."
+ },
+ {
+  "id": "oil_canvas",
+  "name": "Oil Canvas",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Press linseed from the seed heads and rub it in",
+    "checks": 1,
+    "weight": 1.1
+   }
+  ],
+  "steps": [
+   "leather_vat"
+  ],
+  "inputs": {
+   "cloth_linen": 1,
+   "flax_bundle": 2
+  },
+  "output": "canvas_oiled",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "quilt_padding",
+  "name": "Quilt Padding",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "cloth",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the linen layers",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Quilt the diamonds around the wool",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench"
+  ],
+  "inputs": {
+   "cloth_linen": 2,
+   "wool_fleece": 1
+  },
+  "output": "padding_quilted",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 18
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "weave_silk",
+  "name": "Weave Silk Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "silk",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "stitching_table",
+    "op": "Degum and wind the silk",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "loom",
+    "op": "Weave fine silk",
+    "checks": 3,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "stitching_table",
+   "loom"
+  ],
+  "inputs": {
+   "silk_raw": 2
+  },
+  "output": "cloth_silk",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 24
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "weave_ethereal",
+  "name": "Ethereal-thread Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "moonweave",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "thread_spinner",
+    "op": "Spin ethereal thread for the weft",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "loom",
+    "op": "Shoot the ghost-thread through the wool",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "thread_spinner",
+   "loom"
+  ],
+  "inputs": {
+   "cloth_wool": 1,
+   "thread_ethereal": 1
+  },
+  "output": "cloth_ethereal",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 28
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "weave_moonweave",
+  "name": "Weave Moonweave",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "moonweave",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "thread_spinner",
+    "op": "Spin silk with ethereal thread by moonlight",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "loom",
+    "op": "Weave under the moon",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "thread_spinner",
+   "loom"
+  ],
+  "inputs": {
+   "silk_raw": 2,
+   "thread_ethereal": 1,
+   "herb_moonwort": 1
+  },
+  "output": "cloth_moonweave",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 40
+  },
+  "requires": {},
+  "desc": "Moonwort sap sets the ghost-thread into the silk; the cloth then holds magic like wool holds warmth."
+ },
+ {
+  "id": "weave_spidersilk",
+  "name": "Weave Spidersilk Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "spidersilk",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Boil the glue out with quicksalt",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Spin the grey strands",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "loom",
+    "op": "Weave the shadow cloth",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "thread_spinner",
+   "loom"
+  ],
+  "inputs": {
+   "spider_silk": 2,
+   "reagent_salt": 1
+  },
+  "output": "cloth_spidersilk",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 40
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "ward_cloth",
+  "name": "Ward the Cloth",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "warded_cloth",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider the ward rune's pattern",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Set the aether dust into the thread",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "embroidery_frame",
+   "thread_spinner"
+  ],
+  "inputs": {
+   "cloth_moonweave": 1,
+   "runestone_ward": 1,
+   "reagent_aether_dust": 1
+  },
+  "output": "cloth_warded",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 55,
+   "runecraft": 10
+  },
+  "requires": {},
+  "desc": "A ward rune's pattern copied stitch for stitch into moonweave, fixed with aether dust."
+ },
+ {
+  "id": "linen_tunic",
+  "name": "Linen Tunic",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the tunic pattern",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew the seams",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench"
+  ],
+  "inputs": {
+   "cloth_linen": 2,
+   "thread_linen": 1
+  },
+  "output": "tunic_linen",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 16
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "felt_hood",
+  "name": "Felted Hood",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "cloth",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the hood and cape",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew and bind the edge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench"
+  ],
+  "inputs": {
+   "felt_wool": 1,
+   "thread_linen": 1
+  },
+  "output": "hood_wool",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "novice_robe",
+  "name": "Novice's Robe",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "cloth",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the robe panels",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew the long seams",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Hang and hem",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "cloth_wool": 3,
+   "thread_linen": 1
+  },
+  "output": "robe_novice",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 26
+  },
+  "requires": {},
+  "desc": "An apprentice mage's first robe. Plain wool — but cut to let the arms move in a casting."
+ },
+ {
+  "id": "travel_cloak",
+  "name": "Travel Cloak",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "cloth",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the half-circle",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Line the canvas with felt",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "stitching_table",
+    "op": "Fit the clasp",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "stitching_table"
+  ],
+  "inputs": {
+   "canvas_oiled": 1,
+   "felt_wool": 1,
+   "thread_linen": 1
+  },
+  "output": "cloak_travel",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 26
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "quilted_gambeson",
+  "name": "Quilted Gambeson",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "cloth",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the coat panels",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Quilt and sew the coat",
+    "checks": 3,
+    "weight": 1.3
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit it to the wearer",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "padding_quilted": 2,
+   "cloth_linen": 1,
+   "thread_linen": 1
+  },
+  "output": "gambeson",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 34
+  },
+  "requires": {},
+  "desc": "A fighter's padded coat — worn alone or under mail."
+ },
+ {
+  "id": "silk_sash",
+  "name": "Silk Sash",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "silk",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the silk on the bias",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Roll and whip the hems",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench"
+  ],
+  "inputs": {
+   "cloth_silk": 1
+  },
+  "output": "sash_silk",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 24
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "spellweaver_gloves",
+  "name": "Spellweaver's Gloves",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "silk",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the silk fingers",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Stitch the gloves",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Run ghost-thread channels through the palms",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "thread_spinner"
+  ],
+  "inputs": {
+   "cloth_silk": 1,
+   "thread_ethereal": 1
+  },
+  "output": "gloves_spellweaver",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 40
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "scholar_robe",
+  "name": "Scholar's Robe",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "moonweave",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the robe",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew with ethereal thread",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider the scholar's sigils",
+    "checks": 1,
+    "weight": 1.3
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Hang and hem",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "embroidery_frame",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "cloth_ethereal": 2,
+   "cloth_wool": 1,
+   "herb_moonwort": 1
+  },
+  "output": "robe_scholar",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 48
+  },
+  "requires": {},
+  "desc": "Dyed moonwort-blue; the sigils at the hem steady a caster's ward."
+ },
+ {
+  "id": "warded_cloak",
+  "name": "Warded Cloak",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "moonweave",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the cloak",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew the cloak and hood",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider ward sigils from hem to hood",
+    "checks": 2,
+    "weight": 1.4
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "embroidery_frame"
+  ],
+  "inputs": {
+   "cloth_ethereal": 2,
+   "runestone_ward": 1,
+   "thread_ethereal": 1
+  },
+  "output": "cloak_warded",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 55
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "moonweave_cowl",
+  "name": "Moonweave Cowl",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "moonweave",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the cowl",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew the deep hood",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider the clear-thought sigil",
+    "checks": 1,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "embroidery_frame"
+  ],
+  "inputs": {
+   "cloth_moonweave": 1,
+   "thread_ethereal": 1
+  },
+  "output": "hood_moonweave",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 60
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "shadow_cloak",
+  "name": "Shadow Cloak",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "spidersilk",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut spidersilk and moonweave together",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew the shadow seams",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Hang it until it stops moving",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "cloth_spidersilk": 2,
+   "cloth_moonweave": 1,
+   "thread_ethereal": 1
+  },
+  "output": "cloak_shadow",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 70
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "archmage_robe",
+  "name": "Archmage's Robe",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "warded_cloth",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "cutting_table",
+    "op": "Cut the warded panels",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "tailors_bench",
+    "op": "Sew with ghost-thread",
+    "checks": 3,
+    "weight": 1.3
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider the archmage's sigils",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Bind the moonstone into the collar",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit and balance the enchantment",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "cutting_table",
+   "tailors_bench",
+   "embroidery_frame",
+   "thread_spinner",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "cloth_warded": 2,
+   "cloth_moonweave": 2,
+   "thread_ethereal": 2,
+   "gem_moonstone": 1
+  },
+  "output": "robe_archmage",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 110,
+   "runecraft": 15
+  },
+  "requires": {},
+  "desc": "The finest robe a tailor can make: warded cloth over moonweave. A wizard wearing it shrugs off curses and fire alike."
+ },
+ {
+  "id": "iron_shortsword",
+  "name": "Iron Shortsword",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "iron",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the billet",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw the short blade",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the edge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 1,
+   "leather_cured": 1
+  },
+  "output": "sword_short",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 24
+  },
+  "requires": {},
+  "desc": "A quick, broad blade — the easiest sword to forge."
+ },
+ {
+  "id": "steel_shortsword",
+  "name": "Steel Shortsword",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Bring the steel to yellow heat",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw the short blade",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "quench_trough",
+    "op": "Oil-quench",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Hone the edge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 1,
+   "leather_cured": 1
+  },
+  "output": "sword_short",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 34
+  },
+  "requires": {},
+  "desc": "The same shortsword, in folded steel: keener and longer-lived."
+ },
+ {
+  "id": "steel_cutlass",
+  "name": "Steel Cutlass",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw the curved blade",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "quench_trough",
+    "op": "Quench the edge only",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the single edge",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Wrap the basket grip",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "leather_cured": 1
+  },
+  "output": "sword_cutlass",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 42
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "steel_rapier",
+  "name": "Steel Rapier",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Bring the thin bar to cherry heat",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Draw the long narrow blade",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "quench_trough",
+    "op": "Oil-quench",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "forge",
+    "op": "Spring-temper the blade",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the diamond section",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "anvil",
+    "op": "Forge the swept hilt",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "forge",
+   "grinding_wheel",
+   "anvil"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "ore_silver": 1,
+   "leather_cured": 1
+  },
+  "output": "sword_rapier",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 58
+  },
+  "requires": {},
+  "desc": "A spring temper lets it bend and come back true — a duellist's weapon."
+ },
+ {
+  "id": "steel_greatsword",
+  "name": "Steel Greatsword",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 7,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the long billet",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Hold the heat along its length",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "anvil",
+    "op": "Draw the two-handed blade",
+    "checks": 4,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Interrupted quench",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the long fuller",
+    "checks": 2,
+    "weight": 1.1
+   },
+   {
+    "station": "stitching_table",
+    "op": "Wrap the long grip",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "forge",
+   "bellows",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 4,
+   "leather_cured": 2
+  },
+  "output": "sword_great",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 80
+  },
+  "requires": {},
+  "desc": "As tall as its bearer. Keeping four feet of steel straight through the quench takes a master's nerve."
+ },
+ {
+  "id": "iron_hatchet",
+  "name": "Hatchet",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "iron",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the small head",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Punch the eye and shape the bit",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil"
+  ],
+  "inputs": {
+   "ingot_iron": 1
+  },
+  "output": "axe_hatchet",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 18
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "steel_battle_axe",
+  "name": "Steel Battle Axe",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Forge the bearded head",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden the bit",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the edge",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "leather_cured": 1
+  },
+  "output": "axe_battle",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 48
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "steel_great_axe",
+  "name": "Steel Great Axe",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 6,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the great head",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Forge both bits",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden both edges",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Grind the edges",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 4,
+   "leather_cured": 1
+  },
+  "output": "axe_great",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 75
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "steel_warhammer",
+  "name": "Steel Warhammer",
+  "discipline": "classic",
+  "category": "weapon",
+  "material": "steel",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the head",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Forge the face and the spike",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "leather_cured": 1
+  },
+  "output": "hammer_war",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 50
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "iron_buckler",
+  "name": "Buckler",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "iron",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the boss",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Dish the buckler",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil"
+  ],
+  "inputs": {
+   "ingot_iron": 1,
+   "leather_cured": 1
+  },
+  "output": "shield_buckler",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 16
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "iron_chainmail",
+  "name": "Chain Hauberk",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "iron",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Draw the wire",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Coil and cut the rings",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "anvil",
+    "op": "Rivet ring by ring",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "stitching_table",
+    "op": "Line the collar",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "anvil",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_iron": 3,
+   "leather_cured": 1
+  },
+  "output": "chainmail",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 44
+  },
+  "requires": {},
+  "desc": "Thousands of riveted rings. Tedious work; worth every link."
+ },
+ {
+  "id": "steel_half_plate",
+  "name": "Steel Half-Plate",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "steel",
+  "difficulty": 7,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel plates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Hold the yellow heat",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "anvil",
+    "op": "Raise the breastplate",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "anvil",
+    "op": "Shape pauldrons and tassets",
+    "checks": 3,
+    "weight": 1.3
+   },
+   {
+    "station": "quench_trough",
+    "op": "Temper the plates",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Polish",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet the straps",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "forge",
+   "bellows",
+   "anvil",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 5,
+   "leather_cured": 2
+  },
+  "output": "plate_half",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 85
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "full_plate",
+  "name": "Full Plate Harness",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "steel",
+  "difficulty": 8,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel plates",
+    "checks": 2,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Hold the yellow heat",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "anvil",
+    "op": "Raise the breastplate",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "anvil",
+    "op": "Articulate every lame",
+    "checks": 4,
+    "weight": 1.5
+   },
+   {
+    "station": "quench_trough",
+    "op": "Temper the harness",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Polish",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "stitching_table",
+    "op": "Strap and fit the harness",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "forge",
+   "bellows",
+   "anvil",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 7,
+   "leather_cured": 2
+  },
+  "output": "plate_full",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 110
+  },
+  "requires": {},
+  "desc": "A complete articulated harness — the summit of the armourer's craft."
+ },
+ {
+  "id": "steel_tower_shield",
+  "name": "Steel Tower Shield",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "steel",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the tall plate",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Raise the tall face",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden the rim",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Line and strap",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 3,
+   "leather_cured": 1
+  },
+  "output": "shield_tower",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 55
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "hide_armour",
+  "name": "Hide Armour",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Half-cure the hides",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Lace the coat",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_hide": 3,
+   "thread_linen": 1
+  },
+  "output": "armor_hide",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "studded_leather",
+  "name": "Studded Leather",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "leather",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Boil-harden the panels",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Head the iron studs",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "stitching_table",
+    "op": "Set the studs and stitch",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "anvil",
+   "stitching_table"
+  ],
+  "inputs": {
+   "leather_cured": 3,
+   "ingot_iron": 1,
+   "thread_linen": 1
+  },
+  "output": "armor_studded",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 34,
+   "smithing": 6
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "shortbow",
+  "name": "Shortbow",
+  "discipline": "stitching",
+  "category": "weapon",
+  "material": "leather",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam-bend the stave",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "String and wrap the grip",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "stitching_table"
+  ],
+  "inputs": {
+   "yew_stave": 1,
+   "thread_linen": 1
+  },
+  "output": "bow_short",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 14
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "recurve_bow",
+  "name": "Recurve Bow",
+  "discipline": "stitching",
+  "category": "weapon",
+  "material": "bearhide",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam the tips back",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Tiller the limbs",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "stitching_table",
+    "op": "Back with bear sinew and string it",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "grinding_wheel",
+   "stitching_table"
+  ],
+  "inputs": {
+   "yew_stave": 2,
+   "leather_bear": 1,
+   "thread_linen": 1
+  },
+  "output": "bow_recurve",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 46,
+   "smithing": 8
+  },
+  "requires": {},
+  "desc": "Steam-bent tips and a sinew back: a longbow's punch from a shorter stave."
+ },
+ {
+  "id": "silverleaf_warbow",
+  "name": "Silverleaf Warbow",
+  "discipline": "stitching",
+  "category": "weapon",
+  "material": "ethereal",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam-bend the long stave",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Tiller the limbs true",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "thread_spinner",
+    "op": "Spin a ghost-thread string",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Varnish with silverleaf and wrap the grip",
+    "checks": 1,
+    "weight": 0.8
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "grinding_wheel",
+   "thread_spinner",
+   "stitching_table"
+  ],
+  "inputs": {
+   "yew_stave": 2,
+   "herb_silverleaf": 2,
+   "thread_ethereal": 1
+  },
+  "output": "bow_warbow",
+  "qty": 1,
+  "dice": {
+   "edge": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 60
+  },
+  "requires": {},
+  "desc": "An elven-style warbow: the silverleaf varnish keeps it from ever taking a set."
  }
 ]

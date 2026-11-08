@@ -1,7 +1,7 @@
 """Generates game/data/skilltree.json — the Blacksmith's Skill Tree.
 Run: python3 tools/data/make_skilltree.py   (make_data.py also runs it)
 
-Six branches of nodes. A node is learned once its requirements are met:
+Seven branches of nodes (Textiles & Tailoring shares the Enchanted Stitching skill with Leatherworking). A node is learned once its requirements are met:
   requires.skill            [skill_id, level]       a player skill level
   requires.nodes            [node ids]              prerequisite nodes (drawn as lines)
   requires.flags            [flag ids]              knowledge / world discoveries (see FLAGS for hints)
@@ -36,6 +36,8 @@ BRANCHES = [
          desc="Oils, distillations, reagents, infusions and exotic compounds."),
     dict(id="leather", name="Leatherworking & Enchanted Stitching", skill="enchanted_stitching", x=5, colour="#6a4422",
          desc="Hides to monster leather, linen to ethereal thread — and dragon scale."),
+    dict(id="tailoring", name="Textiles & Tailoring", skill="enchanted_stitching", x=6, colour="#6e3a5e",
+         desc="Flax, wool and silk spun, woven and cut into garments — up to moonweave and the archmage's robe."),
 ]
 
 # Knowledge flags: where a player can learn them (shown as hints in the tree).
@@ -88,18 +90,19 @@ START = ["s_basic", "l_basic"]
 NODES = [
     # ------------------------------------------------------------ Traditional Smithing
     N("s_basic", "smithing", "Basic Ironworking & Repairs", "The apprentice's craft: heat, hammer, quench and grind honest iron.", 1, 0,
-      recipes=["smelt_iron", "iron_longsword", "hand_axe", "flanged_mace", "round_shield", "iron_helm"],
+      recipes=["smelt_iron", "iron_longsword", "hand_axe", "flanged_mace", "round_shield", "iron_helm",
+               "iron_shortsword", "iron_hatchet", "iron_buckler"],
       unlock_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel"],
       techniques=[T("t_repairs", "Field repairs", "Dented and notched gear can be ground and re-tempered at the grinding wheel.")], icon="icons/sword_iron"),
     N("s_blades", "smithing", "Simple Blades & Armour", "Once your first sword has left the anvil: plate for the body and silver for the hand.", 1, 1,
       skill=("smithing", 4), nodes=["s_basic"], seen=["sword_iron"],
-      recipes=["iron_cuirass", "silver_band"]),
+      recipes=["iron_cuirass", "silver_band", "iron_chainmail"]),
     N("s_steel", "smithing", "Steelworking", "Folded, normalised steel: keener edges and lighter plate.", 1, 2,
       skill=("smithing", 5), nodes=["s_blades", "m_alloys"],
-      recipes=["steel_longsword", "steel_cuirass"]),
+      recipes=["steel_longsword", "steel_cuirass", "steel_shortsword", "steel_cutlass", "steel_battle_axe"]),
     N("s_heat", "smithing", "Advanced Heat Treatment", "Interrupted quenches, oil tempering and the long, patient normalise.", 1, 3,
       skill=("smithing", 6), nodes=["s_steel"],
-      recipes=["kite_shield"],
+      recipes=["kite_shield", "steel_rapier", "steel_warhammer", "steel_tower_shield"],
       techniques=[T("t_quench", "Interrupted quench", "+2% craftsmanship on classic weapons.", 2, discipline=["classic"], category=["weapon"])], icon="icons/shield_kite"),
     N("s_runed", "smithing", "Runed Steel", "Steel, a set rune and a flame-quenched edge in one blade — four crafts meet at the anvil.", 1.42, 4.2,
       skill=("smithing", 6), nodes=["s_heat", "r_engrave", "al_simple"],
@@ -110,12 +113,19 @@ NODES = [
     N("s_starsteel", "smithing", "Forgotten Starsteel", "A smith's notes from another age describe a blade folded with fallen star-metal.", 0.62, 5.8,
       skill=("smithing", 7), nodes=["s_alloy"], flags=["recipe_starsteel"], secret=True,
       recipes=["starsteel_blade"]),
+    N("s_great", "smithing", "Two-handed Arms", "Greatswords and great axes: long steel kept straight through the quench.", 1.36, 5.2,
+      skill=("smithing", 7), nodes=["s_heat"], gold=80,
+      recipes=["steel_greatsword", "steel_great_axe"], icon="icons/sword_great"),
+    N("s_plate", "smithing", "Plate Harness", "Breastplate, pauldrons and tassets: steel plate shaped to a body.", 1.36, 6.7,
+      skill=("smithing", 7), nodes=["s_heat"], stations=["bellows"], seen=["chainmail"],
+      recipes=["steel_half_plate"], icon="icons/plate_half"),
     N("s_master", "smithing", "Master Smithing", "The hand-and-a-half blade, kept straight over its whole length.", 1, 6.0,
       skill=("smithing", 8), nodes=["s_alloy"], gold=150,
       recipes=["steel_bastard_sword"],
       techniques=[T("t_master_eye", "Master's eye", "+2% craftsmanship on all classic smithing.", 2, discipline=["classic"])]),
     N("s_armour", "smithing", "Master Armourcraft", "Plate that moves with its wearer — the knowledge every legendary armour rests on.", 1, 7.4,
-      skill=("smithing", 8), nodes=["s_master"], gold=250,
+      skill=("smithing", 8), nodes=["s_master", "s_plate"], gold=250,
+      recipes=["full_plate"],
       techniques=[T("t_armourcraft", "Master armourcraft", "+3% craftsmanship on all armour.", 3, category=["armour"])], icon="icons/cuirass_steel"),
 
     # ------------------------------------------------------------ Mining & Metallurgy
@@ -218,10 +228,10 @@ NODES = [
 
     # ------------------------------------------------------------ Leatherworking & Enchanted Stitching
     N("l_basic", "leather", "Ordinary Leatherwork", "Curing hides, cutting belts and gloves.", 5, 0,
-      recipes=["cure_leather", "leather_belt", "leather_gloves"], unlock_stations=["stitching_table", "leather_vat"], icon="icons/leather_cured"),
+      recipes=["cure_leather", "leather_belt", "leather_gloves", "hide_armour", "shortbow"], unlock_stations=["stitching_table", "leather_vat"], icon="icons/leather_cured"),
     N("l_armour", "leather", "Boots, Belts & Simple Armour", "Jerkins, boots, and a ranger's bow; fitted on the mannequin.", 5, 1,
       skill=("enchanted_stitching", 1), nodes=["l_basic"], gold=20,
-      recipes=["leather_boots", "leather_jerkin", "ranger_boots", "hunting_bow"], unlock_stations=["fitting_mannequin"]),
+      recipes=["leather_boots", "leather_jerkin", "ranger_boots", "hunting_bow", "studded_leather"], unlock_stations=["fitting_mannequin"]),
     N("l_threads", "leather", "Magical Threads", "Spinning moonlit thread that holds an enchantment.", 4.68, 2.2,
       skill=("enchanted_stitching", 3), nodes=["l_armour"],
       recipes=["yew_longbow"], unlock_stations=["thread_spinner"]),
@@ -231,12 +241,42 @@ NODES = [
     N("l_enchanted", "leather", "Enchanted Stitching", "Ward sigils embroidered into leather and cloth.", 4.68, 3.4,
       skill=("enchanted_stitching", 3), nodes=["l_threads"],
       recipes=["warded_gloves", "embroidered_hood"], unlock_stations=["embroidery_frame"]),
-    N("l_exotic", "leather", "Exotic Monster Materials", "Troll and wyvern hide tanned into wyrm leather.", 5, 4.6,
+    N("l_bowyer", "leather", "The Bowyer's Craft", "Steam-bent recurve tips backed with bear sinew.", 5.32, 3.4,
+      skill=("enchanted_stitching", 3), nodes=["l_hides"],
+      recipes=["recurve_bow"]),
+    N("l_warbow", "leather", "Elven Warbow", "Yew varnished with silverleaf and strung with ghost-thread: a warbow that never takes a set.", 5.32, 4.7,
+      skill=("enchanted_stitching", 4), nodes=["l_bowyer", "l_threads"], seen=["herb_silverleaf"],
+      recipes=["silverleaf_warbow"]),
+    N("l_exotic", "leather", "Exotic Monster Materials", "Troll and wyvern hide tanned into wyrm leather.", 4.72, 4.8,
       skill=("enchanted_stitching", 4), nodes=["l_enchanted", "l_hides"], seen=["troll_hide"],
       recipes=["cure_troll_leather", "cure_wyvern_leather", "wyrmleather_boots"]),
     N("l_dragon", "leather", "Dragon-scale Preparation", "Brining, trimming and lacing true dragon scale without dulling its fire.", 5, 6.0,
       skill=("enchanted_stitching", 5), nodes=["l_exotic"], flags=["dragon_lore"], seen=["dragon_scale"],
       techniques=[T("t_dragon_scale", "Dragon-scale preparation", "Dragon scale and bone can be worked into armour.")], icon="icons/dragon_scale"),
+
+    # ------------------------------------------------------------ Textiles & Tailoring (shares Enchanted Stitching)
+    N("ta_spin", "tailoring", "Spinning & Weaving", "Flax and fleece spun on a drop spindle and woven on the loom; wool fulled into felt.", 6, 0,
+      skill=("enchanted_stitching", 1), nodes=["l_basic"], seen=["flax_bundle"],
+      recipes=["spin_flax", "spin_wool", "weave_linen", "weave_wool", "full_felt"], unlock_stations=["loom"], icon="icons/cloth_linen"),
+    N("ta_garments", "tailoring", "Cutting & Plain Garments", "Patterns on the cutting table, seams at the tailor's bench: tunics, hoods, a novice's robe and a travel cloak.", 6, 1.1,
+      skill=("enchanted_stitching", 2), nodes=["ta_spin", "l_armour"], stations=["loom"], gold=30,
+      recipes=["linen_tunic", "felt_hood", "novice_robe", "oil_canvas", "travel_cloak"], unlock_stations=["cutting_table", "tailors_bench"],
+      icon="icons/robe_novice"),
+    N("ta_padded", "tailoring", "Quilting & Padded Armour", "Linen quilted around carded wool: the gambeson every fighter wears under mail.", 5.78, 2.95,
+      skill=("enchanted_stitching", 3), nodes=["ta_garments"], stations=["tailors_bench"],
+      recipes=["quilt_padding", "quilted_gambeson"], icon="icons/gambeson"),
+    N("ta_silk", "tailoring", "Silk & Fine Cloth", "Southern silk on the loom, and ghost-thread shot through wool for spellcasters.", 6.32, 2.3,
+      skill=("enchanted_stitching", 3), nodes=["ta_garments", "l_threads"], seen=["silk_raw"],
+      recipes=["weave_silk", "weave_ethereal", "silk_sash", "spellweaver_gloves"], icon="icons/cloth_silk"),
+    N("ta_scholar", "tailoring", "Scholar's Vestments", "Ethereal-thread robes dyed moonwort-blue and cloaks embroidered with wards.", 6.32, 3.5,
+      skill=("enchanted_stitching", 4), nodes=["ta_silk", "l_enchanted"], stations=["embroidery_frame"],
+      recipes=["scholar_robe", "warded_cloak"], icon="icons/robe_scholar"),
+    N("ta_moon", "tailoring", "Moonweave & Spidersilk", "Silk spun with ghost-thread by moonlight; cave-spider silk boiled clean and woven into shadow.", 6, 4.7,
+      skill=("enchanted_stitching", 5), nodes=["ta_scholar"], seen=["cloth_silk"], gold=120,
+      recipes=["weave_moonweave", "weave_spidersilk", "moonweave_cowl", "shadow_cloak"], icon="icons/cloth_moonweave"),
+    N("ta_archmage", "tailoring", "Warded Cloth & the Archmage's Robe", "A ward rune's pattern stitched into moonweave — and the finest robe a tailor can make.", 6, 5.9,
+      skill=("enchanted_stitching", 6), nodes=["ta_moon"], seen=["reagent_aether_dust"], gold=200,
+      recipes=["ward_cloth", "archmage_robe"], icon="icons/robe_archmage"),
 ]
 
 

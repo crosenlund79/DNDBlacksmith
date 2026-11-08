@@ -34,6 +34,10 @@
    96,
    96
   ],
+  "stations/template_cutting_table.png": [
+   128,
+   80
+  ],
   "stations/template_embroidery_frame.png": [
    112,
    112
@@ -61,6 +65,10 @@
   "stations/template_leyline_conductor.png": [
    96,
    128
+  ],
+  "stations/template_loom.png": [
+   128,
+   112
   ],
   "stations/template_mortar_station.png": [
    96,
@@ -100,6 +108,10 @@
   ],
   "stations/template_stitching_table.png": [
    128,
+   80
+  ],
+  "stations/template_tailors_bench.png": [
+   112,
    80
   ],
   "stations/template_thread_spinner.png": [
@@ -702,7 +714,27 @@
    64,
    64
   ],
+  "icons/template_armor_hide.png": [
+   64,
+   64
+  ],
+  "icons/template_armor_studded.png": [
+   64,
+   64
+  ],
+  "icons/template_axe_battle.png": [
+   64,
+   64
+  ],
+  "icons/template_axe_great.png": [
+   64,
+   64
+  ],
   "icons/template_axe_hand.png": [
+   64,
+   64
+  ],
+  "icons/template_axe_hatchet.png": [
    64,
    64
   ],
@@ -738,6 +770,18 @@
    64,
    64
   ],
+  "icons/template_bow_recurve.png": [
+   64,
+   64
+  ],
+  "icons/template_bow_short.png": [
+   64,
+   64
+  ],
+  "icons/template_bow_warbow.png": [
+   64,
+   64
+  ],
   "icons/template_bow_yew.png": [
    64,
    64
@@ -746,11 +790,55 @@
    64,
    64
   ],
+  "icons/template_canvas_oiled.png": [
+   64,
+   64
+  ],
   "icons/template_chainmail.png": [
    64,
    64
   ],
   "icons/template_chest_recovered.png": [
+   64,
+   64
+  ],
+  "icons/template_cloak_shadow.png": [
+   64,
+   64
+  ],
+  "icons/template_cloak_travel.png": [
+   64,
+   64
+  ],
+  "icons/template_cloak_warded.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_ethereal.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_linen.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_moonweave.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_silk.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_spidersilk.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_warded.png": [
+   64,
+   64
+  ],
+  "icons/template_cloth_wool.png": [
    64,
    64
   ],
@@ -794,6 +882,18 @@
    64,
    64
   ],
+  "icons/template_felt_wool.png": [
+   64,
+   64
+  ],
+  "icons/template_flax_bundle.png": [
+   64,
+   64
+  ],
+  "icons/template_gambeson.png": [
+   64,
+   64
+  ],
   "icons/template_gem_garnet.png": [
    64,
    64
@@ -814,6 +914,10 @@
    64,
    64
   ],
+  "icons/template_gloves_spellweaver.png": [
+   64,
+   64
+  ],
   "icons/template_gloves_warded.png": [
    64,
    64
@@ -823,6 +927,10 @@
    32
   ],
   "icons/template_grimhold.png": [
+   64,
+   64
+  ],
+  "icons/template_hammer_war.png": [
    64,
    64
   ],
@@ -855,6 +963,14 @@
    64
   ],
   "icons/template_hood_leather.png": [
+   64,
+   64
+  ],
+  "icons/template_hood_moonweave.png": [
+   64,
+   64
+  ],
+  "icons/template_hood_wool.png": [
    64,
    64
   ],
@@ -946,6 +1062,18 @@
    64,
    64
   ],
+  "icons/template_padding_quilted.png": [
+   64,
+   64
+  ],
+  "icons/template_plate_full.png": [
+   64,
+   64
+  ],
+  "icons/template_plate_half.png": [
+   64,
+   64
+  ],
   "icons/template_potion_healing.png": [
    64,
    64
@@ -1010,6 +1138,18 @@
    64,
    64
   ],
+  "icons/template_robe_archmage.png": [
+   64,
+   64
+  ],
+  "icons/template_robe_novice.png": [
+   64,
+   64
+  ],
+  "icons/template_robe_scholar.png": [
+   64,
+   64
+  ],
   "icons/template_runestone_blank.png": [
    64,
    64
@@ -1034,7 +1174,15 @@
    64,
    64
   ],
+  "icons/template_sash_silk.png": [
+   64,
+   64
+  ],
   "icons/template_satchel_relic.png": [
+   64,
+   64
+  ],
+  "icons/template_shield_buckler.png": [
    64,
    64
   ],
@@ -1046,7 +1194,19 @@
    64,
    64
   ],
+  "icons/template_shield_tower.png": [
+   64,
+   64
+  ],
   "icons/template_shipment_miner.png": [
+   64,
+   64
+  ],
+  "icons/template_silk_raw.png": [
+   64,
+   64
+  ],
+  "icons/template_spider_silk.png": [
    64,
    64
   ],
@@ -1058,7 +1218,15 @@
    64,
    64
   ],
+  "icons/template_sword_cutlass.png": [
+   64,
+   64
+  ],
   "icons/template_sword_emberwarden.png": [
+   64,
+   64
+  ],
+  "icons/template_sword_great.png": [
    64,
    64
   ],
@@ -1067,6 +1235,14 @@
    64
   ],
   "icons/template_sword_mithril.png": [
+   64,
+   64
+  ],
+  "icons/template_sword_rapier.png": [
+   64,
+   64
+  ],
+  "icons/template_sword_short.png": [
    64,
    64
   ],
@@ -1090,7 +1266,15 @@
    64,
    64
   ],
+  "icons/template_tunic_linen.png": [
+   64,
+   64
+  ],
   "icons/template_warplate_adamantine.png": [
+   64,
+   64
+  ],
+  "icons/template_wool_fleece.png": [
    64,
    64
   ],
@@ -1099,6 +1283,10 @@
    64
   ],
   "icons/template_wyvernscale_pauldron.png": [
+   64,
+   64
+  ],
+  "icons/template_yarn_wool.png": [
    64,
    64
   ],

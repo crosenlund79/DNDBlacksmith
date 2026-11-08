@@ -156,8 +156,8 @@ func acquire(def: String, n: int, depth := 0) -> String:
 			if Game.count(def) >= n:
 				_say("imported %s" % def)
 				return ""
-		# 4. merchant ships: wait for one that carries it (first contact with exotic goods)
-		var waited := 0
+		# 4. merchant ships: wait for one that carries it (first contact with exotic goods) — only if some ship ever does
+		var waited := 0 if _ships_carry(def) else 1 << 20
 		while Game.count(def) < n and waited < 260:
 			var ship := Trade.current_ship()
 			var stock: Array = ship.get("stock", [])
@@ -174,7 +174,10 @@ func acquire(def: String, n: int, depth := 0) -> String:
 			_day()
 			waited += 1
 	# 5. hireling expeditions (ores, coal, relics)
-	for dest in ["highmarsh_road", "ironroot_mine", "barrow_fields", "whisperwood"]:
+	var dests := ["highmarsh_road", "ironroot_mine", "barrow_fields", "whisperwood"]
+	# regions whose finds include the material go first (a relic tablet comes from the barrows, not the trade road)
+	dests.sort_custom(func(a, b): return int(_loot_has(str(a), def)) > int(_loot_has(str(b), def)))
+	for dest in dests:
 		var g := 0
 		while Game.count(def) < n and g < 12:
 			g += 1
@@ -184,6 +187,23 @@ func acquire(def: String, n: int, depth := 0) -> String:
 			_say("hirelings brought %s" % def)
 			return ""
 	return "could not obtain %s ×%d (have %d)" % [def, n, Game.count(def)]
+
+
+func _ships_carry(def: String) -> bool:
+	var ships: Dictionary = DB.extra("trade").get("ships", {})
+	for sid in ships:
+		for e in ships[sid].get("stock", []):
+			if str(e[0]) == def:
+				return true
+	return false
+
+
+func _loot_has(dest: String, def: String) -> bool:
+	var tid := str(DB.destinations.get(dest, {}).get("loot", ""))
+	for e in DB.loot.get(tid, {}).get("entries", []):
+		if str(e[0]) == def:
+			return true
+	return false
 
 
 func _collect_imports(max_days: int) -> void:
@@ -340,7 +360,7 @@ func test_beginner_to_master() -> void:
 		return
 	check(craft_blocker("iron_longsword") == "", "start: an ordinary iron longsword can be forged")
 	check(craft_blocker("steel_longsword") != "" and craft_blocker("dragonscale_armor") != "", "start: steel and dragon armour are out of reach")
-	var milestones := [["s_blades", "simple blades"], ["s_steel", "steelworking"], ["r_original", "original runes"],
+	var milestones := [["s_blades", "simple blades"], ["s_steel", "steelworking"], ["r_original", "original runes"], ["ta_scholar", "scholar's vestments (tailoring)"],
 		["ar_crucible", "the Arcane Crucible"], ["ar_plating", "mithril armour plating"], ["l_dragon", "dragon-scale preparation"],
 		["ar_legend", "legendary arcane craftsmanship"]]
 	for m in milestones:

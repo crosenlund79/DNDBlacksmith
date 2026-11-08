@@ -1184,6 +1184,826 @@
   ]
  },
  {
+  "id": "flax_bundle",
+  "name": "Flax",
+  "type": "material",
+  "slot": null,
+  "value": 3,
+  "stats": {},
+  "icon": "flax_bundle",
+  "stack": true,
+  "desc": "Retted flax stalks from Jory's fields: combed, spun and woven they become linen. The seed heads give linseed oil.",
+  "tags": [
+   "fibre"
+  ]
+ },
+ {
+  "id": "wool_fleece",
+  "name": "Wool Fleece",
+  "type": "material",
+  "slot": null,
+  "value": 4,
+  "stats": {},
+  "icon": "wool_fleece",
+  "stack": true,
+  "desc": "A greasy fleece off a Brindlewick sheep. Carded and spun it becomes yarn; fulled, it becomes felt.",
+  "tags": [
+   "fibre"
+  ]
+ },
+ {
+  "id": "silk_raw",
+  "name": "Raw Silk",
+  "type": "material",
+  "slot": null,
+  "value": 22,
+  "stats": {},
+  "icon": "silk_raw",
+  "stack": true,
+  "desc": "Hanks of reeled southern silk, gold-white and cool. The spice traders sell it by the ounce.",
+  "tags": [
+   "fibre"
+  ]
+ },
+ {
+  "id": "spider_silk",
+  "name": "Giant Spider Silk",
+  "type": "material",
+  "slot": null,
+  "value": 45,
+  "stats": {},
+  "icon": "spider_silk",
+  "stack": true,
+  "desc": "Grey strands torn from a cave spider's nest. Stronger than wire once the glue is boiled out — and it drinks shadow.",
+  "tags": [
+   "fibre",
+   "rare"
+  ]
+ },
+ {
+  "id": "yarn_wool",
+  "name": "Wool Yarn",
+  "type": "material",
+  "slot": null,
+  "value": 7,
+  "stats": {},
+  "icon": "yarn_wool",
+  "stack": true,
+  "desc": "Hand-spun woollen yarn, ready for the loom.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "cloth_linen",
+  "name": "Linen Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 12,
+  "stats": {},
+  "icon": "cloth_linen",
+  "stack": true,
+  "desc": "A bolt of plain-woven linen: cool, strong and easy to stitch.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "cloth_wool",
+  "name": "Woollen Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 14,
+  "stats": {},
+  "icon": "cloth_wool",
+  "stack": true,
+  "desc": "Twill-woven wool: warm, and it sheds the rain.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "felt_wool",
+  "name": "Felted Wool",
+  "type": "material",
+  "slot": null,
+  "value": 13,
+  "stats": {},
+  "icon": "felt_wool",
+  "stack": true,
+  "desc": "Fleece fulled in hot water and soap until it mats into thick, wind-proof felt.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "cloth_silk",
+  "name": "Silk Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 48,
+  "stats": {},
+  "icon": "cloth_silk",
+  "stack": true,
+  "desc": "Light, smooth silk. Enchantments sit in it better than in any plant fibre.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "canvas_oiled",
+  "name": "Oiled Canvas",
+  "type": "material",
+  "slot": null,
+  "value": 30,
+  "stats": {},
+  "icon": "canvas_oiled",
+  "stack": true,
+  "desc": "Heavy linen rubbed with linseed oil until it turns the rain.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "padding_quilted",
+  "name": "Quilted Padding",
+  "type": "material",
+  "slot": null,
+  "value": 32,
+  "stats": {},
+  "icon": "padding_quilted",
+  "stack": true,
+  "desc": "Layers of linen quilted around carded wool: the heart of a gambeson.",
+  "tags": [
+   "textile"
+  ]
+ },
+ {
+  "id": "cloth_ethereal",
+  "name": "Ethereal-thread Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 70,
+  "stats": {},
+  "icon": "cloth_ethereal",
+  "stack": true,
+  "desc": "Wool shot through with ethereal thread; it shimmers faintly when spells are near.",
+  "tags": [
+   "textile",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "cloth_moonweave",
+  "name": "Moonweave",
+  "type": "material",
+  "slot": null,
+  "value": 120,
+  "stats": {},
+  "icon": "cloth_moonweave",
+  "stack": true,
+  "desc": "Silk spun with ethereal thread and moonwort sap, woven by moonlight. It stores magic the way wool stores warmth.",
+  "tags": [
+   "textile",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "cloth_spidersilk",
+  "name": "Spidersilk Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 110,
+  "stats": {},
+  "icon": "cloth_spidersilk",
+  "stack": true,
+  "desc": "Grey-black cloth woven from boiled spider silk: light as smoke, hard to cut, hard to see.",
+  "tags": [
+   "textile",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "cloth_warded",
+  "name": "Warded Cloth",
+  "type": "material",
+  "slot": null,
+  "value": 230,
+  "stats": {},
+  "icon": "cloth_warded",
+  "stack": true,
+  "desc": "Moonweave embroidered with a ward rune's pattern and set with aether dust. Curses slide off it.",
+  "tags": [
+   "textile",
+   "enchanted",
+   "rare"
+  ]
+ },
+ {
+  "id": "tunic_linen",
+  "name": "Linen Tunic",
+  "type": "armor_cloth",
+  "slot": "armor",
+  "value": 22,
+  "stats": {
+   "protection": [
+    2,
+    3
+   ],
+   "durability": 40,
+   "speed": 3
+  },
+  "icon": "tunic_linen",
+  "stack": false,
+  "desc": "A plain linen tunic. Nothing to stop a blade — but light enough to run in.",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "gambeson",
+  "name": "Quilted Gambeson",
+  "type": "armor_cloth",
+  "slot": "armor",
+  "value": 85,
+  "stats": {
+   "protection": [
+    6,
+    9
+   ],
+   "durability": 75,
+   "frost": 1
+  },
+  "icon": "gambeson",
+  "stack": false,
+  "desc": "A thick quilted coat: soaks up blows, keeps out the cold, and sits under mail or alone.",
+  "tags": [
+   "cloth",
+   "padded"
+  ]
+ },
+ {
+  "id": "robe_novice",
+  "name": "Novice's Robe",
+  "type": "armor_cloth",
+  "slot": "armor",
+  "value": 45,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 35,
+   "magic": 3
+  },
+  "icon": "robe_novice",
+  "stack": false,
+  "desc": "Plain wool robes of a hedge-mage's apprentice. Loose sleeves, deep pockets for chalk.",
+  "tags": [
+   "cloth",
+   "robe"
+  ]
+ },
+ {
+  "id": "robe_scholar",
+  "name": "Scholar's Robe",
+  "type": "armor_cloth",
+  "slot": "armor",
+  "value": 170,
+  "stats": {
+   "protection": [
+    2,
+    4
+   ],
+   "durability": 50,
+   "magic": 6,
+   "ward": 2
+  },
+  "icon": "robe_scholar",
+  "stack": false,
+  "desc": "Ethereal-thread cloth dyed moonwort-blue; the hems remember the spells cast in it.",
+  "tags": [
+   "cloth",
+   "robe",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "robe_archmage",
+  "name": "Archmage's Robe",
+  "type": "armor_cloth",
+  "slot": "armor",
+  "value": 760,
+  "stats": {
+   "protection": [
+    4,
+    7
+   ],
+   "durability": 85,
+   "magic": 12,
+   "ward": 6,
+   "fire": 3,
+   "frost": 3
+  },
+  "icon": "robe_archmage",
+  "stack": false,
+  "desc": "Warded cloth over moonweave, the sigils embroidered in ghost-thread. It hums like a struck bell when magic passes.",
+  "tags": [
+   "cloth",
+   "robe",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "cloak_travel",
+  "name": "Travel Cloak",
+  "type": "cloak",
+  "slot": "amulet",
+  "value": 55,
+  "stats": {
+   "protection": [
+    1,
+    2
+   ],
+   "durability": 55,
+   "frost": 2
+  },
+  "icon": "cloak_travel",
+  "stack": false,
+  "desc": "Oiled canvas over felted wool, clasped at the throat. Rain runs off it; wind does not get through.",
+  "tags": [
+   "cloth",
+   "cloak"
+  ]
+ },
+ {
+  "id": "cloak_warded",
+  "name": "Warded Cloak",
+  "type": "cloak",
+  "slot": "amulet",
+  "value": 260,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 60,
+   "ward": 5,
+   "magic": 3,
+   "frost": 2
+  },
+  "icon": "cloak_warded",
+  "stack": false,
+  "desc": "Ethereal-thread cloth embroidered with ward sigils from hem to hood.",
+  "tags": [
+   "cloth",
+   "cloak",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "cloak_shadow",
+  "name": "Shadow Cloak",
+  "type": "cloak",
+  "slot": "amulet",
+  "value": 340,
+  "stats": {
+   "protection": [
+    2,
+    3
+   ],
+   "durability": 70,
+   "speed": 6,
+   "magic": 4,
+   "ward": 2
+  },
+  "icon": "cloak_shadow",
+  "stack": false,
+  "desc": "Spidersilk and moonweave: it drinks lamplight, and the wearer moves like a rumour.",
+  "tags": [
+   "cloth",
+   "cloak",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "hood_wool",
+  "name": "Felted Hood",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 18,
+  "stats": {
+   "protection": [
+    1,
+    2
+   ],
+   "durability": 35,
+   "frost": 2
+  },
+  "icon": "hood_wool",
+  "stack": false,
+  "desc": "A thick felt hood and shoulder cape against the northern wind.",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "hood_moonweave",
+  "name": "Moonweave Cowl",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 230,
+  "stats": {
+   "protection": [
+    1,
+    3
+   ],
+   "durability": 45,
+   "magic": 5,
+   "ward": 3
+  },
+  "icon": "hood_moonweave",
+  "stack": false,
+  "desc": "A deep cowl of moonweave; thoughts come clearer in its shadow.",
+  "tags": [
+   "cloth",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "sash_silk",
+  "name": "Silk Sash",
+  "type": "belt",
+  "slot": "belt",
+  "value": 90,
+  "stats": {
+   "protection": [
+    0,
+    1
+   ],
+   "durability": 40,
+   "magic": 3,
+   "speed": 2
+  },
+  "icon": "sash_silk",
+  "stack": false,
+  "desc": "A long silk sash, knotted the way the southern spell-dancers knot theirs.",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "gloves_spellweaver",
+  "name": "Spellweaver's Gloves",
+  "type": "gloves",
+  "slot": "gloves",
+  "value": 200,
+  "stats": {
+   "protection": [
+    1,
+    2
+   ],
+   "durability": 45,
+   "magic": 5,
+   "fire": 2
+  },
+  "icon": "gloves_spellweaver",
+  "stack": false,
+  "desc": "Fingerless silk gloves, the palms stitched with ghost-thread channels for the casting hand.",
+  "tags": [
+   "cloth",
+   "enchanted"
+  ]
+ },
+ {
+  "id": "sword_short",
+  "name": "Shortsword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 45,
+  "stats": {
+   "attack": [
+    6,
+    10
+   ],
+   "durability": 50,
+   "speed": 5
+  },
+  "icon": "sword_short",
+  "stack": false,
+  "desc": "A short, broad blade: quick in a crowded tunnel. Forged in iron or, by a steelworker, in steel.",
+  "tags": []
+ },
+ {
+  "id": "sword_cutlass",
+  "name": "Steel Cutlass",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 115,
+  "stats": {
+   "attack": [
+    10,
+    14
+   ],
+   "durability": 70,
+   "speed": 3
+  },
+  "icon": "sword_cutlass",
+  "stack": false,
+  "desc": "A curved, single-edged sailor's blade with a basket guard. Forgiving and fast.",
+  "tags": []
+ },
+ {
+  "id": "sword_rapier",
+  "name": "Steel Rapier",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 180,
+  "stats": {
+   "attack": [
+    9,
+    13
+   ],
+   "durability": 55,
+   "speed": 9
+  },
+  "icon": "sword_rapier",
+  "stack": false,
+  "desc": "A long, narrow thrusting blade, spring-tempered so it flexes and never takes a set. Lightning in a duellist's hand.",
+  "tags": []
+ },
+ {
+  "id": "sword_great",
+  "name": "Steel Greatsword",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 330,
+  "stats": {
+   "attack": [
+    20,
+    28
+   ],
+   "durability": 130
+  },
+  "icon": "sword_great",
+  "stack": false,
+  "desc": "A two-handed blade as tall as its bearer. Slow to swing; nothing in its arc stays standing.",
+  "tags": [
+   "two_handed"
+  ]
+ },
+ {
+  "id": "axe_hatchet",
+  "name": "Hatchet",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 28,
+  "stats": {
+   "attack": [
+    6,
+    9
+   ],
+   "durability": 45,
+   "speed": 3
+  },
+  "icon": "axe_hatchet",
+  "stack": false,
+  "desc": "A small iron axe for kindling — and, in a pinch, for goblins.",
+  "tags": []
+ },
+ {
+  "id": "axe_battle",
+  "name": "Steel Battle Axe",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 175,
+  "stats": {
+   "attack": [
+    14,
+    19
+   ],
+   "durability": 95
+  },
+  "icon": "axe_battle",
+  "stack": false,
+  "desc": "A broad bearded steel head on an ash haft.",
+  "tags": []
+ },
+ {
+  "id": "axe_great",
+  "name": "Steel Great Axe",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 340,
+  "stats": {
+   "attack": [
+    21,
+    29
+   ],
+   "durability": 125
+  },
+  "icon": "axe_great",
+  "stack": false,
+  "desc": "A double-bitted two-handed axe. A barbarian's idea of an argument.",
+  "tags": [
+   "two_handed"
+  ]
+ },
+ {
+  "id": "hammer_war",
+  "name": "Steel Warhammer",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 215,
+  "stats": {
+   "attack": [
+    15,
+    21
+   ],
+   "durability": 115
+  },
+  "icon": "hammer_war",
+  "stack": false,
+  "desc": "A spiked steel hammer that crumples plate and cracks bone through mail.",
+  "tags": []
+ },
+ {
+  "id": "armor_hide",
+  "name": "Hide Armour",
+  "type": "armor_leather",
+  "slot": "armor",
+  "value": 38,
+  "stats": {
+   "protection": [
+    4,
+    6
+   ],
+   "durability": 55
+  },
+  "icon": "armor_hide",
+  "stack": false,
+  "desc": "Stiff, half-cured hide laced into a coat. Crude, warm and cheap.",
+  "tags": []
+ },
+ {
+  "id": "armor_studded",
+  "name": "Studded Leather",
+  "type": "armor_leather",
+  "slot": "armor",
+  "value": 95,
+  "stats": {
+   "protection": [
+    7,
+    10
+   ],
+   "durability": 80,
+   "speed": 2
+  },
+  "icon": "armor_studded",
+  "stack": false,
+  "desc": "Boiled leather set with iron studs: real protection without the weight of mail.",
+  "tags": []
+ },
+ {
+  "id": "plate_half",
+  "name": "Steel Half-Plate",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 430,
+  "stats": {
+   "protection": [
+    16,
+    21
+   ],
+   "durability": 165
+  },
+  "icon": "plate_half",
+  "stack": false,
+  "desc": "Breastplate, pauldrons and tassets over mail. Heavy — but a blade skates off it.",
+  "tags": [
+   "heavy"
+  ]
+ },
+ {
+  "id": "plate_full",
+  "name": "Full Plate Harness",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 680,
+  "stats": {
+   "protection": [
+    19,
+    26
+   ],
+   "durability": 210
+  },
+  "icon": "plate_full",
+  "stack": false,
+  "desc": "A complete articulated harness of folded steel, every lame fitted to its wearer. The heaviest, surest armour a smith can make.",
+  "tags": [
+   "heavy"
+  ]
+ },
+ {
+  "id": "shield_buckler",
+  "name": "Buckler",
+  "type": "shield",
+  "slot": "shield",
+  "value": 28,
+  "stats": {
+   "protection": [
+    2,
+    4
+   ],
+   "durability": 50,
+   "speed": 2
+  },
+  "icon": "shield_buckler",
+  "stack": false,
+  "desc": "A fist-sized iron boss on a leather-lined dish. Parries more than it blocks.",
+  "tags": []
+ },
+ {
+  "id": "shield_tower",
+  "name": "Steel Tower Shield",
+  "type": "shield",
+  "slot": "shield",
+  "value": 190,
+  "stats": {
+   "protection": [
+    9,
+    14
+   ],
+   "durability": 140
+  },
+  "icon": "shield_tower",
+  "stack": false,
+  "desc": "A tall steel-faced shield that covers a man from chin to shin.",
+  "tags": [
+   "heavy"
+  ]
+ },
+ {
+  "id": "bow_short",
+  "name": "Shortbow",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 40,
+  "stats": {
+   "attack": [
+    5,
+    8
+   ],
+   "durability": 45,
+   "speed": 6
+  },
+  "icon": "bow_short",
+  "stack": false,
+  "desc": "A short ash bow: easy to draw, quick to shoot, short in reach.",
+  "tags": []
+ },
+ {
+  "id": "bow_recurve",
+  "name": "Recurve Bow",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 240,
+  "stats": {
+   "attack": [
+    12,
+    17
+   ],
+   "durability": 85,
+   "speed": 7
+  },
+  "icon": "bow_recurve",
+  "stack": false,
+  "desc": "Steam-bent tips curl away from the archer; bear sinew on the back. Hits like a longbow from a shorter stave.",
+  "tags": []
+ },
+ {
+  "id": "bow_warbow",
+  "name": "Silverleaf Warbow",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 400,
+  "stats": {
+   "attack": [
+    15,
+    21
+   ],
+   "durability": 100,
+   "speed": 6,
+   "magic": 3
+  },
+  "icon": "bow_warbow",
+  "stack": false,
+  "desc": "An elven-style warbow of yew varnished with silverleaf quintessence and strung with ghost-thread; it sings when loosed.",
+  "tags": [
+   "enchanted"
+  ]
+ },
+ {
   "id": "leather_bear",
   "name": "Bear Leather",
   "type": "material",

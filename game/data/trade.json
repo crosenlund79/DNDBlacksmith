@@ -66,6 +66,14 @@
      1,
      2
     ]
+   ],
+   [
+    "flax_bundle",
+    4,
+    [
+     3,
+     8
+    ]
    ]
   ],
   "lines": [
@@ -158,6 +166,15 @@
       4
      ],
      0.6
+    ],
+    [
+     "silk_raw",
+     1.4,
+     [
+      2,
+      6
+     ],
+     0.8
     ],
     [
      "gem_sapphire",
@@ -555,6 +572,30 @@
    ],
    "mult": 1.6
   },
+  "silk_raw": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "wool_fleece": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "flax_bundle": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
   "ore_mithril": {
    "tier": "rare",
    "lead": [
@@ -588,6 +629,14 @@
    "mult": 1.8
   },
   "runestone_blank": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "spider_silk": {
    "tier": "rare",
    "lead": [
     4,

@@ -685,5 +685,77 @@
   "sfx": "stitch",
   "fx": [],
   "solid": true
+ },
+ {
+  "id": "loom",
+  "name": "Weaving Loom",
+  "discipline": "stitching",
+  "pos": [
+   14.0,
+   20.6
+  ],
+  "size": [
+   128,
+   112
+  ],
+  "purpose": "Weaves thread and yarn into linen, wool and silk cloth — and, by moonlight, moonweave and spidersilk.",
+  "check": {
+   "count": 2,
+   "speed": 0.55,
+   "zone": 30,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "spin",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "cutting_table",
+  "name": "Pattern Cutting Table",
+  "discipline": "stitching",
+  "pos": [
+   17.4,
+   20.6
+  ],
+  "size": [
+   128,
+   80
+  ],
+  "purpose": "Lays out paper patterns and cuts cloth on the bias with long shears.",
+  "check": {
+   "count": 1,
+   "speed": 0.6,
+   "zone": 32,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "stitch",
+  "fx": [],
+  "solid": true
+ },
+ {
+  "id": "tailors_bench",
+  "name": "Tailor's Bench",
+  "discipline": "stitching",
+  "pos": [
+   17.9,
+   17.2
+  ],
+  "size": [
+   112,
+   80
+  ],
+  "purpose": "Sews, quilts and hems garments: tunics, robes, cloaks and gambesons.",
+  "check": {
+   "count": 2,
+   "speed": 0.55,
+   "zone": 34,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "stitch",
+  "fx": [],
+  "solid": true
  }
 ]

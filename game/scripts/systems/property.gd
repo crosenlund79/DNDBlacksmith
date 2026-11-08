@@ -19,6 +19,7 @@ const PRICE := {
 	"rune_cutting_bench": 160, "rune_engraving_stand": 190, "rune_cleansing_basin": 150, "resonance_pedestal": 260, "rune_polishing_wheel": 170,
 	"mortar_station": 70, "alembic": 140, "cauldron": 120, "reagent_table": 110, "infusion_rack": 150,
 	"stitching_table": 90, "leather_vat": 110, "thread_spinner": 170, "embroidery_frame": 190, "fitting_mannequin": 160,
+	"loom": 180, "cutting_table": 120, "tailors_bench": 140,
 	"arcane_crucible": 520, "spellbinding_array": 560, "leyline_conductor": 480, "aetheric_stabilizer": 500, "arcane_anvil": 640,
 }
 

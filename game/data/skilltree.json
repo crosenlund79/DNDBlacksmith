@@ -48,6 +48,14 @@
    "x": 5,
    "colour": "#6a4422",
    "desc": "Hides to monster leather, linen to ethereal thread — and dragon scale."
+  },
+  {
+   "id": "tailoring",
+   "name": "Textiles & Tailoring",
+   "skill": "enchanted_stitching",
+   "x": 6,
+   "colour": "#6e3a5e",
+   "desc": "Flax, wool and silk spun, woven and cut into garments — up to moonweave and the archmage's robe."
   }
  ],
  "flags": {
@@ -88,7 +96,10 @@
      "hand_axe",
      "flanged_mace",
      "round_shield",
-     "iron_helm"
+     "iron_helm",
+     "iron_shortsword",
+     "iron_hatchet",
+     "iron_buckler"
     ],
     "stations": [
      "forge",
@@ -129,7 +140,8 @@
    "unlocks": {
     "recipes": [
      "iron_cuirass",
-     "silver_band"
+     "silver_band",
+     "iron_chainmail"
     ],
     "stations": [],
     "techniques": []
@@ -155,7 +167,10 @@
    "unlocks": {
     "recipes": [
      "steel_longsword",
-     "steel_cuirass"
+     "steel_cuirass",
+     "steel_shortsword",
+     "steel_cutlass",
+     "steel_battle_axe"
     ],
     "stations": [],
     "techniques": []
@@ -179,7 +194,10 @@
    },
    "unlocks": {
     "recipes": [
-     "kite_shield"
+     "kite_shield",
+     "steel_rapier",
+     "steel_warhammer",
+     "steel_tower_shield"
     ],
     "stations": [],
     "techniques": [
@@ -293,6 +311,64 @@
    "secret": true
   },
   {
+   "id": "s_great",
+   "branch": "smithing",
+   "name": "Two-handed Arms",
+   "desc": "Greatswords and great axes: long steel kept straight through the quench.",
+   "x": 1.36,
+   "y": 5.2,
+   "requires": {
+    "skill": [
+     "smithing",
+     7
+    ],
+    "nodes": [
+     "s_heat"
+    ],
+    "gold": 80
+   },
+   "unlocks": {
+    "recipes": [
+     "steel_greatsword",
+     "steel_great_axe"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/sword_great"
+  },
+  {
+   "id": "s_plate",
+   "branch": "smithing",
+   "name": "Plate Harness",
+   "desc": "Breastplate, pauldrons and tassets: steel plate shaped to a body.",
+   "x": 1.36,
+   "y": 6.7,
+   "requires": {
+    "skill": [
+     "smithing",
+     7
+    ],
+    "nodes": [
+     "s_heat"
+    ],
+    "stations_installed": [
+     "bellows"
+    ],
+    "items_seen": [
+     "chainmail"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "steel_half_plate"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/plate_half"
+  },
+  {
    "id": "s_master",
    "branch": "smithing",
    "name": "Master Smithing",
@@ -342,12 +418,15 @@
      8
     ],
     "nodes": [
-     "s_master"
+     "s_master",
+     "s_plate"
     ],
     "gold": 250
    },
    "unlocks": {
-    "recipes": [],
+    "recipes": [
+     "full_plate"
+    ],
     "stations": [],
     "techniques": [
      {
@@ -1236,7 +1315,9 @@
     "recipes": [
      "cure_leather",
      "leather_belt",
-     "leather_gloves"
+     "leather_gloves",
+     "hide_armour",
+     "shortbow"
     ],
     "stations": [
      "stitching_table",
@@ -1268,7 +1349,8 @@
      "leather_boots",
      "leather_jerkin",
      "ranger_boots",
-     "hunting_bow"
+     "hunting_bow",
+     "studded_leather"
     ],
     "stations": [
      "fitting_mannequin"
@@ -1358,12 +1440,64 @@
    }
   },
   {
+   "id": "l_bowyer",
+   "branch": "leather",
+   "name": "The Bowyer's Craft",
+   "desc": "Steam-bent recurve tips backed with bear sinew.",
+   "x": 5.32,
+   "y": 3.4,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     3
+    ],
+    "nodes": [
+     "l_hides"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "recurve_bow"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_warbow",
+   "branch": "leather",
+   "name": "Elven Warbow",
+   "desc": "Yew varnished with silverleaf and strung with ghost-thread: a warbow that never takes a set.",
+   "x": 5.32,
+   "y": 4.7,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     4
+    ],
+    "nodes": [
+     "l_bowyer",
+     "l_threads"
+    ],
+    "items_seen": [
+     "herb_silverleaf"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "silverleaf_warbow"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
    "id": "l_exotic",
    "branch": "leather",
    "name": "Exotic Monster Materials",
    "desc": "Troll and wyvern hide tanned into wyrm leather.",
-   "x": 5,
-   "y": 4.6,
+   "x": 4.72,
+   "y": 4.8,
    "requires": {
     "skill": [
      "enchanted_stitching",
@@ -1421,6 +1555,230 @@
     ]
    },
    "icon": "icons/dragon_scale"
+  },
+  {
+   "id": "ta_spin",
+   "branch": "tailoring",
+   "name": "Spinning & Weaving",
+   "desc": "Flax and fleece spun on a drop spindle and woven on the loom; wool fulled into felt.",
+   "x": 6,
+   "y": 0,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     1
+    ],
+    "nodes": [
+     "l_basic"
+    ],
+    "items_seen": [
+     "flax_bundle"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "spin_flax",
+     "spin_wool",
+     "weave_linen",
+     "weave_wool",
+     "full_felt"
+    ],
+    "stations": [
+     "loom"
+    ],
+    "techniques": []
+   },
+   "icon": "icons/cloth_linen"
+  },
+  {
+   "id": "ta_garments",
+   "branch": "tailoring",
+   "name": "Cutting & Plain Garments",
+   "desc": "Patterns on the cutting table, seams at the tailor's bench: tunics, hoods, a novice's robe and a travel cloak.",
+   "x": 6,
+   "y": 1.1,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     2
+    ],
+    "nodes": [
+     "ta_spin",
+     "l_armour"
+    ],
+    "stations_installed": [
+     "loom"
+    ],
+    "gold": 30
+   },
+   "unlocks": {
+    "recipes": [
+     "linen_tunic",
+     "felt_hood",
+     "novice_robe",
+     "oil_canvas",
+     "travel_cloak"
+    ],
+    "stations": [
+     "cutting_table",
+     "tailors_bench"
+    ],
+    "techniques": []
+   },
+   "icon": "icons/robe_novice"
+  },
+  {
+   "id": "ta_padded",
+   "branch": "tailoring",
+   "name": "Quilting & Padded Armour",
+   "desc": "Linen quilted around carded wool: the gambeson every fighter wears under mail.",
+   "x": 5.78,
+   "y": 2.95,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     3
+    ],
+    "nodes": [
+     "ta_garments"
+    ],
+    "stations_installed": [
+     "tailors_bench"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "quilt_padding",
+     "quilted_gambeson"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/gambeson"
+  },
+  {
+   "id": "ta_silk",
+   "branch": "tailoring",
+   "name": "Silk & Fine Cloth",
+   "desc": "Southern silk on the loom, and ghost-thread shot through wool for spellcasters.",
+   "x": 6.32,
+   "y": 2.3,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     3
+    ],
+    "nodes": [
+     "ta_garments",
+     "l_threads"
+    ],
+    "items_seen": [
+     "silk_raw"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "weave_silk",
+     "weave_ethereal",
+     "silk_sash",
+     "spellweaver_gloves"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/cloth_silk"
+  },
+  {
+   "id": "ta_scholar",
+   "branch": "tailoring",
+   "name": "Scholar's Vestments",
+   "desc": "Ethereal-thread robes dyed moonwort-blue and cloaks embroidered with wards.",
+   "x": 6.32,
+   "y": 3.5,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     4
+    ],
+    "nodes": [
+     "ta_silk",
+     "l_enchanted"
+    ],
+    "stations_installed": [
+     "embroidery_frame"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "scholar_robe",
+     "warded_cloak"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/robe_scholar"
+  },
+  {
+   "id": "ta_moon",
+   "branch": "tailoring",
+   "name": "Moonweave & Spidersilk",
+   "desc": "Silk spun with ghost-thread by moonlight; cave-spider silk boiled clean and woven into shadow.",
+   "x": 6,
+   "y": 4.7,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     5
+    ],
+    "nodes": [
+     "ta_scholar"
+    ],
+    "items_seen": [
+     "cloth_silk"
+    ],
+    "gold": 120
+   },
+   "unlocks": {
+    "recipes": [
+     "weave_moonweave",
+     "weave_spidersilk",
+     "moonweave_cowl",
+     "shadow_cloak"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/cloth_moonweave"
+  },
+  {
+   "id": "ta_archmage",
+   "branch": "tailoring",
+   "name": "Warded Cloth & the Archmage's Robe",
+   "desc": "A ward rune's pattern stitched into moonweave — and the finest robe a tailor can make.",
+   "x": 6,
+   "y": 5.9,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     6
+    ],
+    "nodes": [
+     "ta_moon"
+    ],
+    "items_seen": [
+     "reagent_aether_dust"
+    ],
+    "gold": 200
+   },
+   "unlocks": {
+    "recipes": [
+     "ward_cloth",
+     "archmage_robe"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "icon": "icons/robe_archmage"
   }
  ],
  "recipe_node": {
@@ -1430,14 +1788,28 @@
   "flanged_mace": "s_basic",
   "round_shield": "s_basic",
   "iron_helm": "s_basic",
+  "iron_shortsword": "s_basic",
+  "iron_hatchet": "s_basic",
+  "iron_buckler": "s_basic",
   "iron_cuirass": "s_blades",
   "silver_band": "s_blades",
+  "iron_chainmail": "s_blades",
   "steel_longsword": "s_steel",
   "steel_cuirass": "s_steel",
+  "steel_shortsword": "s_steel",
+  "steel_cutlass": "s_steel",
+  "steel_battle_axe": "s_steel",
   "kite_shield": "s_heat",
+  "steel_rapier": "s_heat",
+  "steel_warhammer": "s_heat",
+  "steel_tower_shield": "s_heat",
   "emberwarden_longsword": "s_runed",
   "starsteel_blade": "s_starsteel",
+  "steel_greatsword": "s_great",
+  "steel_great_axe": "s_great",
+  "steel_half_plate": "s_plate",
   "steel_bastard_sword": "s_master",
+  "full_plate": "s_armour",
   "smelt_steel": "m_alloys",
   "smelt_orichalcum": "m_magic",
   "charge_mithril": "ar_crucible",
@@ -1464,18 +1836,47 @@
   "cure_leather": "l_basic",
   "leather_belt": "l_basic",
   "leather_gloves": "l_basic",
+  "hide_armour": "l_basic",
+  "shortbow": "l_basic",
   "leather_boots": "l_armour",
   "leather_jerkin": "l_armour",
   "ranger_boots": "l_armour",
   "hunting_bow": "l_armour",
+  "studded_leather": "l_armour",
   "yew_longbow": "l_threads",
   "cure_bear_leather": "l_hides",
   "bearhide_brigandine": "l_hides",
   "warded_gloves": "l_enchanted",
   "embroidered_hood": "l_enchanted",
+  "recurve_bow": "l_bowyer",
+  "silverleaf_warbow": "l_warbow",
   "cure_troll_leather": "l_exotic",
   "cure_wyvern_leather": "l_exotic",
-  "wyrmleather_boots": "l_exotic"
+  "wyrmleather_boots": "l_exotic",
+  "spin_flax": "ta_spin",
+  "spin_wool": "ta_spin",
+  "weave_linen": "ta_spin",
+  "weave_wool": "ta_spin",
+  "full_felt": "ta_spin",
+  "linen_tunic": "ta_garments",
+  "felt_hood": "ta_garments",
+  "novice_robe": "ta_garments",
+  "oil_canvas": "ta_garments",
+  "travel_cloak": "ta_garments",
+  "quilt_padding": "ta_padded",
+  "quilted_gambeson": "ta_padded",
+  "weave_silk": "ta_silk",
+  "weave_ethereal": "ta_silk",
+  "silk_sash": "ta_silk",
+  "spellweaver_gloves": "ta_silk",
+  "scholar_robe": "ta_scholar",
+  "warded_cloak": "ta_scholar",
+  "weave_moonweave": "ta_moon",
+  "weave_spidersilk": "ta_moon",
+  "moonweave_cowl": "ta_moon",
+  "shadow_cloak": "ta_moon",
+  "ward_cloth": "ta_archmage",
+  "archmage_robe": "ta_archmage"
  },
  "station_node": {
   "forge": "s_basic",
@@ -1503,6 +1904,9 @@
   "leather_vat": "l_basic",
   "fitting_mannequin": "l_armour",
   "thread_spinner": "l_threads",
-  "embroidery_frame": "l_enchanted"
+  "embroidery_frame": "l_enchanted",
+  "loom": "ta_spin",
+  "cutting_table": "ta_garments",
+  "tailors_bench": "ta_garments"
  }
 }

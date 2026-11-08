@@ -769,6 +769,122 @@ def fitting_mannequin(P, W, H):
     return J(sh), J(b), J(e)
 
 
+# ======================================================================= TAILORING (iteration 010)
+def _bolt(P, x, y, w, h, role, seed=1):
+    """A rolled bolt of cloth lying horizontally: body, spiral end and a loose tail."""
+    o = [P.shape(rect(x, y, w, h, h * 0.45), role, s=2.5, lw=1.6)]
+    o.append(P.detail(" ".join(f"M{x + w * k:.1f},{y + 1.5} L{x + w * k:.1f},{y + h - 1.5}" for k in (0.25, 0.5, 0.75)), role, 0.4, 0.5))
+    o.append(P.shape(ell(x + w, y + h / 2, h * 0.32, h / 2), role, s=1, lw=1.4))
+    o.append(lin(f"M{x + w},{y + h / 2} m-{h * 0.18:.1f},0 a{h * 0.18:.1f},{h * 0.25:.1f} 0 1,1 {h * 0.3:.1f},0", INK, 0.7, 0.8))
+    return J(o)
+
+
+def loom(P, W, H):
+    """Floor loom from above: two side frames, the warp beam at the back, the breast beam with woven cloth at the
+    front, a fan of warp threads, the beater (reed) across the middle and a boat shuttle lying on the shed."""
+    sh, b, e = [], [], []
+    sh.append(ground_shadow(P, rect(6, 6, 116, 98, 4), *SH))
+    # side frames (posts at the corners)
+    for x in (6, 112):
+        b.append(P.shape(rect(x, 6, 10, 98, 2), "wood", s=2.5, lw=1.8))
+        b.append(P.detail(f"M{x + 5},{10} L{x + 5},{100}", "wood", 0.4, 0.6))
+    for (x, y) in [(4, 4), (110, 4), (4, 94), (110, 94)]:
+        b.append(P.shape(rect(x, y, 14, 12, 2), "wood", s=1.5, lw=1.6))
+    # warp beam (back) with the rolled warp
+    b.append(P.shape(rect(14, 10, 100, 14, 6), "wood", s=2, lw=1.8))
+    b.append(P.shape(rect(20, 12, 88, 10, 4), "linen", s=1.5, lw=1.2))
+    b.append(P.detail(" ".join(f"M{x},{12.5} L{x},{21.5}" for x in range(24, 106, 6)), "linen", 0.35, 0.5))
+    # the warp: many fine threads from the back beam to the fell of the cloth
+    warp = " ".join(f"M{24 + i * 2.6:.1f},{22} L{26 + i * 2.5:.1f},{70}" for i in range(31))
+    b.append(lin(warp, ST["pal"]["linen"][2], 0.9, 0.9))
+    b.append(lin(warp, ST["pal"]["linen"][0], 0.45, 0.9))
+    # heddle frames (two shafts) as dark bars with eyes
+    for y in (34, 40):
+        b.append(P.shape(rect(18, y, 92, 3.4, 1), "darkiron", s=0.6, lw=1.0))
+    # beater / reed across the warp
+    b.append(P.shape(rect(14, 54, 100, 7, 2), "wood", s=1.5, lw=1.7))
+    b.append(lin(" ".join(f"M{x},{55.5} L{x},{59.5}" for x in range(20, 110, 3)), INK, 0.5, 0.6))
+    # woven cloth on the breast beam: a plum band through the linen
+    cloth = rect(22, 68, 84, 22, 2)
+    b.append(P.shape(cloth, "linen", s=3, lw=1.6))
+    b.append(fill(rect(22, 76, 84, 6), "#6e3a5e", 0.85))
+    b.append(lin(" ".join(f"M{x},{76.5} l2,2.5 l2,-2.5" for x in range(24, 104, 4)), "#e9dcc0", 0.6, 0.8))
+    b.append(P.detail(" ".join(f"M22,{y} L106,{y}" for y in (71, 73.5, 85, 87.5)), "linen", 0.35, 0.6))
+    b.append(P.shape(rect(14, 88, 100, 10, 4), "wood", s=2, lw=1.8))
+    # boat shuttle with its bobbin of thread resting on the warp
+    sht = smooth([(40, 47), (52, 44.5), (76, 44.5), (88, 47), (76, 49.5), (52, 49.5)])
+    b.append(P.shape(sht, "wood", s=1.5, lw=1.5))
+    b.append(fill(rect(56, 45.6, 16, 2.8, 1.2), "#6e3a5e", 0.95))
+    b.append(lin("M70,47 Q92,52 104,66", "#6e3a5e", 0.9, 0.85))
+    # bench in front (edge only)
+    b.append(P.shape(rect(36, 100, 56, 9, 2), "wood", s=1.2, lw=1.5))
+    return J(sh), J(b), J(e)
+
+
+def cutting_table(P, W, H):
+    """Long cutting table: a bolt of blue wool unrolled, paper pattern pieces chalked onto it, great shears,
+    a yardstick with tick marks and a pin cushion."""
+    sh, b, e = [], [], []
+    sh.append(ground_shadow(P, rect(4, 6, 120, 66, 4), *SH))
+    b.append(planks(P, 4, 6, 120, 66, "wood", n=4, dirn="h", s=3, seed=31))
+    # unrolled cloth from the bolt on the left
+    b.append(P.shape(rect(18, 14, 74, 48, 2), "tunic", s=3, lw=1.6))
+    b.append(P.detail(" ".join(f"M18,{y} L92,{y}" for y in range(18, 62, 5)), "tunic", 0.3, 0.45))
+    b.append(_bolt(P, 6, 12, 14, 52, "tunic"))
+    # chalked pattern pieces: a robe panel (trapezoid with sleeve) and a hood
+    chalk = (poly([(28, 18), (52, 18), (60, 56), (22, 56)]) + " " + smooth([(64, 20), (82, 22), (88, 36), (80, 48), (66, 46), (62, 32)]))
+    b.append(f'<path d="{chalk}" fill="none" stroke="#f4ead0" stroke-width="1.1" stroke-dasharray="2.4 1.6" opacity="0.95"/>')
+    # a paper pattern piece pinned on top
+    b.append(P.shape(poly([(66, 24), (80, 26), (84, 36), (72, 40), (64, 34)]), "paper", s=1.5, lw=1.2))
+    b.append(fill(" ".join(ell(x, y, 1.1) for x, y in [(68, 27), (80, 30), (72, 37)]), RUB))
+    # great shears, open
+    b.append(lin("M94,58 L118,40 M96,44 L118,58", INK, 2.6))
+    b.append(lin("M94,58 L118,40 M96,44 L118,58", "#c8ccd0", 1.3))
+    b.append(P.shape(ell(92, 61, 4, 3), "darkiron", s=0.5, lw=1.2, flat=True, fill_override="none"))
+    b.append(P.shape(ell(93, 41, 4, 3), "darkiron", s=0.5, lw=1.2, flat=True, fill_override="none"))
+    # yardstick
+    b.append(P.shape(rect(20, 64, 82, 5, 1), "bronze", s=1, lw=1.2))
+    b.append(lin(" ".join(f"M{x},{64.5} l0,{2 if (x - 22) % 10 else 3.5}" for x in range(22, 100, 5)), INK, 0.6, 0.85))
+    # pin cushion and chalk
+    b.append(P.shape(ell(108, 22, 7, 6), "redp", s=1.5, lw=1.3))
+    b.append(lin(" ".join(f"M{108 + dx},{22 + dy} l{dx * 0.4:.1f},{dy * 0.4 - 2:.1f}" for dx, dy in [(-3, -2), (2, -3), (3, 1), (-1, 2)]), "#d8dce0", 0.8))
+    b.append(P.shape(rect(100, 30, 10, 4, 1), "paper", s=0.6, lw=1.0))
+    return J(sh), J(b), J(e)
+
+
+def tailors_bench(P, W, H):
+    """Tailor's bench: a half-sewn plum robe laid out, running stitches, needle and thread, thimble, spools,
+    a pin cushion and a pressing iron."""
+    sh, b, e = [], [], []
+    sh.append(ground_shadow(P, rect(4, 6, 104, 66, 4), *SH))
+    b.append(planks(P, 4, 6, 104, 66, "wood", n=3, dirn="h", s=3, seed=17))
+    # the garment: robe body with one sleeve, folded hem
+    robe = smooth([(22, 14), (38, 12), (46, 18), (56, 12), (72, 14), (84, 22), (78, 30), (70, 26), (72, 62), (24, 64), (26, 26), (16, 30), (12, 22)])
+    b.append(P.shape(robe, "cloth", s=3, fill_override="#6e3a5e", lw=1.6))
+    b.append(fill(smooth([(30, 16), (46, 22), (62, 16), (64, 40), (34, 42)]), "#8a4e76", 0.5))
+    b.append(P.detail("M46,18 L46,60 M24,56 Q48,60 72,56", "cloth", 0.5, 0.6))
+    # gilt trim at the hem and collar (sigil-ish), running stitch along the seam
+    b.append(lin("M25,58 Q48,62 71,58", GILT, 1.6, 0.95))
+    b.append(lin("M38,13 Q46,20 56,13", GILT, 1.2, 0.95))
+    b.append(f'<path d="M58,16 L66,60" fill="none" stroke="#f4ead0" stroke-width="0.9" stroke-dasharray="2 1.5" opacity="0.9"/>')
+    # needle and its thread trailing from the seam
+    b.append(lin("M66,34 L84,44", INK, 1.4))
+    b.append(lin("M66,34 L84,44", "#e8ece8", 0.6))
+    b.append(lin("M84,44 q8,4 4,10 q-4,6 -14,4", "#e9dcc0", 0.8, 0.9))
+    # spools, thimble, pin cushion
+    b.append(spool(P, 92, 18, 5, "#e9dcc0"))
+    b.append(spool(P, 100, 26, 4.5, "#6e3a5e"))
+    b.append(spool(P, 90, 30, 4.5, GILT))
+    b.append(P.shape(ell(96, 44, 4), "silver", s=1, lw=1.2))
+    b.append(fill(" ".join(ell(96 + dx, 44 + dy, 0.5) for dx in (-2, 0, 2) for dy in (-2, 0, 2)), INK, 0.6))
+    b.append(P.shape(ell(14, 56, 7, 6), "redp", s=1.5, lw=1.3))
+    b.append(lin(" ".join(f"M{14 + dx},{56 + dy} l{dx * 0.4:.1f},{dy * 0.4 - 2:.1f}" for dx, dy in [(-3, -2), (2, -3), (3, 1)]), "#d8dce0", 0.8))
+    # pressing iron
+    b.append(P.shape(poly([(84, 58), (104, 56), (106, 66), (86, 68)]), "darkiron", s=2, lw=1.5))
+    b.append(P.shape(rect(90, 58, 10, 3.5, 1.5), "wood", s=0.8, lw=1.0))
+    return J(sh), J(b), J(e)
+
+
 STATIONS = dict(anvil=anvil, forge=forge, crucible=crucible, quench_trough=quench_trough, bellows=bellows,
                 grinding_wheel=grinding_wheel, rune_cutting_bench=rune_cutting_bench, rune_engraving_stand=rune_engraving_stand,
                 rune_cleansing_basin=rune_cleansing_basin, resonance_pedestal=resonance_pedestal,
@@ -777,7 +893,7 @@ STATIONS = dict(anvil=anvil, forge=forge, crucible=crucible, quench_trough=quenc
                 spellbinding_array=spellbinding_array, leyline_conductor=leyline_conductor,
                 aetheric_stabilizer=aetheric_stabilizer, arcane_anvil=arcane_anvil, stitching_table=stitching_table,
                 thread_spinner=thread_spinner, leather_vat=leather_vat, embroidery_frame=embroidery_frame,
-                fitting_mannequin=fitting_mannequin)
+                fitting_mannequin=fitting_mannequin, loom=loom, cutting_table=cutting_table, tailors_bench=tailors_bench)
 
 RUB = ST["rubric"]
 

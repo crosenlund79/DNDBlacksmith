@@ -77,6 +77,8 @@ SMITHY_STATIONS = {
     # E — leatherworking & enchanted stitching (the column x 15-17 stays clear between the doors)
     "stitching_table": [14.3, 11.8], "thread_spinner": [17.9, 12.2], "leather_vat": [14.2, 14.8],
     "embroidery_frame": [17.8, 15.0], "fitting_mannequin": [14.0, 17.2],
+    # iteration 010 tailoring: the bench by the leather room's south wall, the loom and cutting table in the old store
+    "tailors_bench": [17.9, 17.2], "loom": [14.0, 20.6], "cutting_table": [17.4, 20.6],
     # D — arcane metalworking (locked until the Arcane Foundry)
     "arcane_crucible": [1.6, 20.6], "spellbinding_array": [5.4, 20.6], "leyline_conductor": [8.0, 19.7],
     "arcane_anvil": [10.3, 21.6], "aetheric_stabilizer": [10.6, 19.4],
