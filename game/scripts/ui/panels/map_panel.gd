@@ -23,16 +23,17 @@ func _ready() -> void:
 	h.add_child(view)
 	var side := UIKit.vbox(8)
 	side.custom_minimum_size = Vector2(330, 0)
-	side.add_child(UIKit.label("Legend", 26, "heading"))
+	side.add_child(InkIcons.heading("tb_map", "Legend", 26))
 	for row in [["player", "You (the arrow points where you face)"], ["building", "Building"], ["station", "Workstation (indoors)"],
 			["exit", "Road out of the village"], ["road", "Road"], ["water", "Stream"], ["adventurer", "Adventurer"],
 			["customer", "Customer at the shop"], ["hireling", "Your hireling"], ["villager", "Villager"], ["talk", "Wants a word with you"]]:
 		side.add_child(_legend_row(row[0], row[1]))
 	side.add_child(UIKit.divider())
-	side.add_child(UIKit.label("Wanting a word", 24, "heading"))
+	side.add_child(InkIcons.heading("ic_talk", "Wanting a word", 24))
 	wants = UIKit.vbox(4)
 	side.add_child(UIKit.scroll(wants, 250))
 	side.add_child(UIKit.label("Hover a figure for its name.", 17, "body_italic"))
+	side.add_child(InkIcons.button("ic_travel", "Quick travel [%s]" % Settings.key_label("quick_travel"), func(): Events.open_panel.emit("quick_travel", {}), 0))
 	var w := get_tree().get_first_node_in_group("world") as VillageWorld
 	if w and w.area != "village" and w.buildings.has(w.area):
 		var bname := str(w.buildings[w.area].get("name", w.area))

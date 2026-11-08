@@ -2693,4 +2693,176 @@ func phase_adv10() -> void:
 	await click("Expedition", panel())
 	await wait(0.4)
 	await shot("adv10_sheet_mira_away")
+
+# ======================================================================= iteration 010: navigation & UI
+## Left-clicks a world position through the real input path (GUI first, then the world).
+func click_world(p: Vector2) -> void:
+	await click_screen(W().get_viewport().get_canvas_transform() * p)
+
+
+func click_screen(sp: Vector2) -> void:
+	for down in [true, false]:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = down
+		e.position = sp
+		e.global_position = sp
+		Input.parse_input_event(e)
+		await get_tree().process_frame
+
+
+func _nav() -> PlayerNav:
+	return PlayerNav.of(W())
+
+
+## Waits until the smith stops walking (a click path or quick travel), up to `limit` seconds.
+func _await_walk(limit := 12.0) -> void:
+	var t := 0.0
+	while _nav() and _nav().active() and t < limit:
+		await wait(0.1)
+		t += 0.1
+	await wait(0.2)
+
+
+func phase_nav10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await close_panel()
+	Settings.set_value("gameplay/click_to_move", true)
+	var w := W()
+	expect(_nav() != null, "nav10: the smith has a navigator")
+	# ---- click-to-move across the village
+	await tp(w.spots["well"])
+	await wait(0.4)
+	var from := w.player.position
+	var target := from + Vector2(-620, 140)
+	if not _nav().walkable(target):
+		target = from + Vector2(-500, -200)
+	await click_world(target)
+	await wait(0.3)
+	expect(_nav().active(), "nav10: a click on the ground starts a walk")
+	await shot("nav10_click_walk")
+	await _await_walk()
+	expect(w.player.position.distance_to(target) < 60.0, "nav10: the smith walked to the clicked spot (%.0f px off)" % w.player.position.distance_to(target))
+	# a second hop further on
+	var t2 := w.player.position + Vector2(320, 240)
+	if _nav().walkable(t2):
+		await click_world(t2)
+		await _await_walk()
+		expect(w.player.position.distance_to(t2) < 60.0, "nav10: and on across the village")
+	# ---- into the smithy through the door
+	var door: Vector2 = w.spots["smithy_door_out"]
+	await tp(door + Vector2(380, -120) if _nav().walkable(door + Vector2(380, -120)) else door + Vector2(0, -250))
+	var inside: Vector2 = w.spots.get("smithy_inside", w.bpos("smithy", 15, 7.5))
+	await click_world(inside)
+	await wait(0.6)
+	await shot("nav10_to_smithy")
+	await _await_walk()
+	expect(w.area == "smithy", "nav10: the walk took the smith into the forge by the door (area %s)" % w.area)
+	await shot("nav10_in_smithy")
+	# ---- click a station: walk up and use it
+	var st := find_entry("station", "anvil")
+	expect(not st.is_empty(), "nav10: the anvil is in the forge")
+	if not st.is_empty():
+		await tp(w.spots.get("smithy_inside", w.player.position))
+		var away := (st["pos"] as Vector2).distance_to(w.player.position)
+		await click_world(st["pos"])
+		await _await_walk()
+		await wait(0.4)
+		expect(panel() is StationPanel, "nav10: clicking the anvil walked %.0f px and opened it" % away)
+		await shot("nav10_station_opened")
+		await close_panel()
+	# ---- clicking does nothing over the toolbar's strip
+	var tb := U().toolbar
+	var p0 := w.player.position
+	await click_screen(Vector2(tb.get_global_rect().position.x + 12, tb.get_global_rect().get_center().y))
+	await wait(0.3)
+	expect(not _nav().active() and w.player.position.distance_to(p0) < 4.0, "nav10: a click on the toolbar does not walk")
+	await close_panel()
+	# ---- click a villager: walk up and talk; the villager card
+	Social.change("aldric", 9, 12, "nav10_scales", "The smith mended my shop scales and would not take a coin.")
+	var npc := ""
+	for id in ["aldric", "hilde", "martha", "wenna", "jory", "eda", "tobin", "oswin", "herbalist", "harbourmaster"]:
+		var nn: NPCActor = w.npcs.get(id)
+		if nn and nn.visible:
+			npc = id
+			break
+	expect(npc != "", "nav10: a villager is out and about")
+	if npc != "":
+		var n: NPCActor = w.npcs[npc]
+		n.path = PackedVector2Array()
+		var stand := n.position + Vector2(0, -260)
+		for off in [Vector2(0, -260), Vector2(260, 0), Vector2(-260, 0), Vector2(0, 260)]:
+			if _nav().walkable(n.position + off):
+				stand = n.position + off
+				break
+		await tp(stand)
+		await click_world(n.position + Vector2(0, -40))
+		await _await_walk()
+		await wait(0.5)
+		expect(panel() is DialoguePanel, "nav10: clicking %s walked up and opened the conversation" % npc)
+		var card := panel().find_child("VillagerCard", true, false) if panel() else null
+		expect(card != null, "nav10: the dialogue shows the villager card")
+		expect(panel() != null and panel().find_child("StandingMeter", true, false) != null, "nav10: standing is a meter")
+		await shot("nav10_villager_card")
+		await close_panel()
+		# an adventurer's card links to the character sheet
+		for aid in ["mira", "sigrun", "garrick", "varn", "pip", "elowen", "kestra", "tomas"]:
+			if Adv.get_a(aid).is_empty():
+				continue
+			Events.open_panel.emit("dialogue", {"npc": aid, "area": w.area})
+			await wait(0.6)
+			expect(find_button(panel(), "Character sheet") != null, "nav10: an adventurer's card links to the character sheet")
+			await shot("nav10_adventurer_card")
+			await close_panel()
+			break
+	# ---- quick travel to the harbour (from inside the forge)
+	await tp(w.spots.get("smithy_inside", w.bpos("smithy", 15, 7.5)))
+	await press("quick_travel")
+	await wait(0.6)
+	expect(panel() is QuickTravelMenu, "nav10: T opens the quick-travel wheel")
+	await shot("nav10_quick_travel_menu")
+	var qm := panel() as QuickTravelMenu
+	if qm:
+		var hi := -1
+		for i in qm.dests.size():
+			if qm.dests[i]["id"] == "harbour":
+				hi = i
+		expect(hi >= 0, "nav10: the harbour is on the wheel")
+		var mins := int(qm.dests[hi]["minutes"]) if hi >= 0 else -1
+		expect(mins > 0, "nav10: the walk to the harbour costs %d minutes" % mins)
+		# hover, then click the medallion
+		var gp := qm.wheel.get_global_transform() * qm.wheel.slot(hi)
+		var mm := InputEventMouseMotion.new()
+		mm.position = gp
+		mm.global_position = gp
+		Input.parse_input_event(mm)
+		await wait(0.3)
+		await shot("nav10_quick_travel_hover")
+		var t0 := Game.now()
+		await click_screen(gp)
+		await wait(0.5)
+		expect(_nav().traveling(), "nav10: the smith sets out")
+		await wait(0.8)
+		await shot("nav10_quick_travel_underway")
+		await _await_walk(20.0)
+		var spent := Game.now() - t0
+		expect(absi(spent - mins) <= 3, "nav10: the clock advanced by the walk time (%d of %d min)" % [spent, mins])
+		expect(w.player.position.distance_to(w.spots["harbour_quay"]) < 140.0, "nav10: the smith is at the harbour")
+		await shot("nav10_quick_travel_arrived")
+	# ---- K opens the Skill Tree
+	await close_panel()
+	await press("panel_skills")
+	await wait(0.8)
+	expect(panel() is SkillTreePanel, "nav10: K opens the Skill Tree")
+	await shot("nav10_k_skilltree")
+	await close_panel()
+	await press("panel_skill_levels")
+	await wait(0.6)
+	expect(panel() is SkillsPanel, "nav10: U shows the skill levels")
+	await shot("nav10_u_skill_levels")
+	await close_panel()
+	Events.open_panel.emit("map", {})
+	await wait(0.8)
+	await shot("nav10_map_panel")
 	await close_panel()

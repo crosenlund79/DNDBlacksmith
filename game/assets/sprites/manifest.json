@@ -1394,6 +1394,42 @@
    1200,
    800
   ],
+  "ui/template_ic_family.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_history.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_home.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_memory.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_sheet.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_standing.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_talk.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_travel.png": [
+   96,
+   96
+  ],
+  "ui/template_ic_work.png": [
+   96,
+   96
+  ],
   "ui/template_map_marker.png": [
    48,
    48
@@ -1441,6 +1477,58 @@
   "ui/template_pin.png": [
    32,
    32
+  ],
+  "ui/template_qt_barnaby.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_caravan.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_chapel.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_creatures.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_harbour.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_herbalist.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_inn.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_market.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_pawn.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_pond.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_rival.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_smithy.png": [
+   96,
+   96
+  ],
+  "ui/template_qt_square.png": [
+   96,
+   96
   ],
   "ui/template_recipe_plaque.png": [
    44,

@@ -20,6 +20,7 @@ var values := {
 	"gameplay/time_scale": 1.0,
 	"gameplay/check_assist": false,           # skill checks at tutorial difficulty (wider zones, slower)
 	"gameplay/check_tutorials_seen": [],      # mechanics whose how-to card the player has dismissed
+	"gameplay/click_to_move": true,           # left-click the ground, an object or a person to walk there
 	"debug/overlay": false,
 }
 
@@ -48,6 +49,8 @@ const DEFAULT_KEYS := {
 	"time_pause": [KEY_P],
 	"time_faster": [KEY_EQUAL, KEY_KP_ADD],
 	"time_slower": [KEY_MINUS, KEY_KP_SUBTRACT],
+	"quick_travel": [KEY_T],
+	"panel_skill_levels": [KEY_U],
 }
 
 

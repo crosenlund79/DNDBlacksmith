@@ -87,6 +87,9 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		clicked.emit()
 		accept_event()
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT and compact:
+		Events.open_panel.emit("quick_travel", {})   # the minimap's right-click: quick travel
+		accept_event()
 	elif event is InputEventMouseMotion and not compact:
 		var best := -1
 		var bd := 16.0

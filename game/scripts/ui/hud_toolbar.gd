@@ -11,7 +11,7 @@ const SOCKET := 68.0
 ## id, title, icon, hotkey action ("" = none), panel, args, right-click panel, right args, description
 const BUTTONS := [
 	["inventory", "Inventory", "ui/tb_inventory", "inventory", "inventory", {}, "", {}, "Your stores, equipment and pieces for sale."],
-	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth. Right-click (or K) for your skill levels."],
+	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth. Right-click (or U) for your skill levels."],
 	["hirelings", "Hirelings", "ui/tb_hirelings", "panel_hirelings", "hirelings", {}, "", {}, "Hire, assign work and send people on expeditions."],
 	["adventurers", "Adventurers", "ui/tb_adventurers", "panel_adventurers", "adventurers", {}, "wanted", {}, "Who is in town and how they fare. Right-click (or B) for the Most Wanted board."],
 	["orders", "Commissions", "ui/tb_orders", "panel_orders", "orders", {}, "", {}, "Special orders placed by adventurers."],
@@ -170,7 +170,7 @@ class ToolbarButton extends Control:
 		var k := key_text()
 		var t := "[b]%s[/b]%s\n[i]%s[/i]" % [def[1], ("   [color=#e8cc84][%s][/color]" % k) if k != "" else "", def[8]]
 		if str(def[6]) != "":
-			var rk := "B" if def[6] == "wanted" else ("K" if def[6] == "skills" else "")
+			var rk := "B" if def[6] == "wanted" else (Settings.key_label("panel_skill_levels") if def[6] == "skills" else "")
 			t += "\n[color=#cbb894]Right-click: %s%s[/color]" % ["Most Wanted board" if def[6] == "wanted" else "skill levels", (" [%s]" % rk) if rk != "" else ""]
 		if attention != "":
 			t += "\n[color=#ffa050]%s[/color]" % attention

@@ -27,10 +27,11 @@ func _ready() -> void:
 		row.add_child(sl)
 		content.add_child(row)
 	for t in [["display/fullscreen", "Fullscreen"], ["display/vsync", "V-Sync"], ["gameplay/show_hints", "Show objective hints"],
-			["gameplay/check_assist", "Assist: skill checks at tutorial difficulty (wider zones, slower motion)"]]:
+			["gameplay/check_assist", "Assist: skill checks at tutorial difficulty (wider zones, slower motion)"],
+			["gameplay/click_to_move", "Click to move: left-click the ground, an object or a person to walk there"]]:
 		var cb := CheckBox.new()
 		cb.text = t[1]
-		cb.button_pressed = bool(Settings.get_value(t[0], false))
+		cb.button_pressed = bool(Settings.get_value(t[0], t[0] == "gameplay/click_to_move"))
 		var k2: String = t[0]
 		cb.toggled.connect(func(on): Settings.set_value(k2, on))
 		content.add_child(cb)
@@ -59,4 +60,4 @@ func _ready() -> void:
 	ob2.item_selected.connect(func(i): Settings.set_value("gameplay/time_scale", [0.5, 1.0, 2.0][i]))
 	ts.add_child(ob2)
 	content.add_child(ts)
-	content.add_child(UIKit.label("Controls: WASD/arrows move, Shift run, E/Space interact, I inventory, H hirelings, K skills, J adventurers, O orders, L ledger, F5/F9 quick save/load, F3 diagnostics.", 18, "body_italic"))
+	content.add_child(UIKit.label("Controls: WASD/arrows move (or click), Shift run, E/Space interact, I inventory, H hirelings, K skill tree, U skill levels, T quick travel, J adventurers, O orders, L ledger, F5/F9 quick save/load, F3 diagnostics.", 18, "body_italic"))

@@ -14,7 +14,7 @@ const STEPS := [
 	{"id": "craft", "title": "Work the metal", "text": "At a station, choose a recipe, then play its precision checks: press E as the needle crosses the gilt zone.", "on": ["station_worked"]},
 	{"id": "dice", "title": "Roll for fortune", "text": "Finish every step of the recipe, then roll the dice. Craftsmanship and the fortune die decide the rarity.", "on": ["item_crafted"]},
 	{"id": "customer", "title": "Serve a customer", "text": "Customers sit outside the shop door (speech marks on the minimap). Talk to them to sell, repair or deliver a commission.", "on": ["sale"]},
-	{"id": "skills", "title": "Know your craft", "text": "Open your skills with K, or the skill tree from the toolbar (right-click the button for skill levels).", "on": ["panel:skills", "panel:skilltree"]},
+	{"id": "skills", "title": "Know your craft", "text": "Open the skill tree with K or from the toolbar; U (or a right-click on the button) shows your skill levels.", "on": ["panel:skills", "panel:skilltree"]},
 	{"id": "hirelings", "title": "Put your people to work", "text": "Open Hirelings (H) and set what Borin works at — or send him on an expedition.", "on": ["hireling_work"]},
 	{"id": "adventurers", "title": "Meet the adventurers", "text": "Adventurers buy your gear and risk their lives with it. See them with J, or the Most Wanted board with B.", "on": ["panel:adventurers", "panel:wanted", "panel:dossier", "adventurer_talk"]},
 	{"id": "progress", "title": "Grow the forge", "text": "Plan your future: spend points in the skill tree, or open Workshop to buy and furnish rooms.", "on": ["panel:property"]},
