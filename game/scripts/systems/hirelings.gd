@@ -30,6 +30,9 @@ const TRAITS := {
 }
 const PRESETS := {"best": "Focus on best skill", "two": "Split two best", "even": "Even spread"}
 
+## Tests and the dev panel can force the next expedition outcome: "", "death", "injury" or "success".
+static var force_outcome := ""
+
 
 static func list() -> Array:
 	return Game.state["hirelings"]
@@ -285,6 +288,7 @@ const WORK_OUTPUT := {
 
 
 static func work_hour(_h: int) -> void:
+	Memorial.on_hour(_h)
 	if not Game.is_work_hours():
 		for h in list():
 			if h["status"] == "working":
@@ -397,6 +401,7 @@ static func send(id: String, dest_id: String, opts := {}) -> String:
 			h["expedition"]["budget"] = budget
 			h["expedition"]["want"] = opts.get("want", [])
 	Game.journal("%s set out for %s (%d days)." % [h["name"], d["name"], days])
+	Chronicle.add("departure", "%s set out for %s (%d days)." % [h["name"], d["name"], days], {"hireling": h["id"], "place": dest_id})
 	Events.hireling_departed.emit(id, d["exit"])
 	Events.hirelings_changed.emit()
 	if id == "borin":
@@ -424,6 +429,7 @@ static func on_day() -> void:
 	wages = int(round(wages * float(Expeditions.diff().get("wages", 1.0))))
 	if wages > 0:
 		Game.add_gold(-wages, "wages", "Daily wages")
+	Memorial.on_day()
 	Events.hirelings_changed.emit()
 
 
@@ -460,15 +466,31 @@ static func _resolve(h: Dictionary) -> void:
 	var success := randf() < float(o["success"])
 	var injury := randf() < float(o["injury"])
 	var death := (not success) and injury and randf() < clampf((danger - float(o["power"])) * 0.05, 0.0, 0.3)
+	match force_outcome:
+		"death":
+			success = false
+			injury = true
+			death = true
+		"injury":
+			injury = true
+			death = false
+		"success":
+			success = true
+			injury = false
+			death = false
+	force_outcome = ""
 	h["expeditions"] = int(h.get("expeditions", 0)) + 1
 	var first_bag: bool = h["id"] == "borin" and not Game.has_flag("borin_first_bag")
 	var contents: Array = []
 	if death:
 		h["status"] = "dead"
 		h["expedition"] = {}
+		h["died_day"] = Game.day()
 		_history(h, d, "died", [])
 		Game.journal("%s did not come back from %s." % [h["name"], d["name"]])
-		Events.toast.emit("%s died at %s." % [h["name"], d["name"]], "bad")
+		Events.toast.emit("%s died at %s. Their place in the workshop stands empty." % [h["name"], d["name"]], "bad")
+		Memorial.on_death(h, d)
+		Events.hirelings_changed.emit()
 		var survivors := Loot.roll_table(d["loot"], -20.0)
 		if not survivors.is_empty():
 			Game.state["returns"].append(Loot.make_container("chest_recovered", survivors.slice(0, 2),
@@ -499,19 +521,107 @@ static func _resolve(h: Dictionary) -> void:
 	Regions.on_trip(e["dest"], SkillSys.level(h["skills"], "travelling"), success)
 	add_xp(h, skill, (40 + int(danger) * 15) if success else (20 + int(danger) * 8))
 	add_xp(h, "travelling", 15)
+	var find := _notable_find(contents)
 	if injury:
 		h["status"] = "injured"
 		h["injured_days"] = maxi(1, int(round(randi_range(1, 3) * trait_mult(h, "injury"))))
-		Events.toast.emit("%s came back hurt from %s." % [h["name"], d["name"]], "bad")
+		h["injuries"] = int(h.get("injuries", 0)) + 1
+		h["injured_total"] = int(h["injured_days"])
+		Chronicle.add("return", "%s came back hurt from %s (%d day%s to mend)." % [h["name"], d["name"], int(h["injured_days"]), "" if int(h["injured_days"]) == 1 else "s"], {"hireling": h["id"], "place": d["id"]})
 	else:
 		h["status"] = "working"
+		Chronicle.add("return", "%s returned from %s%s." % [h["name"], d["name"], "" if success else " with little to show"], {"hireling": h["id"], "place": d["id"]})
 	h["expedition"] = {}
 	_history(h, d, ("success" if success else "failed") + ("_injured" if injury else ""), contents)
 	Game.journal("%s returned from %s%s." % [h["name"], d["name"], "" if success else " with little to show"])
-	Events.toast.emit("%s is back from %s — a bag waits in the workshop." % [h["name"], d["name"]], "good")
+	# one toast per homecoming: the hurt, the find and the bag together
+	var msg := "%s is back from %s%s — a bag waits in the workshop." % [h["name"], d["name"], (" but hurt (%d day%s to mend)" % [int(h["injured_days"]), "" if int(h["injured_days"]) == 1 else "s"]) if injury else ""]
+	if find != "":
+		msg += " Among the haul: [b]%s[/b]!" % find
+		Chronicle.add("discovery", "%s brought %s home from %s." % [h["name"], find, d["name"]], {"hireling": h["id"], "place": d["id"]}, true)
+	Events.toast.emit(msg, "bad" if injury else ("legendary" if find != "" else "good"))
 	Events.hireling_returned.emit(h["id"], d["exit"])
 	if h["id"] == "borin":
 		Objectives.set_current("open_bag")
+
+
+## The most remarkable piece of a haul ("" when nothing stands out).
+static func _notable_find(contents: Array) -> String:
+	for it in contents:
+		if str(it.get("rarity", "")) in ["legendary", "unique", "set", "rare"] or str(it.get("def", "")).begins_with("relic_unknown"):
+			return Items.display_name(it)
+	return ""
+
+
+# ------------------------------------------------------------------ the HUD's view of a hireling
+## Health 0..1: full when well, lower while an injury mends, nothing when dead.
+static func health(h: Dictionary) -> float:
+	match str(h.get("status", "")):
+		"dead":
+			return 0.0
+		"injured":
+			var total := maxi(1, int(h.get("injured_total", h.get("injured_days", 1))))
+			return clampf(0.95 - 0.6 * float(int(h.get("injured_days", 0))) / float(total), 0.25, 0.95)
+	return 1.0
+
+
+## working / away / injured / resting (off duty) / dead.
+static func hud_status(h: Dictionary) -> String:
+	var s := str(h.get("status", "working"))
+	if s == "working" and not Game.is_work_hours():
+		return "resting"
+	return s
+
+
+const ACT_ICONS := {"mining": "icons/ore_iron", "smithing": "ui/act_hammer", "alchemy": "icons/herb_moonwort",
+	"runecraft": "icons/runestone_blank", "travelling": "icons/boots_leather", "relic_hunting": "icons/relic_coin"}
+
+
+## Everything the bottom-left portrait shows, in one dictionary.
+static func hud_info(h: Dictionary) -> Dictionary:
+	var st := hud_status(h)
+	var e: Dictionary = h.get("expedition", {})
+	var total := maxi(1, int(e.get("total", 1)))
+	var left := int(e.get("days_left", 0))
+	var act := str(h.get("activity", ""))
+	if st == "working" and act == "":
+		var top := ""
+		for k in h.get("alloc", {}):
+			if top == "" or int(h["alloc"][k]) > int(h["alloc"][top]):
+				top = k
+		act = top
+	var icon: String = ACT_ICONS.get(act, "ui/act_hammer")
+	match st:
+		"away":
+			icon = "ui/act_road"
+		"injured":
+			icon = "ui/act_bandage"
+		"resting":
+			icon = "ui/act_zzz" if Game.hour() >= 22 or Game.hour() < 7 else "icons/ale_mug"
+		"dead":
+			icon = "ui/act_candle"
+	var dest: Dictionary = DB.destinations.get(str(e.get("dest", "")), {})
+	return {"id": str(h["id"]), "name": str(h["name"]), "look": str(h.get("look", h["id"])), "status": st,
+		"health": health(h), "injuries": int(h.get("injuries", 0)), "injured_days": int(h.get("injured_days", 0)),
+		"activity": act if st == "working" else "", "icon": icon,
+		"exp_progress": (float(total - left) / float(total)) if st == "away" else 0.0, "days_left": left if st == "away" else 0,
+		"dest_name": str(dest.get("name", "")), "text": activity_text(h)}
+
+
+## "Borin is in Ironroot Mine — back in about 2 days."
+static func whereabouts(h: Dictionary) -> String:
+	var info := hud_info(h)
+	match str(info["status"]):
+		"away":
+			var dl := int(info["days_left"])
+			return "%s is in %s — back in about %s." % [info["name"], info["dest_name"], "a day" if dl <= 1 else "%d days" % dl]
+		"injured":
+			return "%s is resting at the inn while an injury mends (%d day%s)." % [info["name"], int(info["injured_days"]), "" if int(info["injured_days"]) == 1 else "s"]
+		"resting":
+			return "%s is off duty%s." % [info["name"], " and asleep" if Game.hour() >= 23 or Game.hour() < 8 else " at the inn"]
+		"dead":
+			return "%s rests in the graveyard south of the chapel." % info["name"]
+	return "%s: %s." % [info["name"], info["text"]]
 
 
 static func _history(h: Dictionary, d: Dictionary, outcome: String, contents: Array) -> void:

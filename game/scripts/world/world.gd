@@ -76,6 +76,8 @@ func _ready() -> void:
 	_refresh_bags()
 	_refresh_display()
 	_refresh_eggs()
+	add_child(ActivityBubbles.new())   # iteration 010 (hirelings): activity bubbles over nearby people
+	add_child(MemorialWorld.new())     # iteration 010 (hirelings): graves, funeral, ghost, flowers, vase
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
 	Events.adventurer_departed.connect(_on_departed)
 	Events.hireling_departed.connect(_on_departed)
@@ -1798,6 +1800,8 @@ func _make_npc(id: String, sprite_id: String, name: String) -> NPCActor:
 ## Schedule: where should this NPC be right now? "" = not present in the world (asleep, away…).
 func spot_for(id: String) -> String:
 	var h := Game.hour()
+	if Memorial.funeral_spot(id) != "":   # a funeral morning gathers the village at the graveside
+		return Memorial.funeral_spot(id)
 	for cu in Shop.customers():
 		if cu["npc"] == id:
 			return "wait_seat_%d" % int(cu.get("seat", 0))
@@ -2188,6 +2192,8 @@ func interact(e: Dictionary) -> void:
 				"pawn", "rival_smith", "creatures", "caravan", "hall_of_fame":
 			# venues and desks added in iteration 009 open their panel; the id travels along
 			Events.open_panel.emit(e["kind"], {"id": e["id"]})
+		"vase", "grave", "ghost", "remembrance_flowers":   # remembrance (MemorialWorld)
+			(get_node("MemorialWorld") as MemorialWorld).interact(e)
 		"bag":
 			Events.open_panel.emit("loot", {"uid": int(e["id"])})
 		"eggs":

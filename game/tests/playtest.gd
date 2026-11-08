@@ -2912,3 +2912,8 @@ func phase_tailor10() -> void:
 		await wait(0.4)
 		await shot("tailor10_tree_tailoring_learned")
 	await close_panel()
+
+## Iteration 010, hirelings: HUD portraits, camera glance, bubbles, funeral, grave, ghost, flowers, vase.
+func phase_hire10() -> void:
+	var ph: RefCounted = load("res://tests/playtest_hire10.gd").new()
+	await ph.run(self)

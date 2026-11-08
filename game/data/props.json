@@ -743,6 +743,30 @@
   "solid": false,
   "desc": "small flower clump rooted on the bottom edge (sway shader)"
  },
+ "headstone_hireling": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": true,
+  "desc": "a fresh headstone of pale stone over a new earth mound, a name cut into its face"
+ },
+ "wildflowers_bundle": {
+  "size": [
+   48,
+   40
+  ],
+  "solid": false,
+  "desc": "a small bunch of wildflowers tied with grass, lying on a doorstep"
+ },
+ "vase_flowers": {
+  "size": [
+   48,
+   64
+  ],
+  "solid": true,
+  "desc": "the quarters' small glazed vase holding a bunch of wildflowers"
+ },
  "hall_of_fame_board": {
   "size": [
    192,
