@@ -280,3 +280,7 @@ def apply(layout, by_id, room, door, F, home):
     layout["outdoor_props"] = props
     layout["outdoor_spots"] = {"pond_1": [33.3, 11.4], "pond_2": [38.6, 10.9], "pond_3": [41.6, 9.0],
                                "harbour_quay": [88.3, 52.3], "graveyard": [66.0, 57.8], "fields": [9.0, 50.4]}
+
+    # ------------------------------------------------------------------ iteration 010: venues, signs, paddocks, lamps
+    import village10_layout
+    village10_layout.apply(layout, by_id, room, door, F)

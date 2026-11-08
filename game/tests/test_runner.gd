@@ -20,6 +20,8 @@ func check(cond: bool, name: String) -> void:
 
 
 func _ready() -> void:
+	# deterministic: the same random sequence every run (several checks depend on simulated chance)
+	seed(20261108)
 	Game.new_game()
 	_property()            # needs a genuine new game: a modest smithy
 	# the older crafting-mechanics tests below exercise every discipline: give them the whole workshop
@@ -1296,6 +1298,9 @@ func _ready_everyone() -> void:
 			a["depart_day"] = Game.day()
 			a.erase("exp")
 	Expeditions.st()["parties"] = {}
+	# everyone is home, so no stale "missing" record may later reveal a fate (that made the
+	# Apprentice check fail when a Journeyman-round loss was "found dead" by an Apprentice search party)
+	Game.state["world"]["missing"] = {}
 
 
 func _run_out(eid: String) -> Dictionary:

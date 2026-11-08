@@ -260,24 +260,24 @@
    80,
    48
   ],
-  "solid": true,
-  "desc": "hanging sign: anvil emblem"
+  "solid": false,
+  "desc": "hanging street sign: hammer over an anvil"
  },
  "sign_inn": {
   "size": [
    80,
    48
   ],
-  "solid": true,
-  "desc": "hanging sign: wyvern holding tankard"
+  "solid": false,
+  "desc": "hanging street sign: a foaming tankard"
  },
  "sign_grocer": {
   "size": [
    80,
    48
   ],
-  "solid": true,
-  "desc": "hanging sign: wheat sheaf and apple"
+  "solid": false,
+  "desc": "hanging street sign: wheat sheaf and apple"
  },
  "fence_h": {
   "size": [
@@ -814,6 +814,350 @@
   ],
   "solid": false,
   "desc": "harbour signal pole with a pennant: a ship is expected"
+ },
+ "sign_herbalist": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: mortar with herb sprigs"
+ },
+ "sign_chapel": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: the dawn sun"
+ },
+ "sign_barnaby": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a tiny tank"
+ },
+ "sign_cooper": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a barrel"
+ },
+ "sign_stable": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a horseshoe"
+ },
+ "sign_chandler": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a lit candle"
+ },
+ "sign_netloft": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a fish on a net"
+ },
+ "sign_carpenter": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a saw and a plane"
+ },
+ "sign_farm": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a pitchfork and sheaf"
+ },
+ "sign_laundry": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a shirt on the line"
+ },
+ "sign_cottage_a": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a painted flower"
+ },
+ "sign_cottage_b": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a little house"
+ },
+ "sign_rival": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: crossed hammers over a flame"
+ },
+ "sign_menagerie": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: a paw print and a feather"
+ },
+ "sign_harbour": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: an anchor"
+ },
+ "sign_pawn": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": false,
+  "desc": "hanging street sign: the pawnbroker's three gilt balls"
+ },
+ "street_lamp": {
+  "size": [
+   64,
+   128
+  ],
+  "solid": false,
+  "desc": "iron street lamp on a stone foot, lantern on a scrolled arm (three-quarter view)"
+ },
+ "street_lamp_glow": {
+  "size": [
+   64,
+   128
+  ],
+  "solid": false,
+  "desc": "night overlay: the street lamp's lit glass and halo"
+ },
+ "pawn_counter": {
+  "size": [
+   192,
+   56
+  ],
+  "solid": true,
+  "desc": "pawnbroker's counter: brass scales, pocket watch, ring box, tagged parcels, ledger"
+ },
+ "curio_shelf": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "shelf of odd pawned goods: stuffed owl, globe, bottles, dented helm, clock, price tags"
+ },
+ "display_case": {
+  "size": [
+   96,
+   56
+  ],
+  "solid": true,
+  "desc": "glass-topped case of rings, lockets and trinkets"
+ },
+ "rival_forge": {
+  "size": [
+   128,
+   96
+  ],
+  "solid": true,
+  "desc": "the rival smith's stone forge with glowing coals and bellows"
+ },
+ "rival_anvil": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": true,
+  "desc": "anvil on an oak stump with a hammer"
+ },
+ "rival_counter": {
+  "size": [
+   160,
+   56
+  ],
+  "solid": true,
+  "desc": "the rival smith's sales counter with a blade, an axe and mail"
+ },
+ "rival_display": {
+  "size": [
+   160,
+   40
+  ],
+  "solid": true,
+  "desc": "wall rack of finished weapons and a shield"
+ },
+ "creature_cages": {
+  "size": [
+   128,
+   48
+  ],
+  "solid": true,
+  "desc": "shelf of wicker and iron cages with small creatures, eyes glinting"
+ },
+ "bestiary_desk": {
+  "size": [
+   128,
+   56
+  ],
+  "solid": true,
+  "desc": "desk with an open bestiary, specimen jars, a quill and a feather"
+ },
+ "rabbit_hutch": {
+  "size": [
+   96,
+   72
+  ],
+  "solid": true,
+  "desc": "wooden rabbit hutch with a wire run and two rabbits"
+ },
+ "chicken_coop": {
+  "size": [
+   112,
+   96
+  ],
+  "solid": true,
+  "desc": "small shingled hen house with a run and three hens"
+ },
+ "arcane_enclosure": {
+  "size": [
+   176,
+   128
+  ],
+  "solid": true,
+  "desc": "ring of standing stones and an iron rail around a glowing ward; a drakeling sleeps in a nest"
+ },
+ "feed_scatter": {
+  "size": [
+   64,
+   48
+  ],
+  "solid": false,
+  "desc": "scattered grain and chaff"
+ },
+ "hay_rack": {
+  "size": [
+   80,
+   48
+  ],
+  "solid": true,
+  "desc": "wooden hay rack"
+ },
+ "fence_gate_h": {
+  "size": [
+   64,
+   24
+  ],
+  "solid": true,
+  "desc": "field gate, horizontal"
+ },
+ "fence_gate_v": {
+  "size": [
+   24,
+   64
+  ],
+  "solid": true,
+  "desc": "field gate, vertical"
+ },
+ "caravan_wagon": {
+  "size": [
+   224,
+   144
+  ],
+  "solid": true,
+  "desc": "covered trader's wagon from above: striped painted hood, four wheels, shafts, crates"
+ },
+ "campfire": {
+  "size": [
+   72,
+   72
+  ],
+  "solid": true,
+  "desc": "stone fire ring with logs and embers"
+ },
+ "log_seat": {
+  "size": [
+   96,
+   40
+  ],
+  "solid": true,
+  "desc": "a log laid by the fire as a seat"
+ },
+ "tether_post": {
+  "size": [
+   32,
+   32
+  ],
+  "solid": true,
+  "desc": "tethering post with a rope"
+ },
+ "caravan_pennant": {
+  "size": [
+   80,
+   40
+  ],
+  "solid": true,
+  "desc": "a pole with a swallow-tailed burgundy pennant, the caravan camp's mark"
+ },
+ "square_stage": {
+  "size": [
+   352,
+   208
+  ],
+  "solid": false,
+  "desc": "plank ceremony stage with steps, drapes and a red runner (walkable)"
+ },
+ "podium_board": {
+  "size": [
+   128,
+   64
+  ],
+  "solid": true,
+  "desc": "the square's honours board with brass plaques and a lectern"
+ },
+ "bunting": {
+  "size": [
+   384,
+   56
+  ],
+  "solid": false,
+  "desc": "two swags of bunting in burgundy, cream, gilt and blue"
+ },
+ "grave_plot": {
+  "size": [
+   72,
+   48
+  ],
+  "solid": false,
+  "desc": "an unused grave plot pegged out with string"
  },
  "reeds": {
   "size": [

@@ -38,6 +38,8 @@ var _next_point := 0
 var _room_doors: Array = []
 var room := ""
 var _marker: Sprite2D
+var solid_rects: Array[Rect2] = []   # every static footprint (walls, props, trees, water): the animals' walkability grid
+var _animal_nav: AnimalNav
 
 
 
@@ -148,6 +150,14 @@ func _solid(r: Rect2) -> void:
 	body.position = r.get_center()
 	body.add_child(cs)
 	add_child(body)
+	solid_rects.append(r)
+
+
+## Where village animals may walk (built on first use, once the whole village stands).
+func animal_nav() -> AnimalNav:
+	if _animal_nav == null and is_node_ready():
+		_animal_nav = Village10.build_nav(self)
+	return _animal_nav
 
 
 func _smooth(points: Array, step := 48.0) -> PackedVector2Array:
@@ -200,61 +210,9 @@ func _build_ground() -> void:
 	_solid(Rect2(w, h * 0.5 + 2 * T, 64, h))
 
 
+## Roads, verges, doorsteps and the square's cobbles, worn into the ground (iteration 010: VillageGround).
 func _build_roads() -> void:
-	# trodden, muddy verges under every road first, so the roads sit in worn ground
-	for r in DB.layout.get("roads", []):
-		var mud := Line2D.new()
-		mud.points = _smooth(r["points"])
-		mud.width = float(r["width"]) * T + 46.0
-		mud.texture = Assets.get_tex("textures/dirt_road", Vector2i(256, 256))
-		mud.texture_mode = Line2D.LINE_TEXTURE_TILE
-		mud.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		mud.default_color = Color(0.62, 0.5, 0.36, 0.42)
-		mud.joint_mode = Line2D.LINE_JOINT_ROUND
-		mud.begin_cap_mode = Line2D.LINE_CAP_ROUND
-		mud.end_cap_mode = Line2D.LINE_CAP_ROUND
-		ground_layer.add_child(mud)
-	for r in DB.layout.get("roads", []):
-		var pts := _smooth(r["points"])
-		var wpx := float(r["width"]) * T
-		var edge := Line2D.new()
-		edge.points = pts
-		edge.width = wpx + 8
-		edge.default_color = Color(0.13, 0.08, 0.05, 0.45)
-		edge.joint_mode = Line2D.LINE_JOINT_ROUND
-		edge.begin_cap_mode = Line2D.LINE_CAP_ROUND
-		edge.end_cap_mode = Line2D.LINE_CAP_ROUND
-		ground_layer.add_child(edge)
-		var road := Line2D.new()
-		road.points = pts
-		road.width = wpx
-		road.texture = Assets.get_tex("textures/dirt_road", Vector2i(256, 256))
-		road.texture_mode = Line2D.LINE_TEXTURE_TILE
-		road.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		road.joint_mode = Line2D.LINE_JOINT_ROUND
-		road.begin_cap_mode = Line2D.LINE_CAP_ROUND
-		road.end_cap_mode = Line2D.LINE_CAP_ROUND
-		ground_layer.add_child(road)
-		# cart ruts worn into the wider roads
-		if float(r["width"]) >= 1.4:
-			for side in [-1.0, 1.0]:
-				var rut := Line2D.new()
-				rut.points = _offset_line(pts, side * wpx * 0.2)
-				rut.width = 6.0
-				rut.default_color = Color(0.24, 0.16, 0.09, 0.32)
-				rut.joint_mode = Line2D.LINE_JOINT_ROUND
-				ground_layer.add_child(rut)
-	var sq: Dictionary = DB.layout.get("square", {})
-	if not sq.is_empty():
-		var c := tp(sq["center"])
-		var rad := tp(sq["radius"])
-		var poly := PackedVector2Array()
-		for i in 40:
-			var a := TAU * i / 40.0
-			var wob := 1.0 + 0.04 * sin(a * 5.0)
-			poly.append(c + Vector2(cos(a) * rad.x, sin(a) * rad.y) * wob)
-		_tex_poly(poly, "cobble", ground_layer)
-		_outline(poly, 3.0, ground_layer, Color(0.13, 0.08, 0.05, 0.7))
+	VillageGround.build(self)
 
 
 func _build_stream() -> void:
@@ -451,9 +409,7 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 			add_child(wl)
 			night_lights.append(wl)
 		if b.has("sign"):
-			var d0: Dictionary = b["doors"][0]
-			var sp := _door_center(r, d0) + _door_out(d0) * 40 + Vector2(-T * 1.4, 0)
-			_prop(b["sign"], sp)
+			Village10.place_sign(self, b, r)   # hangs beside the door: no collision, drawn above the actors
 	buildings[b["id"]] = info
 	if b.has("stairs"):
 		var s: Array = b["stairs"]["pos"]
@@ -573,6 +529,13 @@ func _furniture(id: String, pos: Vector2, rot_deg: float) -> void:
 			var sl2 := FX.light(Color("#ffc070"), 230.0, 0.75, true)
 			sl2.position = pos
 			add_child(sl2)
+		"rival_forge":
+			var rf := FX.light(Color("#ff7a26"), 300.0, 0.85, true)
+			rf.position = pos
+			add_child(rf)
+			var re := FX.embers(8)
+			re.position = pos + Vector2(0, -10)
+			add_child(re)
 		"wax_vat":
 			var wv := FX.light(Color("#ff9a50"), 150.0, 0.5, true)
 			wv.position = pos + Vector2(0, 26)
@@ -805,9 +768,10 @@ const ANIMALS := [["animal_cat_1", [57.0, 33.5], 260.0], ["animal_cat_2", [30.5,
 func _spawn_animals() -> void:
 	for a in ANIMALS:
 		var an := AnimalActor.new()
-		an.setup(a[0], tp(a[1]), float(a[2]))
+		an.setup(a[0], tp(a[1]), float(a[2]), Rect2(), self)
 		ysort.add_child(an)
 		animals.append(an)
+	Village10.spawn_livestock(self)   # horses and cows at grass in their paddocks
 
 
 ## Restrained dust in the air, and a darker, smokier, warmer forge corner.
@@ -938,7 +902,7 @@ func _build_outdoors() -> void:
 	spots["notice"] = nb + Vector2(0, 70)
 	_prop("well", Vector2(62.4 * T, 33.6 * T))
 	spots["well"] = Vector2(62.4 * T, 35.0 * T)
-	_prop("market_stall", Vector2(54.0 * T, 35.0 * T))
+	_prop("market_stall", tp(DB.layout.get("market_stall", [54.0, 35.0])))
 	_prop("cart", Vector2(66.5 * T, 30.0 * T))
 	_prop("haybale", Vector2(68.0 * T, 31.3 * T))
 	for i in 6:
@@ -946,18 +910,8 @@ func _build_outdoors() -> void:
 		spots["square_%d" % i] = Vector2(59 * T + cos(a) * 4.6 * T, 31 * T + sin(a) * 3.2 * T)
 	# the customer waiting area outside the shop's street door: four seats, a sign and a display
 	_build_waiting_area()
-	# lantern posts along the roads
-	var lp := [[50, 29.2], [68, 32.8], [40, 29.5], [26, 32.6], [12, 29.4], [80, 32.6], [57.2, 20], [60.8, 42], [57.4, 52], [33.4, 33.4],
-		[52.0, 14.0], [40.4, 13.4], [27.0, 13.2], [37.2, 10.7], [70.0, 18.4], [79.6, 50.4], [92.2, 51.0], [84.0, 58.6],
-		[64.2, 57.0], [8.6, 24.0], [60.8, 46.0], [83.6, 36.6], [11.0, 33.8], [57.6, 8.0]]
-	for p in lp:
-		var pos := tp(p)
-		_veg_mark(pos, T * 1.0, 3)
-		_prop("lantern_post", pos)
-		var l := FX.light(Color("#ffb060"), 260.0, 0.0, true)
-		l.position = pos
-		add_child(l)
-		night_lights.append(l)
+	# street lamps along the roads (iteration 010: iron lamp posts with a lantern that lights at dusk)
+	Village10.build_lamps(self)
 	# farm fence and crops by Jory's
 	for x in range(2, 15):
 		_prop("fence_h", Vector2(x * T + 32, 49.4 * T))
@@ -977,6 +931,7 @@ func _build_outdoors() -> void:
 	_build_pond()
 	_build_harbour()
 	_build_outdoor_props()
+	Village10.build_outdoors(self)   # iteration 010: overhead bunting, venue interactables, the caravan camp
 	_build_ground_detail()
 	_build_vegetation(rng)
 	_place_animals_extra()
@@ -1243,17 +1198,9 @@ func _build_ground_detail() -> void:
 		p.color = Color(0.78, 0.86, 0.6, 0.42) if i % 3 != 0 else Color(0.6, 0.62, 0.46, 0.34)
 		ground_layer.add_child(p)
 		ground_layer.move_child(p, 1)   # right above the base grass, under roads and water
-	# trodden earth in front of every door and grime along the foot of every wall
+	# grime along the foot of every wall (the trodden doorsteps are part of the road mask, VillageGround)
 	for b in DB.layout.get("buildings", []):
 		var r := brect(b)
-		var d: Dictionary = b["doors"][0]
-		var dc := _door_center(r, d) + _door_out(d) * 60.0
-		var worn := Polygon2D.new()
-		worn.polygon = _ellipse_poly(dc, Vector2(78, 52) if d["side"] in ["n", "s"] else Vector2(52, 78), 16, 0.18, str(b["id"]).length())
-		worn.texture = Assets.get_tex("textures/dirt_road", Vector2i(256, 256))
-		worn.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		worn.color = Color(0.85, 0.78, 0.68, 0.75)
-		ground_layer.add_child(worn)
 		var grime := Line2D.new()
 		grime.points = _rect_pts(r.grow(10))
 		grime.closed = true
@@ -1422,6 +1369,8 @@ func _build_vegetation(rng: RandomNumberGenerator) -> void:
 		_veg_mark(tp(ex["pos"]), T * 2.6, 2)
 	for kc in DB.layout.get("boundary", {}).get("keep_clear", []):
 		_veg_mark_rect(Rect2(tp([kc[0], kc[1]]), Vector2(float(kc[2]), float(kc[3])) * T), 1)
+	for cl in DB.layout.get("clearings", []):   # paddocks, yards, the camp, the stage: nothing grows there
+		_veg_mark_rect(Rect2(tp([cl[0], cl[1]]), Vector2(float(cl[2]), float(cl[3])) * T), 3)
 	for n in ysort.get_children():
 		if n is Node2D:
 			_veg_mark((n as Node2D).position, T * 1.15, 1)
@@ -1567,7 +1516,7 @@ const ANIMALS_EXTRA := [["animal_cat_2", [86.0, 52.4], 220.0], ["animal_dog_1", 
 func _place_animals_extra() -> void:
 	for a in ANIMALS_EXTRA:
 		var an := AnimalActor.new()
-		an.setup(a[0], tp(a[1]), float(a[2]))
+		an.setup(a[0], tp(a[1]), float(a[2]), Rect2(), self)
 		ysort.add_child(an)
 		animals.append(an)
 
@@ -1888,6 +1837,21 @@ func spot_for(id: String) -> String:
 			return "harbour_quay" if h >= 6 and h < 19 else ("inn_bar" if h < 22 else "")
 		"rosalind":
 			return "lantern_3"
+		# iteration 010 venues (the characters come from the Commerce worker; nothing happens until they exist)
+		"pawnbroker":
+			return "pawn_counter" if h >= 8 and h < 18 else ""
+		"rival_smith":
+			if h >= 7 and h < 16:
+				return "rival_smith_forge"
+			return "rival_smith_counter" if h < 19 else ("inn_t6" if h < 22 else "")
+		"hale_elder":
+			return "hale_yard" if h >= 7 and h < 18 else ("hale_cottage_inside" if h < 21 else "")
+		"hale_younger":
+			if h >= 14 and h < 16:
+				return "hale_yard"
+			return "hale_study" if h >= 8 and h < 20 else ""
+		"caravan_master":
+			return "caravan_camp" if h >= 7 and h < 21 and Village10.caravan_present(self) else ""
 		"roisin":
 			return Roisin.spot(spots.has("lantern_roisin"))
 		"lysa":
