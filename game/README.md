@@ -60,10 +60,11 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 | F5 / F9 | Quick save / quick load |
 | M | Map of Brindlewick |
 | G | World map (persistent sites, their state and history) |
+| Y | Workshop Ledger — apprentices, stations and work queues |
 | Right-click an item | Inspect it: maker's mark, owners, its story |
 | F1 | Help & searchable reference |
 | F3 | Diagnostics overlay |
-| F10 | Developer tools: time, any item, gold, skills, property, stations, skill tree, progression presets, trade, Ironfront |
+| F10 | Developer tools: a searchable item catalogue (spawn with quantity, rarity, craftsmanship; developer items never earn achievements), money, time, skills, property, stations, skill tree, progression presets, trade, Ironfront, workshop |
 
 ## The first-day loop
 

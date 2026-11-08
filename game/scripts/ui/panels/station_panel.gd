@@ -263,7 +263,7 @@ func _recipe_row(rec: Dictionary) -> Control:
 	var side := UIKit.vbox(4)
 	side.custom_minimum_size = Vector2(170, 0)
 	side.add_child(GuideUI.badge(str(rs["state"]), GuideUI.recipe_badge_text(rs), 30))
-	var how := UIKit.button("Hide" if selected == rid else ("How?" if str(rs["state"]) != "ready" else "Details"), func():
+	var how := UIKit.button("Close ▲" if selected == rid else ("How?" if str(rs["state"]) != "ready" else "Details"), func():
 		selected = "" if selected == rid else rid
 		_fill_list(), 150)
 	how.name = "How_" + rid

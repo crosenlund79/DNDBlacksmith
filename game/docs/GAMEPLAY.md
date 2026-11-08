@@ -512,3 +512,35 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Equipment personalities** | Rare pieces (cursed, arcane, destined, or woken by a real deed) gain one of several temperaments and say authored lines filled with their own history; per-item and global cooldowns, deterministic choice, a mute switch and a frequency setting, optional whisper sound. No AI service | `personality.gd`, `spirit_voice.gd`, `data/personalities.json` |
 
 **Screenshots:** `docs/screenshots/iteration_011/`.
+
+## Iteration 012 — the workshop comes alive
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Apprentices** | Dedicated workshop staff, separate from expedition hirelings. Unlocked at Smithing 6 or after buying the first room next door; 1 place plus one per extra workshop room (max 4). Weekly applicants on the notice board's *Workshop apprentices* tab; signing fee and daily wages; unpaid wages cost loyalty | `apprentices.gd`, `data/apprentices.json` |
+| **Real work** | Repairs, customer commissions, routine crafting with repeats, material preparation and station upkeep, through the real recipes, stations and materials: one worker per station, the smith first; 8:00–18:00 shift with a midday break; simulated identically through sleep and quick travel | `apprentices.gd`, `Crafting.build` |
+| **Training & careers** | Novice → apprentice → journeyman → master by real works and skill; specialties after enough work in one category; proportionate mistakes and pleasant surprises; the smith teaches once a day (1 hour). Apprentice work stays below the smith's exceptional craftsmanship | `apprentices.gd` |
+| **Living histories** | Apprentice pieces carry the apprentice as maker with their own mark (and the smith as supervisor when he watched); they can become named and Epic and hang in the Hall of Fame; their maker recognises them when they come back | `provenance.gd` (`is_workshop`), `item_story.gd` |
+| **Independence** | Rarely, a loyal master asks (with a week's notice) to open their own workshop: give your blessing (they become a friendly competitor whose marked work enters the adventurer economy) or ask them to stay | `apprentices.gd` |
+| **The Workshop Ledger (Y)** | Apprentices, stations and occupancy, the queues with priorities, assignees, materials, estimates and blockers, bottlenecks, add work | `workshop_panel.gd` |
+| **Living miniatures** | Apprentices walk in at 8:00, work beside their stations with small motions and bubbles, carry materials, take their break and leave at 18:00 | `apprentice_actors.gd` |
+| **Workshop space** | One station per eight square tiles (was twelve): all 29 stations fit the whole building; *Find a spot for everything in storage* sets stations up automatically | `property.gd` (`auto_place`) |
+
+**Screenshots:** `docs/screenshots/iteration_012/`.
+
+## UX iteration — clarity, discovery, crafting guidance, equipment refinement
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Guidance from real data** | Every item and recipe knows how it is obtained (shops, ships, imports, caravan, trade runs, hireling work, expeditions, crafting, apprentices), its full dependency tree, its state (have / obtainable / locked / unavailable) and ONE recommended next step with alternatives behind it — generated from the game data, never handwritten | `guide.gd` |
+| **Station recipe view** | Ready / Missing N / Locked at a glance; *How?* opens the next step with a button and *Full details* the tree; every missing ingredient, station or skill is a link to its page | `station_panel.gd`, `guide_ui.gd` |
+| **Encyclopedia** | Help pages for every known item, recipe and station: what it is for, where to get it, how it is made, intermediates, stations and skills, alternatives; links and a Back history; a *Knowledge & Notes* tab | `reference.gd`, `help_panel.gd` |
+| **Knowledge for sale** | Hints about genuinely hidden discoveries only (forgotten recipes, rune lore, exotic cargo) from Quell, the harbourmaster and Maud; never a progression shortcut; kept for good | `knowledge.gd` |
+| **Shops & hours** | One registry of every venue and its keeper's real hours, used by the villagers' schedules, the map and the counters; closed counters say when they open | `venues.gd` |
+| **Pell's Provisions** | A real general-store counter: iron ore, coal, raw hide, cured leather, linen thread, wool — small daily lots, fresh each morning | `trade.gd`, `data/trade.json` |
+| **Map & quick travel** | Shop markers and a compact card (type, open now, hours, what it deals in, whether it has a counter, *Travel there*); honest quick-travel descriptions | `map_panel.gd`, `quick_travel_menu.gd` |
+| **Action prompts** | "The Anvil — [E] Craft (8 ready) · Reforge", with unavailable actions greyed with a reason; dialogue options shown disabled with a reason where that helps | `world_prompts.gd`, `talk.gd` |
+| **Improving equipment** | Refine (craftsmanship), Rework (one affix or the main stat within its legal range), Upgrade (one material step), Reforge — at the right station, with the real precision check, dice and materials; budgets and ceilings stop stat inflation; failure costs little; before/after comparison; the piece keeps its uid, maker, mark, name, owners, rarity, Epic, spirit and history and gains one dated event per change | `refinement.gd`, `refine_panel.gd` |
+| **Developer catalogue (F10)** | Search every item, spawn with quantity, rarity and craftsmanship, add money; developer items are marked and never earn achievements, names, Epic or progression | `dev_tools.gd`, `dev_catalogue_panel.gd` |
+
+**Screenshots:** `docs/screenshots/iteration_ux/`.

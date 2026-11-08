@@ -257,6 +257,29 @@ adventurer or in a recovered chest — you recognise it, once, and see where it 
 **Talking items.** Very rarely a piece wakes after a real event and starts to comment on the work at your bench.
 Settings → Gameplay: *Item voices* on/off and *rare/normal* frequency.
 
+## Iteration 012: the workshop comes alive
+
+Once you can teach (Smithing 6, or as soon as you buy the first room next door), the **notice board** has a
+*Workshop apprentices* tab. Take one on, then open the **Workshop Ledger (Y)** and give them work: customer repairs,
+commissions, a run of longswords, smelting, or station upkeep. They work 8:00–18:00 at the real stations with the real
+materials — you always have priority at a station. Talk to them to see how they are doing or to teach them for an hour.
+Their pieces carry their own mark; they rise from novice to master and, one day, a master may want a workshop of their own.
+
+## Never stuck: guidance, shops and improving your work
+
+**What can I do, and what's missing?** In every station's recipe list each recipe says *Ready*, *Missing N* or *Locked*.
+Press **How?** for the single next step (with a button that takes you there); open **Full details** for the whole chain —
+for example Iron Longsword → Cured Leather → cure Raw Hide at a Leather Vat → buy hide at Pell's Provisions. Click any
+missing ingredient, station or skill to open its page in **Help (F1)**.
+
+**Shops.** The village map (**M**) lists every shop with its hours and whether it is open now; select one for a short
+card and *Travel there*. **Pell's Provisions** sells everyday basics (iron ore, coal, hides, leather, linen, wool).
+Counters close at night — the prompt tells you when they open.
+
+**Improving a piece.** At the grinding wheel, anvil, engraving stand, stitching table or arcane anvil — or from an item's
+inspection (*Improve it…*) — refine, rework, upgrade or reforge it. You see before and after, play the station's
+precision check, and the piece keeps its name, maker and story; the work is written into its history.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.
