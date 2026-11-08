@@ -25,6 +25,7 @@ static func add(kind: String, text: String, refs := {}, notable := false) -> Dic
 		entries().pop_front()
 	if notable:
 		Game.journal(text)
+	Recognition.on_chronicle(e)   # the Hall of Fame and Epic distinction read the record
 	Events.chronicle_added.emit(e)
 	return e
 

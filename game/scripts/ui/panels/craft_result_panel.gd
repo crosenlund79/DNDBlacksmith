@@ -86,6 +86,8 @@ func _item_column(rar: String, cr: Dictionary) -> Control:
 			lines.append("[color=#8aa6f2]+%d %s[/color]" % [int(a["value"]), str(a["stat"]).capitalize()])
 	if item.get("arcane_glow", false):
 		lines.append("[color=#b89cff]Arcane markings glow along the metal.[/color]")
+	if item.has("epic"):
+		lines.append(Recognition.epic_line(item))
 	lines.append("[color=#dab470]Value %d g[/color]" % Items.value(item))
 	v.add_child(UIKit.rich("\n".join(lines), 24, true))
 	if fresh and rar in ["legendary", "rare"]:
@@ -117,6 +119,8 @@ func _work_column(cr: Dictionary) -> Control:
 	var big := UIKit.label("Craftsmanship  %d%%" % int(round(q)), 44, "title", _qcol(q))
 	v.add_child(big)
 	var note := "precision %.1f%% + skill %.1f%%" % [float(cr.get("base_quality", q)), float(cr.get("skill_bonus", 0))]
+	if float(cr.get("tree_bonus", 0)) > 0.05 or float(cr.get("assist_bonus", 0)) > 0.05:
+		note += " (incl. skill tree %+.1f, helping hand %+.1f)" % [float(cr.get("tree_bonus", 0)), float(cr.get("assist_bonus", 0))]
 	if q > 100.0:
 		note += " — [color=#ffa050]beyond perfection[/color]"
 	v.add_child(UIKit.rich("[i]%s[/i]" % note, 20, true))
@@ -126,6 +130,16 @@ func _work_column(cr: Dictionary) -> Control:
 		xl.append("+%d %s" % [int(xp[s]), SkillSys.skill_name(s)])
 	if not xl.is_empty():
 		v.add_child(UIKit.rich("[color=#c8b898]Experience: %s%s[/color]" % [", ".join(xl), "  [i](routine work for an expert)[/i]" if cr.get("expert", false) else ""], 20, true))
+	# how craftsmanship, the dice, the material and the smith's skill made each statistic
+	var bd: Array = cr.get("breakdown", [])
+	if not bd.is_empty():
+		v.add_child(UIKit.divider())
+		v.add_child(_heading("How the numbers came about"))
+		var adv: Dictionary = cr.get("advantage", {})
+		if not adv.is_empty():
+			v.add_child(UIKit.rich("[i][color=#c8b898]%d%% craftsmanship → [b]%s[/b] on the stat dice%s[/color][/i]" % [int(round(q)), str(adv.get("word", "")),
+				" (physical rolls get a modifier instead)" if cr.get("dice_mode", "") == "physical" else ""], 19, true))
+		v.add_child(UIKit.rich("[color=#efe4cc]%s[/color]" % "\n".join(PackedStringArray(bd.map(func(x): return str(x)))), 19, true))
 	return v
 
 
@@ -147,8 +161,11 @@ func _dice_column(cr: Dictionary) -> Control:
 		var row := UIKit.hbox(10)
 		var sides := Dice.sides(str(e.get("expr", "1d6")))
 		row.add_child(UIKit.icon("ui/dice_d20" if sides >= 20 else ("ui/dice_d12" if sides >= 10 else "ui/dice_d6"), 52))
-		var lab := UIKit.rich("[b]%s[/b] %s → [font_size=28][color=#ffc070]%d[/color][/font_size]\n[i][color=#a89a80]%s[/color][/i]" % [
-			attrs.get(k, {}).get("label", k.capitalize()), e.get("expr", ""), int(e.get("total", 0)), attrs.get(k, {}).get("desc", "")], 20, true)
+		var how := str(e.get("text", ""))
+		if how == "":
+			how = str(attrs.get(k, {}).get("desc", ""))
+		var lab := UIKit.rich("[b]%s[/b] %s → [font_size=28][color=#ffc070]%d[/color][/font_size]\n[i][color=#c8b898]%s[/color][/i]" % [
+			attrs.get(k, {}).get("label", k.capitalize()), e.get("expr", ""), int(e.get("total", 0)), how], 19, true)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lab)
 		v.add_child(row)

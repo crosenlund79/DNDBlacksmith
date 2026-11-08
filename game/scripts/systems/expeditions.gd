@@ -1102,6 +1102,7 @@ static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
 		Items.add_history(w, "Named “The %s” after the deed." % bane)
 		Chronicle.add("legend", "The blade %s forged — now called The %s — felled %s." % ["Brannoc", bane, boss_name], {"adv": a["id"], "item": str(w["uid"])}, true)
 		Events.toast.emit("Your work has a name now: The %s (%s's blade)." % [bane, a["name"]], "legendary")
+	Recognition.on_boss_down(str(a["id"]), w, boss_name, str(region(e["dest"])["name"]))   # Hall of Fame + Epic
 	# an unexpected hero: a green adventurer, the smith's gear, a mighty foe
 	if int(a["level"]) <= 3 and str(w.get("crafted_by", "")).begins_with("Brannoc") and not a.get("unexpected_hero", false):
 		a["unexpected_hero"] = true

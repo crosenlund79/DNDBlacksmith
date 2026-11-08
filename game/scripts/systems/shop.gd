@@ -289,6 +289,16 @@ static func request(c: Dictionary) -> Dictionary:
 		"dispute":
 			r["headline"] = "Dispute: their %s failed them" % c.get("item_name", "gear")
 			r["reward_text"] = "wants %d g back" % int(c.get("refund", 20))
+		"multi":
+			var ps: Array = c.get("parts", [])
+			r["headline"] = "Several requests (%d)" % ps.size()
+			r["parts"] = ps.size()
+			r["reward_text"] = "accept or decline each part"
+			var bits := PackedStringArray()
+			for pt in ps:
+				bits.append(part_phrase(pt))
+			r["summary"] = "several things: " + ", ".join(bits)
+			return r
 		_:
 			var a := Adv.get_a(npc)
 			r["kind"] = "equipment"
@@ -328,6 +338,13 @@ static func order_request(o: Dictionary) -> Dictionary:
 		"note": str(o.get("note", "")), "reward_text": "%d g" % int(o["reward"])}
 	if not bonus.is_empty():
 		r["reward_text"] += " + %d g bonus for %s" % [int(bonus.get("gold", 0)), bonus.get("text", "")]
+	if o.has("def"):
+		# a commission for one particular piece (from a multi-order): the piece itself is the requirement
+		r.erase("stat")
+		r.erase("min")
+		r["item_def"] = str(o["def"])
+		r["materials"] = []
+		r["headline"] = "Commission: %s" % DB.item(str(o["def"])).get("name", o["def"])
 	r["summary"] = request_summary(r)
 	return r
 
@@ -382,12 +399,20 @@ static func customer_hour(h: int) -> void:
 				Events.toast.emit("%s gave up waiting outside the shop." % DB.character(c["npc"]).get("name", c["npc"]), "bad")
 		elif now - int(c["arrived"]) >= 3:
 			customers().erase(c)          # never made it here; nobody noticed
+	# someone waiting wanders over to the Hall of Fame board by the shop wall
+	for c in waiting():
+		if not c.get("hof_seen", false) and not Recognition.entries().is_empty() and randf() < 0.12:
+			c["hof_seen"] = true
+			Recognition.customer_comment(str(c["npc"]))
 	if free_seat() < 0 or randf() > clampf(0.45 * (1.0 + reputation() / 120.0), 0.15, 0.75):
 		return
 	var pool := []
 	for a in Adv.in_town():
 		if not refuses(a["id"]):
-			pool.append([a["id"], "repair_own" if worn_slot(a) != "" else "browse"])
+			var w := "repair_own" if worn_slot(a) != "" else "browse"
+			if randf() < MULTI_CHANCE and open_orders().filter(func(o): return o["npc"] == a["id"]).is_empty():
+				w = "multi"   # several requests at once (one may be beyond the smith for now)
+			pool.append([a["id"], w])
 	for v in ["martha", "tobin", "jory", "eda", "oswin", "wenna"]:
 		if not refuses(v):
 			pool.append([v, "goods" if randf() < 0.35 else "repair"])
@@ -418,6 +443,15 @@ static func _add_customer(npc: String, want: String) -> void:
 		c["own_slot"] = slot2
 		c["item"] = a2["equipment"][slot2]
 		c["pay"] = 10 + int(Items.value(c["item"]) * 0.06)
+	elif want == "multi":
+		var a3 := Adv.get_a(npc)
+		c["parts"] = multi_parts_for(a3)
+		c["budget"] = int(a3.get("gold", 0))
+		if (c["parts"] as Array).size() < 2:
+			c["want"] = "browse"
+			c.erase("parts")
+			c["looking_for"] = a3.get("needs", "")
+			_equipment_wish(c, a3)
 	elif want == "goods":
 		c["budget"] = randi_range(30, 80)
 		c["looking_for"] = ["potion_healing", "oil_whetstone"].pick_random()
@@ -594,10 +628,14 @@ static func bonus_met(o: Dictionary, it: Dictionary) -> bool:
 
 
 static func item_meets(o: Dictionary, it: Dictionary) -> bool:
+	if o.has("def"):
+		return str(it.get("def", "")) == str(o["def"])
 	return Items.slot(it) == o["slot"] and Items.stat(it, o["stat"]) >= int(o["min"]) and Items.tier(it) >= int(o.get("tier", 1))
 
 
 static func order_text(o: Dictionary) -> String:
+	if o.has("def"):
+		return str(DB.item(str(o["def"])).get("name", o["def"]))
 	return "%s with %s ≥ %d%s" % [o["slot"], o["stat"], int(o["min"]), (", " + Items.TIER_WORD[int(o["tier"])]) if int(o.get("tier", 1)) >= 2 else ""]
 
 
@@ -618,7 +656,7 @@ static func fulfil(order_id: String, uid: int) -> String:
 		it = Game.take_uid(uid)
 		it.erase("for_sale")
 		var a := Adv.get_a(o["npc"])
-		var margin := Items.stat(it, o["stat"]) - int(o["min"])
+		var margin := Items.stat(it, o["stat"]) - int(o["min"]) if not o.has("def") else int((float(it.get("quality", 70)) - 90.0) / 5.0)
 		var bonus := int(margin * 4 + (40 if it.get("rarity") in ["rare", "legendary", "unique", "set"] else 0))
 		var reward := int(o["reward"]) + bonus
 		var got_bonus := bonus_met(o, it)
@@ -699,3 +737,207 @@ static func slot_ceiling(slot: String, stat: String) -> int:
 		var top := float(v[1]) if v is Array else float(v)
 		best = maxi(best, int(floor(top * 1.2)))
 	return best
+
+
+# ------------------------------------------------------------------ multi-orders
+## EN: A visiting adventurer may bring several requests at once: something advanced (beyond the smith's
+##     skill tree or stations right now), an ordinary piece the smith can make, and a simple repair.
+##     Each part is shown on its own with its requirements, reward and availability ("craftable now" /
+##     "not yet — why"); the smith accepts or declines parts one by one (never all-or-nothing).
+##     Accepted craft parts become commissions (orders with a "def": that exact piece), repairs are done at
+##     the grinding wheel. When no part is pending the customer leaves, pleased in proportion to what was
+##     taken on. Customer: {"want": "multi", "parts": [{pid, kind: craft|repair, status: pending|accepted|
+##     declined|done, …}]}.
+## DA: En kunde kan komme med flere ønsker på én gang; hver del kan accepteres eller afslås for sig.
+const MULTI_CHANCE := 0.3
+
+
+## Equipment recipes split into what the smith can make now (unlocked) and what is still beyond him.
+static func _equipment_recipes() -> Dictionary:
+	var open := []
+	var locked := []
+	for r in DB.recipes.values():
+		var d := DB.item(str(r["output"]))
+		if str(d.get("slot", "")) == "" or str(d.get("type", "")) == "companion":
+			continue
+		if Crafting.recipe_locked_reason(str(r["id"])) == "":
+			open.append(r)
+		else:
+			locked.append(r)
+	return {"open": open, "locked": locked}
+
+
+## Builds the parts of a multi-order for an adventurer (2–3 parts).
+static func multi_parts_for(a: Dictionary) -> Array:
+	if a.is_empty():
+		return []
+	var parts := []
+	var er := _equipment_recipes()
+	var slot := str(a.get("needs", ""))
+	# 1. an advanced piece: the nearest thing the smith cannot make yet
+	var locked: Array = er["locked"]
+	locked.sort_custom(func(x, y): return int(x.get("difficulty", 1)) < int(y.get("difficulty", 1)))
+	if not locked.is_empty():
+		var pick: Dictionary = locked[randi() % mini(5, locked.size())]
+		parts.append(_craft_part(pick, a, true))
+	# 2. an ordinary piece he can make, preferably for the slot they need
+	var open: Array = er["open"]
+	var fits := open.filter(func(r): return str(DB.item(str(r["output"])).get("slot", "")) == slot)
+	var pool: Array = fits if not fits.is_empty() else open
+	if not pool.is_empty():
+		parts.append(_craft_part(pool[randi() % pool.size()], a, false))
+	# 3. a simple repair: their own worn piece, or a spare they carry
+	var ws := worn_slot(a)
+	if ws != "":
+		parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": a["equipment"][ws], "pay": 10 + int(Items.value(a["equipment"][ws]) * 0.06), "status": "pending"})
+	else:
+		var it := Items.make(["dagger", "helm_iron", "shield_round", "axe_hand"].pick_random(), {"quality": randf_range(55, 75)})
+		if it["stats"].has("durability"):
+			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.25, 0.5))
+		parts.append({"pid": "rep", "kind": "repair", "item": it, "pay": randi_range(8, 16), "status": "pending"})
+	return parts
+
+
+static func _craft_part(r: Dictionary, a: Dictionary, advanced: bool) -> Dictionary:
+	var d := DB.item(str(r["output"]))
+	var reward := int(round(float(d.get("value", 20)) * (1.6 if advanced else 1.3))) + 15 + int(a.get("level", 1)) * 4
+	return {"pid": "adv" if advanced else "std", "kind": "craft", "recipe": str(r["id"]), "def": str(r["output"]),
+		"slot": str(d.get("slot", "")), "reward": reward, "days": 6 if advanced else 3, "advanced": advanced, "status": "pending"}
+
+
+## "a Steel Longsword" / "a repair" — for toasts and summaries.
+static func part_phrase(pt: Dictionary) -> String:
+	if str(pt.get("kind", "")) == "repair":
+		return "a repair of their %s" % pt.get("item", {}).get("name", "gear")
+	return str(DB.item(str(pt.get("def", ""))).get("name", pt.get("def", "")))
+
+
+## Can the smith do this part right now? {"state": now|materials|locked|done, "ok": bool, "why": String}
+static func part_availability(pt: Dictionary) -> Dictionary:
+	if str(pt.get("kind", "")) == "repair":
+		var why := Crafting.station_locked_reason("grinding_wheel")
+		return {"state": "now" if why == "" else "locked", "ok": why == "", "why": "at the grinding wheel" if why == "" else why}
+	var rid := str(pt.get("recipe", ""))
+	var lock := Crafting.recipe_locked_reason(rid)
+	if lock != "":
+		return {"state": "locked", "ok": false, "why": lock}
+	var miss := Crafting.missing_inputs(rid)
+	if not miss.is_empty():
+		var bits := PackedStringArray()
+		for k in miss:
+			bits.append("%d %s" % [int(miss[k]), DB.item(k).get("name", k)])
+		return {"state": "materials", "ok": true, "why": "you know how — still need " + ", ".join(bits)}
+	return {"state": "now", "ok": true, "why": "you can make it now"}
+
+
+## A part as request-card data (CustomerCard.build), with its availability.
+static func part_request(c: Dictionary, pt: Dictionary) -> Dictionary:
+	var npc := str(c.get("npc", ""))
+	var av := part_availability(pt)
+	var r := {"npc": npc, "name": Talk.npc_name(npc), "part": str(pt.get("pid", "")), "status": str(pt.get("status", "pending")),
+		"available": bool(av["ok"]), "availability": str(av["state"]), "why": str(av["why"])}
+	if str(pt.get("kind", "")) == "repair":
+		var it: Dictionary = pt.get("item", {})
+		r["kind"] = "repair"
+		r["item_def"] = str(it.get("def", ""))
+		r["headline"] = "Repair: %s" % it.get("name", "gear")
+		var st: Dictionary = it.get("stats", {})
+		if st.has("durability_max"):
+			r["condition"] = "durability %d / %d" % [int(st.get("durability", 0)), int(st["durability_max"])]
+		r["reward_text"] = "about %d g" % int(pt.get("pay", 10))
+	else:
+		r["kind"] = "commission"
+		r["item_def"] = str(pt["def"])
+		r["slot"] = str(pt.get("slot", ""))
+		r["headline"] = "%s: %s" % ["Ambitious" if bool(pt.get("advanced", false)) else "Commission", DB.item(str(pt["def"])).get("name", pt["def"])]
+		r["reward_text"] = "%d g on delivery, %d days" % [int(pt.get("reward", 0)), int(pt.get("days", 3))]
+	return r
+
+
+static func _part(c: Dictionary, pid: String) -> Dictionary:
+	for pt in c.get("parts", []):
+		if str(pt.get("pid", "")) == pid:
+			return pt
+	return {}
+
+
+## Accepts a craft part: it becomes a commission for that exact piece. "" = done, else why not.
+static func accept_part(npc: String, pid: String) -> String:
+	var c := customer(npc)
+	var pt := _part(c, pid)
+	if pt.is_empty() or str(pt.get("status", "")) != "pending":
+		return "That request is no longer open."
+	if str(pt["kind"]) != "craft":
+		return "Take the repair to the grinding wheel."
+	var a := Adv.get_a(npc)
+	if a.is_empty():
+		return "They have gone."
+	var o := {"id": "ord_%d" % Game.new_uid(), "npc": npc, "slot": str(pt["slot"]), "stat": stat_for_slot(str(pt["slot"])), "min": 0, "tier": 1,
+		"def": str(pt["def"]), "recipe": str(pt["recipe"]), "reward": int(pt["reward"]), "deadline": Game.day() + int(pt.get("days", 3)),
+		"status": "open", "placed": Game.day(), "multi": true,
+		"note": "One of several things I asked for%s." % (" — I know it's beyond your forge for now" if bool(pt.get("advanced", false)) else "")}
+	_set_priority(o, a)
+	orders().append(o)
+	pt["status"] = "accepted"
+	pt["order"] = o["id"]
+	Social.change(npc, 1.0, 1.0, "", "", false)
+	Events.orders_changed.emit()
+	Events.toast.emit("Commission accepted: %s for %s." % [order_text(o), Talk.npc_name(npc)], "good")
+	_multi_check_done(c)
+	return ""
+
+
+## Declines one part; the rest of the request stays open.
+static func decline_part(npc: String, pid: String) -> void:
+	var c := customer(npc)
+	var pt := _part(c, pid)
+	if pt.is_empty() or str(pt.get("status", "")) != "pending":
+		return
+	pt["status"] = "declined"
+	Social.change(npc, -0.5, 0.5, "", "", false)
+	Events.customers_changed.emit()
+	_multi_check_done(c)
+
+
+## The repair part, done at the grinding wheel.
+static func repair_part(npc: String, pid: String, quality: float) -> void:
+	var c := customer(npc)
+	var pt := _part(c, pid)
+	if pt.is_empty() or str(pt.get("status", "")) != "pending" or str(pt["kind"]) != "repair":
+		return
+	var it: Dictionary = pt.get("item", {})
+	if pt.has("own_slot"):
+		var a := Adv.get_a(npc)
+		it = a.get("equipment", {}).get(str(pt["own_slot"]), it)
+	var st: Dictionary = it.get("stats", {})
+	if st.has("durability_max"):
+		st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))
+	it.erase("broken")
+	Items.add_history(it, "Repaired at the Ironhand forge (%d%%)." % int(quality))
+	var pay := int(round(float(pt.get("pay", 10)) * (0.5 + quality / 100.0 * 0.7)))
+	Game.add_gold(pay, "repairs", "Repaired %s's %s" % [Talk.npc_name(npc), it.get("name", "gear")])
+	Social.change(npc, 3.0 if quality >= 75 else -1.5, 2.0, "", "", false)
+	Game.grant_player_xp("smithing", 8)
+	pt["status"] = "done"
+	Events.customers_changed.emit()
+	_multi_check_done(c)
+
+
+## When nothing is pending any more the customer thanks the smith and leaves.
+static func _multi_check_done(c: Dictionary) -> void:
+	if c.is_empty():
+		return
+	var taken := 0
+	for pt in c.get("parts", []):
+		if str(pt.get("status", "")) == "pending":
+			Events.customers_changed.emit()
+			return
+		if str(pt.get("status", "")) in ["accepted", "done"]:
+			taken += 1
+	var npc := str(c["npc"])
+	if taken > 0:
+		Social.change(npc, 1.0 + taken, 1.0, "multi_%d" % Game.day(), "Brannoc took on %d of the things I asked for." % taken)
+		Events.toast.emit("%s thanks you and heads off (%d of %d requests taken on)." % [Talk.npc_name(npc), taken, (c.get("parts", []) as Array).size()], "good")
+	else:
+		Events.toast.emit("%s nods — nothing you can take on today — and heads off." % Talk.npc_name(npc), "info")
+	remove_customer(npc)

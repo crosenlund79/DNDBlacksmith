@@ -395,6 +395,99 @@ static func rarity_eval(quality: float, fortune: int, bonus := 0.0) -> Dictionar
 	return {"score": score, "rarity": rar, "parts": parts, "thresholds": th, "masterwork": parts["masterwork"] > 0.0}
 
 
+# ------------------------------------------------------------------ weighted dice
+## EN: Craftsmanship weights the STAT dice (edge, guard, temper, potency, resonance, spellweave) — not the
+##     fortune or purity dice, so the rarity progression is unchanged. Digital dice roll the expression
+##     several times and keep the best (advantage) or the worst (disadvantage); physical dice keep the
+##     player's numbers and add a shown craftsmanship modifier worth about the same on average.
+##       below 55%  heavy disadvantage  — roll 3, keep the lowest   (physical −25% of the die's range)
+##       55–69%     disadvantage        — roll 2, keep the lowest   (−17%)
+##       70–94%     even odds           — one roll                  (±0)
+##       95–114%    advantage           — roll 2, keep the highest  (+17%)
+##       115%+      strong advantage    — roll 3, keep the highest  (+25%)
+## DA: Håndværket vægter statistik-terningerne: digitale slås flere gange (bedste/værste beholdes),
+##     fysiske beholder spillerens tal og får en vist håndværksmodifikator.
+const ADVANTAGE := [[115.0, 2, "strong advantage"], [95.0, 1, "advantage"], [70.0, 0, "even odds"], [55.0, -1, "disadvantage"], [-999.0, -2, "heavy disadvantage"]]
+const PHYSICAL_SHIFT := {-2: -0.25, -1: -0.17, 0: 0.0, 1: 0.17, 2: 0.25}
+
+
+## Advantage tier for a craftsmanship: {"tier": -2..2, "word", "rolls": how many times the die is rolled}.
+static func advantage(quality: float) -> Dictionary:
+	for a in ADVANTAGE:
+		if quality >= float(a[0]):
+			return {"tier": int(a[1]), "word": str(a[2]), "rolls": 1 + absi(int(a[1]))}
+	return {"tier": 0, "word": "even odds", "rolls": 1}
+
+
+## Is this die weighted by craftsmanship? (stat dice yes; fortune and purity no)
+static func is_stat_die(key: String) -> bool:
+	var stat := str(DB.crafting.get("dice", {}).get(key, {}).get("stat", key))
+	return not stat in ["rarity", "yield"]
+
+
+## Rolls one die expression for a craftsmanship: {"total", "faces", "rolls": [{"total","faces"}…], "kept": index,
+## "tier", "word", "quality", "weighted"}. Stat dice roll 1–3 times and keep the best/worst; others roll once.
+static func roll_weighted(key: String, expr: String, quality: float) -> Dictionary:
+	var weighted := is_stat_die(key)
+	var adv := advantage(quality) if weighted else {"tier": 0, "word": "even odds", "rolls": 1}
+	var rolls := []
+	var kept := 0
+	for i in int(adv["rolls"]):
+		var r := Dice.roll(expr)
+		rolls.append({"total": int(r["total"]), "faces": r["faces"]})
+		if i > 0:
+			var better: bool = int(r["total"]) > int(rolls[kept]["total"])
+			var worse: bool = int(r["total"]) < int(rolls[kept]["total"])
+			if (int(adv["tier"]) > 0 and better) or (int(adv["tier"]) < 0 and worse):
+				kept = i
+	return {"total": int(rolls[kept]["total"]), "faces": rolls[kept]["faces"], "rolls": rolls, "kept": kept,
+		"tier": int(adv["tier"]), "word": str(adv["word"]), "quality": quality, "weighted": weighted}
+
+
+## Rolls every die of a recipe's dice spec for a craftsmanship (what the digital dice do).
+static func roll_dice(spec: Dictionary, quality: float) -> Dictionary:
+	var out := {}
+	for k in spec:
+		out[k] = roll_weighted(str(k), str(spec[k]), quality)
+	return out
+
+
+## Lowest and highest total an expression can show.
+static func die_range(expr: String) -> Vector2i:
+	var p := Dice.parse(expr)
+	return Vector2i(int(p["n"]) + int(p["mod"]), int(p["n"]) * int(p["sides"]) + int(p["mod"]))
+
+
+## The craftsmanship modifier added to a physically rolled stat die (shown to the player; 0 for fortune/purity).
+static func physical_modifier(key: String, expr: String, quality: float) -> int:
+	if not is_stat_die(key) or expr == "":
+		return 0
+	var rg := die_range(expr)
+	return int(round(float(PHYSICAL_SHIFT[int(advantage(quality)["tier"])]) * float(rg.y - rg.x)))
+
+
+## One line explaining a die: "rolled 14, 13 → kept 14 (advantage from 108% craftsmanship)".
+static func die_explanation(e: Dictionary) -> String:
+	var q := int(round(float(e.get("quality", 0))))
+	match str(e.get("how", "")):
+		"weighted":
+			var rolls: Array = e.get("rolls", [])
+			if not bool(e.get("weighted", true)):
+				return "rolled %d (pure luck — craftsmanship does not weight this die)" % int(e.get("total", 0))
+			if rolls.size() <= 1:
+				return "rolled %d (even odds at %d%% craftsmanship)" % [int(e.get("total", 0)), q]
+			var vals := PackedStringArray()
+			for r in rolls:
+				vals.append(str(int(r["total"])))
+			return "rolled %s → kept %d (%s from %d%% craftsmanship)" % [", ".join(vals), int(e.get("total", 0)), str(e.get("word", "")), q]
+		"physical":
+			var m := int(e.get("mod", 0))
+			if m == 0:
+				return "you rolled %d%s" % [int(e.get("entered", 0)), "" if bool(e.get("weighted", true)) else " (pure luck — not weighted)"]
+			return "you rolled %d, %+d from %d%% craftsmanship (%s) → counts as %d" % [int(e.get("entered", 0)), m, q, str(e.get("word", "")), int(e.get("total", 0))]
+	return "set to %d" % int(e.get("total", 0))
+
+
 # ------------------------------------------------------------------ stats
 static func _norm(dice: Dictionary, spec: Dictionary, key: String, fallback := 0.5) -> float:
 	if not dice.has(key) or not spec.has(key):
@@ -405,31 +498,78 @@ static func _norm(dice: Dictionary, spec: Dictionary, key: String, fallback := 0
 
 ## Statistics from definition × craftsmanship × material × dice × skill. Craftsmanship dominates;
 ## the main die moves a stat by ±15%, temper ±10% durability, potency/resonance ±20% effect.
-static func compute_stats(d: Dictionary, quality: float, dice: Dictionary, spec: Dictionary, mat: Dictionary, lvl: int) -> Dictionary:
+## `explain` (optional, filled in place): per stat {base, range, craft, die, die_factor, material, skill, final}.
+static func compute_stats(d: Dictionary, quality: float, dice: Dictionary, spec: Dictionary, mat: Dictionary, lvl: int, explain := {}) -> Dictionary:
 	var st: Dictionary = d.get("stats", {})
 	var q := clampf(quality / 100.0 * 0.85, 0.0, 1.15)
 	var skill_mult := 1.0 + 0.01 * lvl
 	var main_n := _norm(dice, spec, "edge", _norm(dice, spec, "guard", -1.0))
+	var main_key := "edge" if dice.has("edge") and spec.has("edge") else ("guard" if dice.has("guard") and spec.has("guard") else "")
 	var potency_n := _norm(dice, spec, "potency", _norm(dice, spec, "resonance", 0.5))
+	var potency_key := "potency" if dice.has("potency") and spec.has("potency") else ("resonance" if dice.has("resonance") and spec.has("resonance") else "")
 	if main_n < 0.0:
 		main_n = potency_n
+		main_key = potency_key
 	var weave_n := _norm(dice, spec, "spellweave", main_n)
+	var weave_key := "spellweave" if dice.has("spellweave") and spec.has("spellweave") else main_key
 	var temper_n := _norm(dice, spec, "temper", 0.5)
 	var ms := float(mat.get("stat", 1.0))
 	var out := {}
 	for key in st:
 		var v: Variant = st[key]
+		var base := 0.0
+		var cq := 1.0
+		var df := 1.0
+		var dk := ""
+		var mm := ms
+		var sm := 1.0
 		if v is Array:
-			out[key] = int(round(lerpf(float(v[0]), float(v[1]), q) * (0.85 + main_n * 0.3) * skill_mult * ms))
+			base = lerpf(float(v[0]), float(v[1]), q)
+			df = 0.85 + main_n * 0.3
+			dk = main_key
+			sm = skill_mult
+			out[key] = int(round(base * df * sm * mm))
 		elif key == "durability":
-			out[key] = int(round(float(v) * (0.6 + 0.4 * minf(quality / 100.0, 1.25)) * (0.9 + temper_n * 0.2) * float(mat.get("durability", 1.0))))
+			base = float(v)
+			cq = 0.6 + 0.4 * minf(quality / 100.0, 1.25)
+			df = 0.9 + temper_n * 0.2
+			dk = "temper" if dice.has("temper") and spec.has("temper") else ""
+			mm = float(mat.get("durability", 1.0))
+			out[key] = int(round(base * cq * df * mm))
 		elif key == "magic":
-			out[key] = int(round(float(v) * (0.7 + 0.3 * minf(quality / 100.0, 1.3)) * (0.85 + weave_n * 0.3) * ms))
+			base = float(v)
+			cq = 0.7 + 0.3 * minf(quality / 100.0, 1.3)
+			df = 0.85 + weave_n * 0.3
+			dk = weave_key
+			out[key] = int(round(base * cq * df * mm))
 		else:
-			out[key] = maxi(1, int(round(float(v) * (0.7 + 0.3 * minf(quality / 100.0, 1.3)) * (0.8 + potency_n * 0.4) * ms)))
+			base = float(v)
+			cq = 0.7 + 0.3 * minf(quality / 100.0, 1.3)
+			df = 0.8 + potency_n * 0.4
+			dk = potency_key
+			out[key] = maxi(1, int(round(base * cq * df * mm)))
+		explain[key] = {"base": base, "range": v is Array, "craft": cq, "die": dk, "die_factor": df, "material": mm,
+			"skill": sm, "final": int(out[key])}
 	if out.has("durability"):
 		out["durability_max"] = out["durability"]
 	return out
+
+
+## One stat's account: "Attack 14 = 11.2 from the item's range at 108% craftsmanship · edge die ×1.06 · Steel ×1.30 · Smithing 6 +6%".
+static func stat_explanation(stat: String, e: Dictionary, quality: float, mat_name: String, skill_id: String, lvl: int) -> String:
+	var bits := PackedStringArray()
+	if bool(e.get("range", false)):
+		bits.append("%.1f from the item's range at %d%% craftsmanship" % [float(e.get("base", 0)), int(round(quality))])
+	else:
+		bits.append("base %d × %.2f for %d%% craftsmanship" % [int(e.get("base", 0)), float(e.get("craft", 1.0)), int(round(quality))])
+	if str(e.get("die", "")) != "":
+		var lab := str(DB.crafting.get("dice", {}).get(str(e["die"]), {}).get("label", str(e["die"]).capitalize()))
+		bits.append("%s die ×%.2f" % [lab.to_lower(), float(e.get("die_factor", 1.0))])
+	if absf(float(e.get("material", 1.0)) - 1.0) > 0.001:
+		bits.append("%s ×%.2f" % [mat_name if mat_name != "" else "material", float(e.get("material", 1.0))])
+	if float(e.get("skill", 1.0)) > 1.0001:
+		bits.append("%s %d %+d%%" % [SkillSys.skill_name(skill_id), lvl, int(round((float(e["skill"]) - 1.0) * 100.0))])
+	return "%s [b]%d[/b] = %s" % [stat.capitalize(), int(e.get("final", 0)), " · ".join(bits)]
 
 
 # ------------------------------------------------------------------ finishing
@@ -443,21 +583,45 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	var spec: Dictionary = r.get("dice", {})
 	var totals := {}
 	var dice_log := {}
+	var base := base_quality(j)
+	var q := final_quality(j)
+	var adv := advantage(q)
 	for k in dice:
 		var v: Variant = dice[k]
 		var total: int = int(v["total"]) if v is Dictionary else int(v)
 		var faces: Array = v.get("faces", [total]) if v is Dictionary else [total]
+		var expr := str(spec.get(k, ""))
+		var entry := {"expr": expr, "total": total, "faces": faces, "quality": q, "weighted": is_stat_die(str(k)),
+			"tier": int(adv["tier"]), "word": str(adv["word"])}
+		if mode == "physical":
+			# the player's own numbers stand; craftsmanship adds a shown modifier (kept within the die's range)
+			var m := physical_modifier(str(k), expr, q)
+			var rg := die_range(expr) if expr != "" else Vector2i(total, total)
+			entry["how"] = "physical"
+			entry["entered"] = total
+			entry["mod"] = m
+			total = clampi(total + m, rg.x, rg.y)
+			entry["total"] = total
+		elif v is Dictionary and v.has("rolls"):
+			entry["how"] = "weighted"
+			entry["rolls"] = v["rolls"]
+			entry["kept"] = int(v.get("kept", 0))
+		else:
+			entry["how"] = "fixed"   # numbers given directly (tests, tools) are used exactly as given
+		entry["text"] = die_explanation(entry)
 		totals[k] = total
-		dice_log[k] = {"expr": str(spec.get(k, "")), "total": total, "faces": faces}
-	var base := base_quality(j)
-	var q := final_quality(j)
+		dice_log[k] = entry
 	var out_def: String = r["output"]
 	var d := DB.item(out_def)
 	var skill_id := recipe_skill(rid)
 	var lvl := Game.player_level(skill_id)
 	var mat := material(rid)
 	var it := Items.make(out_def, {"quality": q, "qty": int(r.get("qty", 1)), "crafted_by": "Brannoc Ironhand"})
-	it["stats"] = compute_stats(d, q, totals, spec, mat, lvl)
+	var explain := {}
+	it["stats"] = compute_stats(d, q, totals, spec, mat, lvl, explain)
+	var breakdown := []
+	for sk_key in explain:
+		breakdown.append(stat_explanation(str(sk_key), explain[sk_key], q, str(mat.get("name", "")), skill_id, lvl))
 	# rarity: quality + fortune + material + runestone bonuses
 	var bonus := float(mat.get("rarity_bonus", 0))
 	for inp in r["inputs"]:
@@ -509,6 +673,8 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 		"ops": j.get("ops", []).duplicate(true), "base_quality": base, "skill_bonus": q - base, "quality": q,
 		"dice": dice_log, "dice_mode": mode, "rarity_score": rev["score"], "rarity_parts": rev.get("parts", {}),
 		"masterwork": rev.get("masterwork", false), "xp": xp, "expert": expert, "day": Game.day(),
+		"advantage": {"tier": int(adv["tier"]), "word": str(adv["word"]), "rolls": int(adv["rolls"])},
+		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid), "assist_bonus": hireling_assist(rid),
 	}
 	it["owner"] = "smith"
 	Items.add_history(it, "Forged at the Ironhand forge (%d%% craftsmanship)." % int(round(q)))
@@ -531,6 +697,7 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 		Game.state["stats"]["legendaries"] += 1
 		Events.legendary_found.emit(it)
 	Objectives.on_crafted(it)
+	Recognition.on_crafted(it)
 	Log.info("Crafted %s (q %.1f%%, %s, score %.1f)" % [it["name"], q, it["rarity"], float(rev["score"])])
 	return it
 

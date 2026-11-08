@@ -1800,6 +1800,9 @@ func spot_for(id: String) -> String:
 	for cu in Shop.customers():
 		if cu["npc"] == id:
 			return "wait_seat_%d" % int(cu.get("seat", 0))
+	var cer := Ceremony.spot_for(id, spots)   # a ceremony in the square overrides the day's routine
+	if cer != "":
+		return cer
 	var hire := Hire.get_h(id)
 	if not hire.is_empty():
 		match hire["status"]:
@@ -1998,6 +2001,7 @@ func _process(delta: float) -> void:
 			_update_ambience()
 	_update_focus()
 	_update_light(false)
+	Ceremony.tick(player.position, spots, delta)
 	Game.state["player"]["pos"] = [player.position.x, player.position.y]
 
 

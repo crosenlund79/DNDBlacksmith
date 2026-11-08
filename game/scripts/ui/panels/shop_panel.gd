@@ -63,7 +63,9 @@ func _customers() -> void:
 		var actions := HFlowContainer.new()
 		actions.add_theme_constant_override("h_separation", 8)
 		actions.add_theme_constant_override("v_separation", 6)
-		if cu.get("want", "") == "repair":
+		if cu.get("want", "") == "multi":
+			_multi_parts(v, cu, npc)
+		elif cu.get("want", "") == "repair":
 			actions.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
 		elif cu.get("want", "") == "goods":
 			var anyg := false
@@ -140,6 +142,46 @@ func _offers() -> void:
 		grid.add_child(col)
 	body.add_child(grid)
 	body.add_child(UIKit.divider())
+
+
+## A multi-order: every part on its own card with availability and its own Accept / Decline / Repair.
+func _multi_parts(v: VBoxContainer, cu: Dictionary, npc: String) -> void:
+	v.add_child(UIKit.label("Take on what you can — each part can be accepted or declined on its own.", 19, "body_italic"))
+	for pt in cu.get("parts", []):
+		var pid := str(pt.get("pid", ""))
+		var r := Shop.part_request(cu, pt)
+		var row := UIKit.hbox(10)
+		var card := CustomerCard.build(r)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(card)
+		var bx := UIKit.vbox(6)
+		bx.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		if str(pt.get("status", "pending")) == "pending":
+			if str(pt.get("kind", "")) == "repair":
+				var rb := UIKit.button("Repair it", func(): _repair_part(npc, pid), 200)
+				rb.disabled = not bool(r.get("available", true))
+				bx.add_child(rb)
+			else:
+				var ab := UIKit.button("Accept", func():
+					var err := Shop.accept_part(npc, pid)
+					if err != "":
+						Events.toast.emit(err, "bad")
+					_build(), 200)
+				ab.tooltip_text = "Becomes a commission: deliver it by the deadline." + ("" if bool(r.get("available", true)) else "\nYou cannot make it yet — %s." % r.get("why", ""))
+				bx.add_child(ab)
+			bx.add_child(UIKit.button("Decline", func():
+				Shop.decline_part(npc, pid)
+				_build(), 200))
+		row.add_child(bx)
+		v.add_child(row)
+
+
+func _repair_part(npc: String, pid: String) -> void:
+	var c := Crafting.check_params("grinding_wheel")
+	Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
+		"on_done": func(qs: Array):
+			Shop.repair_part(npc, pid, float(qs[0]))
+			Events.toast.emit("Repair done (%d%%)." % int(qs[0]), "good")})
 
 
 func _repair(npc: String) -> void:

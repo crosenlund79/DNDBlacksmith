@@ -54,6 +54,11 @@
     "duration": 87.273,
     "loop": true
   },
+  "sfx/applause": {
+    "bus": "SFX",
+    "duration": 4.2,
+    "loop": false
+  },
   "sfx/arcane": {
     "bus": "SFX",
     "duration": 1.6,

@@ -192,6 +192,8 @@ static func value(it: Dictionary) -> int:
 	var base := float(def(it).get("value", 5))
 	var mult: float = {"common": 1.0, "magic": 1.8, "rare": 3.0, "legendary": 7.0, "unique": 9.0, "set": 6.0}.get(it.get("rarity", "common"), 1.0)
 	var qm := 0.6 + float(it.get("quality", 70)) / 100.0 * 0.6
+	if it.has("epic"):
+		qm *= Recognition.EPIC_VALUE   # a piece with an Epic history is worth more
 	return int(round(base * mult * qm)) * int(it.get("qty", 1))
 
 
@@ -199,6 +201,8 @@ static func display_name(it: Dictionary) -> String:
 	var n: String = it.get("name", "?")
 	if int(it.get("qty", 1)) > 1:
 		n += " ×%d" % int(it["qty"])
+	if it.has("epic"):
+		n += " ✦"   # Epic distinction (Recognition)
 	return ("★ " + n) if it.get("star", false) else n
 
 
@@ -223,6 +227,8 @@ static func tooltip(it: Dictionary) -> String:
 	var c := color(it).to_html(false)
 	var lines: Array[String] = []
 	lines.append("[font_size=26][color=#%s]%s[/color][/font_size]" % [c, display_name(it)])
+	if it.has("epic"):
+		lines.append(Recognition.epic_line(it))
 	if it.has("title"):
 		lines.append("[i][color=#%s]%s, once called %s[/color][/i]" % [c, def(it).get("name", ""), it.get("base_name", "")])
 	if it.get("broken", false):
