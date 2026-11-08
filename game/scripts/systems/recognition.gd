@@ -187,14 +187,17 @@ static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed
 		if not ep.has("deeds"):
 			ep["deeds"] = []
 		(ep["deeds"] as Array).append({"day": Game.day(), "deed": deed, "adventurer": adv_id})
-		Items.add_history(it, "Another great deed: %s." % deed)
+		Lore.record("deed", "%s added another great deed: %s." % [Items.display_name(it), deed],
+			{"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 2})
 		return false
 	it["epic"] = {"day": Game.day(), "deed": deed, "adventurer": adv_id, "adventurer_name": who, "kind": kind, "deeds": []}
-	Items.add_history(it, "Earned Epic distinction: %s%s." % [deed, (" (%s)" % who) if who != "" else ""])
+	# one shared record: the item's story, the adventurer's history and the news feed all point at this event
+	Lore.record("epic", "%s earned Epic distinction: %s%s." % [Items.display_name(it), deed, (" (%s)" % who) if who != "" else ""],
+		{"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 3, "chronicle": true, "notable": true,
+		"data": {"deed": deed}})
 	Shop.rep_change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
 	record("epic", Items.display_name(it), "%s — %s." % [_cap(deed), who] if who != "" else _cap(deed) + ".",
 		{"uid": int(it.get("uid", -1)), "adv": adv_id, "def": str(it.get("def", ""))}, "epic_%d" % int(it.get("uid", -1)))
-	Chronicle.add("honour", "%s earned Epic distinction: %s." % [Items.display_name(it), deed], {"adv": adv_id, "item": str(it.get("uid", ""))}, true)
 	Events.toast.emit("EPIC — %s %s." % [Items.display_name(it), deed], "legendary")
 	Ceremony.schedule(adv_id, int(it.get("uid", -1)), deed)
 	Events.inventory_changed.emit()
