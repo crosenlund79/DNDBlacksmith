@@ -225,6 +225,17 @@ func _iter9_tools() -> void:
 		["Learn every secret recipe", func(): _secret_recipes()],
 		["Open the skill tree", func(): Events.open_panel.emit("skilltree", {})],
 		["Open the equipment designer", func(): Events.open_panel.emit("designer", {})]])
+	_section("Iteration 010 — village life", [
+		["Caravan arrives now", func(): Commerce.dev_force_caravan(); _say("The caravan is in")],
+		["Caravan leaves", func(): Commerce.dev_caravan_leave(); _say("The caravan left")],
+		["Next hireling expedition: death", func(): Hire.force_outcome = "death"; _say("The next hireling expedition will end in death")],
+		["Next hireling expedition: injury", func(): Hire.force_outcome = "injury"; _say("The next hireling expedition will end in injury")],
+		["A ghost visits tonight", func(): Memorial.force_ghost = true; _say("A ghost will visit (needs a grave)")],
+		["Every adventurer evaluates gear now", func(): Adv.gear_hour(); _say("Gear errands run")],
+		["Epic: the first smith-made weapon on an adventurer", func(): _dev_epic()],
+		["Open the Hall of Fame", func(): Events.open_panel.emit("hall_of_fame", {"id": "smithy"})],
+		["Open quick travel", func(): Events.open_panel.emit("quick_travel", {})],
+		["Ironfront: replay the invitation", func(): Ironfront.invite_new(); _say("Barnaby's invitation is back")]])
 	_section("Representative progression states", [
 		["New-game progression (keep the world)", func(): _preset("new")],
 		["Mid-game: three workshops, skills 6", func(): _preset("mid")],
@@ -236,6 +247,16 @@ func _iter9_tools() -> void:
 		["Open the harbour", func(): Events.open_panel.emit("harbour", {})],
 		["Open the herbalist", func(): Events.open_panel.emit("herbalist", {})],
 		["Open Ironfront", func(): Events.open_panel.emit("ironfront", {})]])
+
+
+func _dev_epic() -> void:
+	for a in Adv.all().values():
+		var w: Dictionary = a.get("equipment", {}).get("weapon", {})
+		if str(w.get("crafted_by", "")).begins_with("Brannoc"):
+			var ok := Recognition.grant_epic(w, "a test deed in the developer tools", str(a["id"]))
+			_say("Epic granted to %s's %s" % [a["name"], w.get("name", "")] if ok else "Could not grant Epic")
+			return
+	_say("No adventurer carries a smith-made weapon yet")
 
 
 func _grant_card() -> void:
