@@ -110,6 +110,10 @@
    128,
    64
   ],
+  "props/template_anchor.png": [
+   72,
+   72
+  ],
   "props/template_arcane_glyph_decal.png": [
    192,
    192
@@ -133,6 +137,10 @@
   "props/template_barrel.png": [
    56,
    56
+  ],
+  "props/template_barrel_stack.png": [
+   112,
+   96
   ],
   "props/template_bath_tub.png": [
    128,
@@ -166,6 +174,10 @@
    128,
    48
   ],
+  "props/template_broken_crate.png": [
+   64,
+   56
+  ],
   "props/template_bush.png": [
    80,
    80
@@ -177,6 +189,18 @@
   "props/template_candle.png": [
    24,
    24
+  ],
+  "props/template_candle_rack.png": [
+   128,
+   40
+  ],
+  "props/template_card_binders.png": [
+   128,
+   40
+  ],
+  "props/template_card_cabinet.png": [
+   128,
+   44
   ],
   "props/template_cart.png": [
    128,
@@ -190,6 +214,10 @@
    72,
    56
   ],
+  "props/template_chopping_block.png": [
+   48,
+   52
+  ],
   "props/template_coal_pile.png": [
    80,
    64
@@ -202,6 +230,14 @@
    56,
    56
   ],
+  "props/template_crate_stack.png": [
+   96,
+   96
+  ],
+  "props/template_crop_rows.png": [
+   192,
+   128
+  ],
   "props/template_cupboard.png": [
    112,
    48
@@ -210,8 +246,16 @@
    144,
    80
   ],
+  "props/template_diagram_board.png": [
+   128,
+   40
+  ],
   "props/template_dining_table.png": [
    192,
+   96
+  ],
+  "props/template_diorama_table.png": [
+   160,
    96
   ],
   "props/template_display_table.png": [
@@ -226,6 +270,10 @@
    96,
    48
   ],
+  "props/template_duck.png": [
+   32,
+   28
+  ],
   "props/template_dummy_target.png": [
    64,
    64
@@ -234,6 +282,10 @@
    96,
    64
   ],
+  "props/template_felt_table.png": [
+   288,
+   176
+  ],
   "props/template_fence_h.png": [
    64,
    24
@@ -241,6 +293,10 @@
   "props/template_fence_v.png": [
    24,
    64
+  ],
+  "props/template_fern.png": [
+   56,
+   48
   ],
   "props/template_fireplace.png": [
    128,
@@ -266,9 +322,37 @@
    40,
    48
   ],
+  "props/template_harbour_booth.png": [
+   128,
+   112
+  ],
   "props/template_haybale.png": [
    64,
    64
+  ],
+  "props/template_hedge_h.png": [
+   128,
+   40
+  ],
+  "props/template_hedge_v.png": [
+   40,
+   128
+  ],
+  "props/template_herb_baskets.png": [
+   96,
+   72
+  ],
+  "props/template_herb_counter.png": [
+   256,
+   64
+  ],
+  "props/template_herb_garden.png": [
+   128,
+   96
+  ],
+  "props/template_herb_garlands.png": [
+   192,
+   48
   ],
   "props/template_herb_rack.png": [
    160,
@@ -278,6 +362,14 @@
    128,
    96
   ],
+  "props/template_hoop_pile.png": [
+   64,
+   64
+  ],
+  "props/template_horse.png": [
+   72,
+   144
+  ],
   "props/template_ingredient_crates.png": [
    96,
    80
@@ -285,6 +377,10 @@
   "props/template_iron_bars.png": [
    96,
    64
+  ],
+  "props/template_jar_shelf.png": [
+   128,
+   40
   ],
   "props/template_keg.png": [
    56,
@@ -302,6 +398,14 @@
    80,
    56
   ],
+  "props/template_lily_pads.png": [
+   96,
+   64
+  ],
+  "props/template_lobster_pots.png": [
+   64,
+   48
+  ],
   "props/template_loot_pile.png": [
    64,
    48
@@ -310,9 +414,29 @@
    192,
    128
   ],
+  "props/template_mooring_post.png": [
+   32,
+   40
+  ],
+  "props/template_moss_decal.png": [
+   96,
+   40
+  ],
   "props/template_most_wanted_board.png": [
    192,
    96
+  ],
+  "props/template_mud_patch.png": [
+   128,
+   80
+  ],
+  "props/template_net_pile.png": [
+   72,
+   48
+  ],
+  "props/template_net_rack.png": [
+   128,
+   56
   ],
   "props/template_nightstand.png": [
    48,
@@ -326,6 +450,10 @@
    80,
    64
   ],
+  "props/template_paint_desk.png": [
+   128,
+   64
+  ],
   "props/template_pattern_board.png": [
    128,
    40
@@ -334,8 +462,24 @@
    160,
    40
   ],
+  "props/template_potting_bench.png": [
+   128,
+   56
+  ],
   "props/template_produce_crate.png": [
    64,
+   64
+  ],
+  "props/template_puddle.png": [
+   96,
+   56
+  ],
+  "props/template_reeds.png": [
+   64,
+   64
+  ],
+  "props/template_refuse_heap.png": [
+   80,
    64
   ],
   "props/template_rock_a.png": [
@@ -345,6 +489,14 @@
   "props/template_rock_b.png": [
    88,
    64
+  ],
+  "props/template_rope_coil.png": [
+   48,
+   48
+  ],
+  "props/template_rowboat.png": [
+   112,
+   48
   ],
   "props/template_rug_brown.png": [
    160,
@@ -365,6 +517,10 @@
   "props/template_sack.png": [
    48,
    48
+  ],
+  "props/template_saddle_rack.png": [
+   128,
+   40
   ],
   "props/template_shelf.png": [
    128,
@@ -418,13 +574,33 @@
    96,
    128
   ],
+  "props/template_standing_lamp.png": [
+   40,
+   40
+  ],
+  "props/template_stave_bundle.png": [
+   112,
+   48
+  ],
   "props/template_stone_blocks.png": [
    80,
    72
   ],
+  "props/template_stone_wall_h.png": [
+   128,
+   32
+  ],
+  "props/template_stone_wall_v.png": [
+   32,
+   128
+  ],
   "props/template_stool.png": [
    32,
    32
+  ],
+  "props/template_stump.png": [
+   48,
+   48
   ],
   "props/template_table_long.png": [
    192,
@@ -433,6 +609,10 @@
   "props/template_table_round.png": [
    96,
    96
+  ],
+  "props/template_tank_shelf.png": [
+   128,
+   40
   ],
   "props/template_thread_spools.png": [
    72,
@@ -462,6 +642,10 @@
    128,
    40
   ],
+  "props/template_undergrowth.png": [
+   112,
+   80
+  ],
   "props/template_waiting_awning.png": [
    192,
    64
@@ -470,6 +654,10 @@
    64,
    64
   ],
+  "props/template_war_map_wall.png": [
+   192,
+   40
+  ],
   "props/template_wardrobe.png": [
    112,
    48
@@ -477,6 +665,14 @@
   "props/template_washtub.png": [
    72,
    72
+  ],
+  "props/template_water_trough.png": [
+   112,
+   44
+  ],
+  "props/template_wax_vat.png": [
+   80,
+   80
   ],
   "props/template_weapon_rack.png": [
    160,
@@ -914,13 +1110,37 @@
    256,
    256
   ],
+  "roofs/template_barnaby_house.png": [
+   640,
+   448
+  ],
+  "roofs/template_chandler.png": [
+   576,
+   448
+  ],
+  "roofs/template_cooperage.png": [
+   448,
+   384
+  ],
   "roofs/template_grocery.png": [
    704,
    576
   ],
+  "roofs/template_herbalist.png": [
+   576,
+   448
+  ],
+  "roofs/template_house_ashby.png": [
+   448,
+   384
+  ],
   "roofs/template_house_eda.png": [
    512,
    448
+  ],
+  "roofs/template_house_fenn.png": [
+   512,
+   384
   ],
   "roofs/template_house_jory.png": [
    640,
@@ -946,9 +1166,17 @@
    1280,
    896
   ],
+  "roofs/template_net_loft.png": [
+   384,
+   256
+  ],
   "roofs/template_smithy.png": [
    1920,
    1472
+  ],
+  "roofs/template_stable.png": [
+   384,
+   320
   ],
   "ui/template_button_disabled.png": [
    192,

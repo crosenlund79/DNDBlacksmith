@@ -209,7 +209,8 @@ UPSTAIRS_FURNITURE = [
     F("bar_shelf", 16.0, 0.55), F("candle", 15.0, 4.2), F("candle", 19.2, 2.0),
     F("bed_fancy", 14.0, 11.8), F("bed_fancy", 18.0, 11.8),
 ]
-UPSTAIRS_SPOTS = {"lantern_1": [13.4, 6.8], "lantern_2": [17.0, 6.8], "lantern_3": [18.6, 3.0], "upstairs_hall": [6.0, 7.0]}
+UPSTAIRS_SPOTS = {"lantern_1": [13.4, 6.8], "lantern_2": [17.0, 6.8], "lantern_3": [18.6, 3.0], "upstairs_hall": [6.0, 7.0],
+                  "lantern_roisin": [16.4, 10.6]}
 
 # ======================================================================= grocer & homes
 GROCERY_ROOMS = [room("g_shop", "Pell's Provisions", [0, 4, 7, 5], "floor_wood"),
@@ -278,6 +279,9 @@ up.update(rooms=UPSTAIRS_ROOMS, room_doors=UPSTAIRS_DOORS, furniture=UPSTAIRS_FU
 for r in layout["roads"]:
     if r["id"] == "lane_smithy":
         r["points"] = [[32.0, 31.2], [32.0, 34.2]]
+
+import village_layout  # noqa: E402  (iteration 009 village: new buildings, venues, pond, harbour, dressing)
+village_layout.apply(layout, by_id, room, door, F, home)
 
 json.dump(layout, open(os.path.join(D, "layout.json"), "w"), indent=1)
 print("layout ok")

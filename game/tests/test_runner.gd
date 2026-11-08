@@ -47,6 +47,8 @@ func _ready() -> void:
 	_interface()
 
 	_character()
+
+	_village9()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -837,6 +839,52 @@ func _interface() -> void:
 	check(TalkMarkers.wants_to_talk("tobin") == "", "interface: talk flags clear")
 	var ser := ShopPanel._balance_series(7)
 	check(ser.size() == mini(7, Game.day() + 1) and int(ser[-1][1]) == Game.gold(), "interface: ledger gold trend ends at the current purse")
+
+## Iteration 009 village data: new venues, spots, interactables, stairways and props are consistent.
+func _village9() -> void:
+	var L := DB.layout
+	var ids := []
+	for b in L.get("buildings", []) + L.get("areas", []):
+		ids.append(str(b["id"]))
+	for bid in ["herbalist", "barnaby_house", "ironfront_basement", "chandler", "stable", "cooperage", "house_fenn", "house_ashby", "net_loft"]:
+		check(bid in ids, "village9: building/area %s exists" % bid)
+	var sr: Array = DB.building("smithy")["rect"]
+	check(int(sr[0]) == 18 and int(sr[1]) == 34 and int(sr[2]) == 30 and int(sr[3]) == 23, "village9: the smithy rectangle is untouched")
+	var exits := []
+	for e in L.get("exits", []):
+		exits.append(str(e["id"]))
+	check(exits == ["west", "east", "north", "south"], "village9: all four village exits kept %s" % [exits])
+	var all_spots := {}
+	for b in L.get("buildings", []) + L.get("areas", []):
+		for k in b.get("spots", {}):
+			all_spots[k] = true
+	for k in L.get("outdoor_spots", {}):
+		all_spots[k] = true
+	for sp in ["herbalist_counter", "ironfront_host", "ironfront_player", "pond_1", "pond_2", "pond_3", "harbour_quay",
+			"smithy_counter_front", "inn_bar", "grocery_behind", "lantern_1", "house_martha_inside", "oswin_bed"]:
+		check(all_spots.has(sp), "village9: spot %s defined" % sp)
+	var kinds := {}
+	for b in L.get("buildings", []) + L.get("areas", []):
+		for it in b.get("interact", []):
+			kinds[str(it["kind"]) + "/" + str(it["id"])] = true
+	check(kinds.has("herbalist/herbalist") and kinds.has("ironfront/table"), "village9: herbalist and Ironfront interactables")
+	check(not L.get("harbour", {}).get("booth", []).is_empty(), "village9: the harbour has a harbourmaster's booth")
+	var stair_ok := true
+	for b in L.get("buildings", []) + L.get("areas", []):
+		for st in b.get("stairways", []):
+			stair_ok = stair_ok and str(st["to"]) in ids
+	check(stair_ok, "village9: every stairway leads to a real building or area")
+	var missing := []
+	for b in L.get("buildings", []) + L.get("areas", []):
+		for f in b.get("furniture", []):
+			if not DB.props.has(str(f[0])):
+				missing.append(f[0])
+	for f in L.get("outdoor_props", []):
+		if not DB.props.has(str(f[0])):
+			missing.append(f[0])
+	check(missing.is_empty(), "village9: every placed prop is defined %s" % [missing])
+	check(VillageWorld.night_amount(12.0) == 0.0 and VillageWorld.night_amount(0.5) == 1.0 and VillageWorld.night_amount(19.0) > 0.3,
+		"village9: night curve (noon 0, midnight 1, dusk rising)")
 
 
 func _saves() -> void:

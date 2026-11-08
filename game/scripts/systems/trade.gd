@@ -387,3 +387,8 @@ static func dev_finish_imports() -> void:
 		if o["status"] == "ordered":
 			o["due"] = Game.day()
 			_mark_arrived(o)
+
+
+## The type of the ship moored at the quay ("" when none) — the village draws props/ship_<type>.
+static func docked_ship() -> String:
+	return str(current_ship().get("type", ""))

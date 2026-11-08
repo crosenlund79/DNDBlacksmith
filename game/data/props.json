@@ -774,5 +774,397 @@
   ],
   "solid": false,
   "desc": "harbour signal pole with a pennant: a ship is expected"
+ },
+ "reeds": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": false,
+  "desc": "clump of reeds and bulrushes at a water's edge"
+ },
+ "lily_pads": {
+  "size": [
+   96,
+   64
+  ],
+  "solid": false,
+  "desc": "lily pads with one flower, floating"
+ },
+ "duck": {
+  "size": [
+   32,
+   28
+  ],
+  "solid": false,
+  "desc": "mallard on the water, seen from above"
+ },
+ "rowboat": {
+  "size": [
+   112,
+   48
+  ],
+  "solid": false,
+  "desc": "clinker rowing boat moored at the jetty, oars shipped"
+ },
+ "fern": {
+  "size": [
+   56,
+   48
+  ],
+  "solid": false,
+  "desc": "woodland fern"
+ },
+ "undergrowth": {
+  "size": [
+   112,
+   80
+  ],
+  "solid": false,
+  "desc": "low bramble and shrub tangle at the edge of a wood"
+ },
+ "hedge_h": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "clipped hedge, horizontal"
+ },
+ "hedge_v": {
+  "size": [
+   40,
+   128
+  ],
+  "solid": true,
+  "desc": "clipped hedge, vertical"
+ },
+ "stone_wall_h": {
+  "size": [
+   128,
+   32
+  ],
+  "solid": true,
+  "desc": "mossy dry-stone wall, horizontal"
+ },
+ "stone_wall_v": {
+  "size": [
+   32,
+   128
+  ],
+  "solid": true,
+  "desc": "mossy dry-stone wall, vertical"
+ },
+ "crop_rows": {
+  "size": [
+   192,
+   128
+  ],
+  "solid": false,
+  "desc": "tilled strip with rows of cabbages and leeks"
+ },
+ "stump": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": true,
+  "desc": "tree stump with roots and moss"
+ },
+ "puddle": {
+  "size": [
+   96,
+   56
+  ],
+  "solid": false,
+  "desc": "muddy rain puddle"
+ },
+ "mud_patch": {
+  "size": [
+   128,
+   80
+  ],
+  "solid": false,
+  "desc": "trampled mud with boot prints and wheel marks"
+ },
+ "refuse_heap": {
+  "size": [
+   80,
+   64
+  ],
+  "solid": true,
+  "desc": "midden: peelings, a cracked pot, rags"
+ },
+ "broken_crate": {
+  "size": [
+   64,
+   56
+  ],
+  "solid": true,
+  "desc": "smashed crate with loose planks and straw"
+ },
+ "moss_decal": {
+  "size": [
+   96,
+   40
+  ],
+  "solid": false,
+  "desc": "moss and grime creeping up a wall base"
+ },
+ "chopping_block": {
+  "size": [
+   48,
+   52
+  ],
+  "solid": true,
+  "desc": "chopping block with an axe and kindling"
+ },
+ "mooring_post": {
+  "size": [
+   32,
+   40
+  ],
+  "solid": true,
+  "desc": "timber bollard with a rope"
+ },
+ "net_rack": {
+  "size": [
+   128,
+   56
+  ],
+  "solid": true,
+  "desc": "fishing net hung on trestles to dry"
+ },
+ "net_pile": {
+  "size": [
+   72,
+   48
+  ],
+  "solid": true,
+  "desc": "heaped fishing net with floats"
+ },
+ "rope_coil": {
+  "size": [
+   48,
+   48
+  ],
+  "solid": false,
+  "desc": "coil of hemp rope"
+ },
+ "crate_stack": {
+  "size": [
+   96,
+   96
+  ],
+  "solid": true,
+  "desc": "stack of cargo crates and a bale"
+ },
+ "lobster_pots": {
+  "size": [
+   64,
+   48
+  ],
+  "solid": true,
+  "desc": "two wicker lobster pots"
+ },
+ "anchor": {
+  "size": [
+   72,
+   72
+  ],
+  "solid": false,
+  "desc": "old iron anchor lying on the quay"
+ },
+ "harbour_booth": {
+  "size": [
+   128,
+   112
+  ],
+  "solid": true,
+  "desc": "harbourmaster's booth: plank roof, serving hatch with ledger, bell and tide slate"
+ },
+ "herb_counter": {
+  "size": [
+   256,
+   64
+  ],
+  "solid": true,
+  "desc": "herbalist's counter: mortar, brass scales, paper twists, jars, sage"
+ },
+ "jar_shelf": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "wall shelf of stoppered clay jars and bottles"
+ },
+ "herb_garlands": {
+  "size": [
+   192,
+   48
+  ],
+  "solid": false,
+  "desc": "herb bundles hung from a ceiling string"
+ },
+ "herb_baskets": {
+  "size": [
+   96,
+   72
+  ],
+  "solid": true,
+  "desc": "baskets of leaves, lavender, marigold and rosehips"
+ },
+ "herb_garden": {
+  "size": [
+   128,
+   96
+  ],
+  "solid": false,
+  "desc": "stone-edged herb bed"
+ },
+ "potting_bench": {
+  "size": [
+   128,
+   56
+  ],
+  "solid": true,
+  "desc": "potting bench with seedlings and a trowel"
+ },
+ "felt_table": {
+  "size": [
+   288,
+   176
+  ],
+  "solid": true,
+  "desc": "Ironfront game table: green felt battlefield, model tanks, cards, dice, tankards"
+ },
+ "war_map_wall": {
+  "size": [
+   192,
+   40
+  ],
+  "solid": true,
+  "desc": "wall-mounted campaign map with front lines and pins"
+ },
+ "diagram_board": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "chalk board of tank diagrams and formations"
+ },
+ "tank_shelf": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "shelf of painted model tanks"
+ },
+ "diorama_table": {
+  "size": [
+   160,
+   96
+  ],
+  "solid": true,
+  "desc": "terrain diorama with a river, a broken bridge and miniature vehicles"
+ },
+ "card_cabinet": {
+  "size": [
+   128,
+   44
+  ],
+  "solid": true,
+  "desc": "cabinet of card drawers with brass pulls"
+ },
+ "card_binders": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "shelf of card binders and boxed decks"
+ },
+ "paint_desk": {
+  "size": [
+   128,
+   64
+  ],
+  "solid": true,
+  "desc": "hobby desk: paint pots, brushes, a half-painted tank, lamp"
+ },
+ "standing_lamp": {
+  "size": [
+   40,
+   40
+  ],
+  "solid": true,
+  "desc": "brass standing lamp seen from above"
+ },
+ "horse": {
+  "size": [
+   72,
+   144
+  ],
+  "solid": true,
+  "desc": "bay horse standing in a stall"
+ },
+ "water_trough": {
+  "size": [
+   112,
+   44
+  ],
+  "solid": true,
+  "desc": "wooden water trough"
+ },
+ "saddle_rack": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "wall rack with two saddles and a bridle"
+ },
+ "barrel_stack": {
+  "size": [
+   112,
+   96
+  ],
+  "solid": true,
+  "desc": "cooper's finished casks"
+ },
+ "stave_bundle": {
+  "size": [
+   112,
+   48
+  ],
+  "solid": true,
+  "desc": "bundle of barrel staves bound with iron"
+ },
+ "hoop_pile": {
+  "size": [
+   64,
+   64
+  ],
+  "solid": false,
+  "desc": "pile of iron barrel hoops"
+ },
+ "candle_rack": {
+  "size": [
+   128,
+   40
+  ],
+  "solid": true,
+  "desc": "chandler's rack of dipped tapers"
+ },
+ "wax_vat": {
+  "size": [
+   80,
+   80
+  ],
+  "solid": true,
+  "desc": "stone wax vat over a low fire"
  }
 }
