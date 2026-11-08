@@ -1114,6 +1114,8 @@ def jobs():
         if ic in seen or (only and ic not in only):
             continue
         seen.add(ic)
+        if ic not in ICONS:   # drawn by another module (e.g. make_trade_art.py)
+            continue
         svg, ss = build(ic, ICONS[ic], 64, 0.95)
         js.append(dict(name=f"ic_{ic}", svg=svg, w=64, h=64, ss=ss, out=os.path.join(SPR, "icons", ic + ".png")))
     for ic in EXTRA:                       # expansion icons (rendered even before items.json lists them)

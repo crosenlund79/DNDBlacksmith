@@ -18,7 +18,7 @@ HERBALIST = {
     "stock": [
         ["herb_emberleaf", 8, [4, 8]], ["herb_moonwort", 8, [4, 8]], ["reagent_salt", 6, [3, 6]],
         ["herb_bloodroot", 11, [3, 6]], ["herb_frostcap", 12, [2, 5]], ["herb_silverleaf", 16, [2, 4]],
-        ["yew_stave", 17, [1, 3]], ["reagent_aether_dust", 78, [0, 2]],
+        ["yew_stave", 17, [1, 3]], ["reagent_aether_dust", 78, [1, 2]],
     ],
     "lines": [
         "\"Bloodroot for the bleeding, frostcap for the fever, and silverleaf when neither works.\"",

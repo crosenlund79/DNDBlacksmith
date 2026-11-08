@@ -109,7 +109,9 @@ func _quay() -> void:
 		if not n.is_empty():
 			row.add_child(_ship_pic(str(n["type"]), 0.6, 0.45))
 			var sd := Trade.ship_type(str(n["type"]))
-			row.add_child(UIKit.rich("The quay is empty but for gulls and nets.\n\n[b]%s[/b], %s under %s, is expected %s.\n[i]%s[/i]" % [n["name"], sd.get("label", "a merchant ship").to_lower(), n["captain"], _when(int(n["days"]), int(n["at"])), sd.get("desc", "")], 22))
+			var r := UIKit.rich("The quay is empty but for gulls and nets.\n\n[b]%s[/b], %s under %s, is expected %s.\n[i]%s[/i]" % [n["name"], sd.get("label", "a merchant ship").to_lower(), n["captain"], _when(int(n["days"]), int(n["at"])), sd.get("desc", "")], 22)
+			r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(r)
 		else:
 			row.add_child(UIKit.label("No ships are expected.", 22, "body_italic"))
 		body.add_child(row)
@@ -117,7 +119,9 @@ func _quay() -> void:
 	var sd2 := Trade.ship_type(str(s["type"]))
 	var top := UIKit.hbox(18)
 	top.add_child(_ship_pic(str(s["type"]), 0.85, 1.0))
-	top.add_child(UIKit.rich("[font_size=28][b]%s[/b][/font_size]\n%s · %s\n[i]%s[/i]\nSails in %s." % [s["name"], sd2.get("label", ""), s["captain"], sd2.get("desc", ""), _dur(maxi(0, int(s["leaves"]) - Game.now()))], 21))
+	var info := UIKit.rich("[font_size=28][b]%s[/b][/font_size]\n%s · %s\n[i]%s[/i]\nSails in %s." % [s["name"], sd2.get("label", ""), s["captain"], sd2.get("desc", ""), _dur(maxi(0, int(s["leaves"]) - Game.now()))], 21)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(info)
 	body.add_child(top)
 	body.add_child(UIKit.label("In the hold", 26, "heading", UIKit.RUBRIC))
 	var grid := GridContainer.new()
