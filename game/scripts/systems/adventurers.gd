@@ -662,6 +662,9 @@ static func buy_elsewhere(a: Dictionary, want := {}) -> bool:
 			return true
 		if str(want.get("slot", "")) == "companion":
 			return false
+	# a former Ironhand apprentice's own workshop (iteration 012), now and then
+	if Apprentices.alumni_buy_for(a, want):
+		return true
 	# otherwise, now and then, the Salt Anvil across the village
 	if randf() < float(Commerce.rival_cfg().get("adv_chance", 0.5)):
 		return not Commerce.rival_buy_for(a).is_empty()

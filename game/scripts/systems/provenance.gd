@@ -95,9 +95,14 @@ static func set_maker(it: Dictionary, maker_id: String, maker_name: String, mark
 		"materials": _materials(it)}
 
 
-## The smith forged this piece: maker's mark, origin and a "forged" event.
-static func forged(it: Dictionary) -> void:
+## The smith forged this piece: maker's mark, origin and a "forged" event. With `by` (an apprentice:
+## {id, name, mark, supervised}) the apprentice is the maker, the piece was made at the Ironhand forge
+## (maker.workshop = "ironhand") and, when the smith watched over the work, maker.supervisor = "smith".
+static func forged(it: Dictionary, by := {}) -> void:
 	if not applies(it):
+		return
+	if not by.is_empty():
+		_forged_by(it, by)
 		return
 	set_maker(it, SMITH_ID, SMITH_NAME, SMITH_MARK, SMITH_PLACE)
 	# a fresh piece: the lazy migration may have opened a placeholder "held" entry — the chain begins at the anvil
@@ -112,6 +117,36 @@ static func forged(it: Dictionary) -> void:
 		{"items": [it], "actors": [], "place": "brindlewick", "importance": 2 if rich else 0})
 
 
+static func _forged_by(it: Dictionary, by: Dictionary) -> void:
+	var aid := str(by.get("id", ""))
+	set_maker(it, aid, str(by.get("name", "")), str(by.get("mark", aid)), SMITH_PLACE)
+	var mk: Dictionary = st(it)["maker"]
+	mk["workshop"] = SMITH_MARK
+	if bool(by.get("supervised", false)):
+		mk["supervisor"] = SMITH_ID
+	var ow: Array = st(it)["owners"]
+	if ow.size() == 1 and str(ow[0].get("id", "")) == SMITH_ID and str(ow[0].get("how", "")) == "held":
+		ow.clear()
+	_open_owner(it, SMITH_ID, "forged")
+	var q := float(it.get("quality", 0.0))
+	var rich := q >= 105.0 or str(it.get("rarity", "")) in ["rare", "legendary"]
+	Lore.record("forged", "%s, %s at the Ironhand forge, made %s (%d%% craftsmanship%s%s)." % [str(by.get("name", "")),
+		str(by.get("rank_name", "apprentice")).to_lower(), Items.display_name(it), int(round(q)),
+		(", " + str(it.get("rarity", ""))) if str(it.get("rarity", "common")) != "common" else "",
+		", under the smith's eye" if bool(by.get("supervised", false)) else ""],
+		{"items": [it], "actors": [aid], "place": "brindlewick", "importance": 2 if rich else 0, "data": {"apprentice": aid}})
+
+
+## Made at the Ironhand forge: the smith's own work OR an apprentice's work at his forge. Used where the world asks
+## "is it ours" for fame (Epic, Hall of Fame, names, reunions). is_mine still means the smith made it himself.
+static func is_workshop(it: Dictionary) -> bool:
+	if it.is_empty():
+		return false
+	if is_mine(it):
+		return true
+	return it.has("prov") and str(st(it).get("maker", {}).get("workshop", "")) == SMITH_MARK
+
+
 static func is_mine(it: Dictionary) -> bool:
 	if it.is_empty():
 		return false
@@ -124,8 +159,13 @@ static func maker(it: Dictionary) -> Dictionary:
 	return st(it).get("maker", {})
 
 
+## The maker's mark: a fixed mark, or an apprentice's / former apprentice's own (resolved from their record).
 static func mark(it: Dictionary) -> Dictionary:
-	return MARKS.get(str(maker(it).get("mark", "unknown")), MARKS["unknown"])
+	var id := str(maker(it).get("mark", "unknown"))
+	if MARKS.has(id):
+		return MARKS[id]
+	var m := Apprentices.mark_info(id)
+	return m if not m.is_empty() else MARKS["unknown"]
 
 
 # ------------------------------------------------------------------ ownership

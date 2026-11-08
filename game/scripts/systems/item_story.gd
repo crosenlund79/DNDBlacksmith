@@ -71,7 +71,13 @@ static func story_icon(kind: String, text := "") -> String:
 
 
 static func mark_icon(it: Dictionary) -> String:
-	return MARK_TEX + str(Provenance.maker(it).get("mark", "unknown"))
+	var id := str(Provenance.maker(it).get("mark", "unknown"))
+	if not Provenance.MARKS.has(id):
+		# an apprentice's (or former apprentice's) own mark: one generic punch-mark picture, else the journeyman's scratch
+		var generic := "apprentice" if ResourceLoader.exists("res://assets/sprites/marks/template_apprentice.png") \
+			or ResourceLoader.exists("res://assets/sprites/marks/apprentice.png") else "hand"
+		return MARK_TEX + (generic if not Apprentices.mark_info(id).is_empty() else "unknown")
+	return MARK_TEX + id
 
 
 ## An item instance anywhere the smith can see it (stores, worn, adventurers, hirelings, offers, customers).
@@ -122,7 +128,7 @@ static func earned_name(it: Dictionary) -> String:
 static func can_be_named(it: Dictionary) -> bool:
 	if it.is_empty() or not Items.is_equipment(it):
 		return false
-	return Provenance.is_mine(it) or str(it.get("rarity", "")) in ["rare", "legendary", "unique", "set"]
+	return Provenance.is_workshop(it) or str(it.get("rarity", "")) in ["rare", "legendary", "unique", "set"]
 
 
 static func _name_taken(n: String) -> bool:
@@ -185,7 +191,7 @@ static func name_item(it: Dictionary, nm: String, kind: String, why: String, ref
 		{"items": [it], "actors": [adv] if adv != "" else [], "place": place, "importance": 3, "chronicle": true, "notable": true,
 		"data": {"name": final_name, "kind": kind}})
 	it["named"]["event"] = ev
-	if Provenance.is_mine(it):
+	if Provenance.is_workshop(it):
 		mark_famous(it, "Named “%s” — %s." % [final_name, why])
 		Recognition.record("named", final_name, "%s, from the Ironhand forge, was named “%s” — %s." % [base, final_name, why],
 			{"uid": int(it.get("uid", -1)), "adv": adv, "def": str(it.get("def", ""))}, "named_%d" % int(it.get("uid", -1)))
@@ -299,7 +305,7 @@ static func check_names(it: Dictionary, a: Dictionary) -> void:
 # ======================================================================= famous creations
 ## Notes a deed of one of the smith's pieces in the famous-creations register (Hall of Fame).
 static func mark_famous(it: Dictionary, deed: String) -> void:
-	if it.is_empty() or not Provenance.is_mine(it):
+	if it.is_empty() or not Provenance.is_workshop(it):
 		return
 	var key := str(it.get("uid", -1))
 	var f: Dictionary = st()["famous"].get(key, {})
@@ -474,7 +480,7 @@ static func is_rich(it: Dictionary) -> bool:
 ## Is this returning piece worth a moment? Named, Legendary or Epic pieces always; plain ones sometimes
 ## (when they have aged or changed hands).
 static func worth_greeting(it: Dictionary) -> bool:
-	if not Provenance.is_mine(it) or not Items.is_equipment(it):
+	if not Provenance.is_workshop(it) or not Items.is_equipment(it):
 		return false
 	if Provenance.is_notable(it) or is_named(it) or it.has("epic") or str(it.get("rarity", "")) in ["legendary", "rare"]:
 		return true
@@ -504,6 +510,7 @@ static func recognise(it: Dictionary, occasion: String, who := "") -> Dictionary
 		p["reunions"] = []
 	(p["reunions"] as Array).append({"key": reunion_key(occasion, who), "day": Game.day(), "occasion": occasion, "who": who})
 	var data := card_data(it, occasion, who)
+	Apprentices.on_reunion(it, occasion, who)   # the apprentice who made it, if on shift, knows it at once
 	Lore.record("reunion", "%s came back before its maker — %s." % [Items.display_name(it), str(data["occasion_text"]).trim_suffix(".")],
 		{"items": [it], "actors": [who] if who != "" and not Adv.get_a(who).is_empty() else [], "place": "brindlewick", "importance": 2 if Provenance.is_notable(it) else 1})
 	return data
@@ -571,7 +578,7 @@ static func at_counter(npc: String) -> bool:
 
 ## Game.add_item: a piece comes into the smith's stores from elsewhere (chest, bag, buy-back, offer bought).
 static func on_returned(it: Dictionary, how: String) -> void:
-	if not Provenance.is_mine(it) or Provenance.owner_id(it) in ["", Provenance.SMITH_ID]:
+	if not Provenance.is_workshop(it) or Provenance.owner_id(it) in ["", Provenance.SMITH_ID]:
 		return
 	var who := Provenance.owner_id(it)
 	var occ := how if how in ["recovered", "redeemed", "bought"] else "returned"

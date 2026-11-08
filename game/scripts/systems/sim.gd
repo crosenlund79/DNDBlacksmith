@@ -15,6 +15,7 @@ static func on_hour(_day: int, h: int) -> void:
 	Expeditions.on_hour(h)
 	Trade.on_hour(h)
 	Commerce.on_hour(h)
+	Apprentices.on_hour(h)
 	if h == 9:
 		_grocer_check()
 	if h == 15 and Game.day() == 1 and not Game.has_flag("aldric_asked"):
@@ -32,6 +33,7 @@ static func on_day(day: int) -> void:
 	Trade.on_day()
 	Commerce.on_day()
 	ItemStory.on_day()   # earned names, fame commissions, the circulating pool
+	Apprentices.on_day()   # apprentice wages, loyalty, upkeep, independence, weekly applicants
 	if day % 7 == 1:
 		Hire.refresh_applicants()
 	_social_events()
