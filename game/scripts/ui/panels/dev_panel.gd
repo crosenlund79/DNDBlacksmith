@@ -240,6 +240,15 @@ func _iter9_tools() -> void:
 		["Open the world map", func(): Events.open_panel.emit("world_map", {})],
 		["A stranger brings an old Ironhand blade", func(): _say("A stranger is on the way" if not ItemStory.stranger_visit().is_empty() else "No lost blade circulates yet (or no free seat)")],
 		["Wake the first smith-made adventurer weapon", func(): _dev_awaken()]])
+	_section("Iteration 012 — workshop", [
+		["Unlock apprentices", func(): _say(ApprenticeDev.unlock())],
+		["Add an applicant", func(): _say(ApprenticeDev.add_applicant())],
+		["Hire one", func(): _say(ApprenticeDev.hire_one())],
+		["Give materials for the queue", func(): _say(ApprenticeDev.give_materials())],
+		["Advance to the next shift change", func(): _say(ApprenticeDev.advance_shift())],
+		["Promote the first apprentice", func(): _say(ApprenticeDev.promote())],
+		["Independence notice", func(): _say(ApprenticeDev.independence())],
+		["Open the workshop ledger", func(): Events.open_panel.emit("workshop", {})]])
 	_section("Representative progression states", [
 		["New-game progression (keep the world)", func(): _preset("new")],
 		["Mid-game: three workshops, skills 6", func(): _preset("mid")],

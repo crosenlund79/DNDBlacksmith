@@ -83,6 +83,10 @@ func _draw() -> void:
 		# the smith's own work: the Ironhand mark, struck small in the corner
 		var ms := clampf(size_px * 0.3, 18.0, 30.0)
 		draw_texture_rect(Assets.get_tex("marks/ironhand", Vector2i(32, 32)), Rect2(3, size_px - ms - 3, ms, ms), false, Color(1, 1, 1, 0.92))
+	elif size_px >= 48.0 and int(item.get("qty", 1)) <= 1 and Items.is_equipment(item) and ApprenticeUI.is_apprentice_work(item):
+		# iteration 012: an apprentice's piece carries their punch-mark
+		var ms2 := clampf(size_px * 0.3, 18.0, 30.0)
+		draw_texture_rect(Assets.get_tex(ItemStory.mark_icon(item), Vector2i(32, 32)), Rect2(3, size_px - ms2 - 3, ms2, ms2), false, Color(1, 1, 1, 0.92))
 	if item.get("for_sale", false):
 		draw_texture_rect(Assets.get_tex("icons/gold", Vector2i(32, 32)), Rect2(2, 2, 20, 20), false)
 

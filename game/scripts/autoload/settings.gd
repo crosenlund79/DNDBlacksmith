@@ -54,6 +54,7 @@ const DEFAULT_KEYS := {
 	"quick_travel": [KEY_T],
 	"panel_skill_levels": [KEY_U],
 	"panel_world_map": [KEY_G],          # the world map (iteration 011)
+	"panel_workshop": [KEY_Y],           # the workshop ledger: apprentices and work queue (iteration 012)
 }
 
 

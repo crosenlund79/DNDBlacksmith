@@ -17,7 +17,7 @@ const BUTTONS := [
 	["orders", "Commissions", "ui/tb_orders", "panel_orders", "orders", {}, "", {}, "Special orders placed by adventurers."],
 	["ledger", "Ledger", "ui/tb_ledger", "panel_ledger", "shop", {"tab": "ledger"}, "", {}, "Accounts, status of the business, journal and upgrades."],
 	["designer", "Crafting", "ui/tb_designer", "", "designer", {}, "", {}, "Design a piece and plan its work."],
-	["property", "Workshop", "ui/tb_property", "", "property", {}, "", {}, "Your rooms, stations and furnishings."],
+	["property", "Workshop", "ui/tb_property", "", "property", {}, "workshop", {}, "Your rooms, stations and furnishings. Right-click (or Y) for the workshop ledger: apprentices and their work."],
 	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "world_map", {}, "The village of Brindlewick, its people and its roads. Right-click (or G) for the world map."],
 	["help", "Help", "ui/tb_help", "panel_help", "help", {}, "", {}, "Controls, rules and the reference guide. Restart the tutorial here."],
 ]
@@ -170,8 +170,9 @@ class ToolbarButton extends Control:
 		var k := key_text()
 		var t := "[b]%s[/b]%s\n[i]%s[/i]" % [def[1], ("   [color=#e8cc84][%s][/color]" % k) if k != "" else "", def[8]]
 		if str(def[6]) != "":
-			var rk := "B" if def[6] == "wanted" else (Settings.key_label("panel_skill_levels") if def[6] == "skills" else "")
-			t += "\n[color=#cbb894]Right-click: %s%s[/color]" % ["Most Wanted board" if def[6] == "wanted" else "skill levels", (" [%s]" % rk) if rk != "" else ""]
+			var rk := "B" if def[6] == "wanted" else (Settings.key_label("panel_skill_levels") if def[6] == "skills" else (Settings.key_label("panel_workshop") if def[6] == "workshop" else ""))
+			var rn: String = {"wanted": "Most Wanted board", "workshop": "workshop ledger", "world_map": "world map"}.get(str(def[6]), "skill levels")
+			t += "\n[color=#cbb894]Right-click: %s%s[/color]" % [rn, (" [%s]" % rk) if rk != "" else ""]
 		if attention != "":
 			t += "\n[color=#ffa050]%s[/color]" % attention
 		return t

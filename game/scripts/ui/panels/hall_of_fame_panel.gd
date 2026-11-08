@@ -165,6 +165,9 @@ func _creation(f: Dictionary) -> Control:
 	v.add_child(tl)
 	if not it.is_empty() and ItemStory.is_named(it):
 		v.add_child(UIKit.label("a %s from the Ironhand forge" % str(it.get("base_name", Items.def(it).get("name", ""))).to_lower(), 16, "body_italic", Color("#3a2610")))
+	if not it.is_empty() and ApprenticeUI.is_apprentice_work(it):
+		# iteration 012: workshop fame made by an apprentice says whose hands it was
+		v.add_child(UIKit.label("made by %s" % ApprenticeUI.maker_short(it), 15, "body_italic", Color("#5a3a12")))
 	var ds: Array = f.get("deeds", [])
 	var lines := []
 	for d in ds.slice(maxi(0, ds.size() - 3)):

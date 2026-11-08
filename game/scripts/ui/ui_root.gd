@@ -402,7 +402,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"shop":
 			open(ShopPanel.new(args.get("tab", "customers"), args.get("npc", "")))
 		"notice":
-			open(NoticePanel.new())
+			open(NoticePanel.new(str(args.get("tab", "board"))))
 		"hirelings":
 			open(HirelingsPanel.new())
 		"skills":
@@ -471,6 +471,11 @@ func _route(id: String, args: Dictionary) -> void:
 			open(DossierPanel.new(str(args["id"])))
 		"observe":
 			open(ObserverPanel.new(str(args["id"])))
+		"workshop":   # iteration 012: the workshop ledger (apprentices, stations, work queue)
+			open(WorkshopPanel.new())
+		"apprentice":   # iteration 012: a word with a workshop apprentice
+			if not Apprentices.get_a(str(args.get("id", ""))).is_empty():
+				open(ApprenticeTalkPanel.new(str(args["id"])))
 
 
 ## Opens a window over the current panel without closing it (ItemPanel, FamiliarCard). hide_under: the panel below
@@ -488,7 +493,7 @@ func _overlay(p: Control, hide_under: bool) -> void:
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
 const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
 	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
-	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map"}
+	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map", "panel_workshop": "workshop"}
 
 
 static func panel_for_action(action: String) -> String:
