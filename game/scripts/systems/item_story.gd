@@ -41,7 +41,7 @@ const STORY_ICON := {"forged": "forged", "sold": "sale", "bought": "sale", "give
 	"found": "found", "looted": "found", "inherited": "inherited", "recovered": "inherited", "repaired": "repaired",
 	"reforged": "reforged", "enchanted": "enchanted", "treated": "treated", "sharpened": "sharpened", "battle": "battle",
 	"slew": "battle", "victory": "battle", "survived": "survived", "discovery": "discovery", "cleared": "discovery",
-	"named": "named", "epic": "epic", "lost": "lost", "destroyed": "lost", "death": "lost", "returned": "reunion",
+	"named": "named", "epic": "epic", "deed": "epic", "lost": "lost", "destroyed": "lost", "death": "lost", "returned": "reunion",
 	"reunion": "reunion", "commission": "commission", "commissioned": "commission", "note": "note", "received": "found", "offered": "found"}
 const MARK_TEX := "marks/"
 ## Lore kinds that are only changes of hands (shown in the journey, not as achievements).
@@ -430,7 +430,7 @@ static func summary(it: Dictionary) -> String:
 		parts.append("%d owner%s" % [n, "" if n == 1 else "s"])
 	if is_named(it):
 		parts.append("named “%s”" % earned_name(it))
-	var ds := deeds(it).filter(func(e): return str(e.get("kind", "")) in ["slew", "battle", "discovery", "survived", "epic", "cleared"])
+	var ds := deeds(it).filter(func(e): return str(e.get("kind", "")) in ["slew", "battle", "discovery", "survived", "epic", "deed", "cleared"])
 	if not ds.is_empty():
 		var t := str(ds[-1].get("text", ""))
 		parts.append(t.trim_suffix(".") if t.length() <= 70 else t.substr(0, 68) + "…")

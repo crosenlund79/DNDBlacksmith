@@ -139,6 +139,23 @@ func run(p: Node) -> void:
 	await pt.advance_to(13, 0)
 	w._update_schedules(true)     # the mourners have gone home
 	await pt.use("grave", str(fated["id"]))
+	if not (pt.panel() is MemorialPanel):
+		# someone (the priest tending the churchyard, by the day's schedule) stands nearer than the stone on this
+		# side: like a player, step round and face the headstone from another side
+		if pt.panel() != null:
+			await pt.close_panel()
+		var ge: Dictionary = pt.find_entry("grave", str(fated["id"]))
+		for side in [["n", Vector2(0, 40)], ["e", Vector2(-40, 0)], ["w", Vector2(40, 0)]]:
+			await pt.tp((ge["pos"] as Vector2) + (side[1] as Vector2))
+			w.player.facing = str(side[0])
+			await pt.wait(0.2)
+			await pt.press("interact")
+			await pt.wait(0.4)
+			if pt.panel() is MemorialPanel:
+				pt.note("  read the headstone from another side (%s)" % side[0])
+				break
+			if pt.panel() != null:
+				await pt.close_panel()
 	pt.expect(pt.panel() is MemorialPanel, "hire10: the headstone can be read")
 	await pt.shot("h10_grave_panel")
 	await pt.close_panel()

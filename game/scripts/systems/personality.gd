@@ -30,7 +30,7 @@ const VOICE_KEY := "gameplay/item_voices"
 const FREQ_KEY := "gameplay/item_voice_freq"
 const TYPES := ["proud", "sarcastic", "impatient", "noble", "mischievous", "melancholy", "bloodthirsty", "wise", "vengeful", "dutiful"]
 ## Lore kinds that can wake a sleeping spirit.
-const SIGNIFICANT := ["slew", "epic", "named", "death", "inherited", "recovered", "reunion", "honour", "legend"]
+const SIGNIFICANT := ["slew", "epic", "deed", "named", "death", "inherited", "recovered", "reunion", "honour", "legend"]
 const CAUSE := {"slew": "a kill it will not forget", "epic": "a deed of Epic renown", "named": "it was given a name",
 	"legend": "it was given a name", "death": "its bearer's death", "inherited": "it passed to an heir",
 	"recovered": "it was lost and found again", "found": "it was lost and found again", "reunion": "it came home",
