@@ -3114,3 +3114,148 @@ func phase_village10() -> void:
 	await _v9_view("v10_camp_night", W().spots["caravan_camp"] + Vector2(0, -40), 0.9)
 	await _v9_view("v10_map_night", Vector2(48 * T, 32 * T), 0.3)
 	Village10.set_caravan(W(), false)
+
+
+# ======================================================================= iteration 011: item personalities (ItemSpirit)
+## A legendary piece whose uid roll gives it a spirit, forged at the Ironhand forge.
+func _spirit_piece(def: String) -> Dictionary:
+	for i in 400:
+		var it := Items.make(def, {"rarity": "legendary", "crafted_by": "Brannoc Ironhand", "quality": 108.0})
+		if ItemSpirit.destined(it):
+			Game.add_item(it, false)
+			Provenance.forged(it)
+			return it
+	return {}
+
+
+func _spirit_wait_line(uid: int, secs := 1.0) -> bool:
+	await wait(secs)
+	return int(ItemSpirit.last.get("uid", -1)) == uid
+
+
+## A talking piece at the grinding wheel during a repair, during a rune setting, an inspection line, a murmur from the
+## display, and the Item voices setting.
+func phase_spirit11() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await grant_full_workshop()
+	await advance_to(10, 0)
+	var voices_before: Variant = Settings.get_value(ItemSpirit.VOICE_KEY, true)
+	var freq_before: Variant = Settings.get_value(ItemSpirit.FREQ_KEY, "normal")
+	Settings.set_value(ItemSpirit.VOICE_KEY, true)
+	Settings.set_value(ItemSpirit.FREQ_KEY, "normal")
+	var adv := ""
+	for a in Adv.in_town():
+		if str(a.get("cls", "")) in ["Fighter", "Barbarian", "Paladin"]:
+			adv = str(a["id"])
+	if adv == "":
+		for a in Adv.in_town():
+			adv = str(a["id"])
+	expect(adv != "", "spirit11: an adventurer in town")
+	# --- a blade with a past: sold to the adventurer, a kill in the Barrow Fields, back for repair
+	var blade := _spirit_piece("sword_steel")
+	expect(not blade.is_empty() and ItemSpirit.awake(blade), "spirit11: a destined legendary woke at the forge")
+	Provenance.transfer(blade, adv, "sold")
+	for i in 3:
+		Lore.record("slew", "%s felled the Bone Wyrm's brood in the Barrow Fields." % blade["name"], {"items": [blade], "place": "barrow_fields",
+			"importance": 2, "data": {"enemy": "the Bone Wyrm", "place_name": "the Barrow Fields"}})
+	blade["kills"] = 9
+	note("  blade: %s — %s (%s)" % [blade["name"], ItemSpirit.type_name(str(ItemSpirit.spirit(blade)["type"])), ItemSpirit.describe(blade)])
+	var a2 := Adv.get_a(adv)
+	a2["equipment"]["weapon"] = Game.take_uid(int(blade["uid"]))
+	var st: Dictionary = blade.get("stats", {})
+	if st.has("durability_max"):
+		st["durability"] = int(int(st["durability_max"]) * 0.3)
+	Shop.customers().append({"npc": adv, "want": "repair", "own_slot": "weapon", "item": blade, "pay": 14, "seat": 0, "present": true,
+		"arrived": Game.day() * 24 + Game.hour()})
+	await tp(W().station_pos("grinding_wheel") + Vector2(0, 130))
+	await wait(0.6)
+	Events.open_panel.emit("shop", {})
+	await wait(0.8)
+	expect(panel() is ShopPanel, "spirit11: the shop panel opens")
+	if panel() is ShopPanel:
+		(panel() as ShopPanel)._repair(adv)
+	expect(await _spirit_wait_line(int(blade["uid"]), 1.2), "spirit11: the blade speaks as it goes on the grinding wheel")
+	note("  repair line: %s" % str(ItemSpirit.last.get("text", "")))
+	expect(SpiritVoice.instance != null and SpiritVoice.instance.showing(), "spirit11: the voice bubble shows")
+	await shot("spirit11_repair_check")
+	await play_minigame(true)
+	await wait(1.6)
+	await close_panel()
+	await wait(0.4)
+	# the same blade at the wheel later in the day: the bubble stands over the station in the forge
+	Game.advance_minutes(ItemSpirit.ITEM_COOLDOWN + 5)
+	await wait(0.4)
+	note("  area %s" % W().area)
+	expect(ItemSpirit.speak(blade, "sharpen", true) != "", "spirit11: a sharpening line")
+	await wait(0.9)
+	await shot("spirit11_wheel_bubble")
+	await wait(6.5)
+	# --- a wizard's blade at the rune engraving stand
+	var staff := _spirit_piece("sword_steel")
+	Provenance.transfer(staff, "elowen", "sold")
+	Lore.record("discovery", "%s lit the way through the drowned library of the Mirewood." % staff["name"], {"items": [staff], "place": "mirewood",
+		"importance": 1, "data": {"place_name": "the Mirewood"}})
+	Provenance.transfer(staff, "smith", "bought")
+	note("  staff: %s — %s" % [staff["name"], ItemSpirit.type_name(str(ItemSpirit.spirit(staff).get("type", "")))])
+	Game.add_item(Items.make("runestone_ember", {"qty": 1}), false)
+	Game.advance_minutes(ItemSpirit.GLOBAL_COOLDOWN + 5)
+	Events.open_panel.emit("station", {"id": "rune_engraving_stand"})
+	await wait(0.8)
+	for n in panel().find_children("*", "OptionButton", true, false):
+		var ob: OptionButton = n
+		var idx := ob.get_item_index(int(staff["uid"]))
+		if idx >= 0 and ob.get_item_metadata(idx) == null:
+			ob.select(idx)
+	expect(await click("Engrave and set"), "spirit11: the rune setting begins")
+	expect(await _spirit_wait_line(int(staff["uid"]), 1.4), "spirit11: the piece speaks during the rune setting")
+	note("  rune line: %s" % str(ItemSpirit.last.get("text", "")))
+	await shot("spirit11_rune_check")
+	await play_minigame(true)
+	await wait(1.6)
+	await close_panel()
+	await wait(0.3)
+	# --- inspection in the stores
+	Game.advance_minutes(ItemSpirit.ITEM_COOLDOWN + 5)
+	Events.open_panel.emit("inventory", {})
+	await wait(0.8)
+	if panel() is InventoryPanel:
+		(panel() as InventoryPanel)._select(Game.find_uid(int(staff["uid"])))
+	expect(await _spirit_wait_line(int(staff["uid"]), 0.9) and str(ItemSpirit.last.get("context", "")) == "inspect", "spirit11: an inspection line")
+	note("  inspect line: %s" % str(ItemSpirit.last.get("text", "")))
+	await shot("spirit11_inspect")
+	await close_panel()
+	await wait(6.0)
+	# --- on display in the forge, it mutters when nothing else is happening
+	Game.find_uid(int(staff["uid"]))["for_sale"] = true
+	Game.advance_minutes(ItemSpirit.ITEM_COOLDOWN + 5)
+	await tp(W().station_pos("anvil") + Vector2(0, 140))
+	for i in 8:
+		SpiritVoice.instance._idle()
+		if str(ItemSpirit.last.get("context", "")) == "idle":
+			break
+		Game.advance_minutes(20)   # the chance roll said no this minute; a little later
+	expect(await _spirit_wait_line(int(staff["uid"]), 0.9) and str(ItemSpirit.last.get("context", "")) == "idle", "spirit11: an idle murmur from the display")
+	note("  idle line: %s" % str(ItemSpirit.last.get("text", "")))
+	await shot("spirit11_idle")
+	await wait(6.0)
+	# --- the setting: Item voices off silences them
+	Events.open_panel.emit("settings", {})
+	await wait(0.8)
+	var cb: CheckBox = null
+	for n in panel().find_children("*", "CheckBox", true, false):
+		if (n as CheckBox).text.begins_with("Item voices"):
+			cb = n
+	expect(cb != null and cb.button_pressed, "spirit11: the Item voices option is in the settings, on")
+	await shot("spirit11_settings_on")
+	if cb:
+		cb.button_pressed = false
+	await wait(0.3)
+	expect(not ItemSpirit.voices_on(), "spirit11: unticking it turns item voices off")
+	await shot("spirit11_settings_off")
+	await close_panel()
+	Game.advance_minutes(ItemSpirit.ITEM_COOLDOWN + 5)
+	var said := ItemSpirit.speak(Game.find_uid(int(staff["uid"])), "inspect", true)
+	expect(said == "", "spirit11: muted, the piece says nothing")
+	Settings.set_value(ItemSpirit.VOICE_KEY, voices_before)
+	Settings.set_value(ItemSpirit.FREQ_KEY, freq_before)

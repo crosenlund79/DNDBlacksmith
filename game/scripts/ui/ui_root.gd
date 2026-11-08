@@ -50,6 +50,7 @@ func _ready() -> void:
 	Events.close_panels.connect(close_current)
 	Events.inventory_changed.connect(Reference.note_seen)
 	Tutorial.wire()
+	add_child(SpiritVoice.new())   # awakened pieces speak (ItemSpirit); wires the Lore hook
 	Reference.note_seen()
 	_refresh_hud()
 

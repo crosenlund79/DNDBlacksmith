@@ -21,6 +21,8 @@ var values := {
 	"gameplay/check_assist": false,           # skill checks at tutorial difficulty (wider zones, slower)
 	"gameplay/check_tutorials_seen": [],      # mechanics whose how-to card the player has dismissed
 	"gameplay/click_to_move": true,           # left-click the ground, an object or a person to walk there
+	"gameplay/item_voices": true,             # awakened pieces now and then speak while worked on (ItemSpirit)
+	"gameplay/item_voice_freq": "normal",     # normal | rare
 	"debug/overlay": false,
 }
 

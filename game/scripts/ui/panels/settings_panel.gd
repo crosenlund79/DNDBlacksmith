@@ -44,6 +44,21 @@ func _ready() -> void:
 	ob.item_selected.connect(func(i): Settings.set_value("gameplay/dice_mode", "physical" if i == 1 else "auto"))
 	dm.add_child(ob)
 	content.add_child(dm)
+	# item voices (ItemSpirit): awakened pieces now and then speak while worked on
+	var iv := UIKit.hbox()
+	var cbv := CheckBox.new()
+	cbv.text = "Item voices: awakened pieces sometimes speak while you work on them"
+	cbv.button_pressed = bool(Settings.get_value(ItemSpirit.VOICE_KEY, true))
+	cbv.toggled.connect(func(on): Settings.set_value(ItemSpirit.VOICE_KEY, on))
+	iv.add_child(cbv)
+	var obv := OptionButton.new()
+	obv.add_item("Now and then")
+	obv.add_item("Rarely")
+	obv.selected = 1 if str(Settings.get_value(ItemSpirit.FREQ_KEY, "normal")) == "rare" else 0
+	obv.item_selected.connect(func(i): Settings.set_value(ItemSpirit.FREQ_KEY, "rare" if i == 1 else "normal"))
+	obv.tooltip_text = "How often they speak"
+	iv.add_child(obv)
+	content.add_child(iv)
 	var tut := UIKit.hbox()
 	tut.add_child(UIKit.label("Skill-check how-to cards:", 22))
 	tut.add_child(UIKit.button("Show them again", func():

@@ -259,6 +259,11 @@
     "duration": 1.6,
     "loop": false
   },
+  "sfx/spirit_whisper": {
+    "bus": "SFX",
+    "duration": 1.15,
+    "loop": false
+  },
   "sfx/stitch": {
     "bus": "SFX",
     "duration": 1.0,
