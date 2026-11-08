@@ -75,6 +75,8 @@ func new_game(difficulty := "journeyman") -> void:
 	Objectives.init()
 	state["difficulty"] = difficulty if DB.expeditions.get("difficulty", {}).has(difficulty) else "journeyman"
 	Expeditions.init_world()
+	Property.init_new()
+	SkillTree.init_new()
 	journal("Day 1. The forge is cold, Borin is restless and Mira Pell keeps glancing at the shop window.")
 	Log.info("New game created")
 

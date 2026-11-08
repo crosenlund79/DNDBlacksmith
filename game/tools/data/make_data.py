@@ -131,6 +131,12 @@ items = [
  it("grimhold", "Grimhold, the Last Hammer", "weapon", "weapon", 900, {"attack": [24, 34], "durability": 200, "smithing": 2}, tags=["unique"]),
  it("wyvernscale_pauldron", "Wyvernscale Pauldron", "armor_metal", "armor", 400, {"protection": [14, 20], "durability": 150}, tags=["set"]),
 ]
+# extra content modules: every tools/data/extra_*.py may define ITEMS (appended here),
+# CHARACTERS and PROPS (merged further down). Each system/iteration owns its own module.
+import glob, importlib
+EXTRA = [importlib.import_module(os.path.basename(p)[:-3]) for p in sorted(glob.glob(os.path.join(os.path.dirname(__file__), "extra_*.py")))]
+for _m in EXTRA:
+    items += [dict(x) for x in getattr(_m, "ITEMS", [])]
 W("items.json", items)
 
 # ---------------------------------------------------------------- recipes
@@ -281,6 +287,8 @@ for i, (b, f, hair, hc, beard, sk, shirt) in enumerate([
     ("dwarf", True, "braid", "#b05a2a", "none", "#d8a882", "#6e4a3a")]):
     chars.append(ch(f"applicant_{i}", "Applicant", "applicant_look", L(build=b, female=f, skin=sk, hair=hair, hair_col=hc, beard=beard, beard_col=hc,
                     armor="leather" if i % 2 else "none", shirt=shirt, cloak=None, back="pack", hand="none", extras=["pointed_ears"] if i == 2 else [])))
+for _m in EXTRA:
+    chars += [dict(x) for x in getattr(_m, "CHARACTERS", [])]
 W("characters.json", chars)
 print("chars ok", len(chars))
 
@@ -368,5 +376,7 @@ props = {
  "flower_patch_a": P(48, 48, solid=False, desc="small flower clump rooted on the bottom edge (sway shader)"),
  "flower_patch_b": P(48, 48, solid=False, desc="small flower clump rooted on the bottom edge (sway shader)"),
 }
+for _m in EXTRA:
+    props.update(getattr(_m, "PROPS", {}))
 W("props.json", props)
 print("props ok", len(props))

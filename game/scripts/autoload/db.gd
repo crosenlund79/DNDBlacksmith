@@ -84,6 +84,18 @@ func reload() -> void:
 	Log.info("Data loaded: %d items, %d stations, %d recipes, %d characters" % [items.size(), stations.size(), recipes.size(), characters.size()])
 
 
+## Any other data file (data/<name>.json), loaded once and cached — new systems use this instead of
+## adding a field here: DB.extra("skilltree"), DB.extra("ironfront"), DB.extra("trade") …
+var _extra := {}
+
+
+func extra(name: String) -> Variant:
+	if not _extra.has(name):
+		var v: Variant = _read(name + ".json") if FileAccess.file_exists("res://data/" + name + ".json") else {}
+		_extra[name] = v if v != null else {}
+	return _extra[name]
+
+
 func item(id: String) -> Dictionary:
 	return items.get(id, {})
 

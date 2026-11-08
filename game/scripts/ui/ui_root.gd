@@ -317,6 +317,26 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 			open(SettingsPanel.new())
 		"difficulty":
 			open(DifficultyPanel.new())
+		"skilltree":
+			open(SkillTreePanel.new())
+		"designer":
+			open(DesignerPanel.new())
+		"property":
+			open(PropertyPanel.new())
+		"harbour":
+			open(HarbourPanel.new())
+		"herbalist":
+			open(HerbalistPanel.new())
+		"ironfront":
+			open(IronfrontPanel.new(args))
+		"help":
+			open(HelpPanel.new(args))
+		"history":
+			open(HistoryPanel.new(str(args.get("kind", "")), str(args.get("id", ""))))
+		"map":
+			open(MapPanel.new())
+		"customize":
+			open(CustomizePanel.new())
 		"wanted":
 			open(WantedPanel.new(str(args.get("tab", "wanted"))))
 		"dossier":

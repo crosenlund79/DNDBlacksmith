@@ -75,6 +75,14 @@ static func difficulty_word(recipe_id: String) -> String:
 
 # ------------------------------------------------------------------ unlocks
 static func station_locked_reason(station_id: String) -> String:
+	# workshop ownership: is the station installed in a room the smith owns?
+	var pr := Property.station_reason(station_id)
+	if pr != "":
+		return pr
+	# the skill tree: has the smith learned to use it?
+	var tr := SkillTree.station_reason(station_id)
+	if tr != "":
+		return tr
 	var st := DB.station(station_id)
 	var u: Dictionary = st.get("unlock", {})
 	if u.has("upgrade") and not Game.has_upgrade(u["upgrade"]):
@@ -88,6 +96,9 @@ static func station_locked_reason(station_id: String) -> String:
 
 static func recipe_locked_reason(recipe_id: String) -> String:
 	var r := DB.recipe(recipe_id)
+	var tr := SkillTree.recipe_reason(recipe_id)
+	if tr != "":
+		return tr
 	var rf := str(r.get("requires_flag", ""))
 	if rf != "" and not Game.has_flag(rf):
 		return "A forgotten recipe — find its notes among the relics"
