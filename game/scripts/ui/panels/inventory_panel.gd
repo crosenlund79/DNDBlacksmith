@@ -65,6 +65,7 @@ func _fill() -> void:
 func _select(it: Dictionary) -> void:
 	selected = it
 	_fill()
+	ItemSpirit.speak(it, "inspect")   # an awakened piece may remark on being looked over
 
 
 func _detail() -> void:

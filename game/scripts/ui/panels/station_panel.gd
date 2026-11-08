@@ -284,6 +284,7 @@ func _practice() -> void:
 func _on_socket_pressed(ob_item: OptionButton, ob_rune: OptionButton) -> void:
 	var uid := ob_item.get_item_id(ob_item.selected)
 	var rd: String = ob_rune.get_item_metadata(ob_rune.selected)
+	ItemSpirit.speak(Game.find_uid(uid), "enchant")   # an awakened piece may have something to say about it
 	Events.open_panel.emit("skillcheck", {"station": "rune_engraving_stand", "count": 1, "speed": 0.6, "zone": 28.0,
 		"title": "Setting the runestone", "on_done": _on_socket_done.bind(uid, rd)})
 

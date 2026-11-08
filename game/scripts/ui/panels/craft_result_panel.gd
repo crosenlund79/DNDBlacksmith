@@ -44,6 +44,7 @@ func _ready() -> void:
 	btns.add_child(UIKit.button("Keep it" if fresh else "Close", close, 160))
 	content.add_child(btns)
 	if fresh:
+		ItemSpirit.speak(item, "maker")   # a piece that woke at the forge greets its maker
 		match rar:
 			"legendary":
 				pass  # the legendary drop sound and screen flash come from Events.legendary_found

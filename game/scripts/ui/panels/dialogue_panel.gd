@@ -256,6 +256,7 @@ func _choose(oid: String) -> void:
 			"hirelings": Events.open_panel.emit("hirelings", {})
 			"shop": Events.open_panel.emit("shop", {"npc": who})
 			"repair":
+				ItemSpirit.speak_repair(who)
 				var c := Crafting.check_params("grinding_wheel")
 				Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
 					"on_done": _on_repair_done.bind(who)})

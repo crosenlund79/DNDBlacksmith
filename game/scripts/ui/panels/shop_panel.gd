@@ -177,6 +177,7 @@ func _multi_parts(v: VBoxContainer, cu: Dictionary, npc: String) -> void:
 
 
 func _repair_part(npc: String, pid: String) -> void:
+	ItemSpirit.speak_repair(npc, pid)
 	var c := Crafting.check_params("grinding_wheel")
 	Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
 		"on_done": func(qs: Array):
@@ -185,6 +186,7 @@ func _repair_part(npc: String, pid: String) -> void:
 
 
 func _repair(npc: String) -> void:
+	ItemSpirit.speak_repair(npc)
 	var c := Crafting.check_params("grinding_wheel")
 	Events.open_panel.emit("skillcheck", {"station": "grinding_wheel", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Repair at the grinding wheel",
 		"on_done": _on_repair_done.bind(npc)})

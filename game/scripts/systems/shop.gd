@@ -539,6 +539,7 @@ static func do_repair(npc: String, quality: float) -> void:
 				it.erase("broken")
 				Chronicle.add("item", "Brannoc mended %s's broken %s." % [a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
 			Provenance.workshop(it, "repaired", "Repaired at the Ironhand forge for %s (%d%%)." % [a.get("name", npc), int(quality)])
+			ItemSpirit.speak(it, "repair")
 			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
 			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "Brannoc mended my %s %s." % [it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])
@@ -546,6 +547,7 @@ static func do_repair(npc: String, quality: float) -> void:
 			remove_customer(npc)
 			return
 		if c["npc"] == npc and c["want"] == "repair":
+			ItemSpirit.speak(c.get("item", {}), "repair")
 			var pay := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]])
 			Social.change(npc, 4.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()),
@@ -921,6 +923,7 @@ static func repair_part(npc: String, pid: String, quality: float) -> void:
 		st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))
 	it.erase("broken")
 	Items.add_history(it, "Repaired at the Ironhand forge (%d%%)." % int(quality))
+	ItemSpirit.speak(it, "repair")
 	var pay := int(round(float(pt.get("pay", 10)) * (0.5 + quality / 100.0 * 0.7)))
 	Game.add_gold(pay, "repairs", "Repaired %s's %s" % [Talk.npc_name(npc), it.get("name", "gear")])
 	Social.change(npc, 3.0 if quality >= 75 else -1.5, 2.0, "", "", false)

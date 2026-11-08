@@ -733,6 +733,7 @@ static func treat(item_uid: int, coat_def: String) -> String:
 	Game.remove_def(coat_def, 1)
 	it["coating"] = {"name": t[1], "stat": t[0], "value": val, "uses": 3}
 	Provenance.workshop(it, "treated", "Treated with %s at the Ironhand forge (+%d %s)." % [t[1], val, t[0]])
+	ItemSpirit.speak(it, "treat")
 	Audio.play("sfx/glass")
 	Game.grant_player_xp("alchemy", 4)
 	Events.inventory_changed.emit()
@@ -755,6 +756,7 @@ static func socket(item_uid: int, rune_def: String, quality: float) -> bool:
 		it["rarity"] = "magic"
 		it["name"] = "Runed " + str(it["name"])
 	Provenance.workshop(it, "enchanted", "A %s was set into it at the Ironhand forge." % DB.item(rune_def).get("name", rune_def))
+	ItemSpirit.speak(it, "enchant")
 	Game.grant_player_xp("runecraft", 20)
 	Events.inventory_changed.emit()
 	return true
