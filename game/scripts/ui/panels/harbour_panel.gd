@@ -47,7 +47,7 @@ func _build() -> void:
 
 	UIKit.clear(tabs_row)
 	var n_del := Trade.deliveries().size()
-	for t in [["quay", "The Quay"], ["imports", "Special Imports"], ["orders", "Orders & Deliveries" + (" (%d waiting)" % n_del if n_del > 0 else "")]]:
+	for t in [["quay", "The Quay"], ["imports", "Special Imports"], ["orders", "Orders & Deliveries" + (" (%d waiting)" % n_del if n_del > 0 else "")], ["knowledge", "Lore & Cargo"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tab = key; _build(), 0)
 		b.disabled = tab == key
@@ -67,6 +67,7 @@ func _build() -> void:
 		"quay": _quay()
 		"imports": _imports()
 		"orders": _orders()
+		"knowledge": body.add_child(GuideUI.knowledge_box("harbourmaster", _build))
 
 
 func _status_line() -> String:

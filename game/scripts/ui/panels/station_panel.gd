@@ -16,6 +16,8 @@ static var query := ""
 static var cat := "all"
 static var avail := "all"
 static var everywhere := false
+## The recipe whose guidance is unfolded under its row ("" = none).
+static var selected := ""
 var list_box: VBoxContainer
 var chips_row: HBoxContainer
 var count_label: Label
@@ -221,6 +223,8 @@ func _fill_list() -> void:
 
 
 func _recipe_row(rec: Dictionary) -> Control:
+	var rid := str(rec["id"])
+	var outer := UIKit.vbox(6)
 	var row := UIKit.hbox(14)
 	row.add_child(UIKit.icon("icons/" + str(DB.item(rec["output"]).get("icon", rec["output"])), 56))
 	var v := UIKit.vbox(2)
@@ -229,23 +233,87 @@ func _recipe_row(rec: Dictionary) -> Control:
 	for id in rec["inputs"]:
 		var need := int(rec["inputs"][id])
 		var have := Game.count(id)
-		ins.append("[color=%s]%s %d/%d[/color]" % ["#26622f" if have >= need else "#9e3a0c", DB.item(id).get("name", id), have, need])
+		# every ingredient is a link to its encyclopedia page (where to get it, how to make it)
+		ins.append("[url=item:%s][color=%s]%s %d/%d[/color][/url]" % [id, "#26622f" if have >= need else "#9e3a0c", DB.item(id).get("name", id), have, need])
 	var steps := []
-	for o in Crafting.operations(rec["id"]):
+	for o in Crafting.operations(rid):
 		steps.append(str(o["op"]))
-	var lock := Crafting.recipe_locked_reason(rec["id"])
+	var rs := Guide.recipe_status(rid)
+	var lock := Crafting.recipe_locked_reason(rid)
+	var lock_txt := ""
+	if lock != "":
+		var link_to := ""
+		for o in rs["obstacles"]:
+			if str(o["kind"]) == "node":
+				link_to = "skilltree:" + str(o["id"])
+				break
+			if str(o["kind"]) == "station":
+				link_to = "station:" + str(o["id"])
+				break
+		lock_txt = ("\n[url=%s][color=#9e3a0c]%s[/color][/url]" % [link_to, lock]) if link_to != "" else ("\n[color=#9e3a0c]%s[/color]" % lock)
 	var req := []
 	for sk in rec.get("requires", {}):
 		req.append("%s %d" % [SkillSys.skill_name(sk), int(rec["requires"][sk])])
-	var meta := "[color=#5e421c]%d operations · %s · difficulty %d (%s)%s[/color]" % [steps.size(), Crafting.material(rec["id"]).get("name", ""),
-		Crafting.difficulty(rec["id"]), Crafting.difficulty_word(rec["id"]), (" · needs " + ", ".join(req)) if not req.is_empty() else ""]
-	v.add_child(UIKit.rich("[b]%s[/b]  [i]%s[/i]\n%s\n%s\n[color=#5e421c][i]%s[/i][/color]%s" % [rec["name"], rec.get("desc", ""), ", ".join(ins), meta, " → ".join(steps),
-		("\n[color=#9e3a0c]" + lock + "[/color]") if lock != "" else ""], 19))
+	var meta := "[color=#5e421c]%d operations · %s · difficulty %d (%s)%s[/color]" % [steps.size(), Crafting.material(rid).get("name", ""),
+		Crafting.difficulty(rid), Crafting.difficulty_word(rid), (" · needs " + ", ".join(req)) if not req.is_empty() else ""]
+	var txt := GuideUI.rich_links("[b]%s[/b]  [i]%s[/i]\n%s\n%s\n[color=#5e421c][i]%s[/i][/color]%s" % [rec["name"], rec.get("desc", ""), ", ".join(ins), meta, " → ".join(steps),
+		lock_txt], 19, _on_link)
+	v.add_child(txt)
 	row.add_child(v)
-	var b := UIKit.button("Begin", func(): _start(rec["id"]), 120)
-	b.disabled = lock != "" or not Crafting.missing_inputs(rec["id"]).is_empty()
+	var side := UIKit.vbox(4)
+	side.custom_minimum_size = Vector2(170, 0)
+	side.add_child(GuideUI.badge(str(rs["state"]), GuideUI.recipe_badge_text(rs), 30))
+	var how := UIKit.button("Hide" if selected == rid else ("How?" if str(rs["state"]) != "ready" else "Details"), func():
+		selected = "" if selected == rid else rid
+		_fill_list(), 150)
+	how.name = "How_" + rid
+	how.tooltip_text = "Show me how: the next step, every source and the full dependency tree"
+	side.add_child(how)
+	row.add_child(side)
+	var b := UIKit.button("Begin", func(): _start(rid), 120)
+	b.disabled = lock != "" or not Crafting.missing_inputs(rid).is_empty()
+	b.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(b)
-	return row
+	outer.add_child(row)
+	if selected == rid:
+		outer.add_child(_guidance(rid))
+	return outer
+
+
+## "Show me how" under a selected recipe: the next step with its button, then the full details on request.
+func _guidance(rid: String) -> Control:
+	var box := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.36, 0.25, 0.1, 0.08)
+	sb.border_color = Color(UIKit.GILT, 0.7)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(6)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
+	box.add_theme_stylebox_override("panel", sb)
+	var v := UIKit.vbox(6)
+	v.add_child(GuideUI.next_step_box("recipe:" + rid, _on_link, _back()))
+	v.add_child(GuideUI.expander("Full details", func(body: VBoxContainer):
+		body.add_child(GuideUI.tree_block("recipe:" + rid, _on_link))
+		var miss := Crafting.missing_inputs(rid)
+		for d in miss:
+			body.add_child(UIKit.label("Every way to get %s" % Guide.iname(str(d)), 21, "heading"))
+			body.add_child(GuideUI.sources_block(str(d), _on_link, 6))
+		body.add_child(GuideUI.rich_links(GuideUI.link("recipe:" + rid, "Open the full page in Help ›"), 19, _on_link))))
+	box.add_child(v)
+	box.name = "Guidance"
+	return box
+
+
+func _back() -> Dictionary:
+	return {"route": "station", "args": {"id": station_id}}
+
+
+## A link in the recipe list: encyclopedia pages open in Help with a way back to this station.
+func _on_link(meta: String) -> void:
+	GuideUI.follow(meta, _back())
 
 
 func _start(rid: String) -> void:

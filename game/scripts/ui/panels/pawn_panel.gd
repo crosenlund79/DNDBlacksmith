@@ -48,7 +48,7 @@ func _build() -> void:
 
 	UIKit.clear(tabs_row)
 	var held := Commerce.pledges().filter(func(p): return p["status"] == "held").size()
-	for t in [["pledge", "Pledge"], ["tickets", "Your Tickets" + (" (%d)" % held if held > 0 else "")], ["shelf", "The Shelf"], ["ledger", "Ledger"]]:
+	for t in [["pledge", "Pledge"], ["tickets", "Your Tickets" + (" (%d)" % held if held > 0 else "")], ["shelf", "The Shelf"], ["ledger", "Ledger"], ["knowledge", "Old Notes"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tab = key; _build(), 0)
 		b.disabled = tab == key
@@ -59,6 +59,7 @@ func _build() -> void:
 		"tickets": _tickets()
 		"shelf": _shelf()
 		"ledger": _ledger()
+		"knowledge": body.add_child(GuideUI.knowledge_box("pawnbroker", _build))
 
 
 func _pledge() -> void:

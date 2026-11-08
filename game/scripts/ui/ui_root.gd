@@ -424,7 +424,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"difficulty":
 			open(DifficultyPanel.new())
 		"skilltree":
-			open(SkillTreePanel.new())
+			open(SkillTreePanel.new(args))   # {"select": node_id} opens on a node (Guide links)
 		"designer":
 			open(DesignerPanel.new())
 		"property":

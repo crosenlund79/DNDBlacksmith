@@ -1810,6 +1810,26 @@
    1200,
    800
   ],
+  "ui/template_guide_knowledge.png": [
+   96,
+   96
+  ],
+  "ui/template_guide_locked.png": [
+   96,
+   96
+  ],
+  "ui/template_guide_obtainable.png": [
+   96,
+   96
+  ],
+  "ui/template_guide_ready.png": [
+   96,
+   96
+  ],
+  "ui/template_guide_unavailable.png": [
+   96,
+   96
+  ],
   "ui/template_ic_family.png": [
    96,
    96

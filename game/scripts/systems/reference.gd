@@ -11,6 +11,7 @@ const TABS := [
 	["basics", "Basics & Controls"], ["recipes", "Recipes"], ["stations", "Crafting Stations"], ["materials", "Materials"],
 	["skilltree", "Skill-Tree Progression"], ["hirelings", "Hirelings"], ["careers", "Adventurer Careers"],
 	["dice", "Dice & Rarity"], ["workshop", "Workshop Ownership & Editing"], ["ironfront", "Ironfront Rules"],
+	["knowledge", "Knowledge & Notes"],
 ]
 
 const SECRET_TAGS := ["secret", "rare", "unique", "set", "unidentified"]
@@ -72,7 +73,27 @@ static func item_visible(def_id: String) -> bool:
 
 
 # ======================================================================= entries
+## Built once per moment of play: typing in the search box re-reads the cache (the clock stands still while Help is open).
+static var _cache_key := ""
+static var _cache: Array = []
+
+
+static func _key_now() -> String:
+	if Game.state.is_empty():
+		return "menu"
+	return "%d|%d|%d|%d|%d|%d|%d" % [Game.now(), Game.gold(), Game.inventory().size(), (Game.state.get("flags", {}) as Dictionary).hash(),
+		SkillTree.learned().hash(), (Game.state.get("knowledge", {}).get("bought", {}) as Dictionary).size(), seen().size()]
+
+
 static func entries() -> Array:
+	var key := _key_now()
+	if key != _cache_key or _cache.is_empty():
+		_cache = _build_entries()
+		_cache_key = key
+	return _cache
+
+
+static func _build_entries() -> Array:
 	var out := []
 	_basics(out)
 	_recipes(out)
@@ -84,6 +105,7 @@ static func entries() -> Array:
 	_dice(out)
 	_workshop(out)
 	_ironfront(out)
+	_knowledge(out)
 	return out
 
 
@@ -112,8 +134,22 @@ static func tab_name(tab: String) -> String:
 	return tab
 
 
-static func _e(out: Array, tab: String, title: String, body: String, icon := "", keys := "") -> void:
-	out.append({"tab": tab, "title": title, "body": body, "icon": icon, "keys": keys})
+static func _e(out: Array, tab: String, title: String, body: String, icon := "", keys := "", topic := "") -> void:
+	out.append({"tab": tab, "title": title, "body": body, "icon": icon, "keys": keys, "topic": topic})
+
+
+## Is an encyclopedia page (item:<def> | recipe:<id> | station:<id> | knowledge) open to the player?
+## Recipes and items follow the spoiler rules; stations are public furniture.
+static func topic_visible(topic: String) -> bool:
+	if topic == "knowledge":
+		return true
+	if topic.begins_with("item:"):
+		return not DB.item(topic.substr(5)).is_empty() and item_visible(topic.substr(5))
+	if topic.begins_with("recipe:"):
+		return recipe_visible(topic.substr(7))
+	if topic.begins_with("station:"):
+		return not DB.station(topic.substr(8)).is_empty()
+	return false
 
 
 static func _key(action: String) -> String:
@@ -156,7 +192,7 @@ static func _recipes(out: Array) -> void:
 			"%s[b]Discipline:[/b] %s · [b]Difficulty:[/b] %d\n[b]Needs:[/b] %s\n[b]Stations:[/b] %s\n[b]Dice:[/b] %s%s" % [("[i]%s[/i]\n" % str(r["desc"])) if str(r.get("desc", "")) != "" else "",
 				Crafting.DISCIPLINE_NAME.get(str(r.get("discipline", "")), str(r.get("discipline", ""))), int(r.get("difficulty", 0)),
 				", ".join(ins), " → ".join(st), ", ".join(dice) if not dice.is_empty() else "none", ("\n" + req.strip_edges()) if req != "" else ""],
-			"icons/" + str(DB.item(out_def).get("icon", out_def)), "recipe " + str(r.get("category", "")) + " " + ", ".join(ins))
+			"icons/" + str(DB.item(out_def).get("icon", out_def)), "recipe " + str(r.get("category", "")) + " " + ", ".join(ins), "recipe:" + rid)
 
 
 # ----------------------------------------------------------------------- stations
@@ -171,7 +207,7 @@ static func _stations(out: Array) -> void:
 		_e(out, "stations", str(st.get("name", sid)),
 			"%s\n[b]Discipline:[/b] %s · [b]Checks per step:[/b] %d · [b]Recipes you know that use it:[/b] %d\nYour %s level widens the precision zone and slows the needle." % [str(st.get("purpose", "")),
 				Crafting.DISCIPLINE_NAME.get(str(st.get("discipline", "")), ""), int(c.get("count", 1)), known, SkillSys.skill_name(Crafting.skill_for_station(sid))],
-			"stations/" + sid, "station workstation " + str(st.get("discipline", "")))
+			"stations/" + sid, "station workstation " + str(st.get("discipline", "")), "station:" + sid)
 
 
 # ----------------------------------------------------------------------- materials
@@ -187,9 +223,11 @@ static func _materials(out: Array) -> void:
 		for r in DB.recipes.values():
 			if (r.get("inputs", {}) as Dictionary).has(id) and recipe_visible(str(r["id"])):
 				uses.append(str(r.get("name", r["id"])))
-		_e(out, "materials", str(d.get("name", id)), "%s\n[b]Value:[/b] %d g%s" % [str(d.get("desc", "")), int(d.get("value", 0)),
+		var get_it := Guide.tooltip_line(id) if not Game.state.is_empty() else ""
+		_e(out, "materials", str(d.get("name", id)), "%s%s[b]Value:[/b] %d g%s" % [(str(d.get("desc", "")) + "\n") if str(d.get("desc", "")) != "" else "",
+			("[b]Get it:[/b] %s · " % get_it) if get_it != "" else "", int(d.get("value", 0)),
 			("\n[b]Used in:[/b] " + ", ".join(uses.slice(0, 6)) + ("…" if uses.size() > 6 else "")) if not uses.is_empty() else ""],
-			"icons/" + str(d.get("icon", id)), "material " + t)
+			"icons/" + str(d.get("icon", id)), "material " + t, "item:" + id)
 
 
 # ----------------------------------------------------------------------- rules sections
@@ -254,3 +292,13 @@ static func _ironfront(out: Array) -> void:
 			for r in rules:
 				if r is Dictionary:
 					_e(out, "ironfront", str(r.get("title", "Rule")), str(r.get("text", "")), "", "rule")
+
+
+# ----------------------------------------------------------------------- knowledge bought
+static func _knowledge(out: Array) -> void:
+	_e(out, "knowledge", "Who sells knowledge", "Most things are free to learn: every page here says where an item comes from and what to do next. A few villagers sell what they alone know — [b]Silas Quell[/b] at the pawnshop (old notes), the [b]harbourmaster[/b] (lore and cargo from the far ports) and [b]Maud Fennimore[/b] the herbalist (herb lore). A hint tells you where and how; the discovery is still yours to make.", "ui/guide_knowledge", "knowledge hint buy notes lore secret", "knowledge")
+	if Game.state.is_empty():
+		return
+	for k in Knowledge.owned_list():
+		_e(out, "knowledge", str(k["title"]), "%s\n[color=#5e421c][i]Bought from %s on day %d (%s).[/i][/color]" % [str(k["text"]), str(k["seller_name"]), int(k["day"]),
+			"a hint" if str(k["kind"]) == "hint" else "complete knowledge"], "ui/guide_knowledge", "knowledge hint " + str(k["kind"]), "knowledge")
