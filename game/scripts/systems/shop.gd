@@ -528,7 +528,10 @@ static func sell_to(npc: String, uid: int) -> String:
 	return ""
 
 
-static func do_repair(npc: String, quality: float) -> void:
+## Mends a waiting customer's piece. `by` = an apprentice's name when the work was done by an apprentice
+## (the record names them and the smith gains no experience from it).
+static func do_repair(npc: String, quality: float, by := "") -> void:
+	var hand := "Brannoc" if by == "" else by
 	for c in customers():
 		if c["npc"] == npc and c["want"] == "repair" and c.has("own_slot"):
 			# an adventurer's own worn gear: restore its durability (well done = nearly as new)
@@ -539,13 +542,14 @@ static func do_repair(npc: String, quality: float) -> void:
 				st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))
 			if it.get("broken", false):
 				it.erase("broken")
-				Chronicle.add("item", "Brannoc mended %s's broken %s." % [a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
-			Provenance.workshop(it, "repaired", "Repaired at the Ironhand forge for %s (%d%%)." % [a.get("name", npc), int(quality)])
+				Chronicle.add("item", "%s mended %s's broken %s." % [hand, a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
+			Provenance.workshop(it, "repaired", "Repaired at the Ironhand forge for %s (%d%%)%s." % [a.get("name", npc), int(quality), "" if by == "" else " by " + by])
 			ItemSpirit.speak(it, "repair")
 			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
-			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "Brannoc mended my %s %s." % [it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])
-			Game.grant_player_xp("smithing", 10)
+			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "%s mended my %s %s." % [hand, it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])
+			if by == "":
+				Game.grant_player_xp("smithing", 10)
 			remove_customer(npc)
 			return
 		if c["npc"] == npc and c["want"] == "repair":
@@ -554,8 +558,9 @@ static func do_repair(npc: String, quality: float) -> void:
 			var pay := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]])
 			Social.change(npc, 4.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()),
-				"Mended my %s %s." % [c["item"]["name"], "beautifully" if quality >= 95 else ("well enough" if quality >= 75 else "poorly")])
-			Game.grant_player_xp("smithing", 8)
+				"%s my %s %s." % ["Mended" if by == "" else by + " mended", c["item"]["name"], "beautifully" if quality >= 95 else ("well enough" if quality >= 75 else "poorly")])
+			if by == "":
+				Game.grant_player_xp("smithing", 8)
 			remove_customer(npc)
 			return
 

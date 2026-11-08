@@ -358,6 +358,9 @@ func test_beginner_to_master() -> void:
 	var milestones := [["s_blades", "simple blades"], ["s_steel", "steelworking"], ["r_original", "original runes"], ["ta_scholar", "scholar's vestments (tailoring)"],
 		["ar_crucible", "the Arcane Crucible"], ["ar_plating", "mithril armour plating"], ["l_dragon", "dragon-scale preparation"],
 		["ar_legend", "legendary arcane craftsmanship"]]
+	var workshop_at := ""   # iteration 012: when the smith can first take workshop apprentices
+	if has_system("apprentices"):
+		check(not bool(sys("apprentices", "unlocked")), "start: no apprentices yet")
 	for m in milestones:
 		var nid: String = m[0]
 		if SkillTree.node(nid).is_empty():
@@ -368,6 +371,11 @@ func test_beginner_to_master() -> void:
 			for t in trail.slice(maxi(0, trail.size() - 25)):
 				note(t)
 			break
+		if workshop_at == "" and has_system("apprentices") and bool(sys("apprentices", "unlocked")):
+			workshop_at = "after %s, day %d (smithing %d, %d rooms)" % [m[1], Game.day(), Game.player_level("smithing"), (Property.st()["units"] as Array).size()]
+	if has_system("apprentices"):
+		check(workshop_at != "", "workshop apprentices become available in a normal career")
+		note("apprentices unlocked " + workshop_at)
 	if SkillTree.is_unlocked("ar_legend"):
 		var e := make("dragonscale_armor")
 		check(e == "", "Dragonscale Armour forged from real dragon parts (%s)" % e)

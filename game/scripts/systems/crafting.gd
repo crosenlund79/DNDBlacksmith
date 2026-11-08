@@ -578,13 +578,22 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	var j := job()
 	if j.is_empty():
 		return {}
-	var rid: String = j["recipe"]
+	return build(str(j["recipe"]), j.get("ops", []), final_quality(j), dice, mode, {}, base_quality(j))
+
+
+## Builds the finished piece — the one pipeline shared by the smith and his apprentices: dice (weighted by
+## craftsmanship), statistics, rarity, arcane binding, the craft record, provenance, history, stats, the Hall of
+## Fame and events. `maker` empty = the smith (his active job is closed, he gains the experience and any knowledge);
+## otherwise an apprentice: {id, name, mark, level, supervised, rank} — the item carries their name and mark, made at
+## the Ironhand forge; experience is the caller's business (Apprentices). `base` = quality before the skill bonus.
+static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "digital", maker := {}, base := -1.0) -> Dictionary:
+	var player := maker.is_empty()
 	var r := DB.recipe(rid)
 	var spec: Dictionary = r.get("dice", {})
 	var totals := {}
 	var dice_log := {}
-	var base := base_quality(j)
-	var q := final_quality(j)
+	if base < 0.0:
+		base = q
 	var adv := advantage(q)
 	for k in dice:
 		var v: Variant = dice[k]
@@ -614,9 +623,9 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	var out_def: String = r["output"]
 	var d := DB.item(out_def)
 	var skill_id := recipe_skill(rid)
-	var lvl := Game.player_level(skill_id)
+	var lvl := Game.player_level(skill_id) if player else int(maker.get("level", 0))
 	var mat := material(rid)
-	var it := Items.make(out_def, {"quality": q, "qty": int(r.get("qty", 1)), "crafted_by": "Brannoc Ironhand"})
+	var it := Items.make(out_def, {"quality": q, "qty": int(r.get("qty", 1)), "crafted_by": "Brannoc Ironhand" if player else str(maker.get("name", ""))})
 	var explain := {}
 	it["stats"] = compute_stats(d, q, totals, spec, mat, lvl, explain)
 	var breakdown := []
@@ -661,45 +670,56 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	var sk := cfg("skill")
 	var xp := {}
 	var expert := lvl - difficulty(rid) >= int(sk.get("xp_expert_gap", 5))
-	for skill in r.get("xp", {}):
-		var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
-		if expert:
-			amt *= float(sk.get("xp_expert_mult", 0.4))
-		xp[skill] = int(round(amt))
-		Game.grant_player_xp(skill, xp[skill])
+	if player:
+		for skill in r.get("xp", {}):
+			var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
+			if expert:
+				amt *= float(sk.get("xp_expert_mult", 0.4))
+			xp[skill] = int(round(amt))
+			Game.grant_player_xp(skill, xp[skill])
 	it["craft"] = {
 		"recipe": rid, "recipe_name": r.get("name", rid), "material": mat.get("name", ""),
 		"difficulty": difficulty(rid), "skill": skill_id, "level": lvl,
-		"ops": j.get("ops", []).duplicate(true), "base_quality": base, "skill_bonus": q - base, "quality": q,
+		"ops": ops.duplicate(true), "base_quality": base, "skill_bonus": q - base, "quality": q,
 		"dice": dice_log, "dice_mode": mode, "rarity_score": rev["score"], "rarity_parts": rev.get("parts", {}),
 		"masterwork": rev.get("masterwork", false), "xp": xp, "expert": expert, "day": Game.day(),
 		"advantage": {"tier": int(adv["tier"]), "word": str(adv["word"]), "rolls": int(adv["rolls"])},
-		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid), "assist_bonus": hireling_assist(rid),
+		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid) if player else 0.0, "assist_bonus": hireling_assist(rid) if player else 0.0,
 	}
+	if not player:
+		it["craft"]["maker"] = str(maker.get("id", ""))
+		it["craft"]["maker_name"] = str(maker.get("name", ""))
+		it["craft"]["rank"] = str(maker.get("rank", ""))
+		it["craft"]["supervised"] = bool(maker.get("supervised", false))
 	it["owner"] = "smith"
 	# the maker's mark, origin and the "forged" event — the start of the piece's story
-	Provenance.forged(it)
+	Provenance.forged(it, maker)
 	History.log_crafted(it)   # workstation logs (Interface)
-	Game.state["craft"] = {}
-	Game.state["stats"]["crafted"] += 1
-	if out_def == "ingot_mithril" or out_def == "sword_mithril":
+	if player:
+		Game.state["craft"] = {}
+		Game.state["stats"]["crafted"] += 1
+	else:
+		Game.state["stats"]["apprentice_crafted"] = int(Game.state["stats"].get("apprentice_crafted", 0)) + 1
+	if player and (out_def == "ingot_mithril" or out_def == "sword_mithril"):
 		Game.set_flag("crafted_arcane")
 	# some work teaches the smith something (restoring an old runestone → rune lore)
-	var teach := str(r.get("teaches_flag", ""))
+	var teach := str(r.get("teaches_flag", "")) if player else ""
 	if teach != "" and not Game.has_flag(teach):
 		Game.set_flag(teach)
 		var fi := SkillTree.flag_info(teach)
 		Game.journal("Working on the %s taught me something new: %s." % [r.get("name", rid), str(fi.get("name", teach)).to_lower()])
 		Events.toast.emit("New knowledge: %s" % fi.get("name", teach), "good")
 	Game.add_item(it, false)
-	Events.crafting_changed.emit()
+	if player:
+		Events.crafting_changed.emit()
 	Events.item_crafted.emit(it)
 	if it.get("rarity") == "legendary":
 		Game.state["stats"]["legendaries"] += 1
 		Events.legendary_found.emit(it)
-	Objectives.on_crafted(it)
+	if player:
+		Objectives.on_crafted(it)
 	Recognition.on_crafted(it)
-	Log.info("Crafted %s (q %.1f%%, %s, score %.1f)" % [it["name"], q, it["rarity"], float(rev["score"])])
+	Log.info("Crafted %s (q %.1f%%, %s, score %.1f)%s" % [it["name"], q, it["rarity"], float(rev["score"]), "" if player else " by " + str(maker.get("name", ""))])
 	return it
 
 

@@ -113,6 +113,7 @@ func advance_minutes(m: int) -> void:
 		state["minute"] += 1
 		if state["minute"] % 5 == 0:
 			Expeditions.tick()
+			Apprentices.tick(5)   # workshop apprentices work in the same 5-minute steps (sleep and travel included)
 		if state["minute"] % 60 == 0:
 			if state["minute"] >= 24 * 60:
 				state["minute"] = 0

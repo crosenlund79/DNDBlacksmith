@@ -76,8 +76,13 @@ static func recent(n := 100, kinds := []) -> Array:
 	return out
 
 
+## Made at the Ironhand forge — by the smith or by one of his apprentices (Provenance.is_workshop).
 static func made_by_smith(it: Dictionary) -> bool:
-	return not it.is_empty() and str(it.get("crafted_by", "")).begins_with(SMITH)
+	if it.is_empty():
+		return false
+	if str(it.get("crafted_by", "")).begins_with(SMITH):
+		return true
+	return Items.is_equipment(it) and Provenance.is_workshop(it)
 
 
 # ------------------------------------------------------------------ hooks
