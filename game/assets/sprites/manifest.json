@@ -746,6 +746,10 @@
    64,
    64
   ],
+  "icons/template_buckler_seabronze.png": [
+   64,
+   64
+  ],
   "icons/template_chainmail.png": [
    64,
    64
@@ -770,11 +774,67 @@
    64,
    64
   ],
+  "icons/template_comp_fell_pony.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_glimmer_fox.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_hunting_falcon.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_moon_moth.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_mouser_cat.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_pack_mule.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_pocket_drake.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_stone_toad.png": [
+   64,
+   64
+  ],
+  "icons/template_comp_war_hound.png": [
+   64,
+   64
+  ],
   "icons/template_cuirass_iron.png": [
    64,
    64
   ],
   "icons/template_cuirass_steel.png": [
+   64,
+   64
+  ],
+  "icons/template_curio_seer_glass.png": [
+   64,
+   64
+  ],
+  "icons/template_curio_songbird.png": [
+   64,
+   64
+  ],
+  "icons/template_curio_star_chart.png": [
+   64,
+   64
+  ],
+  "icons/template_curio_tide_compass.png": [
+   64,
+   64
+  ],
+  "icons/template_cutlass_seabronze.png": [
    64,
    64
   ],
@@ -823,6 +883,14 @@
    32
   ],
   "icons/template_grimhold.png": [
+   64,
+   64
+  ],
+  "icons/template_harpoon_barbed.png": [
+   64,
+   64
+  ],
+  "icons/template_helm_brinecap.png": [
    64,
    64
   ],
@@ -1031,6 +1099,10 @@
    64
   ],
   "icons/template_runestone_ward.png": [
+   64,
+   64
+  ],
+  "icons/template_sabre_ripple.png": [
    64,
    64
   ],

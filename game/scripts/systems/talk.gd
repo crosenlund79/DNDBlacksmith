@@ -18,6 +18,8 @@ static func npc_name(npc: String) -> String:
 static func greeting(npc: String) -> String:
 	if npc == Roisin.ID:
 		return Roisin.greeting()
+	if npc in Commerce.NPCS:   # caravan, pawnshop, rival smith, creature merchants
+		return Commerce.greeting(npc)
 	var lines: Array = DB.dialogue.get("greet", {}).get(Social.band(npc), ["\"Hm?\""])
 	var t: String = lines.pick_random()
 	var married := Social.spouse() == npc
@@ -93,6 +95,7 @@ static func options(npc: String, area: String) -> Array:
 		out.append({"id": "rumour", "label": "Ask what the adventurers are saying (5 g)"})
 	if not a.is_empty() or kind in ["villager", "companion"]:
 		out.append({"id": "gift", "label": "Give a small gift (a healing draught)"})
+	out.append_array(Commerce.talk_options(npc))
 	out.append({"id": "bye", "label": "Farewell"})
 	return out
 
@@ -102,6 +105,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		var rr := Roisin.choose(opt, area)
 		if not rr.is_empty():
 			return rr
+	var cr := Commerce.talk_choose(npc, opt)
+	if not cr.is_empty():
+		return cr
 	var e := Social.ensure(npc)
 	var c := DB.character(npc)
 	var a := Adv.get_a(npc)

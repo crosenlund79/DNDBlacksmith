@@ -720,6 +720,140 @@
   "portrait": "portraits/applicant_5"
  },
  {
+  "id": "rival_smith",
+  "name": "Maren Tallowgate",
+  "kind": "villager",
+  "look": {
+   "build": "heavy",
+   "female": true,
+   "skin": "#c48a66",
+   "hair": "braid",
+   "hair_col": "#b05a2a",
+   "beard": "none",
+   "armor": "apron",
+   "shirt": "#3e4a6e",
+   "cloak": null,
+   "back": "none",
+   "hand": "hammer",
+   "extras": [
+    "scalp_scar"
+   ]
+  },
+  "sprite": "chars/rival_smith",
+  "portrait": "portraits/rival_smith",
+  "age": 46,
+  "title": "Smith of the Salt Anvil",
+  "work": "rival_smith",
+  "personality": "Loud, warm and fiercely competitive; keeps score of everything, laughs at her own jokes, and swears by salt, sea-bronze and a good rival. Forged for the fishing fleets down the coast before she came to Brindlewick."
+ },
+ {
+  "id": "pawnbroker",
+  "name": "Silas Quell",
+  "kind": "villager",
+  "look": {
+   "build": "slim",
+   "female": false,
+   "skin": "#e0b090",
+   "hair": "bald_fringe",
+   "hair_col": "#9a948a",
+   "beard": "stubble",
+   "beard_col": "#9a948a",
+   "armor": "none",
+   "shirt": "#5a4a3a",
+   "cloak": "#2a2622",
+   "back": "none",
+   "hand": "none",
+   "extras": [
+    "spectacles"
+   ]
+  },
+  "sprite": "chars/pawnbroker",
+  "portrait": "portraits/pawnbroker",
+  "age": 61,
+  "title": "Pawnbroker",
+  "work": "pawn",
+  "personality": "Soft-spoken and exact; weighs everything twice, remembers every ticket, and never asks where a thing came from."
+ },
+ {
+  "id": "caravan_master",
+  "name": "Ottavio Brask",
+  "kind": "villager",
+  "look": {
+   "build": "heavy",
+   "female": false,
+   "skin": "#a8704e",
+   "hair": "curly",
+   "hair_col": "#1e1612",
+   "beard": "short",
+   "beard_col": "#2a1e16",
+   "armor": "leather",
+   "shirt": "#8a3e2c",
+   "cloak": "#7e2c30",
+   "back": "pack",
+   "hand": "staff",
+   "extras": []
+  },
+  "sprite": "chars/caravan_master",
+  "portrait": "portraits/caravan_master",
+  "age": 52,
+  "title": "Caravan Master",
+  "work": "caravan",
+  "personality": "An expansive storyteller who prices everything twice — once for the tale, once for the goods."
+ },
+ {
+  "id": "hale_elder",
+  "name": "Bram Hale",
+  "kind": "villager",
+  "look": {
+   "build": "heavy",
+   "female": false,
+   "skin": "#d49a72",
+   "hair": "bald_fringe",
+   "hair_col": "#a8a094",
+   "beard": "short",
+   "beard_col": "#c8c2b4",
+   "armor": "leather",
+   "shirt": "#6e7a4a",
+   "cloak": "#4e5a3a",
+   "back": "none",
+   "hand": "basket",
+   "extras": []
+  },
+  "sprite": "chars/hale_elder",
+  "portrait": "portraits/hale_elder",
+  "age": 64,
+  "title": "Keeper of Beasts",
+  "work": "creatures",
+  "personality": "Big, slow-spoken and gentle; talks to animals more readily than to people, never hurries a frightened creature, and laughs down in his chest. Has raised hounds, falcons and mules on Hale Farm for forty years."
+ },
+ {
+  "id": "hale_younger",
+  "name": "Ellery Hale",
+  "kind": "villager",
+  "look": {
+   "build": "slim",
+   "female": false,
+   "skin": "#e8c0a0",
+   "hair": "curly",
+   "hair_col": "#8a4a24",
+   "beard": "none",
+   "armor": "none",
+   "shirt": "#7e5a8a",
+   "cloak": "#5a3e6a",
+   "back": "pack",
+   "hand": "none",
+   "extras": [
+    "spectacles"
+   ]
+  },
+  "sprite": "chars/hale_younger",
+  "portrait": "portraits/hale_younger",
+  "age": 27,
+  "title": "Keeper of Curious Creatures",
+  "work": "creatures",
+  "personality": "Bram's son: a scholar who studied at the Collegium and came home with a moth in his pocket. Talks too fast when excited, fills notebooks with wing-patterns, and apologises to every creature before he picks it up."
+ },
+ {
   "id": "barnaby",
   "name": "Barnaby Quill",
   "kind": "villager",

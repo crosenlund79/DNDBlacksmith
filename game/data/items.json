@@ -1184,6 +1184,383 @@
   ]
  },
  {
+  "id": "comp_mouser_cat",
+  "name": "Mouser Cat",
+  "type": "companion",
+  "slot": "companion",
+  "value": 45,
+  "stats": {
+   "scouting": 2,
+   "heal": 1
+  },
+  "icon": "comp_mouser_cat",
+  "stack": false,
+  "desc": "A lean tabby who has never once lost a staring match. Keeps the rats out of the rations and wakes you when something moves.",
+  "tags": [
+   "companion",
+   "beast",
+   "cat"
+  ],
+  "creature": "mouser_cat",
+  "keeper": "hale_elder",
+  "species": "cat"
+ },
+ {
+  "id": "comp_pack_mule",
+  "name": "Pack Mule",
+  "type": "companion",
+  "slot": "companion",
+  "value": 90,
+  "stats": {
+   "carry": 6
+  },
+  "icon": "comp_pack_mule",
+  "stack": false,
+  "desc": "Stubborn, sure-footed and patient as stone. Carries what an adventurer cannot — and brings more of the spoils home.",
+  "tags": [
+   "companion",
+   "beast",
+   "mule"
+  ],
+  "creature": "pack_mule",
+  "keeper": "hale_elder",
+  "species": "mule"
+ },
+ {
+  "id": "comp_fell_pony",
+  "name": "Fell Pony",
+  "type": "companion",
+  "slot": "companion",
+  "value": 130,
+  "stats": {
+   "carry": 3,
+   "scouting": 2,
+   "protection": 1
+  },
+  "icon": "comp_fell_pony",
+  "stack": false,
+  "desc": "A shaggy hill pony, small enough for a dwarf, tough enough for the barrow roads. Knows the way home in a fog.",
+  "tags": [
+   "companion",
+   "beast",
+   "pony"
+  ],
+  "creature": "fell_pony",
+  "keeper": "hale_elder",
+  "species": "pony"
+ },
+ {
+  "id": "comp_war_hound",
+  "name": "War Hound",
+  "type": "companion",
+  "slot": "companion",
+  "value": 170,
+  "stats": {
+   "attack": 4,
+   "protection": 2
+  },
+  "icon": "comp_war_hound",
+  "stack": false,
+  "desc": "A broad-chested hound in a studded collar, bred to stand between its master and anything with teeth.",
+  "tags": [
+   "companion",
+   "beast",
+   "hound"
+  ],
+  "creature": "war_hound",
+  "keeper": "hale_elder",
+  "species": "hound"
+ },
+ {
+  "id": "comp_hunting_falcon",
+  "name": "Hunting Falcon",
+  "type": "companion",
+  "slot": "companion",
+  "value": 200,
+  "stats": {
+   "scouting": 5,
+   "attack": 2
+  },
+  "icon": "comp_hunting_falcon",
+  "stack": false,
+  "desc": "A peregrine trained to the glove. Sees the ambush from a mile off and returns with a hare for supper.",
+  "tags": [
+   "companion",
+   "bird",
+   "falcon",
+   "flying"
+  ],
+  "creature": "hunting_falcon",
+  "keeper": "hale_elder",
+  "species": "falcon"
+ },
+ {
+  "id": "comp_moon_moth",
+  "name": "Moon-Moth",
+  "type": "companion",
+  "slot": "companion",
+  "value": 340,
+  "stats": {
+   "heal": 5,
+   "magic": 1
+  },
+  "icon": "comp_moon_moth",
+  "stack": false,
+  "desc": "A moth the size of a hand whose silver wing-dust closes small wounds. Glows faintly by night; sleeps in a lantern by day.",
+  "tags": [
+   "companion",
+   "insect",
+   "moth",
+   "rare",
+   "flying",
+   "magical"
+  ],
+  "creature": "moon_moth",
+  "keeper": "hale_younger",
+  "species": "moon-moth"
+ },
+ {
+  "id": "comp_stone_toad",
+  "name": "Stone-Toad Familiar",
+  "type": "companion",
+  "slot": "companion",
+  "value": 390,
+  "stats": {
+   "magic": 4,
+   "protection": 3
+  },
+  "icon": "comp_stone_toad",
+  "stack": false,
+  "desc": "A grey toad with a back like weathered granite. Hums with old earth-magic and turns aside blows meant for its keeper.",
+  "tags": [
+   "companion",
+   "amphibian",
+   "toad",
+   "rare",
+   "familiar",
+   "magical"
+  ],
+  "creature": "stone_toad",
+  "keeper": "hale_younger",
+  "species": "stone-toad"
+ },
+ {
+  "id": "comp_glimmer_fox",
+  "name": "Glimmer-Fox",
+  "type": "companion",
+  "slot": "companion",
+  "value": 460,
+  "stats": {
+   "scouting": 5,
+   "magic": 3
+  },
+  "icon": "comp_glimmer_fox",
+  "stack": false,
+  "desc": "A small fox whose brush leaves a trail of pale sparks. Finds hidden doors, buried coin and the shortest way out.",
+  "tags": [
+   "companion",
+   "beast",
+   "fox",
+   "rare",
+   "magical"
+  ],
+  "creature": "glimmer_fox",
+  "keeper": "hale_younger",
+  "species": "glimmer-fox"
+ },
+ {
+  "id": "comp_pocket_drake",
+  "name": "Pocket Drake",
+  "type": "companion",
+  "slot": "companion",
+  "value": 560,
+  "stats": {
+   "attack": 5,
+   "fire": 3
+  },
+  "icon": "comp_pocket_drake",
+  "stack": false,
+  "desc": "A cat-sized drake with ember-red scales and opinions. Breathes a fist of flame at whatever its keeper glares at.",
+  "tags": [
+   "companion",
+   "dragon",
+   "drake",
+   "rare",
+   "fire",
+   "flying",
+   "magical"
+  ],
+  "creature": "pocket_drake",
+  "keeper": "hale_younger",
+  "species": "drake"
+ },
+ {
+  "id": "cutlass_seabronze",
+  "name": "Sea-Bronze Cutlass",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 260,
+  "stats": {
+   "attack": [
+    13,
+    18
+   ],
+   "durability": 130,
+   "speed": 2
+  },
+  "icon": "cutlass_seabronze",
+  "stack": false,
+  "desc": "A broad boarding cutlass of sea-bronze: it will not rust in brine or blood. Maren Tallowgate's mark on the ricasso.",
+  "tags": [
+   "seabronze",
+   "rival"
+  ]
+ },
+ {
+  "id": "harpoon_barbed",
+  "name": "Barbed Harpoon-Spear",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 300,
+  "stats": {
+   "attack": [
+    15,
+    21
+   ],
+   "durability": 115
+  },
+  "icon": "harpoon_barbed",
+  "stack": false,
+  "desc": "A whaler's harpoon re-hafted as a war-spear; the barbs hold whatever they bite.",
+  "tags": [
+   "seabronze",
+   "rival"
+  ]
+ },
+ {
+  "id": "buckler_seabronze",
+  "name": "Sea-Bronze Buckler",
+  "type": "shield",
+  "slot": "shield",
+  "value": 185,
+  "stats": {
+   "protection": [
+    6,
+    9
+   ],
+   "durability": 125,
+   "speed": 2
+  },
+  "icon": "buckler_seabronze",
+  "stack": false,
+  "desc": "A small hammered buckler, green at the rim where the sea has kissed it. Light enough to swim with.",
+  "tags": [
+   "seabronze",
+   "rival"
+  ]
+ },
+ {
+  "id": "helm_brinecap",
+  "name": "Brine-Cap Helm",
+  "type": "helmet",
+  "slot": "helmet",
+  "value": 160,
+  "stats": {
+   "protection": [
+    4,
+    6
+   ],
+   "durability": 115,
+   "ward": 2
+  },
+  "icon": "helm_brinecap",
+  "stack": false,
+  "desc": "An open sea-bronze cap with a leather nape-guard and a salt-ward scratched inside the crown.",
+  "tags": [
+   "seabronze",
+   "rival"
+  ]
+ },
+ {
+  "id": "sabre_ripple",
+  "name": "Ripple-Steel Sabre",
+  "type": "weapon",
+  "slot": "weapon",
+  "value": 640,
+  "stats": {
+   "attack": [
+    19,
+    26
+   ],
+   "durability": 160,
+   "speed": 3
+  },
+  "icon": "sabre_ripple",
+  "stack": false,
+  "desc": "Southern crucible steel, folded until the blade shows water. Maren buys the cakes from a ship's cook who will not say where.",
+  "tags": [
+   "ripple_steel",
+   "rival",
+   "rare"
+  ]
+ },
+ {
+  "id": "curio_tide_compass",
+  "name": "Tide Compass",
+  "type": "curio",
+  "slot": null,
+  "value": 140,
+  "stats": {},
+  "icon": "curio_tide_compass",
+  "stack": false,
+  "desc": "A brass compass whose needle points not north but toward the nearest open water.",
+  "tags": [
+   "curio"
+  ]
+ },
+ {
+  "id": "curio_songbird",
+  "name": "Clockwork Songbird",
+  "type": "curio",
+  "slot": null,
+  "value": 185,
+  "stats": {},
+  "icon": "curio_songbird",
+  "stack": false,
+  "desc": "A gilt songbird on a perch. Wound with a tiny key, it sings three bars of a lullaby nobody in Brindlewick knows.",
+  "tags": [
+   "curio"
+  ]
+ },
+ {
+  "id": "curio_seer_glass",
+  "name": "Seer's Lens",
+  "type": "curio",
+  "slot": null,
+  "value": 120,
+  "stats": {},
+  "icon": "curio_seer_glass",
+  "stack": false,
+  "desc": "A smoky glass lens in a bone ring. Through it, candle-flames look a little like faces.",
+  "tags": [
+   "curio"
+  ]
+ },
+ {
+  "id": "curio_star_chart",
+  "name": "Southern Star Chart",
+  "type": "curio",
+  "slot": null,
+  "value": 160,
+  "stats": {},
+  "icon": "curio_star_chart",
+  "stack": false,
+  "desc": "An inked chart of stars that never rise over Brindlewick, with notes in three hands and two languages.",
+  "tags": [
+   "curio"
+  ]
+ },
+ {
   "id": "leather_bear",
   "name": "Bear Leather",
   "type": "material",
