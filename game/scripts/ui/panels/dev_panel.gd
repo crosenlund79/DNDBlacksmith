@@ -65,6 +65,7 @@ func _ready() -> void:
 		["Pause / resume time", func(): Game.toggle_pause(); _say("Paused" if Game.paused else "Running")],
 		["Speed ×1", func(): Game.set_speed(1); _say("×1")], ["Speed ×4", func(): Game.set_speed(4); _say("×4")], ["Speed ×8", func(): Game.set_speed(8); _say("×8")],
 		["Open the Most Wanted board", func(): Events.open_panel.emit("wanted", {})]])
+	_iter9_tools()
 	_section("Relationships", [
 		["+20 affection: everyone in town", func(): _aff(20.0)],
 		["−20 affection: everyone in town", func(): _aff(-20.0)]])
@@ -133,6 +134,176 @@ func _potions() -> void:
 	Game.inventory().append(p)
 	Events.inventory_changed.emit()
 	_say("Draughts on the shelf")
+
+
+# ------------------------------------------------------------------ iteration 009 tools
+## Calls a static function on a system script if it exists (systems are added by separate modules).
+func _static_call(path: String, method: String, args := []) -> Variant:
+	if not ResourceLoader.exists(path):
+		_say("%s not available" % path.get_file())
+		return null
+	var sc: Script = load(path)
+	for m in sc.get_script_method_list():
+		if m["name"] == method:
+			return sc.callv(method, args)
+	_say("%s.%s() not available" % [path.get_file(), method])
+	return null
+
+
+func _iter9_tools() -> void:
+	# money and any registered item
+	body.add_child(UIKit.label("Items & money", 24, "heading", UIKit.GILT))
+	var row := UIKit.hbox(8)
+	var gold := LineEdit.new()
+	gold.placeholder_text = "gold (e.g. 5000 or -200)"
+	gold.custom_minimum_size = Vector2(240, 0)
+	row.add_child(gold)
+	row.add_child(UIKit.button("Grant gold", func(): Game.add_gold(int(gold.text), "dev", "Developer funds"); _say("%+d g" % int(gold.text)), 0))
+	var find := LineEdit.new()
+	find.placeholder_text = "item id or name…"
+	find.custom_minimum_size = Vector2(280, 0)
+	row.add_child(find)
+	var qty := SpinBox.new()
+	qty.min_value = 1
+	qty.max_value = 99
+	qty.value = 5
+	row.add_child(qty)
+	body.add_child(row)
+	var matches := HFlowContainer.new()
+	matches.add_theme_constant_override("h_separation", 6)
+	body.add_child(matches)
+	find.text_changed.connect(func(t: String):
+		UIKit.clear(matches)
+		if t.length() < 2:
+			return
+		var n := 0
+		for it in DB.items.values():
+			if n >= 24:
+				break
+			var q := t.to_lower()
+			if str(it["id"]).contains(q) or str(it["name"]).to_lower().contains(q):
+				var def: String = it["id"]
+				var b := UIKit.button(str(it["name"]), func():
+					var stack := bool(DB.item(def).get("stack", false))
+					if stack:
+						Game.add_item(Items.make(def, {"qty": int(qty.value)}), false)
+					else:
+						for k in int(qty.value):
+							Game.add_item(Items.make(def, {"quality": 90.0}), false)
+					Events.inventory_changed.emit()
+					_say("%s ×%d added" % [DB.item(def)["name"], int(qty.value)]), 0)
+				b.add_theme_font_size_override("font_size", 16)
+				matches.add_child(b)
+				n += 1)
+	# skills
+	body.add_child(UIKit.label("Skills & experience", 24, "heading", UIKit.GILT))
+	var sk_flow := HFlowContainer.new()
+	sk_flow.add_theme_constant_override("h_separation", 8)
+	for sk in DB.skill_list:
+		var id: String = sk["id"]
+		var box := UIKit.hbox(2)
+		box.add_child(UIKit.label("%s" % sk.get("name", id), 16, "body_bold", UIKit.PAPER))
+		box.add_child(UIKit.button("−", func(): _set_level(id, Game.player_level(id) - 1), 0))
+		box.add_child(UIKit.button("+", func(): _set_level(id, Game.player_level(id) + 1), 0))
+		box.add_child(UIKit.button("+XP", func(): Game.grant_player_xp(id, int(SkillSys.xp_needed(Game.player_level(id) + 1) / 2)); _say("%s %d" % [id, Game.player_level(id)]), 0))
+		sk_flow.add_child(box)
+	body.add_child(sk_flow)
+	# progression, property and workstations
+	var unit_btns := []
+	for u in Property.units():
+		var uid: String = u["id"]
+		if uid != "start":
+			unit_btns.append(["Own: " + str(u["name"]), func(): Property.dev_grant_unit(uid); _rebuild("Owns " + str(u["name"]))])
+	_section("Property & workstations (rebuilds the world)", unit_btns + [
+		["Own the whole building", func(): for u2 in Property.units(): Property.dev_grant_unit(str(u2["id"])); _rebuild("Whole building owned")],
+		["Install every station", func(): Property.dev_grant_all(); _rebuild("Every station installed")],
+		["Buy every station (to storage)", func(): _buy_all_stations()],
+		["Open Property & Workshop", func(): Events.open_panel.emit("property", {})]])
+	_section("Skill tree & recipes", [
+		["Unlock every skill-tree node", func(): _static_call("res://scripts/systems/skilltree.gd", "unlock_all"); Events.world_flag_changed.emit("tree"); _say("Every node unlocked")],
+		["Reset the tree to a new game", func(): _static_call("res://scripts/systems/skilltree.gd", "reset_new"); _say("Tree reset")],
+		["Learn every secret recipe", func(): _secret_recipes()],
+		["Open the skill tree", func(): Events.open_panel.emit("skilltree", {})],
+		["Open the equipment designer", func(): Events.open_panel.emit("designer", {})]])
+	_section("Representative progression states", [
+		["New-game progression (keep the world)", func(): _preset("new")],
+		["Mid-game: three workshops, skills 6", func(): _preset("mid")],
+		["Late game: whole building, skills 14", func(): _preset("late")]])
+	_section("Trade & Ironfront", [
+		["Ship docks now", func(): _static_call("res://scripts/systems/trade.gd", "dev_force_ship", [""]); _say("A ship is in")],
+		["Finish every import order", func(): _static_call("res://scripts/systems/trade.gd", "dev_finish_imports"); _say("Imports arrived")],
+		["Grant 5 random Ironfront cards", func(): for i in 5: _grant_card(); _say("Cards granted")],
+		["Open the harbour", func(): Events.open_panel.emit("harbour", {})],
+		["Open the herbalist", func(): Events.open_panel.emit("herbalist", {})],
+		["Open Ironfront", func(): Events.open_panel.emit("ironfront", {})]])
+
+
+func _grant_card() -> void:
+	var c: Variant = _static_call("res://scripts/systems/ironfront.gd", "random_card", [""])
+	if c != null:
+		_static_call("res://scripts/systems/ironfront.gd", "grant_card", [str(c), "dev"])
+
+
+func _set_level(skill: String, lvl: int) -> void:
+	var sset: Dictionary = Game.state["player"]["skills"]
+	if not sset.has(skill):
+		sset[skill] = {"lvl": 0, "xp": 0}
+	sset[skill]["lvl"] = clampi(lvl, 0, int(DB.skill_curve.get("max_level", 20)))
+	sset[skill]["xp"] = 0
+	Events.skill_level_up.emit("player", skill, int(sset[skill]["lvl"]))
+	_say("%s set to %d" % [skill, int(sset[skill]["lvl"])])
+
+
+func _buy_all_stations() -> void:
+	Game.add_gold(20000, "dev", "Developer funds for stations")
+	var n := 0
+	for sid in DB.stations:
+		if not Property.is_owned_station(sid):
+			(Property.st()["stored"] as Array).append(sid)
+			n += 1
+	_say("%d stations delivered to storage" % n)
+
+
+func _secret_recipes() -> void:
+	for r in DB.recipes.values():
+		var f := str(r.get("requires_flag", ""))
+		if f != "":
+			Game.set_flag(f)
+	Events.world_flag_changed.emit("recipes")
+	_say("Secret recipes learned")
+
+
+## Representative states for testing progression and the expanded building.
+func _preset(kind: String) -> void:
+	match kind:
+		"new":
+			Property.dev_reset_new()
+			_static_call("res://scripts/systems/skilltree.gd", "reset_new")
+			for sk in DB.skill_list:
+				_set_level(str(sk["id"]), {"smithing": 4, "mining": 2, "alchemy": 1, "runecraft": 1, "travelling": 3, "relic_hunting": 2, "arcane_metalwork": 0, "enchanted_stitching": 1}.get(str(sk["id"]), 0))
+		"mid":
+			for uid in ["cobbler", "laundry", "weaver"]:
+				Property.dev_grant_unit(uid)
+			for sk in DB.skill_list:
+				_set_level(str(sk["id"]), maxi(Game.player_level(str(sk["id"])), 6))
+			Property.dev_install_in_owned()
+			_static_call("res://scripts/systems/skilltree.gd", "unlock_available")
+		"late":
+			Property.dev_grant_all()
+			for sk in DB.skill_list:
+				_set_level(str(sk["id"]), maxi(Game.player_level(str(sk["id"])), 14))
+			_static_call("res://scripts/systems/skilltree.gd", "unlock_all")
+			if not Game.has_upgrade("arcane_foundry"):
+				(Game.state["upgrades"] as Array).append("arcane_foundry")
+	_rebuild("Progression preset: " + kind)
+
+
+func _rebuild(msg: String) -> void:
+	_say(msg)
+	var main := get_tree().root.get_node_or_null("Main")
+	if main and main.has_method("rebuild_world"):
+		close()
+		main.call_deferred("rebuild_world")
 
 
 func _resolve_all() -> void:

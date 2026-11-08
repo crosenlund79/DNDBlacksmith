@@ -637,6 +637,18 @@ static func dev_grant_all() -> void:
 		(s["stored"] as Array).erase(sid)
 
 
+## Installs every station whose original spot lies in a room the smith owns (dev / test presets).
+static func dev_install_in_owned() -> void:
+	var s := st()
+	var sp: Dictionary = data().get("station_pos", {})
+	for sid in DB.stations:
+		var p: Array = sp.get(sid, DB.station(sid).get("pos", [0, 0]))
+		var host := room_at_tile(rooms(), Vector2(float(p[0]), float(p[1])))
+		if not host.is_empty() and room_owned(host) and not (s["stations"] as Dictionary).has(sid):
+			s["stations"][sid] = {"pos": [float(p[0]), float(p[1])], "flip": false}
+			(s["stored"] as Array).erase(sid)
+
+
 static func dev_grant_unit(uid: String) -> void:
 	if not owns(uid):
 		(st()["units"] as Array).append(uid)
