@@ -44,7 +44,8 @@ func _build() -> void:
 	info.add_child(UIKit.label(Crafting.DISCIPLINE_NAME.get(st.get("discipline", ""), ""), 22, "heading_italic", UIKit.RUBRIC))
 	info.add_child(UIKit.label(st.get("purpose", ""), 22))
 	var c := Crafting.check_params(station_id)
-	info.add_child(UIKit.label("Precision ring at average difficulty: zone %d°, needle %.2f rev/s (your %s %d widens and slows it)" % [int(c["zone"]), c["speed"],
+	var mech_name := str(Minigames.tutorial(Minigames.mechanic({"station": station_id})).get("name", "Precision ring"))
+	info.add_child(UIKit.label("%s at average difficulty: zone %d°, needle %.2f rev/s (your %s %d widens and slows it)" % [mech_name, int(c["zone"]), c["speed"],
 		SkillSys.skill_name(Crafting.skill_for_station(station_id)), Game.player_level(Crafting.skill_for_station(station_id))], 18, "body_italic"))
 	var why := Crafting.station_locked_reason(station_id)
 	if why != "":
