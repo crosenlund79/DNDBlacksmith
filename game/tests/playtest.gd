@@ -3013,7 +3013,7 @@ func phase_recog10() -> void:
 	W()._update_schedules(true)
 	await wait(0.5)
 	var podium: Vector2 = W().spots.get("square_podium", W().spots.get("square_0", Vector2.ZERO))
-	expect(Ceremony.can_attend(), "recog10: the ceremony is gathered at noon")
+	expect(Ceremony.can_attend(), "recog10: the ceremony is gathered at noon (state %s, day %d, hour %d)" % [str(Ceremony.state()), Game.day(), Game.hour()])
 	await tp(podium + Vector2(0, 260))
 	await wait(1.0)
 	expect(panel() is HallOfFamePanel and str(Ceremony.state().get("status", "")) == "held", "recog10: walking into the square holds the ceremony")
