@@ -234,5 +234,8 @@ for r in layout["roads"]:
     if r["id"] == "lane_smithy":
         r["points"] = [[32.0, 31.2], [32.0, 34.2]]
 
+import village_layout  # noqa: E402  (iteration 009 village: new buildings, venues, pond, harbour, dressing)
+village_layout.apply(layout, by_id, room, door, F, home)
+
 json.dump(layout, open(os.path.join(D, "layout.json"), "w"), indent=1)
 print("layout ok")

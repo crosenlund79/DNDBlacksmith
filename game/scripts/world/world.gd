@@ -198,6 +198,19 @@ func _build_ground() -> void:
 
 
 func _build_roads() -> void:
+	# trodden, muddy verges under every road first, so the roads sit in worn ground
+	for r in DB.layout.get("roads", []):
+		var mud := Line2D.new()
+		mud.points = _smooth(r["points"])
+		mud.width = float(r["width"]) * T + 46.0
+		mud.texture = Assets.get_tex("textures/dirt_road", Vector2i(256, 256))
+		mud.texture_mode = Line2D.LINE_TEXTURE_TILE
+		mud.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		mud.default_color = Color(0.62, 0.5, 0.36, 0.42)
+		mud.joint_mode = Line2D.LINE_JOINT_ROUND
+		mud.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		mud.end_cap_mode = Line2D.LINE_CAP_ROUND
+		ground_layer.add_child(mud)
 	for r in DB.layout.get("roads", []):
 		var pts := _smooth(r["points"])
 		var wpx := float(r["width"]) * T
@@ -219,6 +232,15 @@ func _build_roads() -> void:
 		road.begin_cap_mode = Line2D.LINE_CAP_ROUND
 		road.end_cap_mode = Line2D.LINE_CAP_ROUND
 		ground_layer.add_child(road)
+		# cart ruts worn into the wider roads
+		if float(r["width"]) >= 1.4:
+			for side in [-1.0, 1.0]:
+				var rut := Line2D.new()
+				rut.points = _offset_line(pts, side * wpx * 0.2)
+				rut.width = 6.0
+				rut.default_color = Color(0.24, 0.16, 0.09, 0.32)
+				rut.joint_mode = Line2D.LINE_JOINT_ROUND
+				ground_layer.add_child(rut)
 	var sq: Dictionary = DB.layout.get("square", {})
 	if not sq.is_empty():
 		var c := tp(sq["center"])
@@ -473,7 +495,7 @@ func _sprite(id: String, pos: Vector2, parent: Node) -> Sprite2D:
 ## Places a prop: floor props go flat on the floor layer, others are Y-sorted with collision.
 ## `rot` is in radians; quarter turns swap the footprint so collisions match the drawn sprite.
 const SWAY := {"flowers": 2.6, "flower_patch_a": 2.8, "flower_patch_b": 2.8, "bush_flower": 1.8, "bush": 1.4,
-	"tree_oak_a": 1.3, "tree_oak_b": 1.3, "tree_pine": 1.0, "tree_small": 1.6}
+	"tree_oak_a": 1.3, "tree_oak_b": 1.3, "tree_pine": 1.0, "tree_small": 1.6, "reeds": 2.4, "fern": 1.8, "undergrowth": 1.2}
 var _sway_mats := {}
 
 
@@ -540,6 +562,18 @@ func _furniture(id: String, pos: Vector2, rot_deg: float) -> void:
 			var al := FX.light(Color("#9a6cff"), 160.0, 0.35, true)
 			al.position = pos
 			add_child(al)
+		"standing_lamp":
+			var sl2 := FX.light(Color("#ffc070"), 230.0, 0.75, true)
+			sl2.position = pos
+			add_child(sl2)
+		"wax_vat":
+			var wv := FX.light(Color("#ff9a50"), 150.0, 0.5, true)
+			wv.position = pos + Vector2(0, 26)
+			add_child(wv)
+		"paint_desk":
+			var pdl := FX.light(Color("#ffd090"), 150.0, 0.55)
+			pdl.position = pos + Vector2(42, -10)
+			add_child(pdl)
 		"rune_shelf", "rune_glyph_decal":
 			var rl := FX.light(Color("#ffe0a0"), 140.0, 0.3)
 			rl.position = pos
@@ -798,6 +832,7 @@ func _build_atmosphere() -> void:
 		var em := FX.embers(14)
 		em.position = fp + Vector2(40, 20)
 		add_child(em)
+	_build_night_dressing()
 
 
 func _room_rect_by_id(bid: String, rid: String) -> Rect2:
@@ -894,9 +929,12 @@ func _build_outdoors() -> void:
 	# the customer waiting area outside the shop's street door: four seats, a sign and a display
 	_build_waiting_area()
 	# lantern posts along the roads
-	var lp := [[50, 29.2], [68, 32.8], [40, 29.5], [26, 32.6], [12, 29.4], [80, 32.6], [57.2, 20], [60.8, 42], [57.4, 52], [33.4, 33.4]]
+	var lp := [[50, 29.2], [68, 32.8], [40, 29.5], [26, 32.6], [12, 29.4], [80, 32.6], [57.2, 20], [60.8, 42], [57.4, 52], [33.4, 33.4],
+		[52.0, 14.0], [40.4, 13.4], [27.0, 13.2], [37.2, 10.7], [70.0, 18.4], [79.6, 50.4], [92.2, 51.0], [84.0, 58.6],
+		[64.2, 57.0], [8.6, 24.0], [60.8, 46.0], [83.6, 36.6], [11.0, 33.8], [57.6, 8.0]]
 	for p in lp:
 		var pos := tp(p)
+		_veg_mark(pos, T * 1.0, 3)
 		_prop("lantern_post", pos)
 		var l := FX.light(Color("#ffb060"), 260.0, 0.0, true)
 		l.position = pos
@@ -914,57 +952,606 @@ func _build_outdoors() -> void:
 		var pos := tp(ex["pos"])
 		_add_interactable(pos, 160.0, "exit", ex["id"], "Road to " + ex["label"])
 		spots["exit_" + ex["id"]] = pos
-	# trees, bushes, rocks, flowers — avoid roads, buildings and the square
-	var blocked: Array[Rect2] = []
-	for b in buildings.values():
-		blocked.append((b["rect"] as Rect2).grow(80))
-	var road_pts: Array[Vector2] = []
-	for r in DB.layout.get("roads", []):
-		for p in _smooth(r["points"], 64.0):
-			road_pts.append(p)
-	var sq_c := tp(DB.layout["square"]["center"])
-	var placed: Array[Vector2] = []
+	# iteration 009: stairs, pond, harbour, hand-placed dressing, ground wear, groves and the woodland boundary
+	_build_stairways()
+	for name in DB.layout.get("outdoor_spots", {}):
+		spots[name] = tp(DB.layout["outdoor_spots"][name])
+	_build_pond()
+	_build_harbour()
+	_build_outdoor_props()
+	_build_ground_detail()
+	_build_vegetation(rng)
+	_place_animals_extra()
+
+
+# ======================================================================= iteration 009: the living village
+## Generic stairways (data: buildings[].stairways / areas[].stairways = [{pos, to, arrive, sprite, label}]).
+## Each stairway is an interactable of kind "stairs" whose id is the building/area it leads to; arriving there
+## puts you on its "stairs_<id>" spot. Barnaby's house ↔ the Ironfront basement uses this; the inn keeps its
+## older "stairs" record, which `interact()` handles the same way.
+func _build_stairways() -> void:
+	for b in DB.layout.get("buildings", []) + DB.layout.get("areas", []):
+		if not b.has("stairways"):
+			continue
+		var r := brect(b)
+		for st in b["stairways"]:
+			var spos := r.position + Vector2(float(st["pos"][0]), float(st["pos"][1])) * T
+			_sprite("props/" + str(st.get("sprite", "stairs_up")), spos, floor_layer)
+			_add_interactable(spos, 80.0, "stairs", str(st["to"]), str(st.get("label", "Stairs")))
+			var arr: Array = st.get("arrive", [st["pos"][0], float(st["pos"][1]) + 1.5])
+			spots["stairs_" + str(b["id"])] = r.position + Vector2(float(arr[0]), float(arr[1])) * T
+
+
+## Static collision for a water body: 32 px cells whose centre lies inside `poly`, minus the `open` rects
+## (jetties, quays), merged into horizontal runs.
+func _water_collision(poly: PackedVector2Array, open: Array) -> void:
+	var bb := Rect2(poly[0], Vector2.ZERO)
+	for p in poly:
+		bb = bb.expand(p)
+	var cs := 32.0
+	var y := bb.position.y
+	while y < bb.end.y:
+		var run_start := -1.0
+		var x := bb.position.x
+		while x <= bb.end.x + cs:
+			var c := Vector2(x + cs * 0.5, y + cs * 0.5)
+			var wet := x <= bb.end.x and Geometry2D.is_point_in_polygon(c, poly)
+			for o in open:
+				if (o as Rect2).has_point(c):
+					wet = false
+			if wet and run_start < 0.0:
+				run_start = x
+			elif not wet and run_start >= 0.0:
+				_solid(Rect2(run_start, y, x - run_start, cs))
+				run_start = -1.0
+			x += cs
+		y += cs
+
+
+func _ellipse_poly(c: Vector2, rad: Vector2, n := 36, wob := 0.05, seed := 3) -> PackedVector2Array:
+	var poly := PackedVector2Array()
+	for i in n:
+		var a := TAU * i / n
+		var k := 1.0 + wob * sin(a * 3.0 + seed) + wob * 0.6 * sin(a * 7.0 + seed * 2.0)
+		poly.append(c + Vector2(cos(a) * rad.x, sin(a) * rad.y) * k)
+	return poly
+
+
+func _water_body(poly: PackedVector2Array) -> void:
+	# muddy bank, ink shoreline, water, and a pale sheen toward the middle
+	var bank := Line2D.new()
+	bank.points = poly
+	bank.closed = true
+	bank.width = 30.0
+	bank.default_color = Color(0.42, 0.32, 0.2, 0.55)
+	ground_layer.add_child(bank)
+	_tex_poly(poly, "water", ground_layer)
+	_outline(poly, 4.0, ground_layer)
+	var c := Vector2.ZERO
+	for p in poly:
+		c += p
+	c /= poly.size()
+	var inner := PackedVector2Array()
+	for p in poly:
+		inner.append(c + (p - c) * 0.82)
+	var sheen := Polygon2D.new()
+	sheen.polygon = inner
+	sheen.color = Color(0.85, 0.92, 1.0, 0.10)
+	ground_layer.add_child(sheen)
+
+
+func _plank_deck(r: Rect2, vertical: bool) -> void:
+	_tex_poly(_rect_pts(r), "floor_wood", floor_layer, Color(0.9, 0.84, 0.76))
+	_outline(_rect_pts(r), 3.0, floor_layer)
+	var n := int((r.size.y if vertical else r.size.x) / 22.0)
+	for i in range(1, n):
+		var t := float(i) / n
+		var seam: PackedVector2Array
+		if vertical:
+			var yy := r.position.y + r.size.y * t
+			seam = PackedVector2Array([Vector2(r.position.x + 3, yy), Vector2(r.end.x - 3, yy)])
+		else:
+			var xx := r.position.x + r.size.x * t
+			seam = PackedVector2Array([Vector2(xx, r.position.y + 3), Vector2(xx, r.end.y - 3)])
+		_outline(seam, 1.2, floor_layer, Color(0.13, 0.08, 0.05, 0.45), false)
+
+
+# ----------------------------------------------------------------------- the pond
+var _ducks: Array = []
+
+
+func _build_pond() -> void:
+	var pd: Dictionary = DB.layout.get("pond", {})
+	if pd.is_empty():
+		return
+	var c := tp(pd["center"])
+	var rad := tp(pd["radius"])
+	_water_body(_ellipse_poly(c, rad, 40, 0.06, 5))
+	var jr: Array = pd.get("jetty", [])
+	var jetty := Rect2()
+	if jr.size() == 4:
+		jetty = Rect2(tp([jr[0], jr[1]]), Vector2(float(jr[2]), float(jr[3])) * T)
+		_plank_deck(jetty, true)
+		for py in [jetty.position.y + 10, jetty.position.y + jetty.size.y * 0.5]:
+			for px in [jetty.position.x - 4, jetty.end.x + 4]:
+				_sprite("props/mooring_post", Vector2(px, py), floor_layer).scale = Vector2(0.6, 0.6)
+	_water_collision(_ellipse_poly(c, rad * 0.9, 40, 0.06, 5), [jetty.grow(-6)])
+	for p in pd.get("lilies", []):
+		_prop("lily_pads", tp(p))
+	for p in pd.get("reeds", []):
+		_prop("reeds", tp(p))
+	if pd.has("bench"):
+		_prop("bench", tp(pd["bench"]))
+	_veg_mark_ellipse(c, rad + Vector2(T * 1.6, T * 1.4), 1)
+	_veg_mark_ellipse(c, rad + Vector2(T * 0.4, T * 0.4), 2)
+	# ducks paddle slow loops on the water
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21
+	for d in pd.get("ducks", []):
+		var home := tp(d)
+		var duck := _sprite("props/duck", home, floor_layer)
+		duck.z_index = 1
+		duck.scale = Vector2(1.5, 1.5)
+		var tw := duck.create_tween().set_loops()
+		var prev: Vector2 = home
+		var legs: Array[Vector2] = []
+		for k in 4:
+			var a := rng.randf() * TAU
+			legs.append(c + Vector2(cos(a) * rad.x, sin(a) * rad.y) * rng.randf_range(0.25, 0.68))
+		legs.append(home)
+		for nxt in legs:
+			var west := nxt.x < prev.x
+			tw.tween_callback(func() -> void: duck.flip_h = west)
+			tw.tween_property(duck, "position", nxt, maxf(0.5, prev.distance_to(nxt) / 14.0)).set_trans(Tween.TRANS_SINE)
+			tw.tween_interval(rng.randf_range(1.5, 4.0))
+			prev = nxt
+		_ducks.append(duck)
+
+
+# ----------------------------------------------------------------------- the harbour
+var harbour_ship: Sprite2D
+var harbour_ship_id := ""
+
+
+func _build_harbour() -> void:
+	var hb: Dictionary = DB.layout.get("harbour", {})
+	if hb.is_empty():
+		return
+	var poly := PackedVector2Array()
+	for p in hb["water"]:
+		poly.append(tp(p))
+	_water_body(poly)
+	var q: Array = hb["quay"]
+	var quay := Rect2(tp([q[0], q[1]]), Vector2(float(q[2]), float(q[3])) * T)
+	_tex_poly(_rect_pts(quay), "cobble", floor_layer, Color(0.86, 0.82, 0.76))
+	_outline(_rect_pts(quay), 3.0, floor_layer)
+	# timber fender along the water's edge, weed on the wet stone below it
+	var edge_y := quay.end.y - 6.0
+	_outline(PackedVector2Array([Vector2(quay.position.x, edge_y), Vector2(quay.end.x, edge_y)]), 12.0, floor_layer, Color("#4a3220"), false)
+	_outline(PackedVector2Array([Vector2(quay.position.x, edge_y), Vector2(quay.end.x, edge_y)]), 2.0, floor_layer, INK, false)
+	_outline(PackedVector2Array([Vector2(quay.position.x, quay.end.y + 6), Vector2(quay.end.x, quay.end.y + 6)]), 8.0, ground_layer, Color(0.3, 0.36, 0.22, 0.6), false)
+	if hb.has("culvert"):
+		# the stream runs under a plank bridge in the quay and spills out into the harbour
+		var cv: Array = hb["culvert"]
+		var deck := Rect2(tp([cv[0], cv[1]]) - Vector2(float(cv[2]) * T * 0.5, 0), Vector2(float(cv[2]), float(cv[3])) * T)
+		_plank_deck(deck, false)
+		var mouth := Polygon2D.new()
+		mouth.polygon = _ellipse_poly(Vector2(deck.get_center().x, deck.end.y + 4), Vector2(deck.size.x * 0.42, 10), 16, 0.02)
+		mouth.color = Color(0.06, 0.05, 0.05, 0.7)
+		ground_layer.add_child(mouth)
+	for p in hb.get("boats", []):
+		_prop("rowboat", tp(p))
+	var jr: Array = hb.get("jetty", [])
+	var jetty := Rect2()
+	if jr.size() == 4:
+		jetty = Rect2(tp([jr[0], jr[1]]), Vector2(float(jr[2]), float(jr[3])) * T)
+		_plank_deck(jetty, true)
+	for p in hb.get("posts", []):
+		_prop("mooring_post", tp(p))
+	_water_collision(poly, [jetty.grow(-4), quay])
+	# the harbourmaster's booth: interactable `harbour` at its serving hatch
+	if hb.has("booth"):
+		var bp := tp(hb["booth"])
+		_prop("harbour_booth", bp)
+		_add_interactable(bp + Vector2(0, 76), 130.0, "harbour", "harbour", "Harbourmaster's booth — ships, cargo & trade")
+		var bl := FX.light(Color("#ffb060"), 220.0, 0.0, true)
+		bl.position = bp + Vector2(-56, -50)
+		add_child(bl)
+		night_lights.append(bl)
+	_veg_mark_poly(poly, 3)
+	_veg_mark_rect(quay.grow(T * 1.5), 1)
+	_veg_mark_rect(quay, 2)
+	# the docked-ship hook: a sprite at the berth, shown when Trade reports a ship in port
+	harbour_ship = Sprite2D.new()
+	harbour_ship.position = tp(hb["ship"])
+	harbour_ship.z_index = 2
+	harbour_ship.visible = false
+	floor_layer.add_child(harbour_ship)
+	var bob := harbour_ship.create_tween().set_loops()
+	bob.tween_property(harbour_ship, "offset:y", 3.0, 2.2).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(harbour_ship, "offset:y", -3.0, 2.2).set_trans(Tween.TRANS_SINE)
+	Events.day_started.connect(func(_d: int) -> void: refresh_harbour_ship())
+	Events.hour_passed.connect(func(_d: int, _h: int) -> void: refresh_harbour_ship())
+	refresh_harbour_ship()
+
+
+## Shows the ship `Trade` reports in port at the berth (props/ship_spice, ship_barge, ship_whaler — drawn by the
+## trade worker). Contract: static Trade.docked_ship() -> String returns "" (no ship) or a ship id ("spice" or
+## "ship_spice"…). Guarded so the village works without the Trade system. The lead can also call
+## `set_harbour_ship(id)` directly or connect a Trade signal to `refresh_harbour_ship()`.
+func refresh_harbour_ship() -> void:
+	var id := ""
+	if ResourceLoader.exists("res://scripts/systems/trade.gd"):
+		var tr: Script = load("res://scripts/systems/trade.gd")
+		for m in tr.get_script_method_list():
+			if str(m["name"]) == "docked_ship":
+				id = str(tr.call("docked_ship"))
+				break
+	set_harbour_ship(id)
+
+
+func set_harbour_ship(id: String) -> void:
+	if harbour_ship == null:
+		return
+	if id != "" and not id.begins_with("ship_"):
+		id = "ship_" + id
+	harbour_ship_id = id
+	if id == "" or not Assets.has_tex("props/" + id):
+		harbour_ship.visible = false
+		return
+	harbour_ship.texture = Assets.get_tex("props/" + id, Vector2i(512, 192))
+	harbour_ship.visible = true
+
+
+# ----------------------------------------------------------------------- hand-placed dressing & ground wear
+func _build_outdoor_props() -> void:
+	for f in DB.layout.get("outdoor_props", []):
+		_prop(str(f[0]), tp([f[1], f[2]]), deg_to_rad(float(f[3])) if f.size() > 3 else 0.0)
+
+
+func _build_ground_detail() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 33
 	var size: Array = DB.layout["size"]
-	var want := {"tree_oak_a": 70, "tree_oak_b": 55, "tree_pine": 45, "tree_small": 40, "bush": 50, "bush_flower": 30, "rock_a": 22, "rock_b": 16, "flowers": 60,
-		"flower_patch_a": 45, "flower_patch_b": 45}
-	for kind in want:
-		var n: int = want[kind]
+	var grass := Assets.get_tex("textures/grass", Vector2i(256, 256))
+	# greener, lusher meadow patches and darker damp hollows break up the flat ground
+	for i in 46:
+		var c := Vector2(rng.randf_range(-2, float(size[0]) + 2), rng.randf_range(-2, float(size[1]) + 2)) * T
+		var rad := Vector2(rng.randf_range(2.0, 5.5), rng.randf_range(1.6, 4.0)) * T
+		var p := Polygon2D.new()
+		p.polygon = _ellipse_poly(c, rad, 18, 0.16, i)
+		p.texture = grass
+		p.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		p.color = Color(0.78, 0.86, 0.6, 0.42) if i % 3 != 0 else Color(0.6, 0.62, 0.46, 0.34)
+		ground_layer.add_child(p)
+		ground_layer.move_child(p, 1)   # right above the base grass, under roads and water
+	# trodden earth in front of every door and grime along the foot of every wall
+	for b in DB.layout.get("buildings", []):
+		var r := brect(b)
+		var d: Dictionary = b["doors"][0]
+		var dc := _door_center(r, d) + _door_out(d) * 60.0
+		var worn := Polygon2D.new()
+		worn.polygon = _ellipse_poly(dc, Vector2(78, 52) if d["side"] in ["n", "s"] else Vector2(52, 78), 16, 0.18, str(b["id"]).length())
+		worn.texture = Assets.get_tex("textures/dirt_road", Vector2i(256, 256))
+		worn.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		worn.color = Color(0.85, 0.78, 0.68, 0.75)
+		ground_layer.add_child(worn)
+		var grime := Line2D.new()
+		grime.points = _rect_pts(r.grow(10))
+		grime.closed = true
+		grime.width = 26.0
+		grime.default_color = Color(0.2, 0.13, 0.07, 0.22)
+		ground_layer.add_child(grime)
+	# a glow and embers over the forge chimney: the smithy reads from the street, day and night
+	var sm := DB.building("smithy")
+	var chims: Array = sm.get("chimneys", [])
+	if not chims.is_empty():
+		var cp := brect(sm).position + Vector2(float(chims[0][0]) + 0.4, float(chims[0][1]) + 0.4) * T
+		var fg := FX.light(Color("#ff7a26"), 230.0, 0.0, true)
+		fg.position = cp
+		fg.set_meta("gain", 1.3)
+		fg.set_meta("roof", true)
+		add_child(fg)
+		night_lights.append(fg)
+		var em := FX.embers(8)
+		em.position = cp
+		em.z_index = 45
+		add_child(em)
+
+
+## Point list offset sideways by `d` pixels (cart ruts along a road).
+func _offset_line(pts: PackedVector2Array, d: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in pts.size():
+		var a := pts[maxi(i - 1, 0)]
+		var b := pts[mini(i + 1, pts.size() - 1)]
+		var dir := (b - a).normalized()
+		out.append(pts[i] + Vector2(-dir.y, dir.x) * d)
+	return out
+
+
+# ----------------------------------------------------------------------- vegetation: groves & the woodland edge
+## A coarse half-tile grid of where plants may not grow. Bit 1 blocks trees, bit 2 blocks undergrowth/flowers.
+const VEG_CELL := 32.0
+const VEG_PAD := 6
+var _veg: PackedByteArray
+var _veg_w := 0
+var _veg_h := 0
+var _trees_at: Dictionary = {}
+
+
+func _veg_init() -> void:
+	if _veg_w > 0:
+		return
+	var size: Array = DB.layout.get("size", [96, 64])
+	_veg_w = int((float(size[0]) + VEG_PAD * 2) * T / VEG_CELL)
+	_veg_h = int((float(size[1]) + VEG_PAD * 2) * T / VEG_CELL)
+	_veg.resize(_veg_w * _veg_h)
+	_veg.fill(0)
+
+
+func _veg_cell(p: Vector2) -> Vector2i:
+	return Vector2i(int(floor((p.x + VEG_PAD * T) / VEG_CELL)), int(floor((p.y + VEG_PAD * T) / VEG_CELL)))
+
+
+func _veg_get(p: Vector2) -> int:
+	_veg_init()
+	var c := _veg_cell(p)
+	if c.x < 0 or c.y < 0 or c.x >= _veg_w or c.y >= _veg_h:
+		return 3
+	return _veg[c.y * _veg_w + c.x]
+
+
+func _veg_set_cells(a: Vector2i, b: Vector2i, bits: int, test: Callable) -> void:
+	for y in range(maxi(a.y, 0), mini(b.y + 1, _veg_h)):
+		for x in range(maxi(a.x, 0), mini(b.x + 1, _veg_w)):
+			var centre := Vector2((x + 0.5) * VEG_CELL - VEG_PAD * T, (y + 0.5) * VEG_CELL - VEG_PAD * T)
+			if test.call(centre):
+				_veg[y * _veg_w + x] |= bits
+
+
+func _veg_mark(p: Vector2, r: float, bits: int) -> void:
+	_veg_init()
+	_veg_set_cells(_veg_cell(p - Vector2(r, r)), _veg_cell(p + Vector2(r, r)), bits, func(c: Vector2) -> bool: return c.distance_to(p) <= r)
+
+
+func _veg_mark_rect(r: Rect2, bits: int) -> void:
+	_veg_init()
+	_veg_set_cells(_veg_cell(r.position), _veg_cell(r.end), bits, func(_c: Vector2) -> bool: return true)
+
+
+func _veg_mark_ellipse(c: Vector2, rad: Vector2, bits: int) -> void:
+	_veg_init()
+	_veg_set_cells(_veg_cell(c - rad), _veg_cell(c + rad), bits,
+		func(p: Vector2) -> bool: return pow((p.x - c.x) / rad.x, 2) + pow((p.y - c.y) / rad.y, 2) <= 1.0)
+
+
+func _veg_mark_poly(poly: PackedVector2Array, bits: int) -> void:
+	_veg_init()
+	var bb := Rect2(poly[0], Vector2.ZERO)
+	for p in poly:
+		bb = bb.expand(p)
+	_veg_set_cells(_veg_cell(bb.position), _veg_cell(bb.end), bits, func(c: Vector2) -> bool: return Geometry2D.is_point_in_polygon(c, poly))
+
+
+## A tree or shrub; outside the playable map it skips the collision body (the map border walls are there).
+func _veg_prop(id: String, pos: Vector2, solid := true) -> void:
+	if solid:
+		_prop(id, pos)
+		return
+	var info: Dictionary = DB.props.get(id, {"size": [64, 64]})
+	var h := float(info["size"][1])
+	var holder := Node2D.new()
+	holder.position = pos + Vector2(0, h * 0.3)
+	var s := Sprite2D.new()
+	s.texture = Assets.get_tex("props/" + id, Vector2i(int(info["size"][0]), int(h)))
+	s.position = Vector2(0, -h * 0.3)
+	if SWAY.has(id):
+		s.material = _sway_material(id)
+	holder.add_child(s)
+	ysort.add_child(holder)
+
+
+func _tree_free(p: Vector2, gap: float) -> bool:
+	var c := _veg_cell(p)
+	var k := int(ceil(gap / VEG_CELL))
+	for y in range(c.y - k, c.y + k + 1):
+		for x in range(c.x - k, c.x + k + 1):
+			var key := y * 100000 + x
+			if _trees_at.has(key) and (_trees_at[key] as Vector2).distance_to(p) < gap:
+				return false
+	return true
+
+
+func _plant(kind: String, p: Vector2, gap: float, solid := true) -> bool:
+	var bit := 1 if kind.begins_with("tree") else 2
+	if _veg_get(p) & bit:
+		return false
+	if not _tree_free(p, gap):
+		return false
+	var c := _veg_cell(p)
+	_trees_at[c.y * 100000 + c.x] = p
+	_veg_prop(kind, p, solid)
+	return true
+
+
+func _build_vegetation(rng: RandomNumberGenerator) -> void:
+	_veg_init()
+	var size: Array = DB.layout["size"]
+	var mw := float(size[0]) * T
+	var mh := float(size[1]) * T
+	# what may not be overgrown: buildings, roads, the square, the stream, exits, spots, props already placed
+	for bid in buildings:
+		if buildings[bid]["area"]:
+			continue
+		_veg_mark_rect((buildings[bid]["rect"] as Rect2).grow(T * 1.3), 1)
+		_veg_mark_rect((buildings[bid]["rect"] as Rect2).grow(T * 0.3), 2)
+	for r in DB.layout.get("roads", []):
+		var half := float(r["width"]) * T * 0.5
+		for p in _smooth(r["points"], 32.0):
+			_veg_mark(p, half + T * 1.1, 1)
+			_veg_mark(p, half + T * 0.3, 2)
+	var st: Dictionary = DB.layout.get("stream", {})
+	if not st.is_empty():
+		for p in _smooth(st["points"], 32.0):
+			_veg_mark(p, float(st["width"]) * T * 0.5 + T * 0.9, 3)
+	var sq: Dictionary = DB.layout.get("square", {})
+	if not sq.is_empty():
+		_veg_mark_ellipse(tp(sq["center"]), tp(sq["radius"]) + Vector2(T * 2, T * 2), 1)
+		_veg_mark_ellipse(tp(sq["center"]), tp(sq["radius"]) + Vector2(T * 0.4, T * 0.4), 2)
+	for ex in DB.layout.get("exits", []):
+		_veg_mark(tp(ex["pos"]), T * 5.0, 1)
+		_veg_mark(tp(ex["pos"]), T * 2.6, 2)
+	for kc in DB.layout.get("boundary", {}).get("keep_clear", []):
+		_veg_mark_rect(Rect2(tp([kc[0], kc[1]]), Vector2(float(kc[2]), float(kc[3])) * T), 1)
+	for n in ysort.get_children():
+		if n is Node2D:
+			_veg_mark((n as Node2D).position, T * 1.15, 1)
+			_veg_mark((n as Node2D).position, T * 0.75, 2)
+	for f in DB.layout.get("outdoor_props", []):
+		if str(f[0]) in ["crop_rows", "herb_garden", "mud_patch", "puddle"]:
+			_veg_mark(tp([f[1], f[2]]), T * 1.6, 3)
+	for name in spots:
+		if not _inside_any_building(spots[name]):
+			_veg_mark(spots[name], T * 1.0, 3)
+	var tree_kinds := ["tree_oak_a", "tree_oak_b", "tree_pine", "tree_small", "tree_pine", "tree_oak_a"]
+	var under_kinds := ["undergrowth", "fern", "bush", "undergrowth", "fern", "bush_flower"]
+	# 1) the woodland boundary: a dense belt along the map edge and a ragged row just beyond it
+	var bd: Dictionary = DB.layout.get("boundary", {})
+	var depth := float(bd.get("depth", 3.5)) * T
+	var sp := float(bd.get("spacing", 1.3)) * T
+	var y := -2.4 * T
+	while y < mh + 2.4 * T:
+		var x := -2.4 * T
+		while x < mw + 2.4 * T:
+			var p := Vector2(x, y) + Vector2(rng.randf_range(-0.42, 0.42), rng.randf_range(-0.42, 0.42)) * sp
+			var edge := minf(minf(p.x, mw - p.x), minf(p.y, mh - p.y))
+			var outside := edge < 0.0
+			var east_wood := p.x > 91.6 * T and p.y < 46.0 * T
+			if edge < depth or east_wood:
+				var dense := 1.0 - clampf(edge / depth, 0.0, 1.0) * 0.45
+				if rng.randf() < dense:
+					var kind: String = tree_kinds[rng.randi() % tree_kinds.size()]
+					if not _plant(kind, p, sp * 0.82, not outside):
+						if not outside and rng.randf() < 0.7:
+							_plant(under_kinds[rng.randi() % under_kinds.size()], p, T * 0.7)
+					elif not outside and rng.randf() < 0.55:
+						# undergrowth on the inner side of the trunk
+						var inward := (Vector2(mw * 0.5, mh * 0.5) - p).normalized()
+						_plant(under_kinds[rng.randi() % under_kinds.size()], p + inward * T * rng.randf_range(0.9, 1.4), T * 0.7)
+			x += sp
+		y += sp
+	# 2) groves: clustered trees, the biggest near the middle, fringed with shrubs, ferns and brambles
+	for g in DB.layout.get("groves", []):
+		var gc := tp([g[0], g[1]])
+		var gr := float(g[2]) * T
+		var want := int(float(g[3]) * PI * pow(float(g[2]), 2) / 2.2) + 1
 		var tries := 0
-		while n > 0 and tries < 3000:
+		while want > 0 and tries < 260:
 			tries += 1
-			var p := Vector2(rng.randf_range(0, float(size[0]) * T), rng.randf_range(0, float(size[1]) * T))
-			var edge := minf(minf(p.x, float(size[0]) * T - p.x), minf(p.y, float(size[1]) * T - p.y))
-			# trees cluster near the map edges (forest), the rest is open meadow
-			if kind.begins_with("tree") and edge > 9 * T and rng.randf() < 0.82:
-				continue
-			var ok := p.distance_to(sq_c) > 9 * T
-			for br in blocked:
-				if br.has_point(p):
-					ok = false
-					break
-			if ok:
-				for rp in road_pts:
-					if rp.distance_to(p) < (2.4 * T if kind.begins_with("tree") else 1.7 * T):
-						ok = false
-						break
-			if ok:
-				var gap := 1.6 * T if kind.begins_with("tree") else 0.9 * T
-				for q in placed:
-					if q.distance_to(p) < gap:
-						ok = false
-						break
-			if not ok:
-				continue
-			# keep exits open
-			var near_exit := false
-			for ex in DB.layout["exits"]:
-				if tp(ex["pos"]).distance_to(p) < 5 * T:
-					near_exit = true
-			if near_exit:
-				continue
-			placed.append(p)
-			_prop(kind, p, 0.0)
-			n -= 1
+			var a := rng.randf() * TAU
+			var d := sqrt(rng.randf()) * gr
+			var gp := gc + Vector2(cos(a), sin(a)) * d
+			var kind2: String = ["tree_oak_a", "tree_oak_b", "tree_pine"][rng.randi() % 3] if d < gr * 0.55 else tree_kinds[rng.randi() % tree_kinds.size()]
+			if _plant(kind2, gp, T * 1.35):
+				want -= 1
+		for k in int(float(g[2]) * 5.0):
+			var a2 := rng.randf() * TAU
+			_plant(under_kinds[rng.randi() % under_kinds.size()], gc + Vector2(cos(a2), sin(a2)) * gr * rng.randf_range(0.7, 1.25), T * 0.75)
+	# 3) the open meadow: a few lone shrubs, rocks, flowers and stumps
+	var want2 := {"bush": 26, "bush_flower": 18, "rock_a": 16, "rock_b": 10, "flowers": 50, "flower_patch_a": 40, "flower_patch_b": 40,
+		"fern": 20, "stump": 8, "tree_small": 10}
+	for kind3 in want2:
+		var n2: int = want2[kind3]
+		var tries2 := 0
+		while n2 > 0 and tries2 < 1500:
+			tries2 += 1
+			var p3 := Vector2(rng.randf_range(2, float(size[0]) - 2) * T, rng.randf_range(2, float(size[1]) - 2) * T)
+			if _plant(kind3, p3, T * (1.6 if kind3.begins_with("tree") else 0.9)):
+				n2 -= 1
+
+
+# ----------------------------------------------------------------------- night dressing: lit windows, light masks
+var _window_glows: Array = []
+
+
+## Roofs only take light from street lamps, windows and the forge chimney (light mask 2), never from candles and
+## hearths inside (mask 1), so interiors no longer bleed through the roofs by day. At night every house shows
+## warm lit windows along its eaves (children of the roof, so they fade with it when you step inside).
+## Light masks: 1 = interiors and actors, 2 = roofs, 4 = outdoor ground and props, 8 = lit window panes.
+## Interior lights (candles, hearths, stations) keep the default cull mask 1; street lights cull 1|4.
+func _build_night_dressing() -> void:
+	for l in night_lights:
+		(l as PointLight2D).range_item_cull_mask = 7 if l.get_meta("roof", false) else 5
+	for ch in ground_layer.get_children():
+		(ch as CanvasItem).light_mask = 4
+	for ch in floor_layer.get_children():
+		if ch is Sprite2D and not _inside_any_building((ch as Sprite2D).position):
+			(ch as CanvasItem).light_mask = 5
+	for ch in ysort.get_children():
+		if ch is Node2D and ch.get_child_count() > 0 and ch.get_child(0) is Sprite2D and not _inside_any_building((ch as Node2D).position):
+			(ch.get_child(0) as CanvasItem).light_mask = 5
+	for bid in buildings:
+		var info: Dictionary = buildings[bid]
+		var roof: Sprite2D = info["roof"]
+		if roof == null:
+			continue
+		roof.light_mask = 2
+		var r: Rect2 = info["rect"]
+		var b := DB.building(bid)
+		var sides := ["n", "s"] if b.get("ridge", "h") == "h" else ["w", "e"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = bid.hash()
+		for side in sides:
+			var length := r.size.x if side in ["n", "s"] else r.size.y
+			var n := maxi(1, int(length / (3.4 * T)))
+			for i in n:
+				var t := (i + 0.5) / n + rng.randf_range(-0.06, 0.06)
+				var local: Vector2
+				var sz := Vector2(30, 9) if side in ["n", "s"] else Vector2(9, 30)
+				match side:
+					"n": local = Vector2(r.size.x * t, 9)
+					"s": local = Vector2(r.size.x * t, r.size.y - 9)
+					"w": local = Vector2(9, r.size.y * t)
+					_: local = Vector2(r.size.x - 9, r.size.y * t)
+				var win := Polygon2D.new()
+				# the roof sprite is scaled to the building: draw in its local (texture) space
+				win.polygon = _rect_pts(Rect2((local - sz * 0.5) / roof.scale, sz / roof.scale))
+				win.color = Color(1.0, 0.78, 0.4)
+				win.light_mask = 8
+				win.modulate.a = 0.0
+				roof.add_child(win)
+				_window_glows.append(win)
+				if i % 2 == 0:
+					var wl := FX.light(Color("#ffae58"), 120.0, 0.0)
+					wl.position = r.position + local + _side_vec(side) * 26.0
+					wl.range_item_cull_mask = 5
+					wl.set_meta("gain", 0.8)
+					add_child(wl)
+					night_lights.append(wl)
+		# one light per house that only lights its window panes (mask 8), so the panes glow without lighting the roof
+		var pane := FX.light(Color("#ffc070"), r.size.length() * 0.6, 0.0)
+		pane.position = r.get_center()
+		pane.range_item_cull_mask = 8
+		pane.set_meta("gain", 2.4)
+		add_child(pane)
+		night_lights.append(pane)
+
+
+func _side_vec(side: String) -> Vector2:
+	return {"n": Vector2.UP, "s": Vector2.DOWN, "w": Vector2.LEFT, "e": Vector2.RIGHT}[side]
+
+
+# ----------------------------------------------------------------------- more animals
+const ANIMALS_EXTRA := [["animal_cat_2", [86.0, 52.4], 220.0], ["animal_dog_1", [10.2, 27.6], 200.0], ["animal_cat_1", [35.0, 11.8], 160.0]]
+
+
+func _place_animals_extra() -> void:
+	for a in ANIMALS_EXTRA:
+		var an := AnimalActor.new()
+		an.setup(a[0], tp(a[1]), float(a[2]))
+		ysort.add_child(an)
+		animals.append(an)
 
 
 func _refresh_eggs() -> void:
@@ -1036,9 +1623,9 @@ func _build_nav() -> void:
 			if a < b and not astar.are_points_connected(a, b) and astar.get_point_position(a).distance_to(astar.get_point_position(b)) < 120.0:
 				astar.connect_points(a, b)
 	var outdoor_ids: Array[int] = road_ids.duplicate()
-	# outdoor spots
+	# outdoor spots: every named spot that is not inside a building or an area
 	for name in spots.keys():
-		if name.begins_with("square_") or name in ["notice", "well", "inn_garden"] or name.begins_with("exit_") or name.begins_with("wait_seat_"):
+		if not _inside_any_building(spots[name]):
 			var id := _pt(spots[name])
 			spot_ids[name] = id
 			_link_nearest(id, 1400.0, 2)
@@ -1094,8 +1681,24 @@ func _build_nav() -> void:
 				spot_ids[name] = sid
 				astar.connect_points(sid, hubs[bid + "/" + rid3])
 			break
-	if spot_ids.has("upstairs_hall"):
-		pass
+	# stairs join floors: the arrival spot of each stairway links to the arrival spot on the other side
+	for e in interactables:
+		if e["kind"] != "stairs":
+			continue
+		var there: String = "stairs_" + str(e["id"])
+		var here := ""
+		for bid in buildings:
+			if (buildings[bid]["rect"] as Rect2).has_point(e["pos"]):
+				here = "stairs_" + bid
+		if spot_ids.has(here) and spot_ids.has(there) and not astar.are_points_connected(spot_ids[here], spot_ids[there]):
+			astar.connect_points(spot_ids[here], spot_ids[there])
+
+
+func _inside_any_building(p: Vector2) -> bool:
+	for bid in buildings:
+		if (buildings[bid]["rect"] as Rect2).has_point(p):
+			return true
+	return false
 
 
 ## Room id at a world position inside building `bid` ("" outside any room).
@@ -1124,6 +1727,8 @@ func _spawn_player() -> void:
 	player = PlayerBody.new()
 	var saved: Array = Game.state["player"].get("pos", [])
 	player.position = Vector2(float(saved[0]), float(saved[1])) if saved.size() == 2 else bpos("smithy", 15, 7.5)
+	if Rect2(104 * T, 10 * T, 20 * T, 14 * T).has_point(player.position):
+		player.position += Vector2((118 - 104) * T, 0)   # saved upstairs before iteration 009 moved the area east
 	ysort.add_child(player)
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
@@ -1135,8 +1740,8 @@ func _spawn_player() -> void:
 
 func _set_camera_limits() -> void:
 	var r: Rect2
-	if area == "inn_upstairs":
-		r = brect(DB.building("inn_upstairs")).grow(400)
+	if buildings.get(area, {}).get("area", false):
+		r = (buildings[area]["rect"] as Rect2).grow(400)
 	else:
 		var size: Array = DB.layout["size"]
 		r = Rect2(-256, -256, float(size[0]) * T + 512, float(size[1]) * T + 512)
@@ -1213,7 +1818,8 @@ func spot_for(id: String) -> String:
 		var seed := absi(id.hash() + Game.day())
 		if h < 9 or (h >= 12 and h < 14) or h >= 18:
 			return ["inn_t%d" % (1 + seed % 6), "inn_t%db" % (1 + (seed / 7) % 6), "inn_bar", "inn_hearth"][(seed + h) % 4]
-		return ["square_%d" % (seed % 6), "notice", "well", "inn_garden", "square_%d" % ((seed + 3) % 6)][(seed + h) % 5]
+		return ["square_%d" % (seed % 6), "notice", "well", "inn_garden", "square_%d" % ((seed + 3) % 6), "pond_%d" % (1 + seed % 3),
+			"harbour_quay"][(seed + h) % 7]
 	match id:
 		"aldric":
 			if Game.state["world"].get("delivery_pending", false) and h >= 9 and h < 17:
@@ -1226,15 +1832,34 @@ func spot_for(id: String) -> String:
 				return ["inn_t1b", "inn_t3b", "inn_t4", "inn_bar", "inn_t6b", "inn_t2"][h % 6]
 			return ""
 		"martha":
+			if h >= 15 and h < 17:
+				return "pond_1"   # an afternoon on the pond bench
 			return "well" if h >= 8 and h < 12 else ("house_martha_inside" if h < 21 else "")
 		"tobin":
 			return "house_tobin_inside" if h >= 8 and h < 17 else ("inn_t4b" if h < 21 else "")
 		"oswin":
 			return "house_oswin_inside" if h >= 6 and h < 21 else ""
 		"jory":
+			if h >= 7 and h < 11:
+				return "fields"
+			if h >= 15 and h < 18:
+				return "pond_3"
 			return "house_jory_inside" if h >= 7 and h < 15 else (["square_2", "inn_t5b"][int(h >= 18)] if h < 21 else "")
 		"eda":
+			if h >= 13 and h < 16:
+				return "pond_2"
 			return "well" if h >= 8 and h < 16 else ("square_4" if h < 20 else "")
+		"barnaby":
+			# the Ironfront host: his parlour by day, the basement den in the evening
+			if h >= 17 and h < 23:
+				return "ironfront_host"
+			if h >= 12 and h < 14:
+				return "inn_t6b"
+			return "barnaby_house_inside" if h >= 8 and h < 17 else ""
+		"herbalist":
+			return "herbalist_counter" if h >= 8 and h < 18 else ("pond_3" if h < 20 else "")
+		"harbourmaster":
+			return "harbour_quay" if h >= 6 and h < 19 else ("inn_bar" if h < 22 else "")
 		"rosalind":
 			return "lantern_3"
 		"lysa":
@@ -1280,7 +1905,7 @@ func _home_spot(id: String) -> String:
 	var home: String = c.get("home", "")
 	if home == "grocery":
 		return "grocery_behind"
-	if home.begins_with("house_"):
+	if home.begins_with("house_") or spots.has(home + "_inside"):
 		return home + "_inside"
 	if home == "inn_upstairs":
 		return "lantern_3"
@@ -1380,7 +2005,15 @@ func _update_area(delta: float) -> void:
 
 func _on_area_changed() -> void:
 	_set_camera_limits()
-	var night := Game.is_night()
+	_update_ambience()
+	Events.toast.emit(buildings.get(area, {}).get("name", "Brindlewick"), "area")
+
+
+## Ambience bed + music for where the player is and the time of day: the village day loop gives way to
+## the night loop at dusk (and back at dawn), cottages and shops muffle the street, the inn and the
+## basement den carry the tavern murmur.
+func _update_ambience() -> void:
+	var night := Game.is_night() or night_factor > 0.5
 	match area:
 		"smithy":
 			Audio.set_ambience("bed", "amb/workshop_loop", -4.0)
@@ -1388,10 +2021,16 @@ func _on_area_changed() -> void:
 		"inn", "inn_upstairs":
 			Audio.set_ambience("bed", "amb/tavern_loop", -6.0 if area == "inn" else -16.0)
 			Audio.play_music("music/tavern")
-		_:
+		"ironfront_basement":
+			Audio.set_ambience("bed", "amb/tavern_loop", -18.0)
+			Audio.play_music("music/tavern")
+		"village":
 			Audio.set_ambience("bed", "amb/village_night_loop" if night else "amb/village_day_loop", -6.0)
 			Audio.play_music("music/village_evening" if Game.hour() >= 17 or night else "music/hearth_day")
-	Events.toast.emit(buildings.get(area, {}).get("name", "Brindlewick"), "area")
+		_:
+			# other houses and shops: the street outside, muffled by the walls
+			Audio.set_ambience("bed", "amb/village_night_loop" if night else "amb/village_day_loop", -15.0)
+			Audio.play_music("music/village_evening" if Game.hour() >= 17 or night else "music/hearth_day")
 
 
 func _update_focus() -> void:
@@ -1460,10 +2099,12 @@ func interact(e: Dictionary) -> void:
 			Audio.play("sfx/water")
 			Events.toast.emit("You scrub the shop front clean. Somebody in this village is cross with you.", "info")
 		"stairs":
-			var target := "inn_upstairs" if e["id"] == "inn_upstairs" else "inn"
-			player.position = spots["stairs_inn_upstairs"] if target == "inn_upstairs" else spots["stairs_inn"]
-			Audio.play("sfx/door", -4.0)
-			camera.reset_smoothing()
+			# stairs lead to building/area `id`; you arrive at its "stairs_<id>" spot (inn ↔ upstairs, house ↔ basement…)
+			var arrive: String = "stairs_" + str(e["id"])
+			if spots.has(arrive):
+				player.position = spots[arrive]
+				Audio.play("sfx/door", -4.0)
+				camera.reset_smoothing()
 		"exit":
 			var ex := {}
 			for x in DB.layout["exits"]:
@@ -1474,31 +2115,61 @@ func interact(e: Dictionary) -> void:
 
 
 # ======================================================================= light
+## Sky colour keyframes over the day (hour, colour): deep blue night, a warm dawn, a clean white midday,
+## a golden late afternoon, a short dusky violet and back to night. Lights follow `night_factor`.
+const SKY := [[0.0, Color(0.20, 0.24, 0.44)], [4.6, Color(0.21, 0.25, 0.46)], [5.6, Color(0.36, 0.36, 0.56)],
+	[6.5, Color(0.90, 0.72, 0.70)], [7.4, Color(1.0, 0.86, 0.74)], [9.5, Color(1.0, 0.97, 0.93)], [14.5, Color(1.0, 0.98, 0.93)],
+	[16.8, Color(1.0, 0.88, 0.72)], [18.0, Color(0.98, 0.68, 0.50)], [19.0, Color(0.72, 0.50, 0.58)], [20.2, Color(0.36, 0.34, 0.56)],
+	[21.6, Color(0.22, 0.26, 0.46)], [24.0, Color(0.20, 0.24, 0.44)]]
+var night_factor := 0.0
+var _last_night := -1
+
+
+func sky_color(h: float) -> Color:
+	for i in SKY.size() - 1:
+		var a: Array = SKY[i]
+		var b: Array = SKY[i + 1]
+		if h >= float(a[0]) and h <= float(b[0]):
+			var t := (h - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0]))
+			return (a[1] as Color).lerp(b[1], smoothstep(0.0, 1.0, t))
+	return SKY[0][1]
+
+
+## 0 by day, 1 at night: lamps, windows and the forge chimney glow come up through dusk and fade at dawn.
+static func night_amount(h: float) -> float:
+	if h < 5.2 or h >= 20.4:
+		return 1.0
+	if h < 7.4:
+		return 1.0 - smoothstep(5.2, 7.4, h)
+	if h >= 17.2:
+		return smoothstep(17.2, 20.4, h)
+	return 0.0
+
+
 func _update_light(force: bool) -> void:
 	var m := float(Game.state.get("minute", 720))
 	var h := m / 60.0
-	var c: Color
-	var night_f := 0.0
-	if h < 4.5:
-		c = Color(0.36, 0.40, 0.62); night_f = 1.0
-	elif h < 7.0:
-		var t := (h - 4.5) / 2.5
-		c = Color(0.36, 0.40, 0.62).lerp(Color(1.0, 0.86, 0.78), t); night_f = 1.0 - t
-	elif h < 17.5:
-		c = Color(1.0, 0.86, 0.78).lerp(Color(1.0, 0.98, 0.94), clampf((h - 7.0) / 3.0, 0.0, 1.0))
-		if h > 15.5:
-			c = Color(1.0, 0.98, 0.94).lerp(Color(1.0, 0.84, 0.66), (h - 15.5) / 2.0)
-	elif h < 21.0:
-		var t2 := (h - 17.5) / 3.5
-		c = Color(1.0, 0.84, 0.66).lerp(Color(0.40, 0.42, 0.64), t2); night_f = t2
-	else:
-		c = Color(0.36, 0.40, 0.62); night_f = 1.0
-	if area in ["smithy", "inn", "grocery", "inn_upstairs"] or area.begins_with("house_"):
-		c = c.lerp(Color(0.92, 0.84, 0.74), 0.55)   # interiors are lit by hearths and candles
+	var night_f := night_amount(h)
+	var c := sky_color(h)
+	if area != "village":
+		# interiors are lit by hearths and candles; at night they stay warm and readable
+		c = c.lerp(Color(0.92, 0.84, 0.74), 0.55 + 0.2 * night_f)
+		if buildings.get(area, {}).get("area", false):
+			c = Color(0.86, 0.78, 0.68).lerp(Color(0.74, 0.66, 0.6), night_f)   # cellars and upper floors: lamp-lit
 	canvas_mod.color = c
+	night_factor = night_f
+	var e := night_f * 0.9
 	for l in night_lights:
-		(l as PointLight2D).energy = night_f * 0.9
-		if l.has_method("_process"):
-			l.set("base_energy", night_f * 0.9)
+		var pl := l as PointLight2D
+		pl.visible = e > 0.01
+		pl.energy = e * float(pl.get_meta("gain", 1.0))
+		if pl.has_method("_process"):
+			pl.set("base_energy", e * float(pl.get_meta("gain", 1.0)))
+	for w in _window_glows:
+		(w as CanvasItem).modulate.a = clampf(night_f * 1.2, 0.0, 1.0)
+	var is_night := int(night_f > 0.5)
 	if force:
 		_on_area_changed()
+	elif is_night != _last_night and _last_night >= 0 and area == "village":
+		_update_ambience()
+	_last_night = is_night

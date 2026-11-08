@@ -1507,3 +1507,113 @@ func phase_village_reload() -> void:
 	Events.open_panel.emit("wanted", {"tab": "legends"})
 	await wait(0.6)
 	await shot("village_reload_legends")
+
+
+# ======================================================================= iteration 009: the village
+func _v9_view(name: String, center: Vector2, zoom := 1.0) -> void:
+	await tp(center)
+	W().camera.zoom = Vector2(zoom, zoom)
+	W().camera.limit_left = -100000
+	W().camera.limit_top = -100000
+	W().camera.limit_right = 100000
+	W().camera.limit_bottom = 100000
+	W().camera.reset_smoothing()
+	await wait(0.8)
+	await shot(name)
+	W().camera.zoom = Vector2.ONE
+	W()._set_camera_limits()
+
+
+## Density, boundaries, the pond, harbour, herbalist, Barnaby's basement and day/night lighting.
+func phase_village9() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(11, 0)
+	var T := 64.0
+	await _v9_view("v9_map_day", Vector2(48 * T, 32 * T), 0.3)
+	await _v9_view("v9_map_north", Vector2(48 * T, 14 * T), 0.5)
+	await _v9_view("v9_map_south", Vector2(48 * T, 50 * T), 0.5)
+	# the new venues and spots exist and are reachable
+	for sp in ["pond_1", "pond_2", "pond_3", "harbour_quay", "herbalist_counter", "ironfront_host", "ironfront_player"]:
+		expect(W().spot_ids.has(sp), "village9: spot %s on the nav graph" % sp)
+	for k in [["harbour", "harbour"], ["herbalist", "herbalist"], ["ironfront", "table"]]:
+		expect(not find_entry(k[0], k[1]).is_empty(), "village9: interactable %s/%s" % k)
+	# doorsteps join the street without cutting through another building
+	var crossings := []
+	for b in DB.layout["buildings"]:
+		var oid: int = W().spot_ids[b["id"] + "_door_out"]
+		var p0: Vector2 = W().astar.get_point_position(oid)
+		for c in W().astar.get_point_connections(oid):
+			var p1: Vector2 = W().astar.get_point_position(c)
+			for b2 in DB.layout["buildings"]:
+				if b2["id"] == b["id"]:
+					continue
+				var r: Rect2 = W().brect(b2).grow(-8)
+				var pts := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
+				for k in 4:
+					if Geometry2D.segment_intersects_segment(p0, p1, pts[k], pts[(k + 1) % 4]) != null:
+						crossings.append("%s->%s" % [b["id"], b2["id"]])
+	expect(crossings.is_empty(), "village9: doorstep links stay outside other buildings %s" % [crossings])
+	var ids: PackedInt64Array = W().astar.get_id_path(W().spot_ids["square_0"], W().spot_ids["ironfront_host"])
+	expect(not ids.is_empty(), "village9: Barnaby can walk from the square to his basement table (%d nodes)" % ids.size())
+	# pond, harbour, herbalist close up by day
+	await _v9_view("v9_pond", W().spots["pond_2"] + Vector2(-120, -160), 1.0)
+	await _v9_view("v9_harbour", W().spots["harbour_quay"] + Vector2(-80, 150), 0.75)
+	await _v9_view("v9_herbalist_out", W().spots["herbalist_door_out"] + Vector2(0, -120), 1.0)
+	await tp(W().spots["herbalist_door_out"] + Vector2(0, -150))
+	await wait(1.0)
+	expect(W().area == "herbalist", "village9: inside the herbalist (%s/%s)" % [W().area, W().room])
+	await shot("v9_herbalist_in")
+	var e := find_entry("herbalist", "herbalist")
+	await tp((e["pos"] as Vector2) + Vector2(0, 60))
+	W().player.facing = "n"
+	await wait(0.4)
+	expect(W()._focus.get("kind", "") == "herbalist", "village9: the herbalist counter is in reach (%s)" % W()._focus.get("label", ""))
+	# Barnaby's house and down the stairs to the Ironfront den
+	await tp(W().spots["barnaby_house_door_out"] + Vector2(0, -150))
+	await wait(0.8)
+	await shot("v9_barnaby_house")
+	expect(await use("stairs", "ironfront_basement"), "village9: stairs down in Barnaby's house")
+	await wait(1.0)
+	expect(W().area == "ironfront_basement", "village9: down in the basement (%s)" % W().area)
+	await shot("v9_basement")
+	await tp(W().spots["ironfront_player"] + Vector2(0, 30))
+	W().player.facing = "n"
+	await wait(0.5)
+	expect(W()._focus.get("kind", "") == "ironfront", "village9: the Ironfront table is in reach (%s)" % W()._focus.get("label", ""))
+	await shot("v9_basement_table")
+	expect(await use("stairs", "barnaby_house"), "village9: stairs back up")
+	await wait(0.8)
+	expect(W().area == "barnaby_house", "village9: back in Barnaby's parlour (%s)" % W().area)
+	# the inn interior and its own stairs still work
+	await tp(W().bpos("inn", 7.0, 8.4))
+	await wait(1.0)
+	await shot("v9_inn")
+	expect(await use("stairs", "inn_upstairs"), "village9: inn stairs up")
+	await wait(0.8)
+	expect(W().area == "inn_upstairs", "village9: upstairs (%s)" % W().area)
+	await shot("v9_inn_upstairs")
+	expect(await use("stairs", "inn"), "village9: inn stairs down")
+	await wait(0.8)
+	expect(W().area == "inn", "village9: back in the common room (%s)" % W().area)
+	# other new interiors
+	for bid in ["chandler", "cooperage", "stable", "net_loft", "house_fenn", "grocery", "house_oswin"]:
+		await tp(W().spots[bid + "_door_out"] - (W().spots[bid + "_door_out"] - (W().buildings[bid]["rect"] as Rect2).get_center()).normalized() * 150.0)
+		await wait(0.8)
+		expect(W().area == bid, "village9: inside %s (%s)" % [bid, W().area])
+		await shot("v9_in_" + bid)
+	# dawn, dusk and night over the square, the pond and the harbour
+	await advance_to(6, 30)
+	await _v9_view("v9_square_dawn", Vector2(59 * T, 29 * T), 0.6)
+	await advance_to(18, 30)
+	await _v9_view("v9_square_dusk", Vector2(59 * T, 29 * T), 0.6)
+	await advance_to(22, 30)
+	await _v9_view("v9_square_night", Vector2(59 * T, 29 * T), 0.6)
+	await _v9_view("v9_smithy_night", Vector2(33 * T, 33 * T), 0.6)
+	await _v9_view("v9_harbour_night", W().spots["harbour_quay"] + Vector2(-80, 150), 0.75)
+	await _v9_view("v9_map_night", Vector2(48 * T, 32 * T), 0.3)
+	await tp(W().bpos("inn", 7.0, 8.4))
+	await wait(1.0)
+	await shot("v9_inn_night")
+	W().set_harbour_ship("barge")
+	expect(W().harbour_ship_id == "ship_barge", "village9: harbour ship hook takes a ship id")

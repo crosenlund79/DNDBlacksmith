@@ -85,6 +85,9 @@ func _process(delta: float) -> void:
 		var tgt := path[0]
 		var d := tgt - position
 		var step := speed * delta * (Game.MINUTES_PER_SECOND / 1.6)
+		# a stairway links floors that lie far apart on the map: take the stairs instead of walking there
+		if d.length() > 2500.0:
+			step = d.length()
 		if d.length() <= step:
 			position = tgt
 			path.remove_at(0)
