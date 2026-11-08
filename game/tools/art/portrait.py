@@ -679,6 +679,19 @@ def portrait_svg(c, st):
     if A.get("soot"):
         o.append(f'<ellipse cx="{CX + hw*0.55}" cy="{cy + hh*0.3}" rx="18" ry="9" fill="{st["soot"]}" opacity="0.32" style="filter:blur(3px)"/>')
         o.append(f'<ellipse cx="{CX - hw*0.1}" cy="{cy - hh*0.75}" rx="14" ry="6" fill="{st["soot"]}" opacity="0.2" style="filter:blur(3px)"/>')
+    if "spectacles" in ex:
+        ex_ = hw * 0.42
+        for sd in (-1, 1):
+            o.append(P.detail(ell(CX + sd * ex_, cy + 2, 26, 22), None, 2.6))
+        o.append(P.detail(f"M{CX - ex_ + 26},{cy} Q{CX},{cy - 8} {CX + ex_ - 26},{cy}", None, 2.2))
+        o.append(P.detail(f"M{CX - ex_ - 26},{cy - 2} L{CX - hw * 1.0},{cy - 8} M{CX + ex_ + 26},{cy - 2} L{CX + hw * 1.0},{cy - 8}", None, 2.0))
+    if "helmet_m1" in ex:
+        hp = [(CX - hw * 1.26, cy - hh * 0.36), (CX - hw * 1.12, cy - hh * 0.92), (CX - hw * 0.55, cy - hh * 1.32), (CX, cy - hh * 1.4),
+              (CX + hw * 0.55, cy - hh * 1.32), (CX + hw * 1.12, cy - hh * 0.92), (CX + hw * 1.26, cy - hh * 0.36)]
+        o.append(P.shape(smooth(hp + [(CX, cy - hh * 0.5)]), "olive", s=12))
+        o.append(P.shape(smooth([(CX - hw * 1.42, cy - hh * 0.4), (CX, cy - hh * 0.55), (CX + hw * 1.42, cy - hh * 0.4),
+                                 (CX + hw * 1.38, cy - hh * 0.27), (CX, cy - hh * 0.4), (CX - hw * 1.38, cy - hh * 0.27)]), "olive", s=4))
+        o.append(P.detail(f"M{CX - hw*0.7},{cy - hh*1.0} Q{CX},{cy - hh*1.22} {CX + hw*0.7},{cy - hh*1.0}", "olive", 0.8, 0.8))
     if "helmet_miner" in ex:
         hp = [(CX - hw * 1.18, cy - hh * 0.38), (CX - hw * 1.05, cy - hh * 0.9), (CX - hw * 0.5, cy - hh * 1.28), (CX, cy - hh * 1.34),
               (CX + hw * 0.5, cy - hh * 1.28), (CX + hw * 1.05, cy - hh * 0.9), (CX + hw * 1.18, cy - hh * 0.38)]

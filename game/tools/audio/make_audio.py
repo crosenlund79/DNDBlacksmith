@@ -1693,6 +1693,46 @@ def m_title(rng):
     return soft_limit(y, 0.75)
 
 
+@sound("music/ironfront", bus="Music")
+def m_ironfront(rng):
+    """Barnaby's war-room: a jaunty brass march over snare and bass drum (loops seamlessly)."""
+    pc = Piece("music/ironfront", 58, IONIAN, 116, 4, 24)
+    r = pc.rng
+    rhythms = [[1, 0.5, 0.5, 1, 1], [0.75, 0.25, 1, 0.75, 0.25, 1], [1, 1, 0.5, 0.5, 1], [0.5, 0.5, 1, 1, 1]]
+    cads = [[1, 1, 2], [0.75, 0.25, 1, 2], [2, 2]]
+    A = [0, 4, 0, 4, 0, 3, 4, 0]
+    B = [3, 0, 4, 0, 3, 0, 4, 4]
+    strong = (0, 2)
+    melA, motif = section_melody(r, A, 4, strong, rhythms, cads, 0, 9, 4)
+    melB, _ = section_melody(r, B, 4, strong, rhythms, cads, 2, 11, 5, targets=(4, 2, 4, 0))
+    plan = A + B + A
+    render_melody(pc, "brass", melA, 0, brass, 0.75, 0.82, 0, strong)
+    render_melody(pc, "brass", melB, 8, brass, 0.75, 0.82, 0, strong)
+    render_melody(pc, "brass", melA, 16, brass, 0.8, 0.82, 0, strong)
+    render_melody(pc, "fife", melB, 8, flute, 0.35, 0.8, 1, strong)
+    for bar, root in enumerate(plan):
+        # oom-pah: bass on 1 and 3, chord stabs on 2 and 4
+        for beat, deg in ((0, root - 14), (2, root - 10)):
+            pc.add("bass", pc.at(bar, beat), brass(mtof(pc.midi(deg)), 0.42, 0.8, r), 0.004)
+        for beat in (1, 3):
+            for k in chord_degs(root):
+                pc.add("stab", pc.at(bar, beat), brass(mtof(pc.midi(k - 7)), 0.22, 0.32, r), 0.004)
+        # bass drum on 1 and 3, snare rudiments
+        for beat in (0, 2):
+            pc.add("drum", pc.at(bar, beat), frame_drum(r, 0.9, "dum", 0.5), 0.003)
+        roll = [1, 3, 3.5] if bar % 4 != 3 else [1, 2.5, 2.75, 3, 3.25, 3.5, 3.75]
+        for beat in roll:
+            n = N(0.18)
+            t = tt(n)
+            sn = (0.8 * bp(r.standard_normal(n), 2600, 0.9) + 0.4 * np.sin(TAU * 190 * t)) * np.exp(-t / 0.045)
+            pc.add("snare", pc.at(bar, beat), sn * (0.9 if beat == int(beat) else 0.6), 0.003)
+    y = mix_down(pc, {"brass": 0.5, "fife": 0.35, "bass": 0.5, "stab": 0.45, "drum": 0.7, "snare": 0.35},
+                 {"brass": 0.35, "fife": 0.4, "bass": 0.15, "stab": 0.2, "drum": 0.25, "snare": 0.25}, t60=1.1, wet=0.28,
+                 posts={"brass": lambda f: r_lp(f, 4200) * r_peak(f, 900, 1.2, 3), "stab": lambda f: r_lp(f, 3000),
+                        "fife": lambda f: r_lp(f, 6000), "drum": lambda f: r_lp(f, 1500)})
+    return soft_limit(y, 0.72)
+
+
 # ----------------------------------------------------------------------------
 # output / verification
 # ----------------------------------------------------------------------------
@@ -1765,176 +1805,6 @@ def a_pond(rng):
     add_circ(ev, 0.03 * buzz / np.std(buzz) * np.sin(np.pi * tm / d) ** 2, N(12.0))
     ev = reverb(ev, 0.3, circular=True, t60=1.2)
     return y + ev
-
-
-@sound("music/ironfront", bus="Music")
-def m_ironfront(rng):
-    """Ironfront: a tense, measured war-table tune — low drum ostinato, plucked minor riff, a fiddle line."""
-    pc = Piece("music/ironfront", 50, AEOLIAN, 96, 4, 32)
-    r = pc.rng
-    plan = [0, 0, 5, 4] * 2 + [0, 3, 4, 4, 5, 3, 4, 0] + [0, 0, 5, 4] * 2 + [3, 3, 4, 4, 0, 5, 4, 0]
-    rhythms = [[1, 0.5, 0.5, 2], [1.5, 0.5, 1, 1], [1, 1, 2], [0.5, 0.5, 1, 2]]
-    cads = [[1, 1, 2], [2, 2], [1.5, 0.5, 2]]
-    melA, motif = section_melody(r, plan[8:16], 4, (0, 2), rhythms, cads, -2, 8, 4)
-    melB, _ = section_melody(r, plan[24:32], 4, (0, 2), rhythms, cads, -2, 9, 2, motif=vary_motif(r, motif))
-    render_melody(pc, "fiddle", melA, 8, fiddle, 0.6, 0.95, 0, (0, 2))
-    render_melody(pc, "fiddle", melB, 24, fiddle, 0.65, 0.95, 0, (0, 2))
-    for bar, root in enumerate(plan):
-        # plucked riff: root, fifth, root, minor third above
-        for i, k in enumerate([root - 14, root - 10, root - 7, root - 12, root - 7, root - 5, root - 7, root - 10]):
-            v = (0.85 if i in (0, 4) else 0.45) * r.uniform(0.9, 1.08)
-            pc.add("lute", pc.at(bar, i * 0.5), lute_note(mtof(pc.midi(k)), 0.7, v, r), 0.004)
-        # war drum: dum . dum-dum . | dum . tek tek
-        pat = [("dum", 1.0, 0), ("dum", 0.6, 1.5), ("dum", 0.8, 2), ("tek", 0.4, 3), ("tek", 0.5, 3.5)]
-        if bar % 8 == 7:
-            pat = [("dum", 1.0, 0), ("tek", 0.5, 1), ("dum", 0.8, 2), ("dum", 0.8, 2.5), ("dum", 0.9, 3), ("dum", 1.0, 3.5)]
-        for kind, v, pos in pat:
-            pc.add("drum", pc.at(bar, pos), frame_drum(r, v * r.uniform(0.88, 1.08), kind, dur=0.8), 0.004)
-    drone(pc, "drone", [38, 45], 0.4, bright=600, buzz=0.08)
-    y = mix_down(pc, {"fiddle": 0.4, "lute": 0.6, "drum": 0.7, "drone": 0.3},
-                 {"fiddle": 0.35, "lute": 0.25, "drum": 0.25, "drone": 0.2}, t60=1.6, wet=0.3,
-                 posts={"lute": LUTE_POST, "fiddle": FIDDLE_POST})
-    return soft_limit(y, 0.72)
-
-
-def finalize(x, loop, peak_db):
-    x = np.asarray(x, float)
-    x = hp(x, 25, order=2, circular=loop)
-    x -= np.mean(x) if loop else 0
-    if not loop:
-        fi = N(0.0008)
-        x[:fi] *= np.linspace(0, 1, fi)
-        fo = min(N(0.03), len(x) // 4)
-        x[-fo:] *= np.linspace(1, 0, fo) ** 2
-    pk = np.max(np.abs(x))
-    if pk > 0:
-        x *= dbg(peak_db) / pk
-    return x
-
-
-def write_wav(path, x):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pcm = np.clip(np.round(x * 32767), -32767, 32767).astype("<i2")
-    with wave.open(str(path), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(SR)
-        w.writeframes(pcm.tobytes())
-
-
-def read_wav(path):
-    with wave.open(str(path), "rb") as w:
-        assert w.getframerate() == SR and w.getnchannels() == 1 and w.getsampwidth() == 2
-        return np.frombuffer(w.readframes(w.getnframes()), "<i2").astype(float) / 32768.0
-
-
-def spectrogram_png(x, path, max_sec=None, nfft=1024, hop=128, height=320, max_w=1000):
-    from PIL import Image
-    if max_sec:
-        x = x[:N(max_sec)]
-    xx = np.concatenate([np.zeros(nfft // 2), x, np.zeros(nfft)])
-    nfr = (len(xx) - nfft) // hop
-    idx = np.arange(nfft)[None, :] + hop * np.arange(nfr)[:, None]
-    S = np.abs(np.fft.rfft(xx[idx] * np.hanning(nfft), axis=1))
-    D = 20 * np.log10(S + 1e-9)
-    D = np.clip((D - (D.max() - 65)) / 65, 0, 1)
-    if D.shape[0] > max_w:
-        k = int(np.ceil(D.shape[0] / max_w))
-        D = D[:D.shape[0] // k * k].reshape(-1, k, D.shape[1]).max(axis=1)
-    # log-ish frequency axis (50 Hz .. 11 kHz)
-    f = np.fft.rfftfreq(nfft, 1 / SR)
-    rows = np.geomspace(50, SR / 2, height)[::-1]
-    img = np.array([np.interp(rows, f, col) for col in D]).T
-    # waveform envelope strip
-    wav_h = 60
-    cols = img.shape[1]
-    seg = np.array_split(np.abs(x), cols)
-    env = np.array([s.max() if len(s) else 0 for s in seg])
-    strip = np.zeros((wav_h, cols))
-    for c, e in enumerate(env):
-        h = int(e * (wav_h - 2))
-        strip[wav_h // 2 - h // 2: wav_h // 2 + h // 2 + 1, c] = 1
-    v = np.vstack([img, np.full((2, cols), 0.15), strip])
-    rgb = np.stack([np.clip(v * 1.6, 0, 1), np.clip(v * 1.4 - 0.35, 0, 1), np.clip(v * 1.6 - 0.9, 0, 1)], -1)
-    Image.fromarray((rgb * 255).astype(np.uint8)).save(path)
-
-
-def verify(ids=None):
-    print(f"\n{'id':28s} {'dur':>6s} {'peak dBFS':>9s} {'rms dBFS':>9s} {'clip':>5s} {'seam':>17s}  notes")
-    tot = 0
-    problems = []
-    manifest = {}
-    for sid, meta in sorted(REGISTRY.items()):
-        p = OUT / f"{sid}.wav"
-        if not p.exists():
-            problems.append(f"missing {sid}")
-            continue
-        tot += p.stat().st_size
-        x = read_wav(p)
-        dur = len(x) / SR
-        pk = 20 * np.log10(np.max(np.abs(x)) + 1e-12)
-        rms = 20 * np.log10(np.sqrt(np.mean(x ** 2)) + 1e-12)
-        clip = int(np.sum(np.abs(x) >= 32766 / 32768))
-        d = np.abs(np.diff(x))
-        ref = np.percentile(d, 99.5) + 1e-9
-        notes = []
-        seam = ""
-        if meta["loop"]:
-            jump = abs(x[0] - x[-1])
-            ratio = jump / ref
-            seam = f"{ratio:5.2f}"
-            w = N(0.05)
-            lvl_a = np.sqrt(np.mean(x[:w] ** 2))
-            lvl_b = np.sqrt(np.mean(x[-w:] ** 2))
-            if ratio > 1.0:
-                notes.append("SEAM JUMP")
-            # level step across the seam vs. the same metric at every other 50 ms boundary
-            fr = np.sqrt(np.mean(x[:len(x) // w * w].reshape(-1, w) ** 2, axis=1)) + 1e-6
-            steps = np.abs(20 * np.log10(fr[1:] / fr[:-1]))
-            seam_step = abs(20 * np.log10((lvl_a + 1e-6) / (lvl_b + 1e-6)))
-            seam += f" {seam_step:4.1f}dB/p{(steps < seam_step).mean() * 100:3.0f}"
-            # music loops restart on a bar-1 downbeat, where an onset (level step) is intended
-            if not sid.startswith("music/") and seam_step > max(3.0, np.percentile(steps, 99)):
-                notes.append("seam level step")
-        else:
-            if abs(x[0]) > 0.01 or abs(x[-1]) > 0.01:
-                notes.append("edge click")
-        if clip:
-            notes.append("CLIP")
-        if abs(np.mean(x)) > 0.01:
-            notes.append("DC")
-        if notes:
-            problems.append(f"{sid}: {', '.join(notes)}")
-        manifest[sid] = {"duration": round(dur, 3), "loop": meta["loop"], "bus": meta["bus"]}
-        print(f"{sid:28s} {dur:6.2f} {pk:9.2f} {rms:9.2f} {clip:5d} {seam:>17s}  {' '.join(notes)}")
-    with open(OUT / "manifest.json", "w") as fh:
-        json.dump(manifest, fh, indent=2, sort_keys=True)
-    tot += (OUT / "manifest.json").stat().st_size
-    print(f"\nfiles: {len(manifest)}  total: {tot / 1e6:.2f} MB")
-    print("problems:", problems or "none")
-    SPEC_OUT.mkdir(parents=True, exist_ok=True)
-    for sid, mx in [("sfx/legendary_drop", None), ("sfx/hammer_1", None), ("sfx/check_perfect", None),
-                    ("music/hearth_day", 20.0)]:
-        p = OUT / f"{sid}.wav"
-        if p.exists():
-            spectrogram_png(read_wav(p), SPEC_OUT / (sid.replace("/", "_") + ".png"), mx)
-    return problems
-
-
-def main(argv):
-    if "--verify" in argv:
-        verify()
-        return
-    filt = [a for a in argv if not a.startswith("-")]
-    for sid, meta in REGISTRY.items():
-        if filt and not any(f in sid for f in filt):
-            continue
-        t0 = time.time()
-        x = meta["fn"](rng_of(sid))
-        x = finalize(x, meta["loop"], meta["peak"])
-        write_wav(OUT / f"{sid}.wav", x)
-        print(f"rendered {sid:28s} {len(x) / SR:6.2f}s  ({time.time() - t0:.1f}s)", flush=True)
-    verify()
 
 
 if __name__ == "__main__":
