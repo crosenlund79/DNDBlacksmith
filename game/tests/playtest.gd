@@ -723,7 +723,7 @@ func phase_craft() -> void:
 	var iron_twin := Crafting.compute_stats(DB.item("sword_iron"), float(steel.get("quality", 0)), rolls, DB.recipe("iron_longsword")["dice"], DB.crafting["materials"]["iron"], int(sc.get("level", 0)))
 	var steel_base := Crafting.compute_stats(DB.item("sword_steel"), float(steel.get("quality", 0)), rolls, DB.recipe("steel_longsword")["dice"], DB.crafting["materials"]["steel"], int(sc.get("level", 0)))
 	expect(steel.get("def") == "sword_steel" and int(steel_base["attack"]) > int(iron_twin["attack"]), "2. steel longsword outclasses iron at equal craft and rolls (%d vs %d base attack; finished %d)" % [int(steel_base["attack"]), int(iron_twin["attack"]), Items.stat(steel, "attack")])
-	expect(steel.get("craft", {}).get("dice_mode") == "physical" and int(steel.get("craft", {}).get("dice", {}).get("edge", {}).get("total", 0)) == 14, "7b. physical dice entered and used (edge 14)")
+	expect(steel.get("craft", {}).get("dice_mode") == "physical" and int(steel.get("craft", {}).get("dice", {}).get("edge", {}).get("entered", steel.get("craft", {}).get("dice", {}).get("edge", {}).get("total", 0))) == 14, "7b. physical dice entered and used (edge 14 entered; craftsmanship adds a shown modifier)")
 	# 3. armour
 	var cuirass := await craft_ui("iron_cuirass", 0.4, "auto", {}, "cuirass")
 	expect(cuirass.get("def") == "cuirass_iron" and Items.stat(cuirass, "protection") > 0, "3. iron cuirass (%d protection)" % Items.stat(cuirass, "protection"))
