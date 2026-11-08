@@ -3003,7 +3003,9 @@ func phase_recog10() -> void:
 	note("  board furniture: host room %s, clashes %s, rect %s" % [host.get("id", "-"), str(W()._furniture_clashes("hall_of_fame_board", hp, host)) if not host.is_empty() else "-",
 		str(Property.rect(host)) if not host.is_empty() else "-"])
 	await shot("recog10_board_prop")
-	# --- the next day at noon: the square gathers and the smith walks in
+	# --- the next day at noon: the square gathers and the smith walks in (he waits in the forge until then,
+	# well away from the podium — standing near it while the crowd gathers would hold the ceremony at once)
+	await tp(W().bpos("smithy", 5.0, 6.5))
 	Game.advance_minutes(1440 - int(Game.state["minute"]) + 11 * 60 + 40)
 	await wait(0.5)
 	# skip the hour-long walk over from their homes: snap everyone to where the schedule wants them
