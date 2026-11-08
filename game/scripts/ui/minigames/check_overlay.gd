@@ -146,11 +146,18 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var vs := size
+	if card != null and is_instance_valid(card) and card.visible:
+		draw_rect(Rect2(Vector2.ZERO, vs), Color(0.03, 0.02, 0.01, 0.5))
 	if pulse_t > 0.0:
 		var a := clampf(pulse_t / 0.45, 0.0, 1.0) * pulse_col.a
-		var r := Rect2(vs * 0.5 - Vector2(480, 360), Vector2(960, 720))
-		for i in 4:
-			draw_rect(r.grow(4 + i * 7), Color(pulse_col, a * (0.55 - i * 0.12)), false, 7.0)
+		if host is SkillCheckPanel:
+			# the ring check has no frame: pulse around the dial
+			for i in 4:
+				draw_arc(vs * 0.5, 236.0 + i * 8.0, 0, TAU, 96, Color(pulse_col, a * (0.6 - i * 0.13)), 7.0)
+		else:
+			var r := Rect2(vs * 0.5 - Vector2(480, 360), Vector2(960, 720))
+			for i in 4:
+				draw_rect(r.grow(4 + i * 7), Color(pulse_col, a * (0.55 - i * 0.12)), false, 7.0)
 	if result_t >= 0.0:
 		_draw_result(vs)
 
@@ -233,8 +240,9 @@ func open_tutorial(auto: bool) -> void:
 	dont_show.add_theme_color_override("font_hover_color", INK)
 	dont_show.add_theme_color_override("font_pressed_color", INK)
 	dont_show.add_theme_font_size_override("font_size", 20)
-	dont_show.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dont_show.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btns.add_child(spacer)
 	btns.add_child(dont_show)
 	v.add_child(btns)
 	add_child(card)
@@ -261,8 +269,10 @@ func _practice() -> void:
 	if card == null:
 		return
 	card.visible = false
+	host.self_modulate = Color(1, 1, 1, 0)      # the practice run draws its own dial on top
 	var pa := Minigames.practice_args(args)
 	pa["on_done"] = func(qs: Array):
+		host.self_modulate = Color.WHITE
 		if is_instance_valid(card):
 			card.visible = true
 			var q := float(qs[0]) if not qs.is_empty() else 0.0

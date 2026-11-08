@@ -29,8 +29,8 @@ func _build() -> void:
 		row.add_child(UIKit.portrait("portraits/" + str(o["npc"]), 110))
 		var v := UIKit.vbox(6)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_child(UIKit.rich("[b]%s[/b] needs a [b]%s[/b] — more coin for exceeding it.\n[color=#7e2418]%s[/color]" % [
-			Talk.npc_name(o["npc"]), Shop.order_text(o), Shop.order_terms(o)], 20))
+		v.add_child(UIKit.rich("[b]%s[/b] — [color=#7e2418]%s[/color]. More coin for exceeding the minimum." % [
+			Talk.npc_name(o["npc"]), Shop.order_terms(o)], 20))
 		v.add_child(CustomerCard.build(Shop.order_request(o)))
 		var h := UIKit.hbox(8)
 		var any := false

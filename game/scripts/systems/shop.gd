@@ -324,7 +324,7 @@ static func order_request(o: Dictionary) -> Dictionary:
 	var bonus: Dictionary = o.get("bonus", {})
 	var r := {"kind": "commission", "npc": str(o["npc"]), "name": Talk.npc_name(str(o["npc"])), "slot": str(o["slot"]), "stat": stat,
 		"min": int(o["min"]), "prop": "", "materials": mats, "material_required": tier >= 2, "reward": int(o["reward"]),
-		"deadline": int(o["deadline"]), "priority": str(o.get("priority", "")), "headline": "Commission: %s" % o["slot"],
+		"deadline": int(o["deadline"]), "priority": str(o.get("priority", "")), "headline": "Commission: %s" % slot_phrase(str(o["slot"])),
 		"note": str(o.get("note", "")), "reward_text": "%d g" % int(o["reward"])}
 	if not bonus.is_empty():
 		r["reward_text"] += " + %d g bonus for %s" % [int(bonus.get("gold", 0)), bonus.get("text", "")]
