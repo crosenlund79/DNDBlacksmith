@@ -14,6 +14,7 @@ func _ready() -> void:
 	h.add_child(UIKit.portrait("portraits/player", 200))
 	h.add_child(UIKit.rich("[font_size=30][b]Brannoc Ironhand[/b][/font_size]\n[i]Fifty-eight winters. Twenty of them spent adventuring, the rest hammering. The knee aches; the eye is gone; the hands remember everything.[/i]", 22))
 	content.add_child(h)
+	content.add_child(InkIcons.button("tb_skilltree", "Open the Skill Tree [%s]" % Settings.key_label("panel_skills"), func(): Events.open_panel.emit("skilltree", {}), 320))
 	content.add_child(UIKit.divider())
 	var grid := GridContainer.new()
 	grid.columns = 4

@@ -47,6 +47,7 @@ func _ready() -> void:
 	foot.add_child(_legend_chip("Locked", "locked"))
 	foot.add_child(UIKit.button("Fit the whole tree", func(): canvas.fit_all(), 220))
 	foot.add_child(UIKit.button("Top", func(): canvas.reset_view(), 90))
+	foot.add_child(InkIcons.button("ic_work", "Skill levels [%s]" % Settings.key_label("panel_skill_levels"), func(): Events.open_panel.emit("skills", {}), 220))
 	left.add_child(foot)
 	var sp := PanelContainer.new()
 	var sb := StyleBoxFlat.new()

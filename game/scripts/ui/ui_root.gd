@@ -111,7 +111,7 @@ func _build_hud() -> void:
 	minimap.position = Vector2(-20 - MINIMAP_SIZE.x, 18)
 	minimap.size = MINIMAP_SIZE
 	minimap.clicked.connect(func(): _on_open_panel("map", {}))
-	minimap.mouse_entered.connect(func(): show_tooltip("[b]Map[/b]  [color=#e8cc84][%s][/color]\n[i]Click for the village map. Speech marks: someone wants a word.[/i]" % Settings.key_label("panel_map")))
+	minimap.mouse_entered.connect(func(): show_tooltip("[b]Map[/b]  [color=#e8cc84][%s][/color]\n[i]Click for the village map, right-click for quick travel [%s]. Speech marks: someone wants a word.[/i]" % [Settings.key_label("panel_map"), Settings.key_label("quick_travel")]))
 	minimap.mouse_exited.connect(hide_tooltip)
 	hud.add_child(minimap)
 	minimap_caption = UIKit.label("", 18, "heading_italic", Color("#efe4cc"))
@@ -461,6 +461,16 @@ func _route(id: String, args: Dictionary) -> void:
 			open(ObserverPanel.new(str(args["id"])))
 
 
+## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
+const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
+	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
+	"quick_travel": "quick_travel", "cancel": "pause"}
+
+
+static func panel_for_action(action: String) -> String:
+	return str(HOTKEY_PANELS.get(action, ""))
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_pressed() or event.is_echo():
 		return
@@ -495,12 +505,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_on_open_panel("wanted", {})
 		return
-	var map := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skills",
-		"panel_adventurers": "adventurers", "panel_orders": "orders", "cancel": "pause"}
-	for action in map:
+	for action in HOTKEY_PANELS:
 		if event.is_action_pressed(action):
 			get_viewport().set_input_as_handled()
-			_on_open_panel(map[action], {})
+			_on_open_panel(HOTKEY_PANELS[action], {})
 			return
 	if event.is_action_pressed("panel_map"):
 		get_viewport().set_input_as_handled()
