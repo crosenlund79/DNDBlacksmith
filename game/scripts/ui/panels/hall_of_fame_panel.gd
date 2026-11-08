@@ -13,7 +13,7 @@ const OAK_LIGHT := Color("#4a2f19")
 const BRASS := Color("#c9a253")
 const BRASS_DARK := Color("#6e4a1a")
 const ENGRAVE := Color("#2a1a0a")
-const FILTERS := [["all", "All honours"], ["craft", "Masterworks"], ["discovery", "Discoveries"], ["commission", "Commissions"],
+const FILTERS := [["all", "All honours"], ["famous", "Famous creations"], ["craft", "Masterworks"], ["discovery", "Discoveries"], ["commission", "Commissions"],
 	["deed", "Great deeds"], ["epic", "Epic"], ["ceremony", "Ceremonies"]]
 
 var where := "smithy"
@@ -51,8 +51,9 @@ func _ready() -> void:
 	tabs.add_theme_constant_override("h_separation", 8)
 	for f in FILTERS:
 		var key: String = f[0]
-		var n := Recognition.entries().size() if key == "all" else Recognition.of_kind(key).size()
+		var n := Recognition.entries().size() if key == "all" else (ItemStory.famous_creations().size() if key == "famous" else Recognition.of_kind(key).size())
 		var b := UIKit.button("%s (%d)" % [f[1], n], func(): filter = key; _fill(), 0)
+		b.name = "Filter_" + key
 		tabs.add_child(b)
 	content.add_child(tabs)
 	var oak := PanelContainer.new()
@@ -80,6 +81,9 @@ func _fill() -> void:
 	var crest := UIKit.label("✠  THE HALL OF FAME  ✠", 34, "title", BRASS)
 	crest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	board.add_child(crest)
+	if filter == "famous":
+		_famous()
+		return
 	var es := Recognition.recent(200, [] if filter == "all" else [filter])
 	if es.is_empty():
 		var l := UIKit.label("No plaques yet. Exceptional pieces, legendary finds, great commissions and deeds done with your work will be honoured here." if filter == "all"
@@ -95,6 +99,89 @@ func _fill() -> void:
 	for e in es:
 		grid.add_child(_plaque(e))
 	board.add_child(grid)
+
+
+## Famous creations (ItemStory): the smith's named and Epic pieces — the piece, its name, its deeds, its owner now.
+func _famous() -> void:
+	var fs := ItemStory.famous_creations()
+	if fs.is_empty():
+		var l := UIKit.label("None of your work is famous yet. Pieces that earn a name or Epic distinction out in the world are remembered here.", 22, "body_italic", Color("#d8c495"))
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		board.add_child(l)
+		return
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 16)
+	for f in fs:
+		grid.add_child(_creation(f))
+	board.add_child(grid)
+
+
+func _creation(f: Dictionary) -> Control:
+	var epic := bool(f.get("epic", false))
+	var pc := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#d9b46a") if epic else BRASS
+	sb.border_color = Recognition.EPIC_COLOR_LIGHT if epic else BRASS_DARK
+	sb.set_border_width_all(4 if epic else 3)
+	sb.set_corner_radius_all(6)
+	sb.content_margin_left = 22
+	sb.content_margin_right = 22
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
+	sb.shadow_color = Color(0, 0, 0, 0.45)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(2, 3)
+	pc.add_theme_stylebox_override("panel", sb)
+	pc.custom_minimum_size = Vector2(660, 190)
+	pc.name = "Creation_%d" % int(f["uid"])
+	var rivets := Rivets.new()
+	rivets.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pc.add_child(rivets)
+	var h := UIKit.hbox(14)
+	var it: Dictionary = f.get("item", {})
+	var left := UIKit.vbox(6)
+	if not it.is_empty():
+		left.add_child(ItemSlot.new(it, 96.0))
+	else:
+		left.add_child(UIKit.icon("ui/story_lost", 80))
+	left.add_child(UIKit.icon("marks/ironhand", 32))
+	h.add_child(left)
+	var v := UIKit.vbox(2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var tags := []
+	if bool(f.get("named", false)):
+		tags.append("NAMED")
+	if epic:
+		tags.append("✦ EPIC")
+	var r := str(f.get("rarity", "common"))
+	if r in ["legendary", "unique", "set", "rare"]:
+		tags.append(Items.RARITY_LABEL.get(r, "").to_upper())
+	v.add_child(UIKit.label("FAMOUS CREATION" + ("  ·  " + "  ·  ".join(PackedStringArray(tags)) if not tags.is_empty() else ""), 15, "heading",
+		Recognition.EPIC_COLOR_LIGHT if epic else Color("#5a3a12")))
+	var tl := UIKit.label(str(f.get("name", "")), 26, "heading", ENGRAVE)
+	tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(tl)
+	if not it.is_empty() and ItemStory.is_named(it):
+		v.add_child(UIKit.label("a %s from the Ironhand forge" % str(it.get("base_name", Items.def(it).get("name", ""))).to_lower(), 16, "body_italic", Color("#3a2610")))
+	var ds: Array = f.get("deeds", [])
+	var lines := []
+	for d in ds.slice(maxi(0, ds.size() - 3)):
+		lines.append("• Day %d — %s" % [int(d.get("day", 0)), str(d.get("text", ""))])
+	var dl := UIKit.label("\n".join(PackedStringArray(lines)), 16, "body", Color("#2a1a0a"))
+	dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(dl)
+	v.add_child(UIKit.label("Held now by %s" % str(f.get("owner", "")), 17, "body_bold", Color("#3a2610")))
+	if not it.is_empty():
+		var u := int(f["uid"])
+		var b := UIKit.button("Its story", func(): Events.open_panel.emit("item", {"uid": u}), 140)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		v.add_child(b)
+	h.add_child(v)
+	pc.add_child(h)
+	return pc
 
 
 ## One brass plaque: rivets, the honour's kind, the item (if it can be found), title, text and day.

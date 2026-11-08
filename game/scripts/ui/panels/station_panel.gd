@@ -95,6 +95,11 @@ func _build() -> void:
 	if station_id == "infusion_rack" and why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(_treat_ui())
+	if why == "" and job.is_empty():
+		var svc := WorkshopServices.build(station_id)   # sharpening (grinding wheel), reforging (anvil)
+		if svc != null:
+			body.add_child(UIKit.divider())
+			body.add_child(svc)
 	if why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(UIKit.button("Practise a check (no materials, a little experience)", _practice, 460))

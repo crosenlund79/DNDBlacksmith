@@ -269,9 +269,45 @@ func _page_combat(a: Dictionary) -> void:
 func _page_equipment(a: Dictionary) -> void:
 	var doll := PaperDoll.new(self, a)
 	page.add_child(doll)
-	page.add_child(UIKit.label("Hover a piece for the full item, its maker and its history.  ⚒ = made at your forge.", 18, "body_italic"))
+	page.add_child(UIKit.label("Hover a piece for the full item; click it for its maker, history and owners.  ⚒ = made at your forge.", 18, "body_italic"))
+	_equipment_histories(a)
 	page.add_child(_heading("Wants & plans"))
 	_shopping_list(a, 12)
+
+
+## What their gear has been through (ItemStory): one line per piece with a story, the richest first.
+func _equipment_histories(a: Dictionary) -> void:
+	var rows := []
+	for s in a.get("equipment", {}):
+		var it: Dictionary = a["equipment"][s]
+		if it.is_empty() or not Provenance.applies(it):
+			continue
+		var n := ItemStory.events_of(it).size()
+		if n == 0 and not Provenance.is_mine(it):
+			continue
+		rows.append([n + (100 if ItemStory.is_named(it) or it.has("epic") else 0), it])
+	if rows.is_empty():
+		return
+	rows.sort_custom(func(x, y): return int(x[0]) > int(y[0]))
+	page.add_child(_heading("Equipment histories"))
+	var k := _know()
+	for r in rows:
+		var it: Dictionary = r[1]
+		var known := k >= 15.0 or Provenance.is_mine(it)
+		var row := UIKit.hbox(12)
+		var sl := ItemSlot.new(it if known else {}, 56.0)
+		row.add_child(sl)
+		var v := UIKit.vbox(0)
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		v.add_child(UIKit.label(Items.display_name(it) if known else "a %s" % Items.type_label(it).to_lower(), 19, "body_bold", Items.color(it, false)))
+		v.add_child(UIKit.rich("[i]%s[/i]" % (ItemStory.summary(it) if known else "You don't know its story yet."), 17))
+		row.add_child(v)
+		if known:
+			var u := int(it["uid"])
+			var b := UIKit.button("Its story", func(): Events.open_panel.emit("item", {"uid": u}), 140)
+			b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			row.add_child(b)
+		page.add_child(row)
 
 
 func _page_expedition(a: Dictionary) -> void:
@@ -644,6 +680,9 @@ class PaperDoll extends Control:
 		var h := UIKit.hbox(10)
 		var known := k >= 15.0 or mine or it.is_empty()
 		var slot_ui := ItemSlot.new(it if known else {}, 84.0)
+		if known and not it.is_empty() and Provenance.applies(it):
+			var iu := int(it.get("uid", -1))
+			slot_ui.clicked.connect(func(_x): Events.open_panel.emit("item", {"uid": iu}))
 		h.add_child(slot_ui)
 		if it.is_empty():
 			var ghost := TextureRect.new()

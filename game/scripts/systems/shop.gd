@@ -413,6 +413,8 @@ static func customer_hour(h: int) -> void:
 			Recognition.customer_comment(str(c["npc"]))
 	if free_seat() < 0 or randf() > clampf(0.45 * (1.0 + reputation() / 120.0), 0.15, 0.75):
 		return
+	if ItemStory.maybe_stranger():   # now and then: a villager with an old blade from the Ironhand forge
+		return
 	var pool := []
 	for a in Adv.in_town():
 		if not refuses(a["id"]):
@@ -546,6 +548,7 @@ static func do_repair(npc: String, quality: float) -> void:
 			remove_customer(npc)
 			return
 		if c["npc"] == npc and c["want"] == "repair":
+			ItemStory.on_villager_repair(c, quality)   # mended pieces remember it
 			var pay := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]])
 			Social.change(npc, 4.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()),

@@ -3114,3 +3114,163 @@ func phase_village10() -> void:
 	await _v9_view("v10_camp_night", W().spots["caravan_camp"] + Vector2(0, -40), 0.9)
 	await _v9_view("v10_map_night", Vector2(48 * T, 32 * T), 0.3)
 	Village10.set_caravan(W(), false)
+
+
+# ======================================================================= iteration 011: item stories
+## Forges a piece through the real crafting system with fixed scores and dice (no minigame).
+func _s11_craft(rid: String, q: float, fortune := 1) -> Dictionary:
+	if not Crafting.start(rid):
+		return {}
+	var guard := 0
+	while Crafting.current_station() != "" and guard < 30:
+		var qs := []
+		for i in int(Crafting.op_params().get("count", 1)):
+			qs.append(q)
+		Crafting.record_step(Crafting.current_station(), qs)
+		guard += 1
+	return Crafting.finish({"edge": 14, "temper": 10, "fortune": fortune}, "digital")
+
+
+func _s11_overlay(cls_name: String) -> Control:
+	for c in U().panel_host.get_children():
+		if is_instance_valid(c) and not c.is_queued_for_deletion() and c.get_script() and c.get_script().get_global_name() == cls_name:
+			return c
+	return null
+
+
+func _s11_close_overlays() -> void:
+	for c in U().panel_host.get_children():
+		if c is ItemPanel or c is FamiliarCard:
+			(c as UIWindow).close()
+	await wait(0.3)
+
+
+func phase_story11() -> void:
+	await click("New Game")
+	await wait(2.5)
+	for i in 3:
+		Game.add_item(Items.make("ingot_iron", {"qty": 6}), false)
+		Game.add_item(Items.make("leather_cured", {"qty": 3}), false)
+	var it := _s11_craft("iron_longsword", 104.0, 1)
+	expect(not it.is_empty(), "story11: a longsword is forged")
+	if it.is_empty():
+		return
+	var uid := int(it["uid"])
+	var ids := Adv.in_town().map(func(x): return str(x["id"]))
+	ids.sort()
+	expect(ids.size() >= 2, "story11: two adventurers in town (%s)" % str(ids))
+	var a1 := Adv.get_a(str(ids[0]))
+	var a2 := Adv.get_a(str(ids[1]))
+	Expeditions.ensure(a1)
+	Expeditions.ensure(a2)
+	# its life: sold to the first, fells a boss (named, Epic), sharpened, a discovery, then inherited by the second
+	a1["gold"] = 400
+	Adv.give_item(a1, Game.take_uid(uid), 60)
+	Game.advance_minutes(600)
+	a1["status"] = "away"
+	var ex := {"id": "exp_s11", "party": [a1["id"]], "leader": a1["id"], "dest": "barrow_fields", "journal": [], "encounters": []}
+	var rec := {"boss": true, "enemies": [{"kind": "undead", "name": "The Barrow King", "key": "e0"}],
+		"actions": [{"kind": "attack", "target_key": "e0", "hp_after": 0, "actor_id": a1["id"], "weapon_uid": uid, "hit": true}]}
+	Expeditions._boss_down(ex, {"name": "The Barrow Hall"}, rec)
+	a1["status"] = "in_town"
+	var w := Game.find_uid_anywhere(uid)
+	expect(ItemStory.is_named(w), "story11: the blade earned a name (%s)" % ItemStory.earned_name(w))
+	Lore.record("discovery", "%s found a sealed reliquary in the Whisperwood with %s at their side." % [a1["name"], Items.display_name(w)],
+		{"items": [w], "actors": [a1["id"]], "place": "whisperwood", "importance": 2})
+	Game.advance_minutes(1440)
+	ItemStory.sharpen(w, 88.0, str(a1["id"]))
+	Game.advance_minutes(1440)
+	a1["equipment"].erase("weapon")
+	var old: Dictionary = a2["equipment"].get("weapon", {})
+	if not old.is_empty():
+		a2["loot"].append(old)
+	a2["equipment"]["weapon"] = w
+	Provenance.transfer(w, str(a2["id"]), "inherited", "barrow_fields", "%s took up %s when %s laid down the sword after the Barrow Hall." % [a2["name"], Items.display_name(w), a1["name"]])
+	w["stats"]["durability"] = int(int(w["stats"]["durability_max"]) * 0.3)
+	# --- the adventurer sheet: the equipment page with its histories
+	Events.open_panel.emit("dossier", {"id": str(a2["id"])})
+	await wait(0.8)
+	await click("Equipment", panel())
+	await wait(0.6)
+	var scs: Array = panel().find_children("*", "ScrollContainer", true, false) if panel() else []
+	if not scs.is_empty():
+		(scs[0] as ScrollContainer).scroll_vertical = 560
+		await wait(0.3)
+	await shot("story11_sheet_equipment_history")
+	expect(find_button(panel(), "Its story") != null, "story11: the sheet offers each piece's story")
+	# --- the inspection: overview (with mark), history, owners
+	await click("Its story", panel())
+	await wait(0.8)
+	var ip := _s11_overlay("ItemPanel")
+	expect(ip != null, "story11: the item inspection opens over the sheet")
+	await shot("story11_item_overview")
+	if ip:
+		expect(ip.find_child("MakersMark", true, false) != null, "story11: the overview shows the maker's mark")
+		await click("History", ip)
+		await wait(0.5)
+		await shot("story11_item_history")
+		await click("Owners", ip)
+		await wait(0.5)
+		await shot("story11_item_owners")
+	await _s11_close_overlays()
+	expect(panel() is DossierPanel and panel().visible, "story11: closing the inspection returns to the sheet")
+	await close_panel()
+	# --- "A Familiar Creation": the inheritor brings it in for a repair
+	await advance_to(10, 5)
+	Game.state["customers"].clear()
+	Shop.customers().append({"npc": str(a2["id"]), "want": "repair", "own_slot": "weapon", "pay": 20, "present": true, "seat": 0,
+		"arrived": Game.day() * 24 + Game.hour(), "seated": Game.day() * 24 + Game.hour()})
+	Events.open_panel.emit("shop", {})
+	await wait(1.0)
+	var card := _s11_overlay("FamiliarCard")
+	expect(card != null, "story11: the familiar creation card appears at the counter")
+	await shot("story11_familiar_creation")
+	await _s11_close_overlays()
+	await close_panel()
+	Events.open_panel.emit("shop", {})
+	await wait(0.8)
+	expect(_s11_overlay("FamiliarCard") == null, "story11: the card does not repeat when the counter is opened again")
+	await close_panel()
+	# --- the Hall of Fame: famous creations
+	Events.open_panel.emit("hall_of_fame", {"id": "smithy"})
+	await wait(0.8)
+	await click("Famous creations", panel())
+	await wait(0.5)
+	expect(panel() != null and panel().find_child("Creation_%d" % uid, true, false) != null, "story11: the blade is among the famous creations")
+	await shot("story11_hall_famous")
+	await close_panel()
+	# --- workshop services: reforging a broken piece from the stores, sharpening a blade
+	var it2 := _s11_craft("iron_longsword", 84.0, 1)
+	if not it2.is_empty():
+		it2["stats"]["durability"] = 0
+		it2["broken"] = true
+		Game.add_item(Items.make("coal", {"qty": 2}), false)
+		WorkshopServices.reforge_done(int(it2["uid"]), 112.0)
+		await wait(0.8)
+		expect(_s11_overlay("FamiliarCard") != null, "story11: the reforge result card")
+		await shot("story11_reforge_result")
+		await _s11_close_overlays()
+		WorkshopServices.sharpen_done("", int(it2["uid"]), 92.0)
+		await wait(0.8)
+		await shot("story11_sharpen_result")
+		await _s11_close_overlays()
+	# --- the tooltip with the maker's mark, and the mark in the slot corner
+	Events.open_panel.emit("inventory", {})
+	await wait(0.8)
+	if not it2.is_empty():
+		UIRoot.show_tooltip(Items.tooltip(Game.find_uid(int(it2["uid"]))))
+	await wait(0.3)
+	await shot("story11_tooltip_mark")
+	UIRoot.hide_tooltip()
+	await close_panel()
+	# --- talking to the owner: "Ask about … — its travels"
+	var r := Talk.choose(str(a2["id"]), "itemstory_%d" % uid, "village")
+	expect(str(r.get("text", "")).contains("Day"), "story11: the owner tells the blade's travels")
+	expect(Talk.options(str(a2["id"]), "village").any(func(o): return str(o["id"]) == "itemstory_%d" % uid), "story11: the dialogue offers to ask about it")
+	await _s11_close_overlays()
+	var nm := ItemStory.earned_name(w)
+	expect(Saves.save("story11_pt"), "story11: save")
+	expect(Saves.load_slot("story11_pt"), "story11: load")
+	Saves.delete("story11_pt")
+	await wait(1.5)
+	expect(ItemStory.earned_name(Game.find_uid_anywhere(uid)) == nm, "story11: the name survives save/load")

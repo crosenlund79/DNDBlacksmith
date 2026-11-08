@@ -67,6 +67,14 @@ func _customers() -> void:
 			_multi_parts(v, cu, npc)
 		elif cu.get("want", "") == "repair":
 			actions.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
+			var rit: Dictionary = cu.get("item", {})
+			if cu.has("own_slot"):
+				rit = a.get("equipment", {}).get(str(cu["own_slot"]), rit)
+			if Items.is_equipment(rit):
+				var ruid := int(rit.get("uid", -1))
+				actions.add_child(UIKit.button("Inspect the piece", func(): Events.open_panel.emit("item", {"uid": ruid}), 0))
+				if waiting:
+					(func(): ItemStory.at_counter(npc)).call_deferred()   # "A Familiar Creation" — once per reunion
 		elif cu.get("want", "") == "goods":
 			var anyg := false
 			for it in Game.inventory():
@@ -138,6 +146,11 @@ func _offers() -> void:
 			Events.toast.emit(err if err != "" else "Bought — it is in your stores.", "bad" if err != "" else "good")
 			_build(), 110))
 		h.add_child(UIKit.button("Decline", func(): Shop.decline_offer(oid); _build(), 110))
+		if Items.is_equipment(it):
+			var ouid := int(it["uid"])
+			h.add_child(UIKit.button("Inspect", func(): Events.open_panel.emit("item", {"uid": ouid}), 110))
+			var ofrom := str(o["from"])
+			(func(): ItemStory.present(it, "offer", ofrom)).call_deferred()   # your own work among the finds
 		col.add_child(h)
 		grid.add_child(col)
 	body.add_child(grid)

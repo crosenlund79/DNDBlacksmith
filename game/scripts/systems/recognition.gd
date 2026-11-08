@@ -23,6 +23,7 @@ const KINDS := {
 	"deed": {"name": "Great Deed", "icon": "icons/sword_iron"},
 	"epic": {"name": "Epic", "icon": "icons/star"},
 	"ceremony": {"name": "Ceremony", "icon": "icons/gold"},
+	"named": {"name": "Named", "icon": "ui/story_named"},
 }
 const EPIC_COLOR := Color("#ff6f8e")          # rose-crimson accent on dark tooltips
 const EPIC_COLOR_LIGHT := Color("#8a1f3c")    # the same on parchment
@@ -93,6 +94,7 @@ static func on_crafted(it: Dictionary) -> void:
 		why.append("a masterwork")
 	if str(it.get("rarity", "")) == "legendary":
 		why.append("legendary")
+	ItemStory.on_crafted(it)   # optional: a 120%+ masterwork is named by the smith at the anvil
 	if why.is_empty():
 		return
 	record("craft", Items.display_name(it), "Forged at the Ironhand forge — %s." % ", ".join(PackedStringArray(why)),
@@ -187,10 +189,12 @@ static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed
 		if not ep.has("deeds"):
 			ep["deeds"] = []
 		(ep["deeds"] as Array).append({"day": Game.day(), "deed": deed, "adventurer": adv_id})
-		Items.add_history(it, "Another great deed: %s." % deed)
+		Lore.record("epic", "Another great deed: %s." % deed, {"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 2})
+		ItemStory.on_epic(it, deed)
 		return false
 	it["epic"] = {"day": Game.day(), "deed": deed, "adventurer": adv_id, "adventurer_name": who, "kind": kind, "deeds": []}
-	Items.add_history(it, "Earned Epic distinction: %s%s." % [deed, (" (%s)" % who) if who != "" else ""])
+	Lore.record("epic", "Earned Epic distinction: %s%s." % [deed, (" (%s)" % who) if who != "" else ""], {"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 3})
+	ItemStory.on_epic(it, deed)
 	Shop.rep_change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
 	record("epic", Items.display_name(it), "%s — %s." % [_cap(deed), who] if who != "" else _cap(deed) + ".",
 		{"uid": int(it.get("uid", -1)), "adv": adv_id, "def": str(it.get("def", ""))}, "epic_%d" % int(it.get("uid", -1)))
