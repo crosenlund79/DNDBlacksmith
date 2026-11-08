@@ -67,6 +67,9 @@ static func knows(def_id: String) -> bool:
 	if t["seen"].has(def_id) or Game.count(def_id) > 0 or Game.has_flag("heard_" + def_id):
 		return true
 	var tier: String = str(cfg().get("imports", {}).get(def_id, {}).get("tier", "common"))
+	# a smith who has studied exotic monster materials knows to ask the harbourmaster for dragon parts
+	if def_id in ["dragon_scale", "dragon_bone"] and SkillTree.is_unlocked("l_exotic"):
+		return true
 	if tier in ["exotic", "legendary"]:
 		return false
 	if def_id == "ore_mithril" and Game.has_flag("found_mithril"):

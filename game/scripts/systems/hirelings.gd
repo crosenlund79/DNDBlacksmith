@@ -248,6 +248,7 @@ static func equip(id: String, uid: int) -> bool:
 	it.erase("for_sale")
 	var old: Dictionary = h["equipment"].get(key, {})
 	h["equipment"][key] = it
+	Provenance.transfer(it, id, "given", "brindlewick")
 	if not old.is_empty():
 		Game.add_item(old, false)
 	log_line(h, "took up %s" % it["name"])

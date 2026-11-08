@@ -677,7 +677,8 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid), "assist_bonus": hireling_assist(rid),
 	}
 	it["owner"] = "smith"
-	Items.add_history(it, "Forged at the Ironhand forge (%d%% craftsmanship)." % int(round(q)))
+	# the maker's mark, origin and the "forged" event — the start of the piece's story
+	Provenance.forged(it)
 	History.log_crafted(it)   # workstation logs (Interface)
 	Game.state["craft"] = {}
 	Game.state["stats"]["crafted"] += 1
@@ -731,6 +732,7 @@ static func treat(item_uid: int, coat_def: String) -> String:
 	var val := int(round(maxf(2.0, base * 2.0) * (0.7 + float(c.get("quality", 70)) / 200.0)))
 	Game.remove_def(coat_def, 1)
 	it["coating"] = {"name": t[1], "stat": t[0], "value": val, "uses": 3}
+	Provenance.workshop(it, "treated", "Treated with %s at the Ironhand forge (+%d %s)." % [t[1], val, t[0]])
 	Audio.play("sfx/glass")
 	Game.grant_player_xp("alchemy", 4)
 	Events.inventory_changed.emit()
@@ -752,6 +754,7 @@ static func socket(item_uid: int, rune_def: String, quality: float) -> bool:
 	if it["rarity"] == "common":
 		it["rarity"] = "magic"
 		it["name"] = "Runed " + str(it["name"])
+	Provenance.workshop(it, "enchanted", "A %s was set into it at the Ironhand forge." % DB.item(rune_def).get("name", rune_def))
 	Game.grant_player_xp("runecraft", 20)
 	Events.inventory_changed.emit()
 	return true

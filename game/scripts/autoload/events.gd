@@ -35,3 +35,5 @@ signal game_loaded
 signal objective_changed(text: String)
 signal fatigue_changed(value: float)              # Vitality: 0 fresh .. 100 spent
 signal appearance_changed                         # the player changed hair/beard/colours (Appearance)
+
+signal lore_recorded(event: Dictionary)          # a world event was recorded (Lore) — places, items, adventurers

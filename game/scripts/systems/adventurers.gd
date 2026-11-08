@@ -492,6 +492,7 @@ static func give_item(a: Dictionary, it: Dictionary, price: int) -> void:
 	if a["equipment"].has(s):
 		a["loot"].append(a["equipment"][s])
 	a["equipment"][s] = it
+	Provenance.transfer(it, str(a["id"]), "given" if price <= 0 else "sold", "brindlewick")
 	it["owner"] = a["id"]
 	if a["needs"] == s:
 		a["needs"] = ""
@@ -951,3 +952,50 @@ static func after_expedition(a: Dictionary, where: String) -> void:
 			it["broken_noted"] = true
 			Chronicle.add("chain", "%s came home from %s with a broken %s." % [a["name"], where, it.get("name", s)], {"adv": a["id"], "item": str(it.get("uid", ""))})
 	evaluate_gear(a)
+
+
+
+## A fallen adventurer's equipment passes on (iteration 011). Each piece goes to a companion who can use it and
+## would be better off with it ("inherited"), or — if it is the smith's work or a notable piece — is carried home
+## to the forge ("recovered", in a chest at the workshop), or stays buried with its owner ("lost"). The instance
+## is never duplicated: it leaves the dead adventurer's equipment.
+static func bequeath(dead: Dictionary, heirs: Array, place: String, place_name := "") -> void:
+	if dead.get("bequeathed", false):
+		return
+	dead["bequeathed"] = true
+	var home := []
+	for slot in (dead.get("equipment", {}) as Dictionary).keys():
+		var it: Dictionary = dead["equipment"][slot]
+		if it.is_empty() or not Items.is_equipment(it):
+			continue
+		var heir := {}
+		var best := 0.0
+		for hid in heirs:
+			var h := get_a(str(hid))
+			if h.is_empty() or str(h.get("status", "")) == "dead":
+				continue
+			var cur: Dictionary = h.get("equipment", {}).get(slot, {})
+			var gain := Items.score(it) - Items.score(cur)
+			if gain > best and affinity(h, it) > 0.0:
+				best = gain
+				heir = h
+		dead["equipment"].erase(slot)
+		if not heir.is_empty():
+			var old: Dictionary = heir["equipment"].get(slot, {})
+			if not old.is_empty():
+				heir["loot"].append(old)
+			heir["equipment"][slot] = it
+			Provenance.transfer(it, str(heir["id"]), "inherited", place,
+				"%s took up %s from fallen %s at %s." % [heir["name"], Items.display_name(it), dead["name"], place_name if place_name != "" else "the road"])
+		elif Provenance.is_mine(it) or Provenance.is_notable(it) or slot == "weapon":
+			home.append(it)
+		else:
+			Provenance.lose(it, place_name, "buried with %s" % dead["name"], place)
+	if not home.is_empty():
+		for it2 in home:
+			it2["_arrives_how"] = "recovered"
+			Lore.record("recovered", "%s's companions carried %s home from %s." % [dead["name"], Items.display_name(it2), place_name if place_name != "" else "the wilds"],
+				{"items": [it2], "actors": [dead["id"]] + heirs, "place": place, "importance": 1})
+		Game.state["returns"].append(Loot.make_container("chest_recovered", home, str(get_a(str(heirs[0])).get("name", "Companions")),
+			"%s's companions brought this home: \"It should go back to the forge.\"" % dead["name"]))
+		Events.inventory_changed.emit()

@@ -200,6 +200,9 @@ func add_item(item: Dictionary, notify := true) -> void:
 	if item.is_empty():
 		return
 	SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material"
+	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov"):
+		Provenance.transfer(item, "smith", str(item.get("_arrives_how", "received")), "brindlewick")
+	item.erase("_arrives_how")
 	var inv := inventory()
 	if DB.item(item["def"]).get("stack", false):
 		# batches of different rarity (a flawless potion, an exquisite runestone) keep their own stack

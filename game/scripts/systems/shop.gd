@@ -88,6 +88,8 @@ static func add_offer(adv_id: String, it: Dictionary, announce := true) -> void:
 	var price := maxi(2, int(Items.value(it) * (0.55 if Social.band(adv_id) in ["friendly", "devoted"] else 0.75)))
 	if Social.spouse() == adv_id:
 		price = 0
+	if Provenance.applies(it) and Provenance.owner_id(it) != adv_id:
+		Provenance.transfer(it, adv_id, "found")
 	it["owner"] = adv_id
 	offers().append({"id": "off_%d" % Game.new_uid(), "from": adv_id, "item": it, "price": price, "day": Game.day()})
 	if announce and (Regions.is_unidentified(it) or it.get("rarity", "common") in ["rare", "legendary"] or DB.item(it["def"]).get("tags", []).has("rare")):
@@ -106,8 +108,8 @@ static func accept_offer(oid: String) -> String:
 		Game.add_gold(-price, "materials", "Bought %s from %s" % [o["item"]["name"], a.get("name", "")])
 		a["gold"] = int(a.get("gold", 0)) + price
 		var it: Dictionary = o["item"]
+		Provenance.transfer(it, "smith", "bought", "brindlewick", "%s sold %s to the forge for %d g." % [a.get("name", ""), Items.display_name(it), price])
 		it["owner"] = "smith"
-		Items.add_history(it, "Sold to the forge by %s for %d g." % [a.get("name", ""), price])
 		Game.add_item(it)
 		offers().erase(o)
 		Social.change(o["from"], 2.0, 2.0)
@@ -536,7 +538,7 @@ static func do_repair(npc: String, quality: float) -> void:
 			if it.get("broken", false):
 				it.erase("broken")
 				Chronicle.add("item", "Brannoc mended %s's broken %s." % [a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
-			Items.add_history(it, "Repaired at the Ironhand forge (%d%%)." % int(quality))
+			Provenance.workshop(it, "repaired", "Repaired at the Ironhand forge for %s (%d%%)." % [a.get("name", npc), int(quality)])
 			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
 			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
 			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "Brannoc mended my %s %s." % [it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])

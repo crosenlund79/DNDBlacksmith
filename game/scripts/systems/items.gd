@@ -162,6 +162,10 @@ static func wtype(it: Dictionary) -> String:
 static func add_history(it: Dictionary, text: String) -> void:
 	if it.is_empty():
 		return
+	if is_equipment(it):
+		# equipment remembers through the shared world memory (one event, linked from the item)
+		Lore.record("note", text, {"items": [it], "importance": 0})
+		return
 	if not it.has("history"):
 		it["history"] = []
 	it["history"].append({"day": Game.day(), "text": text})

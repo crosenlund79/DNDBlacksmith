@@ -1295,6 +1295,11 @@ static func finish(e: Dictionary) -> void:
 				for id in e["party"]:
 					achieve(Adv.get_a(id), "Searched %s for the missing." % reg["name"], 15)
 	var alive: Array = (e["party"] as Array).filter(func(i): return Adv.get_a(i).get("status", "") == "away")
+	# the fallen's gear passes on: to a companion who can use it, home to the forge, or into the grave
+	for fid in e["party"]:
+		var fa := Adv.get_a(fid)
+		if fa.get("status", "") == "dead" and int(fa.get("died_day", -1)) >= int(int(e.get("start", 0)) / 1440) + 1 and not alive.is_empty():
+			Adv.bequeath(fa, alive, str(e["dest"]), reg.get("name", ""))
 	var share := int(e["gold"]) / maxi(1, alive.size())
 	var xp_each := int(e.get("xp", 0)) / maxi(1, alive.size())
 	for id in alive:

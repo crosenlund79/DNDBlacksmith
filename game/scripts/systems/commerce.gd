@@ -339,6 +339,7 @@ static func pawn_item(uid: int, qty := 0) -> String:
 	if taken.is_empty():
 		return "You no longer have that."
 	taken.erase("for_sale")
+	Provenance.transfer(taken, "pawnbroker", "pawned", "brindlewick")
 	var hold := int(pawn_cfg().get("hold_days", 10))
 	var p := {"id": _new_id("pl"), "item": taken, "payout": pay, "buyback": pawn_buyback(taken), "day": Game.day(),
 		"due": Game.day() + hold, "status": "held"}
@@ -362,7 +363,8 @@ static func redeem(pledge_id: String) -> String:
 			return "That costs %d g — you cannot afford it." % cost
 		var nm := Items.display_name(it)
 		Game.add_gold(-cost, "pawn", ("Redeemed %s" if p["status"] == "held" else "Bought back %s off the shelf") % nm)
-		var back: Dictionary = it.duplicate(true)
+		var back: Dictionary = it.duplicate(true)   # the same instance (same uid) leaves the pledge book
+		back["_arrives_how"] = "redeemed"
 		Game.add_item(back, false)
 		pledges().erase(p)
 		_log("%s %s for %d g." % ["Redeemed" if p["status"] == "held" else "Bought back", nm, cost], -cost)
@@ -436,7 +438,8 @@ static func rival_stock() -> Array:
 			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
 			var it := Items.make(str(e[0]), {"quality": randf_range(82, 104), "rarity": "magic" if randf() < 0.2 else "common", "crafted_by": "Maren Tallowgate"})
-			Items.add_history(it, "Forged at the Salt Anvil by Maren Tallowgate.")
+			Provenance.set_maker(it, "rival_smith", "Maren Tallowgate", "salt_anvil", "the Salt Anvil, Brindlewick")
+			Provenance.transfer(it, "rival_smith", "forged", "brindlewick", "Maren Tallowgate forged %s at the Salt Anvil." % Items.display_name(it))
 			out.append({"def": str(e[0]), "qty": 1, "item": it, "price": maxi(1, int(round(Items.value(it) * float(e[1]) * pf)))})
 		for e in rival_cfg().get("materials", []):
 			if randf() > float(e[3]) or DB.item(str(e[0])).is_empty():
