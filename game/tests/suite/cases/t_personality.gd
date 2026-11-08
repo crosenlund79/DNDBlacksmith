@@ -105,6 +105,18 @@ func test_innate_legendary_wakes_at_the_forge() -> void:
 	Provenance.forged(it)
 	check(ItemSpirit.awake(it), "a destined legendary wakes when it is forged")
 	eq(str(ItemSpirit.spirit(it).get("cause", "")), "forged", "it woke at the forge")
+	# it grows into its character: the type settles with its first words, from the history until then
+	_voices(true)
+	Provenance.transfer(it, "aldric", "sold")
+	Lore.record("death", "Aldric fell with %s in hand." % it["name"], {"items": [it], "place": "kings_road", "importance": 2})
+	Provenance.transfer(it, "hilde", "inherited")
+	Lore.record("death", "Hilde fell too.", {"items": [it], "place": "mirewood", "importance": 2})
+	check(ItemSpirit.speak(it, "inspect", true) != "", "its first words")
+	eq(str(ItemSpirit.spirit(it)["type"]), "melancholy", "its character settled from what happened to it")
+	for i in 5:
+		_slay(it, "a troll", "Ironroot", "ironroot_mine")
+	ItemSpirit.settle(it)
+	eq(str(ItemSpirit.spirit(it)["type"]), "melancholy", "once it has spoken, its character never changes")
 	var dud := _legend(false)
 	Game.add_item(dud, false)
 	Provenance.forged(dud)

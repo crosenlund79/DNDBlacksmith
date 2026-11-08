@@ -9,7 +9,7 @@
 class_name SpiritVoice
 extends CanvasLayer
 
-const BG := Color("#efe6f2")
+const BG := Color("#ebe0f2")
 const BORDER := Color("#3d2257")
 const NAME_COL := Color("#5b3a7e")
 const TEXT_COL := Color("#2a1840")

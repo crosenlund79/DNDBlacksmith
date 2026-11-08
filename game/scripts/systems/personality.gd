@@ -4,7 +4,8 @@
 ##     (a roll fixed by the uid). Legendary, unique and cursed pieces wake the first time the world notices them;
 ##     the rest wake only after a significant event (a boss kill, an Epic deed, a name, its bearer's death, being
 ##     lost and found) — Lore events, heard through Events.lore_recorded. The personality type is chosen from the
-##     piece's real history (kills → bloodthirsty/proud, dead bearers → melancholy, many hands → sarcastic, …).
+##     piece's real history (kills → bloodthirsty/proud, dead bearers → melancholy, many hands → sarcastic, …),
+##     settling for good with its first words (a piece that woke at the forge grows into its character).
 ##     State: Provenance.st(it)["spirit"] = {type, awakened_day, cause, last_line_t, lines_said, recent[]}; the
 ##     awakening is a Lore event ("awakened"). Global cooldown: Game.state["spirits"] = {last_t, said}.
 ##     Lines: data/personalities.json (tools/data/make_personalities.py), per type and context, with placeholders
@@ -310,6 +311,14 @@ static func derive_type(it: Dictionary) -> String:
 	return best
 
 
+## A piece that woke young (at the forge) has little history yet: its character settles with its first words,
+## from everything that happened to it until then. After that it never changes.
+static func settle(it: Dictionary) -> void:
+	var sp := spirit(it)
+	if not sp.is_empty() and int(sp.get("lines_said", 0)) == 0:
+		sp["type"] = derive_type(it)
+
+
 static func type_name(t: String) -> String:
 	return str(data().get("types", {}).get(t, {}).get("name", t.capitalize()))
 
@@ -504,6 +513,7 @@ static func speak(it: Dictionary, context: String, force := false) -> String:
 		return ""
 	var sp := spirit(it)
 	var uid := int(it.get("uid", -1))
+	settle(it)
 	# the first words of a newly woken piece are never lost to the chance roll
 	if not force and int(sp.get("lines_said", 0)) > 0 and _roll("chance:%d:%d:%s:%d" % [uid, int(sp.get("lines_said", 0)), context, Game.now()]) >= int(SPEAK_CHANCE[frequency()]):
 		return ""
