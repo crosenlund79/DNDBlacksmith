@@ -2448,3 +2448,72 @@ func phase_skilltree() -> void:
 	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
 	await shot("st_tree_secret")
 	await close_panel()
+
+
+
+# ======================================================================= iteration 010: adventurer sheet
+func phase_adv10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	# Sigrun: a seasoned fighter with a companion, a broken blade, worn armour, an empty slot or two
+	var s := Adv.get_a("sigrun")
+	Expeditions.ensure(s)
+	s["equipment"]["companion"] = {"uid": Game.new_uid(), "def": "test_companion", "name": "Ash-hound", "creature_name": "Ash-hound", "qty": 1,
+		"rarity": "magic", "quality": 70.0, "stats": {"attack": 8, "protection": 3, "scouting": 4}, "affixes": [], "sockets": []}
+	s["equipment"]["boots"] = Items.make("boots_leather", {"quality": 78.0})
+	s["equipment"]["ring"] = Items.make("ring_garnet", {"quality": 90.0, "rarity": "rare"})
+	var e := Expeditions.start({"members": ["sigrun", "tomas"], "leader": "sigrun", "dest": "whisperwood"})
+	for n in Expeditions.region("whisperwood")["nodes"]:
+		if n["kind"] == "encounter":
+			Expeditions.fight(e, n)
+			break
+	Expeditions.finish(e)
+	var w: Dictionary = s["equipment"]["weapon"]
+	w["stats"]["durability"] = 0
+	w["broken"] = true
+	s["equipment"]["armor"]["stats"]["durability"] = int(int(s["equipment"]["armor"]["stats"]["durability_max"]) * 0.2)
+	s["status"] = "in_town"
+	s["gold"] = 40
+	Adv.evaluate_gear(s)
+	expect(not s["shopping"].is_empty(), "adv10: Sigrun has a shopping list (%d)" % s["shopping"].size())
+	# Mira, Pip and Kestra are out right now
+	var e2 := Expeditions.start({"members": ["mira", "pip", "kestra"], "leader": "mira", "dest": "whisperwood"})
+	e2["step"] = 1
+	for a in Adv.all().values():
+		Expeditions.ensure(a)
+		if a["status"] == "in_town":
+			Adv.evaluate_gear(a)
+	await press("panel_adventurers")
+	await wait(0.8)
+	expect(panel() is AdventurersPanel, "adv10: J opens the roster")
+	await shot("adv10_roster")
+	var card: Control = panel().find_child("Card_sigrun", true, false) as Control if panel() else null
+	expect(card != null, "adv10: Sigrun has a card")
+	if card:
+		var ev := InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_LEFT
+		ev.pressed = true
+		card.gui_input.emit(ev)
+		await wait(0.8)
+	expect(panel() is DossierPanel, "adv10: the card opens the character sheet")
+	if not panel() is DossierPanel:
+		Events.open_panel.emit("dossier", {"id": "sigrun"})
+		await wait(0.8)
+	for t in DossierPanel.TABS:
+		expect(await click(t, panel()), "adv10: tab %s" % t)
+		await wait(0.5)
+		await shot("adv10_sheet_" + t.to_lower())
+	# the broken weapon's tooltip
+	await click("Equipment", panel())
+	await wait(0.4)
+	UIRoot.show_tooltip(Items.tooltip(w))
+	await wait(0.3)
+	await shot("adv10_tooltip_broken")
+	UIRoot.hide_tooltip()
+	# a traveller's sheet: the expedition in progress
+	Events.open_panel.emit("dossier", {"id": "mira"})
+	await wait(0.6)
+	await click("Expedition", panel())
+	await wait(0.4)
+	await shot("adv10_sheet_mira_away")
+	await close_panel()

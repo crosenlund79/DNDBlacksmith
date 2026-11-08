@@ -140,6 +140,9 @@ static func expire_offers() -> void:
 ## An adventurer's most worn piece, if anything is below 40% durability.
 static func worn_slot(a: Dictionary) -> String:
 	for slot in a.get("equipment", {}):
+		if a["equipment"][slot].get("broken", false):
+			return slot   # a broken piece comes first
+	for slot in a.get("equipment", {}):
 		var st: Dictionary = a["equipment"][slot].get("stats", {})
 		if st.has("durability_max") and float(st["durability"]) < float(st["durability_max"]) * 0.4:
 			return slot
@@ -219,6 +222,8 @@ static func slot_phrase(slot: String) -> String:
 			return "a suit of armour"
 		"amulet":
 			return "an amulet"
+		"companion":
+			return "a companion creature"
 	return "a " + slot
 
 

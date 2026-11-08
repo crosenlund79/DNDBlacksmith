@@ -169,13 +169,49 @@ static func add_history(it: Dictionary, text: String) -> void:
 		it["history"].pop_front()
 
 
-static func stat(it: Dictionary, key: String) -> int:
+## Every equipment slot, in sheet order. `companion` holds a creature (type "companion").
+const SLOTS := ["weapon", "shield", "armor", "helmet", "gloves", "boots", "belt", "ring", "amulet", "companion"]
+const SLOT_LABEL := {"weapon": "Weapon", "shield": "Shield", "armor": "Body", "helmet": "Head", "gloves": "Hands", "boots": "Feet",
+	"belt": "Belt", "ring": "Ring", "amulet": "Amulet", "companion": "Companion"}
+
+
+## Condition of a worn piece as an effectiveness factor: 1.0 while durability is at least half,
+## falling to 0.8 as it nears zero; a broken piece works at half strength. Pieces without durability: 1.0.
+static func condition(it: Dictionary) -> float:
+	if it.get("broken", false):
+		return 0.5
+	var st: Dictionary = it.get("stats", {})
+	if not st.has("durability_max") or float(st["durability_max"]) <= 0.0:
+		return 1.0
+	var r := clampf(float(st.get("durability", 0)) / float(st["durability_max"]), 0.0, 1.0)
+	return 1.0 if r >= 0.5 else 0.8 + 0.4 * r
+
+
+## Durability fraction 0..1 (1.0 for pieces that never wear).
+static func durability_frac(it: Dictionary) -> float:
+	var st: Dictionary = it.get("stats", {})
+	if not st.has("durability_max") or float(st["durability_max"]) <= 0.0:
+		return 1.0
+	return clampf(float(st.get("durability", 0)) / float(st["durability_max"]), 0.0, 1.0)
+
+
+## A stat as made (stats + affixes), before wear.
+static func base_stat(it: Dictionary, key: String) -> int:
 	var v := int(it.get("stats", {}).get(key, 0))
 	for a in it.get("affixes", []):
 		if a["stat"] == key:
 			v += int(a["value"])
-	if key == "attack" and it.get("broken", false):
-		v = v / 2
+	return v
+
+
+## A stat as it works now: worn pieces lose some effectiveness, broken ones half of every stat.
+static func stat(it: Dictionary, key: String) -> int:
+	var v := base_stat(it, key)
+	if v == 0 or key in ["durability", "durability_max"]:
+		return v
+	var f := condition(it)
+	if f < 1.0:
+		v = int(floor(float(v) * f)) if v > 0 else v
 	return v
 
 
@@ -185,6 +221,7 @@ static func score(it: Dictionary) -> float:
 		return 0.0
 	return stat(it, "attack") + stat(it, "protection") * 1.2 + stat(it, "magic") * 1.5 + stat(it, "fire") \
 		+ stat(it, "frost") + stat(it, "ward") * 1.2 + stat(it, "vitality") * 0.5 + stat(it, "speed") * 0.4 \
+		+ stat(it, "scouting") * 0.6 + stat(it, "heal") * 0.8 + stat(it, "carry") * 0.4 \
 		+ float(it.get("quality", 70)) * 0.05
 
 
@@ -215,7 +252,7 @@ static func type_label(it: Dictionary) -> String:
 	var t: String = def(it).get("type", "")
 	return {"weapon": "Weapon", "shield": "Shield", "armor_metal": "Metal Armour", "armor_leather": "Leather Armour",
 		"helmet": "Helmet", "boots": "Boots", "gloves": "Gloves", "belt": "Belt", "ring": "Ring", "amulet": "Amulet",
-		"runestone": "Runestone", "material": "Material", "potion": "Alchemy", "relic": "Relic", "container": "Container"}.get(t, t.capitalize())
+		"runestone": "Runestone", "companion": "Companion", "material": "Material", "potion": "Alchemy", "relic": "Relic", "container": "Container"}.get(t, t.capitalize())
 
 
 ## BBCode tooltip for dark panels.
@@ -226,17 +263,20 @@ static func tooltip(it: Dictionary) -> String:
 	if it.has("title"):
 		lines.append("[i][color=#%s]%s, once called %s[/color][/i]" % [c, def(it).get("name", ""), it.get("base_name", "")])
 	if it.get("broken", false):
-		lines.append("[color=#ff9a80]Broken — needs the grinding wheel and anvil[/color]")
+		lines.append("[color=#ff9a80]Broken — every stat at half strength; needs the grinding wheel and anvil[/color]")
+	elif condition(it) < 1.0:
+		lines.append("[color=#e0b070]Worn — working at %d%% until repaired[/color]" % int(round(condition(it) * 100.0)))
 	if it.has("epithet"):
 		lines.append("[i][color=#%s]%s[/color][/i]" % [c, it["epithet"]])
 	lines.append("[color=#%s]%s %s[/color]" % [c, RARITY_LABEL.get(it.get("rarity", "common"), ""), type_label(it)])
 	var st: Dictionary = it.get("stats", {})
 	var names := {"attack": "Attack", "protection": "Protection", "magic": "Magic", "fire": "Fire", "frost": "Frost",
-		"ward": "Ward", "heal": "Healing", "edge": "Edge", "smithing": "Smithing"}
+		"ward": "Ward", "heal": "Healing", "scouting": "Scouting", "carry": "Carry", "edge": "Edge", "smithing": "Smithing"}
 	for k in names:
 		var v := stat(it, k)
 		if v != 0:
-			lines.append("%s  [b]%d[/b]" % [names[k], v])
+			var b := base_stat(it, k)
+			lines.append(("%s  [b]%d[/b]" % [names[k], v]) + (("  [color=#c09070](%d when sound)[/color]" % b) if b != v else ""))
 	if st.has("durability"):
 		lines.append("Durability  %d / %d" % [int(st["durability"]), int(st.get("durability_max", st["durability"]))])
 	for a in it.get("affixes", []):

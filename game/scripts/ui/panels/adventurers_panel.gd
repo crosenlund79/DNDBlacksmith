@@ -1,86 +1,143 @@
-## AdventurersPanel — who is active around Brindlewick: class, approximate level and capabilities,
-## gear, condition, whereabouts, how they regard the smith, and what happened on their last trip.
-## EN: Accuracy grows with familiarity (talk to them, drink with them, equip them) and with rumours
-##     from the Velvet Lantern: strangers show a level range and gear by kind; acquaintances show
-##     exact levels, named gear and the story of their last expedition.
-## DA: Nøjagtigheden vokser med kendskab og rygter: fremmede vises med niveau-interval, bekendte
-##     med præcise oplysninger og historien om sidste ekspedition.
+## AdventurersPanel [J] — the roster of the Tipsy Wyvern as compact cards: portrait, class icon,
+## level, whereabouts, a gear-completeness meter and durability warnings. A card opens the full
+## character sheet (DossierPanel).
+## EN: Accuracy grows with familiarity (talk, drink, equip them) and with rumours from the Velvet
+##     Lantern: strangers show a level range; acquaintances show exact levels and their gear's state.
+## DA: Kroens eventyrere som kort; et kort åbner karakterarket.
 class_name AdventurersPanel
 extends UIWindow
 
+var grid: GridContainer
+
 
 func _init() -> void:
-	super._init("Adventurers of the Tipsy Wyvern", 1600, 880)
+	super._init("Adventurers of the Tipsy Wyvern", 1640, 900)
 
 
 func _ready() -> void:
 	super._ready()
-	content.add_child(UIKit.label("What you know depends on how well you know them — talk, share a drink, equip them, or pay for rumours at the Velvet Lantern.", 19, "body_italic"))
-	var body := UIKit.vbox(10)
+	content.add_child(UIKit.label("Click a card for the full character sheet. What you know depends on how well you know them — talk, share a drink, equip them, or pay for rumours at the Velvet Lantern.", 19, "body_italic"))
+	grid = GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 14)
+	content.add_child(UIKit.scroll(grid, 740))
+	_build()
+
+
+func _build() -> void:
+	UIKit.clear(grid)
 	var list := Adv.all().values()
-	list.sort_custom(func(a, b): return Social.fam(a["id"]) > Social.fam(b["id"]))
+	# the living first, then by how well you know them
+	list.sort_custom(func(a, b):
+		var da := 1 if a["status"] == "dead" else 0
+		var db := 1 if b["status"] == "dead" else 0
+		if da != db:
+			return da < db
+		return Social.fam(a["id"]) > Social.fam(b["id"]))
 	for a in list:
-		Adv.ensure(a)
-		body.add_child(_row(a))
-		body.add_child(UIKit.divider())
-	content.add_child(UIKit.scroll(body, 700))
+		Expeditions.ensure(a)
+		grid.add_child(card(a))
 
 
 func _know(a: Dictionary) -> float:
+	if bool(Expeditions.diff().get("detail", true)):
+		return 100.0
 	return Social.fam(a["id"]) + (25.0 if Game.has_flag("rumour_" + a["id"]) else 0.0)
 
 
-func _row(a: Dictionary) -> Control:
+func card(a: Dictionary) -> Control:
 	var k := _know(a)
-	var row := UIKit.hbox(16)
-	var p := UIKit.portrait("portraits/" + str(a["id"]), 116)
+	var id: String = a["id"]
+	var p := PanelContainer.new()
+	p.name = "Card_" + id
+	p.custom_minimum_size = Vector2(385, 176)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.94, 0.89, 0.78, 0.6) if a["status"] != "dead" else Color(0.6, 0.56, 0.5, 0.45)
+	sb.border_color = UIKit.GILT if Social.spouse() != id else UIKit.RUBRIC
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	p.add_theme_stylebox_override("panel", sb)
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	p.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			Audio.play("sfx/ui_click", -4.0)
+			Events.open_panel.emit("dossier", {"id": id}))
+	p.mouse_entered.connect(func(): sb.border_color = Color("#e6702a"))
+	p.mouse_exited.connect(func(): sb.border_color = UIKit.GILT if Social.spouse() != id else UIKit.RUBRIC)
+	var h := UIKit.hbox(12)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# portrait with the class badge in its corner
+	var pc := Control.new()
+	pc.custom_minimum_size = Vector2(120, 150)
+	var por := UIKit.portrait("portraits/" + id, 120)
 	if a["status"] == "dead":
-		p.modulate = Color(0.5, 0.45, 0.42)
-	row.add_child(p)
+		por.modulate = Color(0.5, 0.45, 0.42)
+	pc.add_child(por)
+	var badge := UIKit.icon(DossierPanel.CLASS_ICON.get(a["cls"], "ui/cls_fighter"), 46)
+	badge.position = Vector2(78, 104)
+	badge.size = Vector2(46, 46)
+	pc.add_child(badge)
+	if a["status"] in ["dead", "missing"] and Assets.has_tex("ui/stamp_" + ("fallen" if a["status"] == "dead" else "missing")):
+		var st := UIKit.icon("ui/stamp_" + ("fallen" if a["status"] == "dead" else "missing"), 110)
+		st.position = Vector2(5, 20)
+		st.size = Vector2(110, 110)
+		pc.add_child(st)
+	h.add_child(pc)
+	var v := UIKit.vbox(3)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(UIKit.label(a["name"], 24, "body_bold"))
 	var lv := int(a["level"])
-	var level_txt := ("level %d" % lv) if k >= 25.0 else ("around level %d–%d" % [maxi(1, lv - 1), lv + 2])
-	var where := ""
-	match a["status"]:
-		"in_town": where = "In Brindlewick" + ((" — means to head for %s next" % DB.destinations[a["next_dest"]]["name"]) if a.has("next_dest") and k >= 20.0 else "")
-		"injured": where = "Recovering at the inn (%d day%s)" % [int(a["injured_days"]), "" if int(a["injured_days"]) == 1 else "s"]
-		"away": where = "Away at %s%s" % [DB.destinations[a["dest"]]["name"], (" — back in about %d day%s" % [int(a["days_left"]), "" if int(a["days_left"]) == 1 else "s"]) if k >= 25.0 else ""]
-		"dead": where = "Fallen"
-	var female: bool = DB.character(a["id"]).get("look", {}).get("female", false)
-	var attitude: String = {"hostile": "resents you", "cool": "is cool towards you", "neutral": "knows you by sight", "warm": "likes you", "friendly": "counts you a friend", "devoted": "would walk through fire for you"}.get(Social.band(a["id"]), "")
-	var rom := Social.romance(a["id"])
-	if rom in ["dating", "courting", "married", "widowed"]:
-		attitude += {"dating": " · you've been sharing drinks", "courting": " · you are courting", "married": " · [color=#7e2418]your wife[/color]", "widowed": " · [color=#7e2418]your late wife[/color]"}[rom]
-	var gear := []
-	for s in a["equipment"]:
-		var it: Dictionary = a["equipment"][s]
-		if k >= 15.0 or str(it.get("crafted_by", "")).begins_with("Brannoc"):
-			var mark := " ⚒" if str(it.get("crafted_by", "")).begins_with("Brannoc") else ""
-			gear.append("[color=#%s]%s[/color]%s" % [Items.color(it, false).to_html(false), Items.display_name(it), mark])
+	v.add_child(UIKit.label(("Level %d %s" % [lv, a["cls"]]) if k >= 25.0 else ("Level %d–%d %s" % [maxi(1, lv - 1), lv + 2, a["cls"]]), 18))
+	var sw := Expeditions.status_word(a)
+	var where := sw
+	if a["status"] == "away":
+		where += " · " + str(Expeditions.region(str(a.get("dest", ""))).get("name", ""))
+	v.add_child(UIKit.label(where, 18, "body_bold", WantedPanel.STATUS_COL.get(sw, UIKit.INK)))
+	if a["status"] != "dead":
+		var c := Adv.completeness(a)
+		var gm := UIKit.hbox(6)
+		gm.add_child(UIKit.icon("ui/stat_gear", 26))
+		var b := DossierPanel._bar(float(c.x), float(c.y), Color("#4c7a34"), 120, 12)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		gm.add_child(b)
+		gm.add_child(UIKit.label("%d/%d" % [c.x, c.y], 16))
+		v.add_child(gm)
+		var ww := Adv.wear_warnings(a)
+		var wr := UIKit.hbox(4)
+		if k < 15.0:
+			wr.add_child(UIKit.label("gear's state unknown", 15, "body_italic", Color("#8a7a60")))
+		elif int(ww["broken"]) + int(ww["worn"]) == 0:
+			wr.add_child(UIKit.label("gear sound", 16, "body_italic", Color("#4c7a34")))
 		else:
-			gear.append("a %s" % Items.type_label(it).to_lower())
-	var cond := ""
-	if int(a.get("potions", 0)) > 0 and k >= 20.0:
-		cond = " · carries %d healing draught%s" % [int(a["potions"]), "" if int(a["potions"]) == 1 else "s"]
-	var hist: Array = a.get("history", [])
-	var record := ""
-	if not hist.is_empty() and k >= 10.0:
-		var wins := 0
-		var trips := 0
-		for e in hist:
-			trips += 1
-			if str(e["outcome"]).begins_with("success"):
-				wins += 1
-		record = " · %d of their last %d trips went well" % [wins, trips]
-	var lines := "[font_size=28][b]%s[/b][/font_size]  ·  %s %s, %s  ·  [i]%s[/i]\n%s · %s%s\n%s%s · %s\nGear: %s" % [
-		a["name"], Adv.rating_text(a), a["cls"], level_txt, Adv.TRAITS.get(a["trait"], ""),
-		where, ("She " if female else "He ") + attitude, cond,
-		(Adv.skills_text(a).left(1).to_upper() + Adv.skills_text(a).substr(1)) if k >= 15.0 else "Capabilities: hard to judge yet", record, "%d expeditions" % int(a["expeditions"]),
-		", ".join(gear) if not gear.is_empty() else "—"]
-	if k >= 10.0 and not a.get("log", []).is_empty():
-		lines += "\n[color=#5e421c][i]%s[/i][/color]" % "  ".join(a["log"])
-	elif a.get("last_report", "") != "":
-		lines += "\n[color=#5e421c]%s[/color]" % a["last_report"]
-	var lab := UIKit.rich(lines, 19)
-	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(lab)
-	return row
+			if int(ww["broken"]) > 0:
+				wr.add_child(UIKit.icon("ui/warn_broken", 26))
+				wr.add_child(UIKit.label("%d broken " % int(ww["broken"]), 16, "body_bold", UIKit.RUBRIC))
+			if int(ww["worn"]) > 0:
+				wr.add_child(UIKit.icon("ui/warn_worn", 26))
+				wr.add_child(UIKit.label("%d worn" % int(ww["worn"]), 16, "body_bold", Color("#8a4a10")))
+		v.add_child(wr)
+		var sh: Array = a.get("shopping", [])
+		if not sh.is_empty() and k >= 15.0:
+			var e: Dictionary = sh[0]
+			v.add_child(UIKit.label("Wants: %s (%s)" % [Adv._slot_name(str(e["slot"])).to_lower(), {"buy": "to buy", "repair": "repair", "requested": "repair asked",
+				"commission": "commission", "commissioned": "commissioned", "elsewhere": "elsewhere", "save": "saving", "watch": "watching your display"}.get(e["plan"], e["plan"])], 15, "body_italic", Color("#5e421c")))
+	for c2 in v.get_children():
+		if c2 is Control:
+			(c2 as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(v)
+	p.add_child(h)
+	_ignore_mouse(h)
+	return p
+
+
+func _ignore_mouse(n: Node) -> void:
+	for c in n.get_children():
+		if c is Control:
+			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ignore_mouse(c)
