@@ -16,7 +16,7 @@ InstallDir "$PROGRAMFILES64\Ember and Ash"
 InstallDirRegKey HKLM "Software\${APPKEY}" "InstallDir"
 RequestExecutionLevel admin
 BrandingText "${APPNAME} ${VERSION}"
-VIProductVersion "0.12.0.0"
+VIProductVersion "0.13.0.0"
 VIAddVersionKey "ProductName" "${APPNAME}"
 VIAddVersionKey "FileDescription" "${APPNAME} installer"
 VIAddVersionKey "ProductVersion" "${VERSION}"

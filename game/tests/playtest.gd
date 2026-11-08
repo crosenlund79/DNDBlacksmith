@@ -1247,7 +1247,8 @@ func phase_slice() -> void:
 	await shot("slice_shop_display")
 	await use("counter", "smithy")
 	await shot("slice_shop_garrick")
-	await click("Emberwarden")
+	# the piece may have earned a name of its own at the anvil (a 120%+ masterwork): click it by its current name
+	await click(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
 	await wait(0.5)
 	expect(gar["equipment"].get("weapon", {}).get("uid", -1) == ember.get("uid", -2), "slice: Garrick bought and equipped the Emberwarden")
 	await close_panel()
@@ -3354,7 +3355,7 @@ func phase_world11() -> void:
 	# the village map links here too
 	await press("panel_map")
 	await wait(0.8)
-	expect(await click("The world beyond", panel()), "world11: the village map links to the world map")
+	expect(await click("The world [", panel()), "world11: the village map links to the world map")
 	await wait(0.8)
 	expect(panel() is WorldMapPanel, "world11: world map from the village map")
 	await shot("w11_world_map_again")
