@@ -138,7 +138,7 @@ def apply(layout, by_id, room, door, F):
     props += [F("campfire", 62.6, 6.9), F("log_seat", 61.4, 7.6), F("log_seat", 63.9, 7.9, 90), F("caravan_pennant", 60.8, 3.6),
               F("mud_patch", 64.4, 7.0), F("tether_post", 67.4, 5.2)]
     # ---- the ceremony stage in the square (south-west quadrant); the market stall moves east of the well
-    props += [F("square_stage", 54.5, 34.7), F("podium_board", 54.5, 35.55), F("bench", 52.2, 32.85), F("bench", 56.8, 32.85)]
+    props += [F("square_stage", 54.4, 34.95), F("podium_board", 54.4, 36.0), F("bench", 52.0, 32.8), F("bench", 56.9, 32.8)]
     # ---- the graveyard: five old stones in the north row, eight plots below (headstones come with the dead)
     for x in (66.4, 68.0, 69.6, 71.2, 72.8):
         props.append(F("gravestone", x, 58.2))
@@ -149,9 +149,9 @@ def apply(layout, by_id, room, door, F):
     layout["outdoor_props"] = props
 
     layout["market_stall"] = [65.6, 34.0]
-    layout["overhead_props"] = [F("bunting", 54.5, 33.2), F("sign_harbour", 85.0, 50.9)]
+    layout["overhead_props"] = [F("bunting", 54.4, 33.3), F("sign_harbour", 85.0, 50.9)]
     layout["clearings"] = [[4.0, 4.4, 8.4, 6.8], [14.2, 13.8, 6.6, 7.0], [1.4, 33.4, 6.0, 5.8], [60.2, 2.6, 8.2, 6.4],
-                           [51.4, 32.0, 6.4, 4.6], [65.0, 57.0, 10.0, 5.6], [13, 9, 5, 4]]
+                           [51.2, 32.0, 6.8, 5.0], [65.0, 57.0, 10.0, 5.6], [13, 9, 5, 4]]
     layout["paddocks"] = [
         dict(id="horse_paddock", kind="horse", rect=[14.2, 13.8, 6.6, 7.0], count=2, sprites=["animal_horse_1", "animal_horse_2"]),
         dict(id="cow_pasture", kind="cow", rect=[1.4, 33.4, 6.0, 5.8], count=3, sprites=["animal_cow_1", "animal_cow_2", "animal_cow_1"]),
@@ -161,11 +161,11 @@ def apply(layout, by_id, room, door, F):
                                           label="The travelling caravan — rare wares from afar")}
     layout["outdoor_interact"] = [
         dict(kind="creatures", id="hale", pos=[10.6, 10.5], r=150, label="The Hales' menagerie — creatures & companions"),
-        dict(kind="hall_of_fame", id="square", pos=[54.5, 35.0], r=130, label="The village Hall of Fame — the square's honours board"),
+        dict(kind="hall_of_fame", id="square", pos=[54.4, 35.45], r=130, label="The village Hall of Fame — the square's honours board"),
     ]
 
     spots = layout["outdoor_spots"]
-    spots.update({"hale_yard": [10.2, 9.7], "caravan_camp": [63.5, 6.2], "square_podium": [54.5, 34.5],
+    spots.update({"hale_yard": [10.2, 9.7], "caravan_camp": [63.5, 6.2], "square_podium": [54.4, 34.9],
                   "square_audience_1": [52.2, 31.9], "square_audience_2": [53.4, 32.1], "square_audience_3": [55.6, 32.1],
                   "square_audience_4": [56.8, 31.9], "square_audience_5": [54.5, 31.7], "square_audience_6": [58.2, 33.6],
                   "horse_paddock": [17.4, 13.0], "cow_pasture": [8.4, 36.2]})
@@ -176,4 +176,4 @@ def apply(layout, by_id, room, door, F):
     layout["lamps"] = [[50, 29.2], [68, 32.8], [40, 29.5], [26, 32.6], [12, 29.4], [81.4, 32.6], [57.2, 20], [60.8, 42], [57.4, 52],
                        [33.4, 33.4], [52.0, 14.0], [40.4, 13.4], [24.6, 13.2], [37.2, 10.7], [70.0, 18.4], [79.6, 50.4], [92.2, 51.0],
                        [84.0, 58.6], [64.2, 57.0], [8.6, 24.0], [60.8, 46.0], [83.6, 36.6], [11.0, 33.8], [57.6, 8.0],
-                       [72.4, 32.4], [61.0, 8.2], [18.2, 11.2], [30.6, 10.4], [51.0, 33.7], [58.0, 36.4]]
+                       [72.4, 32.4], [61.0, 8.2], [18.2, 11.2], [30.6, 10.4], [51.0, 34.6], [58.0, 36.4]]

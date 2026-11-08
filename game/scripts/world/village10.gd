@@ -71,7 +71,7 @@ static func build_lamps(w: VillageWorld) -> void:
 		w._window_glows.append(g)
 		w.ysort.add_child(holder)
 		w._solid(Rect2(pos - Vector2(12, 8), Vector2(24, 14)))
-		var l := FX.light(Color("#ffb060"), 290.0, 0.0, true)
+		var l := FX.light(Color("#ffb060"), 340.0, 0.0, true)
 		l.position = pos + Vector2(18, -46)
 		w.add_child(l)
 		w.night_lights.append(l)

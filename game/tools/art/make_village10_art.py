@@ -206,12 +206,17 @@ def em_carpenter(P, cx, cy):
 
 
 def em_farm(P, cx, cy):
-    b = [lin(f"M{cx-12},{cy+12} L{cx+6},{cy-6}", INK, 3.2), lin(f"M{cx-12},{cy+12} L{cx+6},{cy-6}", PAL["wood"][0], 1.6)]
-    tines = " ".join(f"M{cx+3+i*2.2:.1f},{cy-3+i*2.2:.1f} l{8-i:.1f},{-8+i:.1f}" for i in range(-1, 2))
-    b += [lin(f"M{cx+1},{cy-8} L{cx+11},{cy+2}", INK, 2.6), lin(tines, INK, 2.2), lin(tines, PAL["metal"][0], 0.9),
-          lin(" ".join(f"M{cx-6},{cy+12} L{cx-13+i*2.4:.1f},{cy-6}" for i in range(4)), PAL["straw"][2], 1.6),
-          fill(" ".join(ell(cx - 13 + i * 2.4, cy - 6, 1.3, 2.6) for i in range(4)), PAL["straw"][1]),
-          lin(f"M{cx-12},{cy+5} h7", RUB, 1.2)]
+    """A sheaf of wheat tied with red twine beside an upright pitchfork."""
+    sx = cx - 7
+    stalks = " ".join(f"M{sx},{cy+12} L{sx-8+i*2.6:.1f},{cy-8}" for i in range(7))
+    b = [lin(stalks, PAL["straw"][2], 1.8), lin(stalks, PAL["straw"][0], 0.8),
+         fill(" ".join(ell(sx - 8 + i * 2.6, cy - 8, 1.4, 2.8) for i in range(7)), PAL["straw"][1]),
+         lin(" ".join(ell(sx - 8 + i * 2.6, cy - 8, 1.4, 2.8) for i in range(7)), INK, 0.5, 0.7),
+         lin(f"M{sx-4},{cy+3} h8", RUB, 1.6)]
+    fx = cx + 9
+    tines = f"M{fx-5},{cy-12} L{fx-5},{cy-4} Q{fx-5},{cy-1} {fx},{cy-1} Q{fx+5},{cy-1} {fx+5},{cy-4} L{fx+5},{cy-12} M{fx},{cy-12} L{fx},{cy-1}"
+    b += [lin(f"M{fx},{cy-1} L{fx},{cy+13}", INK, 3.2), lin(f"M{fx},{cy-1} L{fx},{cy+13}", PAL["wood"][0], 1.6),
+          lin(tines, INK, 2.4), lin(tines, PAL["metal"][0], 1.0)]
     return J(b), ""
 
 

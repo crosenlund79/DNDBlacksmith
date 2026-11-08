@@ -43,9 +43,9 @@ PROPS.update({
     "tether_post": P(32, 32, desc="tethering post with a rope"),
     "caravan_pennant": P(80, 40, desc="a pole with a swallow-tailed burgundy pennant, the caravan camp's mark"),
     # the square's ceremony stage
-    "square_stage": P(288, 176, False, "plank ceremony stage with steps, drapes and a red runner (walkable)"),
+    "square_stage": P(352, 208, False, "plank ceremony stage with steps, drapes and a red runner (walkable)"),
     "podium_board": P(128, 64, desc="the square's honours board with brass plaques and a lectern"),
-    "bunting": P(320, 56, False, "two swags of bunting in burgundy, cream, gilt and blue"),
+    "bunting": P(384, 56, False, "two swags of bunting in burgundy, cream, gilt and blue"),
     # graveyard
     "grave_plot": P(72, 48, False, "an unused grave plot pegged out with string"),
 })

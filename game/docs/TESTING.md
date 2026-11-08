@@ -43,6 +43,7 @@ dice, so runs are deterministic.
 | `t_ironfront` | **Scenario E.** A full match against the AI, rewards, a new deck made active, persistence; Blitzkrieg |
 | `t_social` | **Scenario F.** Family ripple, memories, gifts, fatigue from crafting and its effect, rest and sleep, finds offered at the counter, the herbalist, persistence |
 | `t_trade` | Import orders from deposit to delivery, ships visit and their schedule persists |
+| `t_village10` | Every building has a non-solid sign clear of its doorway, the new venues (pawnshop, rival forge, the Hales, caravan camp, ceremony stage, graveyard plots) have their spots on the nav graph and their interactables, the caravan comes and goes, wander targets never fall inside a building, five simulated minutes of wandering never put an animal in a house or on a footprint, horses and cows stay in their paddocks |
 | `t_integrity` | Broken references (recipes, stations, loot, ships, tree), tree shape (unique ids, prerequisites exist, no cycles, every recipe and station learned from exactly one node, every station purchasable, every required knowledge findable), every required material has a source, every room can eventually be bought and the whole building is reachable, commissions never ask for more than a craftable piece can give |
 
 ## Bugs the suite has already caught (kept as regressions)

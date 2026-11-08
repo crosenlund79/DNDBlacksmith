@@ -1105,8 +1105,8 @@
  },
  "square_stage": {
   "size": [
-   288,
-   176
+   352,
+   208
   ],
   "solid": false,
   "desc": "plank ceremony stage with steps, drapes and a red runner (walkable)"
@@ -1121,7 +1121,7 @@
  },
  "bunting": {
   "size": [
-   320,
+   384,
    56
   ],
   "solid": false,
