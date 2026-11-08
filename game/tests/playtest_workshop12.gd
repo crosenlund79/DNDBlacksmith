@@ -152,7 +152,7 @@ func run(p: Node) -> void:
 		await pt.tp((e["pos"] as Vector2) + Vector2(-90, -40))
 		w.player.facing = "e"
 		await pt.wait(0.5)
-		var pr := str(pt.U().prompt_label.text)
+		var pr := str(pt.U().prompt_label.text) + " " + str(pt.U().prompt_sub.text)   # the apprentice note sits on the second line
 		pt.expect(pr.contains("step aside"), "workshop12: the prompt explains the %s is in use (%s)" % [held, pr])
 		await pt.shot("w12_station_prompt")
 	# ---- the property plan with occupancy

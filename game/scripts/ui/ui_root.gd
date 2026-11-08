@@ -13,6 +13,7 @@ var energy_bar: ProgressBar
 var energy_label: Label
 var objective_label: RichTextLabel
 var prompt_label: Label
+var prompt_sub: Label   # WorldPrompts: unavailable actions and who is using a station
 var toast_box: VBoxContainer
 var area_banner: Label
 var tooltip_panel: PanelContainer
@@ -149,6 +150,16 @@ func _build_hud() -> void:
 	prompt_label.position = Vector2(-500, -172)   # above the toolbar
 	prompt_label.size = Vector2(1000, 40)
 	hud.add_child(prompt_label)
+	# the prompt's quieter line: actions not possible right now, with a short reason (WorldPrompts.sub)
+	prompt_sub = UIKit.label("", 21, "body_italic", Color("#e8dcc0"))
+	prompt_sub.add_theme_color_override("font_outline_color", Color("#20140c"))
+	prompt_sub.add_theme_constant_override("outline_size", 6)
+	prompt_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_sub.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	prompt_sub.position = Vector2(-600, -206)   # just above the main prompt line
+	prompt_sub.size = Vector2(1200, 30)
+	prompt_sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(prompt_sub)
 	# area banner
 	area_banner = UIKit.label("", 44, "title", Color("#efe4cc"))
 	area_banner.add_theme_color_override("font_outline_color", Color("#20140c"))
@@ -375,8 +386,9 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 func _route(id: String, args: Dictionary) -> void:
 	match id:
 		"prompt":
-			var t: String = args.get("text", "")
-			prompt_label.text = ("[%s]  %s" % [Settings.key_label("interact"), t]) if t != "" else ""
+			# {text} (a plain label) or a WorldPrompts dictionary {title, actions, status, off, note}
+			prompt_label.text = WorldPrompts.line(args, Settings.key_label("interact"))
+			prompt_sub.text = WorldPrompts.sub(args) if prompt_label.text != "" else ""
 		"station":
 			open(StationPanel.new(args["id"]))
 		"skillcheck":
@@ -431,8 +443,8 @@ func _route(id: String, args: Dictionary) -> void:
 			open(PropertyPanel.new())
 		"harbour":
 			open(HarbourPanel.new())
-		"herbalist":
-			open(HerbalistPanel.new())
+		"herbalist", "store":   # a village counter (Fennimore's Simples, Pell's Provisions): args {"id": store id}
+			open(HerbalistPanel.new({"id": str(args.get("id", "general_store" if id == "store" else "herbalist"))}))
 		"ironfront":
 			open(IronfrontPanel.new(args))
 		"help":
@@ -448,7 +460,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"familiar":
 			_overlay(FamiliarCard.new(args), false)
 		"map":
-			open(MapPanel.new())
+			open(MapPanel.new(args))   # {"venue": id} opens with that shop's card
 		"world_map":
 			open(WorldMapPanel.new(args))
 		"customize":

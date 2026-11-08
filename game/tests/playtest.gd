@@ -2913,6 +2913,12 @@ func phase_tailor10() -> void:
 		await shot("tailor10_tree_tailoring_learned")
 	await close_panel()
 
+## UX iteration (WORLD): the map with a shop card, quick travel hours, Pell's counter, prompts, a closed shop at night.
+func phase_world_ux() -> void:
+	var ph: RefCounted = load("res://tests/playtest_world_ux.gd").new()
+	await ph.run(self)
+
+
 ## Iteration 012, apprentices: hiring at the board, the Workshop Ledger, miniatures at their stations, break, shift end,
 ## the finished piece with the apprentice's mark, a word with them, save/load (tests/playtest_workshop12.gd).
 func phase_workshop12() -> void:

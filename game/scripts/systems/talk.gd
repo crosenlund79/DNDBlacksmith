@@ -61,6 +61,15 @@ static func options(npc: String, area: String) -> Array:
 	var c := DB.character(npc)
 	var kind: String = c.get("kind", "hireling")
 	out.append({"id": "talk", "label": "Talk"})
+	# a counter's keeper: buy from the counter (shown greyed with the reason when the shop is shut)
+	var vid := Venues.for_keeper(npc)
+	if vid in ["general_store", "herbalist"]:
+		var so := {"id": "shop_counter", "label": "Buy from the counter — %s" % ", ".join(Venues.categories(vid).slice(0, 3)).to_lower()}
+		if Venues.keeper_away(vid) != "":
+			so["disabled"] = "the shop is shut while he delivers"
+		elif not Venues.is_open(vid):
+			so["disabled"] = "the shop is " + Venues.status_text(vid).to_lower().replace(" — ", "; ")
+		out.append(so)
 	if not Hire.get_h(npc).is_empty():
 		out.append({"id": "manage", "label": "Discuss work and expeditions"})
 	if npc == "aldric" and Game.state["world"].get("delivery_pending", false):
@@ -71,12 +80,18 @@ static func options(npc: String, area: String) -> Array:
 				out.insert(0, {"id": "refund", "label": "Refund them for the %s (%d g)" % [cu.get("item_name", "gear"), int(cu.get("refund", 20))]})
 				out.insert(1, {"id": "refuse", "label": "Refuse — the work was sound"})
 				continue
-			out.insert(0, {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Show them the wares"})
+			var so2 := {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Show them the wares"}
+			if cu["want"] == "repair" and Crafting.station_locked_reason("grinding_wheel") != "":
+				so2["disabled"] = "needs your grinding wheel (%s)" % Crafting.station_locked_reason("grinding_wheel").to_lower()
+			out.insert(0, so2)
 			out.insert(1, {"id": "send_away", "label": "Ask them to come back another time"})
 	var a := Adv.get_a(npc)
 	if not a.is_empty() and a["status"] in ["in_town", "injured"]:
 		out.append({"id": "travels", "label": "Ask about their last expedition"})
-		out.append({"id": "equip", "label": "Give equipment (free)" if Social.spouse() == npc else "Offer equipment"})
+		var eo := {"id": "equip", "label": "Give equipment (free)" if Social.spouse() == npc else "Offer equipment"}
+		if not Game.inventory().any(func(it): return Items.is_equipment(it)):
+			eo["disabled"] = "no equipment in your stores"
+		out.append(eo)
 		if a.get("needs", "") != "" and not Shop.open_orders().any(func(o): return o["npc"] == npc):
 			out.append({"id": "order", "label": "Ask what they need forged"})
 		if c.get("romance", false):
@@ -108,7 +123,10 @@ static func options(npc: String, area: String) -> Array:
 		out.append({"id": "evening", "label": "Spend the evening (25 g)"})
 		out.append({"id": "rumour", "label": "Ask what the adventurers are saying (5 g)"})
 	if not a.is_empty() or kind in ["villager", "companion"]:
-		out.append({"id": "gift", "label": "Give a small gift (a healing draught)"})
+		var go := {"id": "gift", "label": "Give a small gift (a healing draught)"}
+		if Game.count("potion_healing") < 1:
+			go["disabled"] = "you have no healing draught"
+		out.append(go)
 	out.append_array(Commerce.talk_options(npc))
 	out.append_array(ItemStory.talk_options(npc))   # "Ask about Wolfbane — its travels"
 	out.append({"id": "bye", "label": "Farewell"})
@@ -130,6 +148,12 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 	var c := DB.character(npc)
 	var a := Adv.get_a(npc)
 	match opt:
+		"shop_counter":
+			var sv := Venues.for_keeper(npc)
+			if not Venues.is_open(sv):
+				return {"text": "\"Shop's shut, smith. %s.\"" % Venues.status_text(sv).replace("Closed — opens", "Opens at")}
+			Events.open_panel.emit.call_deferred(str(Venues.get_v(sv)["panel"]), {"id": sv})
+			return {"text": "\"What'll it be?\"", "action": "close"}
 		"talk":
 			var first_today := int(e.get("last_talk", -1)) != Game.day()
 			e["last_talk"] = Game.day()

@@ -1798,11 +1798,11 @@ func spot_for(id: String) -> String:
 		return cs if spots.has(cs) else ""
 	match id:
 		"aldric":
-			if Game.state["world"].get("delivery_pending", false) and h >= 9 and h < 17:
+			if Venues.keeper_away("general_store", h) != "":   # the weekly delivery: at the smithy door (hours: Venues)
 				return "smithy_door_out"
-			return "grocery_behind" if h >= 7 and h < 19 else ("inn_t2b" if h < 21 else "")
+			return "grocery_behind" if Venues.in_hours("general_store", h) else ("inn_t2b" if h >= 19 and h < 21 else "")
 		"hilde":
-			return "inn_behind_bar" if h >= 6 else ""
+			return "inn_behind_bar" if Venues.in_hours("inn", h) else ""
 		"wenna":
 			if h >= 11 and h < 24:
 				return ["inn_t1b", "inn_t3b", "inn_t4", "inn_bar", "inn_t6b", "inn_t2"][h % 6]
@@ -1827,32 +1827,19 @@ func spot_for(id: String) -> String:
 			return "well" if h >= 8 and h < 16 else ("square_4" if h < 20 else "")
 		"barnaby":
 			# the Ironfront host: his parlour by day, the basement den in the evening
-			if h >= 17 and h < 23:
+			if Venues.in_hours("ironfront", h):
 				return "ironfront_host"
 			if h >= 12 and h < 14:
 				return "inn_t6b"
 			return "barnaby_house_inside" if h >= 8 and h < 17 else ""
 		"herbalist":
-			return "herbalist_counter" if h >= 8 and h < 18 else ("pond_3" if h < 20 else "")
+			return "herbalist_counter" if Venues.in_hours("herbalist", h) else ("pond_3" if h >= 18 and h < 20 else "")
 		"harbourmaster":
-			return "harbour_quay" if h >= 6 and h < 19 else ("inn_bar" if h < 22 else "")
+			return "harbour_quay" if Venues.in_hours("harbour", h) else ("inn_bar" if h >= 19 and h < 22 else "")
 		"rosalind":
 			return "lantern_3"
-		# iteration 010 venues (the characters come from the Commerce worker; nothing happens until they exist)
-		"pawnbroker":
-			return "pawn_counter" if h >= 8 and h < 18 else ""
-		"rival_smith":
-			if h >= 7 and h < 16:
-				return "rival_smith_forge"
-			return "rival_smith_counter" if h < 19 else ("inn_t6" if h < 22 else "")
-		"hale_elder":
-			return "hale_yard" if h >= 7 and h < 18 else ("hale_cottage_inside" if h < 21 else "")
-		"hale_younger":
-			if h >= 14 and h < 16:
-				return "hale_yard"
-			return "hale_study" if h >= 8 and h < 20 else ""
-		"caravan_master":
-			return "caravan_camp" if h >= 7 and h < 21 and Village10.caravan_present(self) else ""
+		# the pawnbroker, the rival smith, the Hales and the caravan master are placed by Commerce.spot_for above
+		# (their counter hours come from Venues)
 		"roisin":
 			return Roisin.spot(spots.has("lantern_roisin"))
 		"lysa":
@@ -2087,10 +2074,20 @@ func _update_focus() -> void:
 		if lab != str(best.get("label", "")):
 			best = best.duplicate()
 			best["label"] = lab
-	if best.get("label", "") != _focus.get("label", ""):
+	# the prompt lists what can be done here (WorldPrompts); rebuilt when the focus changes and every second
+	var key := "%s/%s/%s" % [best.get("kind", ""), best.get("id", ""), best.get("label", "")]
+	_prompt_t += get_process_delta_time()
+	if key != _focus_key or (not best.is_empty() and _prompt_t > 1.0):
+		_prompt_t = 0.0
+		var changed := key != _focus_key
+		_focus_key = key
 		_focus = best
-		Events.open_panel.emit("prompt", {"text": best.get("label", "")})
-		_set_highlight(best)
+		var pr := WorldPrompts.for_entity(best, area) if not best.is_empty() else {}
+		if changed or pr != _prompt:
+			_prompt = pr
+			Events.open_panel.emit("prompt", pr if not pr.is_empty() else {"text": ""})
+		if changed:
+			_set_highlight(best)
 	if _hl_ring and _hl_ring.visible:
 		_hl_t += get_process_delta_time()
 		_hl_ring.modulate.a = 0.55 + 0.35 * sin(_hl_t * 4.0)
@@ -2098,6 +2095,9 @@ func _update_focus() -> void:
 			_hl_ring.position = (npcs[_focus["id"]] as Node2D).position + Vector2(0, 6)
 
 
+var _focus_key := "//"
+var _prompt := {}
+var _prompt_t := 0.0
 var _hl_ring: Line2D
 var _hl_sprite: CanvasItem
 var _hl_t := 0.0
@@ -2145,7 +2145,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func interact(e: Dictionary) -> void:
+	# a shop counter respects its keeper's hours (Venues): closed counters say when they open instead
+	var vid := Venues.venue_for_entity(str(e.get("kind", "")), str(e.get("id", "")))
+	if vid != "" and not Venues.is_open(vid):
+		Audio.play("sfx/error", -8.0)
+		Events.toast.emit("%s — %s." % [Venues.get_v(vid)["name"], Venues.status_text(vid)], "info")
+		return
 	match e["kind"]:
+		"store":   # Pell's Provisions and any other restocking counter (HerbalistPanel, Trade.store_stock)
+			Events.open_panel.emit("store", {"id": e["id"]})
 		"station":
 			Events.open_panel.emit("station", {"id": e["id"]})
 		"counter":

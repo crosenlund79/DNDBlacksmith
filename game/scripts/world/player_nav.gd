@@ -564,25 +564,34 @@ func destinations() -> Array:
 				break
 		if pos == Vector2.INF:
 			continue
-		out.append({"id": d[0], "name": d[1], "icon": "ui/qt_" + str(d[2]), "pos": pos, "desc": d[4]})
+		var vid := Venues.for_travel(str(d[0]))
+		out.append({"id": d[0], "name": d[1], "icon": "ui/qt_" + str(d[2]), "pos": pos, "desc": d[4], "venue": vid,
+			"short": str(SHORT.get(str(d[0]), d[1])),
+			"status": Venues.status_text(vid) if vid != "" else "", "open": Venues.is_open(vid) if vid != "" else true})
 	return out
 
 
-## id, name, icon, candidate spots (first that exists), line
+## Short names under the quick-travel medallions (the full name shows in the centre when hovered).
+const SHORT := {"provisions": "Provisions", "herbalist": "Herbalist", "pawn": "Pawnshop", "rival_smith": "Salt Anvil",
+	"creatures": "Menagerie", "chapel": "Chapel", "barnaby": "Barnaby's", "inn": "Tipsy Wyvern", "smithy": "Your Forge"}
+
+
+## id, name, icon, candidate spots (first that exists), line — each line says what the smith can really do there
+## (opening hours and open/closed come from Venues and are shown beside it).
 const DESTINATIONS := [
-	["smithy", "Ironhand Forge", "smithy", ["smithy_inside", "smithy_counter_back", "smithy_door_out"], "Your forge and shop."],
-	["inn", "The Tipsy Wyvern", "inn", ["inn_inside", "inn_bar", "inn_door_out"], "Hilde's inn: ale, gossip, adventurers."],
-	["square", "Village Square", "square", ["well", "notice", "square_0"], "The well, the notice board, the market crowd."],
-	["market", "Market", "market", ["market", "market_1", "grocery_door_out", "grocery_front"], "Pell's Provisions and the stalls."],
-	["herbalist", "Fennimore's Simples", "herbalist", ["herbalist_inside", "herbalist_counter", "herbalist_door_out"], "Maud's herbs and remedies."],
-	["harbour", "The Harbour", "harbour", ["harbour_quay"], "Ships, imports and the harbourmaster."],
-	["barnaby", "Barnaby's House", "barnaby", ["barnaby_house_inside", "barnaby_house_door_out"], "And the Ironfront den below."],
+	["smithy", "Ironhand Forge", "smithy", ["smithy_inside", "smithy_counter_back", "smithy_door_out"], "Your forge, stores and shop counter."],
+	["inn", "The Tipsy Wyvern", "inn", ["inn_inside", "inn_bar", "inn_door_out"], "Hilde's inn: meals, ale, gossip and adventurers."],
+	["square", "Village Square", "square", ["well", "notice", "square_0"], "The well, the notice board and the Hall of Fame."],
+	["provisions", "Pell's Provisions", "market", ["grocery_front", "grocery_door_out"], "Aldric's counter: ore, coal, hides, leather and thread."],
+	["herbalist", "Fennimore's Simples", "herbalist", ["herbalist_inside", "herbalist_counter", "herbalist_door_out"], "Maud's counter: herbs, reagents and fibres."],
+	["harbour", "The Harbour", "harbour", ["harbour_quay"], "Buy from a docked ship or order imports from the harbourmaster."],
+	["barnaby", "Barnaby's House", "barnaby", ["barnaby_house_inside", "barnaby_house_door_out"], "Barnaby's parlour; the Ironfront den below in the evening."],
 	["chapel", "Chapel & Graveyard", "chapel", ["graveyard", "house_oswin_door_out", "house_oswin_inside"], "Father Oswin and the quiet dead."],
 	["pond", "The Pond", "pond", ["pond_1", "pond_2"], "Ducks, reeds, a bench."],
-	["pawn", "Pawnshop", "pawn", ["pawn_counter"], "Sell, pledge and redeem."],
-	["rival_smith", "The Rival Smith", "rival", ["rival_smith_counter", "rival_smith_forge"], "See what the competition sells."],
-	["creatures", "Hale's Creatures", "creatures", ["hale_yard", "hale_study"], "Companion beasts for adventurers."],
-	["caravan", "Caravan Camp", "caravan", ["caravan_camp"], "Travelling traders, when they are in."],
+	["pawn", "The Three Brass Balls", "pawn", ["pawn_counter"], "The pawnbroker: pledge, sell, redeem or buy curios."],
+	["rival_smith", "The Salt Anvil", "rival", ["rival_smith_counter", "rival_smith_forge"], "The rival smith: sea-bronze arms and a few materials."],
+	["creatures", "The Hales' Menagerie", "creatures", ["hale_yard", "hale_study"], "Companion beasts for you or an adventurer."],
+	["caravan", "Caravan Camp", "caravan", ["caravan_camp"], "The Brask caravan's wagons: rare wares, only while they are camped."],
 ]
 
 

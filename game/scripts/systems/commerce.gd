@@ -813,16 +813,15 @@ static func creature_buy_for(a: Dictionary, offer := {}) -> Dictionary:
 ## (The village worker's spots: pawn_counter, rival_smith_counter, rival_smith_forge, hale_yard, hale_study, caravan_camp.)
 static func spot_for(id: String, h: int) -> String:
 	match id:
+		# counter hours come from Venues (the single source the map and the prompts read too)
 		"pawnbroker":
-			return "pawn_counter" if h >= 8 and h < 19 else ""
+			return "pawn_counter" if Venues.in_hours("pawn", h) else ""
 		"rival_smith":
-			if h >= 7 and h < 12:
-				return "rival_smith_forge"
-			if h >= 12 and h < 18:
-				return "rival_smith_counter"
+			if Venues.in_hours("rival_smith", h):
+				return "rival_smith_forge" if h < int(Venues.get_v("rival_smith").get("counter_from", 12)) else "rival_smith_counter"
 			return "inn_bar" if h >= 19 and h < 22 else ""
 		"hale_elder":
-			if h >= 6 and h < 18:
+			if Venues.in_hours("creatures", h):
 				return "hale_yard"
 			return "inn_t2" if h >= 19 and h < 21 else ""
 		"hale_younger":
@@ -830,7 +829,7 @@ static func spot_for(id: String, h: int) -> String:
 				return "pond_2"
 			return "hale_study" if h >= 8 and h < 21 else ""
 		"caravan_master":
-			return "caravan_camp" if caravan_present() and h >= 7 and h < 22 else ""
+			return "caravan_camp" if caravan_present() and Venues.in_hours("caravan", h) else ""
 	return "-"
 
 
