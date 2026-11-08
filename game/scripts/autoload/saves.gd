@@ -9,6 +9,8 @@
 extends Node
 
 const DIR := "user://saves/"
+## Where saves go. Tests point this at a scratch folder (use_test_dir) so they never touch real saves.
+var dir := DIR
 const SLOTS := ["slot_1", "slot_2", "slot_3", "autosave", "quicksave"]
 
 # keys whose values must stay floats even when integral
@@ -16,11 +18,21 @@ const FLOAT_KEYS := ["quality", "precision", "aff", "fam", "power", "progress", 
 
 
 func _ready() -> void:
-	DirAccess.make_dir_recursive_absolute(DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+
+
+## Redirects every save/load to user://test_saves/ (cleared first) — for automated tests.
+func use_test_dir() -> void:
+	dir = "user://test_saves/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var d := DirAccess.open(dir)
+	if d:
+		for f in d.get_files():
+			d.remove(f)
 
 
 func path(slot: String) -> String:
-	return DIR + slot + ".json"
+	return dir + slot + ".json"
 
 
 func exists(slot: String) -> bool:
@@ -66,7 +78,7 @@ func save(slot: String) -> bool:
 	f.store_string(JSON.stringify(doc))
 	f.close()
 	if exists(slot):
-		DirAccess.copy_absolute(path(slot), DIR + slot + ".bak")
+		DirAccess.copy_absolute(path(slot), dir + slot + ".bak")
 		DirAccess.remove_absolute(path(slot))
 	DirAccess.rename_absolute(tmp, path(slot))
 	Log.info("Saved %s (day %d)" % [slot, Game.day()])
@@ -77,7 +89,7 @@ func load_slot(slot: String) -> bool:
 	var data := _read(path(slot))
 	if data.is_empty():
 		Log.warn("Save %s unreadable — trying backup" % slot)
-		data = _read(DIR + slot + ".bak")
+		data = _read(dir + slot + ".bak")
 	if data.is_empty():
 		return false
 	data = _restore_ints(data)
