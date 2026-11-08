@@ -130,6 +130,12 @@ static func rarity_from(quality: float, fortune: int, bonus := 0.0) -> String:
 
 ## Material tier of an item (1 iron/leather … 4 adamantine) — orders can ask for "steel or better".
 static func tier(it: Dictionary) -> int:
+	# a piece upgraded at the anvil (Refinement) counts as its new metal: steel plating makes it "steel or better"
+	var up: int = {"steel": 2, "mithril": 3, "adamantine": 4}.get(str(it.get("refine", {}).get("material", "")), 0)
+	return maxi(up, _def_tier(it))
+
+
+static func _def_tier(it: Dictionary) -> int:
 	var id := str(it.get("def", ""))
 	if id.contains("adamantine"):
 		return 4

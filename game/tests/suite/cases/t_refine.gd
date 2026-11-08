@@ -195,6 +195,7 @@ func test_upgrade_one_material_step() -> void:
 	var cap := Refinement.fresh_cap(w, "steel")
 	check(int(w["stats"]["attack"]) <= maxi(int(cap["attack"]), atk0), "never past a fresh steel piece (%d)" % int(cap["attack"]))
 	eq(str(w["def"]), "sword_iron", "the same kind of piece (def unchanged)")
+	eq(Items.tier(w), 2, "orders asking for steel or better accept it")
 	eq(str(w["rarity"]), str(it["rarity"]), "rarity unchanged")
 	check(Items.tooltip(w).contains("Steel work"), "the tooltip says it was upgraded")
 	var p2 := Refinement.plan(w, "upgrade")
