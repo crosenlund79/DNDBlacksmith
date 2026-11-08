@@ -123,7 +123,9 @@ func _buy_unit(uid: String) -> void:
 # ------------------------------------------------------------------ layout tab
 func _side_layout() -> void:
 	side.add_child(UIKit.label("Workshop layout", 26, "heading"))
-	var tools := UIKit.hbox(6)
+	var tools := HFlowContainer.new()
+	tools.add_theme_constant_override("h_separation", 6)
+	tools.add_theme_constant_override("v_separation", 6)
 	for t in [["stations", "Move stations"], ["merge", "Take down a wall"], ["split", "Put up a wall"], ["door", "Cut a doorway"], ["undoor", "Brick up a doorway"], ["use", "Change a room's use"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tool = key; carrying = ""; _build(), 0)
