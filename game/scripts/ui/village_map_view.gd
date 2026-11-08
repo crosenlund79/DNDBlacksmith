@@ -7,6 +7,7 @@ class_name VillageMapView
 extends Control
 
 signal clicked
+signal venue_clicked(id: String)   # the full map: a shop medallion was clicked (Venues)
 
 const INK := Color("#20140c")
 const PAPER := Color("#e9dcbc")
@@ -31,6 +32,10 @@ var _view := Rect2()
 var _markers: Array = []       # [{pos (local), name, reason}] for hover
 var _hover := -1
 var markers_cache := {}
+var show_venues := false       # the full map: a medallion for every shop and service (Venues)
+var selected_venue := ""
+var _venue_hits: Array = []    # [{pos (local), id}]
+const VENUE_R := 17.0
 
 
 func _init(is_compact := true) -> void:
@@ -85,12 +90,21 @@ func to_world(local: Vector2) -> Vector2:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		clicked.emit()
+		var vhit := venue_at((event as InputEventMouseButton).position)
+		if vhit != "":
+			venue_clicked.emit(vhit)
+		else:
+			clicked.emit()
 		accept_event()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT and compact:
 		Events.open_panel.emit("quick_travel", {})   # the minimap's right-click: quick travel
 		accept_event()
 	elif event is InputEventMouseMotion and not compact:
+		var vh := venue_at((event as InputEventMouseMotion).position)
+		if vh != "":
+			_hover = -2
+			UIRoot.show_tooltip("[b]%s[/b] — %s\n[i]%s · click for details[/i]" % [Venues.get_v(vh)["name"], Venues.get_v(vh)["type"], Venues.status_text(vh)])
+			return
 		var best := -1
 		var bd := 16.0
 		for i in _markers.size():
@@ -224,8 +238,57 @@ func _draw_village(w: VillageWorld) -> void:
 			lp.y = clampf(lp.y, 24.0, size.y - 10.0)
 			draw_string_outline(f, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, 4, Color(PAPER, 0.95))
 			draw_string(f, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, RUBRIC)
+	if show_venues:
+		_draw_venues(w)
 	_draw_people(w, Rect2())
 	_draw_player(w, "")
+
+
+## Where a venue's medallion sits in world coordinates: on the lower edge of its building, else at its spot.
+static func venue_world_pos(w: VillageWorld, id: String) -> Vector2:
+	var v := Venues.get_v(id)
+	var bid := str(v.get("building", ""))
+	if bid != "" and w.buildings.has(bid) and not w.buildings[bid].get("area", false):
+		var r: Rect2 = w.buildings[bid]["rect"]
+		return Vector2(r.get_center().x, r.end.y - 8.0)
+	return w.spots.get(str(v.get("spot", "")), Vector2.INF)
+
+
+func venue_at(local: Vector2) -> String:
+	if not show_venues:
+		return ""
+	for h in _venue_hits:
+		if local.distance_to(h["pos"]) < VENUE_R + 3.0:
+			return str(h["id"])
+	return ""
+
+
+## Shop medallions: the venue's ink icon in a parchment disc, a gilt ring when open, dimmed with a rubric bar when
+## closed or away; the selected one carries a pulsing rubric ring.
+func _draw_venues(w: VillageWorld) -> void:
+	_venue_hits.clear()
+	for id: String in Venues.ids():
+		var wp := venue_world_pos(w, id)
+		if wp == Vector2.INF:
+			continue
+		var p := m(wp)
+		var open := Venues.is_open(id)
+		var sel := id == selected_venue
+		if sel:
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 250.0)
+			draw_circle(p, VENUE_R + 7.0 + pulse * 2.0, Color(RUBRIC, 0.25))
+		draw_circle(p + Vector2(1.5, 2.0), VENUE_R + 1.0, Color(INK, 0.35))
+		draw_circle(p, VENUE_R, Color("#f3e7c6") if open else Color("#cbbf9f"))
+		var tex := Assets.get_tex("ui/qt_" + str(Venues.ICONS.get(id, "square")), Vector2i(96, 96))
+		var s := VENUE_R * 1.55
+		draw_texture_rect(tex, Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), false, Color.WHITE if open else Color(0.62, 0.58, 0.54))
+		draw_arc(p, VENUE_R, 0, TAU, 32, INK, 2.0, true)
+		draw_arc(p, VENUE_R - 2.5, 0, TAU, 32, GILT if open else Color(INK, 0.3), 1.4, true)
+		if not open:
+			draw_line(p + Vector2(-VENUE_R * 0.7, VENUE_R * 0.7), p + Vector2(VENUE_R * 0.7, -VENUE_R * 0.7), Color(RUBRIC, 0.85), 2.6, true)
+		if sel:
+			draw_arc(p, VENUE_R + 4.0, 0, TAU, 36, RUBRIC, 3.0, true)
+		_venue_hits.append({"pos": p, "id": id})
 
 
 func _hatch(r: Rect2, col: Color) -> void:

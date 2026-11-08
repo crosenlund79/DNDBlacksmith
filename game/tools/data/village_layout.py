@@ -168,6 +168,10 @@ def apply(layout, by_id, room, door, F, home):
     gr["furniture"] = gr["furniture"] + [
         F("barrel", 0.6, 6.3), F("herb_baskets", 6.2, 7.2, 90), F("mud_patch", 4.9, 8.3), F("rug_brown", 5.2, 2.4),
         F("sack", 7.6, 7.0), F("crate", 8.6, 6.6), F("cupboard", 0.42, 2.6, 90)]
+    # UX iteration: Aldric's counter is a real shop (Trade.store_stock("general_store"), hours from Venues)
+    gr["interact"] = [i for i in gr.get("interact", []) if i.get("kind") != "store"] + [
+        dict(kind="store", id="general_store", pos=[3.6, 6.6], r=140,
+             label="Pell's Provisions — ore, coal, hides & leather")]
     chp = by_id["house_oswin"]
     chp["furniture"] = chp["furniture"] + [
         F("rug_red", 4.4, 4.5, 90), F("candle", 0.6, 1.0), F("candle", 0.6, 8.0), F("candle", 6.6, 1.2), F("candle", 6.6, 7.8),

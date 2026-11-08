@@ -2578,7 +2578,19 @@
      2.6
     ]
    },
-   "sign_side": -1
+   "sign_side": -1,
+   "interact": [
+    {
+     "kind": "store",
+     "id": "general_store",
+     "pos": [
+      3.6,
+      6.6
+     ],
+     "r": 140,
+     "label": "Pell's Provisions \u2014 ore, coal, hides & leather"
+    }
+   ]
   },
   {
    "id": "house_martha",

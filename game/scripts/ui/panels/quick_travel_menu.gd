@@ -13,6 +13,7 @@ var wheel: Wheel
 var name_label: Label
 var desc_label: Label
 var time_label: Label
+var status_label: Label
 
 
 func _init(_args: Dictionary = {}) -> void:
@@ -51,9 +52,15 @@ func centre_text(d: Dictionary) -> void:
 		name_label.text = "Where to?"
 		desc_label.text = "Choose a place on the ring."
 		time_label.text = ""
+		status_label.text = ""
 		return
 	name_label.text = str(d["name"])
 	desc_label.text = str(d["desc"])
+	# a shop's opening hours (Venues): "Open until 19:00" / "Closed — opens 7:00" / "Away — next in ~3 days"
+	var vid := str(d.get("venue", ""))
+	var shows := vid != "" and (not (Venues.get_v(vid)["hours"] as Array).is_empty() or str(Venues.get_v(vid).get("presence", "")) == "caravan")
+	status_label.text = str(d.get("status", "")) if shows else ""
+	status_label.add_theme_color_override("font_color", Color("#3e5a1e") if bool(d.get("open", true)) else UIKit.RUBRIC)
 	if bool(d.get("here", false)):
 		time_label.text = "You are here."
 	elif int(d["minutes"]) < 0:
@@ -90,7 +97,8 @@ class Wheel extends Control:
 		menu.name_label = UIKit.label("", 30, "heading")
 		menu.desc_label = UIKit.label("", 19, "body_italic")
 		menu.time_label = UIKit.label("", 22, "body_bold", UIKit.RUBRIC)
-		for l: Label in [menu.name_label, menu.desc_label, menu.time_label]:
+		menu.status_label = UIKit.label("", 20, "body_bold", UIKit.RUBRIC)
+		for l: Label in [menu.name_label, menu.desc_label, menu.status_label, menu.time_label]:
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			l.custom_minimum_size = Vector2(300, 0)
@@ -178,12 +186,17 @@ class Wheel extends Control:
 			draw_texture_rect(Assets.get_tex(str(dd["icon"]), Vector2i(96, 96)), r.grow(-s * 0.16), false, tint)
 			if here:
 				draw_arc(p, s * 0.5 + 2.0, 0, TAU, 40, UIKit.GILT, 3.0, true)
+			if not bool(dd.get("open", true)):   # a shop that is shut right now (Venues): struck through, as on the map
+				var k := s * 0.3
+				draw_line(p + Vector2(-k, k), p + Vector2(k, -k), Color(UIKit.RUBRIC, 0.85), 4.0, true)
 			# name under (or over, for the lower half) the medallion
-			var nm := str(dd["name"])
+			var nm := str(dd.get("short", dd["name"]))
 			var fs := 17
 			var tw := f.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			var below := p.y < c.y + 10.0   # names sit on the inner side of the ring
 			var ty := p.y + s * 0.5 + 18.0 if below else p.y - s * 0.5 - 6.0
 			var tp := Vector2(p.x - tw * 0.5, ty)
+			if absf(p.y - c.y) < R * 0.45:   # beside the equator the names go inwards, so neighbours never overlap
+				tp = Vector2(p.x - s * 0.5 - 8.0 - tw if p.x > c.x else p.x + s * 0.5 + 8.0, p.y + 6.0)
 			draw_string_outline(f, tp, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 5, Color(0.94, 0.89, 0.78, 0.95))
 			draw_string(f, tp, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(ink, 0.5) if off else ink)

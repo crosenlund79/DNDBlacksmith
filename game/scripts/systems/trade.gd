@@ -10,13 +10,15 @@
 ## Public API (static):
 ##   herbalist_stock() -> Array[{def, qty, price}]          buy_herbalist(def, qty) -> String ("" = ok)
 ##   herbalist_line() -> String
+##   store_stock(store_id) -> Array[{def, qty, price}]       buy_store(store_id, def, qty) -> String ("" = ok)
+##   store_line(store_id), store_name(store_id), store_cfg(store_id)   STORES = ["herbalist", "general_store"]
 ##   current_ship() -> Dictionary ({} when none docked)       next_arrival() -> Dictionary {type, name, captain, at, days}
 ##   buy_from_ship(index, qty) -> String                      ship_type(type) -> Dictionary
 ##   importables() -> Array[{def, tier, price, deposit, lead}] place_import(def, qty) -> String
 ##   imports() -> Array (open orders: status "ordered" | "arrived")   collect_delivery(id) -> String
 ##   deliveries() -> Array (status "arrived")                 knows(def) -> bool    mark_seen(def)
 ##   on_day(), on_hour(h)                                      dev_force_ship(type), dev_finish_imports()
-## State: Game.state["trade"] = {herb: {day, stock}, ship: {}, next: {}, orders: [], history: [], seen: {}, seq}
+## State: Game.state["trade"] = {herb: {day, stock}, stores: {general_store: {day, stock}} (lazy), ship: {}, next: {}, orders: [], history: [], seen: {}, seq}
 class_name Trade
 extends RefCounted
 
@@ -86,33 +88,64 @@ static func _scan_inventory() -> void:
 		seen[str(it["def"])] = true
 
 
-# ------------------------------------------------------------------ herbalist
-static func herbalist_stock() -> Array:
-	var h: Dictionary = st()["herb"]
+# ------------------------------------------------------------------ village counters (herbalist, general store)
+## The counters that restock every morning from data/trade.json: "herbalist" (Fennimore's Simples) and
+## "general_store" (Pell's Provisions). Each config: {shop, keeper, stock: [[def, price, [min, max]]], lines}.
+const STORES := ["herbalist", "general_store"]
+
+
+static func store_cfg(store_id: String) -> Dictionary:
+	return cfg().get(store_id, {})
+
+
+static func store_name(store_id: String) -> String:
+	return str(store_cfg(store_id).get("shop", store_id.capitalize()))
+
+
+static func _store_state(store_id: String) -> Dictionary:
+	var t := st()
+	if store_id == "herbalist":   # kept under its old key so older saves keep today's stock
+		if not t.has("herb") or not (t["herb"] is Dictionary):
+			t["herb"] = {"day": 0, "stock": []}
+		return t["herb"]
+	if not t.has("stores") or not (t["stores"] is Dictionary):
+		t["stores"] = {}
+	if not t["stores"].has(store_id):
+		t["stores"][store_id] = {"day": 0, "stock": []}
+	return t["stores"][store_id]
+
+
+## Today's stock of a counter: [{def, qty, price}] (restocked lazily on a new day).
+static func store_stock(store_id: String) -> Array:
+	if store_cfg(store_id).is_empty():
+		return []
+	var h := _store_state(store_id)
 	if int(h.get("day", 0)) != Game.day() or not h.has("stock"):
-		_restock_herbalist()
+		_restock(store_id)
 	for e in h["stock"]:
 		mark_seen(str(e["def"]))
 	return h["stock"]
 
 
-static func _restock_herbalist() -> void:
-	var h: Dictionary = st()["herb"]
+static func _restock(store_id: String) -> void:
+	var h := _store_state(store_id)
 	var out := []
-	for e in cfg().get("herbalist", {}).get("stock", []):
+	for e in store_cfg(store_id).get("stock", []):
 		var q := randi_range(int(e[2][0]), int(e[2][1]))
 		out.append({"def": str(e[0]), "qty": q, "price": maxi(1, int(round(float(e[1]) * price_factor())))})
 	h["day"] = Game.day()
 	h["stock"] = out
 
 
-static func herbalist_line() -> String:
-	var lines: Array = cfg().get("herbalist", {}).get("lines", [])
+static func store_line(store_id: String) -> String:
+	var lines: Array = store_cfg(store_id).get("lines", [])
 	return str(lines[Game.day() % lines.size()]) if not lines.is_empty() else ""
 
 
-static func buy_herbalist(def_id: String, qty := 1) -> String:
-	for e in herbalist_stock():
+## Buys up to `qty` (capped at what is left today). "" = bought. No opening-hours check (the counter in the
+## world checks Venues.is_open before it opens the screen).
+static func buy_store(store_id: String, def_id: String, qty := 1) -> String:
+	for e in store_stock(store_id):
 		if e["def"] != def_id:
 			continue
 		qty = mini(qty, int(e["qty"]))
@@ -121,12 +154,29 @@ static func buy_herbalist(def_id: String, qty := 1) -> String:
 		var cost := int(e["price"]) * qty
 		if not Game.can_afford(cost):
 			return "You cannot afford it (%d g)." % cost
-		Game.add_gold(-cost, "materials", "Herbalist: %d × %s" % [qty, DB.item(def_id).get("name", def_id)])
+		var who := "Herbalist" if store_id == "herbalist" else store_name(store_id)
+		Game.add_gold(-cost, "materials", "%s: %d × %s" % [who, qty, DB.item(def_id).get("name", def_id)])
 		Game.add_item(Items.make(def_id, {"qty": qty, "quality": randf_range(68, 90)}), false)
 		e["qty"] = int(e["qty"]) - qty
 		mark_seen(def_id)
 		return ""
-	return "The herbalist does not sell that."
+	return "The herbalist does not sell that." if store_id == "herbalist" else "%s does not sell that." % store_name(store_id)
+
+
+static func herbalist_stock() -> Array:
+	return store_stock("herbalist")
+
+
+static func _restock_herbalist() -> void:
+	_restock("herbalist")
+
+
+static func herbalist_line() -> String:
+	return store_line("herbalist")
+
+
+static func buy_herbalist(def_id: String, qty := 1) -> String:
+	return buy_store("herbalist", def_id, qty)
 
 
 # ------------------------------------------------------------------ ships
@@ -362,7 +412,7 @@ static func _mark_arrived(o: Dictionary) -> void:
 # ------------------------------------------------------------------ clock (called from Sim)
 static func on_day() -> void:
 	st()
-	_restock_herbalist()
+	_restock_herbalist()   # other counters restock lazily on the first look of the day (store_stock), same stock rules
 	_arrive_imports()
 
 

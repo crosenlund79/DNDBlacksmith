@@ -232,8 +232,13 @@ func _options() -> void:
 	UIKit.clear(opts)
 	for o in Talk.options(npc, area):
 		var oid: String = o["id"]
-		var b := UIKit.button("❧ " + o["label"], func(): _choose(oid), 0)
+		var why := str(o.get("disabled", ""))
+		# an expected option that is not possible right now stays visible, greyed, with its reason
+		var b := UIKit.button("❧ " + o["label"] + (("  — " + why) if why != "" else ""), func(): _choose(oid), 0)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		if why != "":
+			b.disabled = true
+			b.tooltip_text = why[0].to_upper() + why.substr(1) + "."
 		opts.add_child(b)
 
 
