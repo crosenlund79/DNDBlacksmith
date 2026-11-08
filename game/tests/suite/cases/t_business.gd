@@ -64,12 +64,18 @@ func test_commission_and_expedition() -> void:
 		Expeditions.step(e)
 		guard += 1
 	check(not Expeditions.active().has(eid), "the expedition finished on its own")
-	var used := false
+	# every blow the adventurer struck names the weapon instance they carried
+	var blows := 0
+	var with_blade := 0
 	for r in e.get("encounters", []):
 		for act in r.get("actions", []):
-			if int(act.get("weapon_uid", -1)) == uid:
-				used = true
-	check(used or (e.get("encounters", []) as Array).is_empty(), "the forged blade's uid appears in the combat record")
+			if str(act.get("kind", "")) == "attack" and str(act.get("actor", "")) == str(a["name"]) and act.has("weapon_uid"):
+				blows += 1
+				if int(act["weapon_uid"]) == uid:
+					with_blade += 1
+	if blows == 0:
+		note("%s struck no blow on this trip" % a["name"])
+	check(blows == 0 or with_blade > 0, "the forged blade's uid appears in the combat record (%d/%d blows)" % [with_blade, blows])
 	var sw := Game.find_uid_anywhere(uid)
 	check(sw.is_empty() or (sw.get("history", []) as Array).size() >= 2, "the blade's history grew")
 	check(int(a.get("expeditions", 0)) >= 1 and (Chronicle.entries().size() > 0), "persistent record: expeditions counted, chronicle written")

@@ -124,7 +124,7 @@ func _buy_unit(uid: String) -> void:
 func _side_layout() -> void:
 	side.add_child(UIKit.label("Workshop layout", 26, "heading"))
 	var tools := UIKit.hbox(6)
-	for t in [["stations", "Move stations"], ["merge", "Take down a wall"], ["split", "Put up a wall"], ["door", "Cut a doorway"], ["undoor", "Brick up a doorway"]]:
+	for t in [["stations", "Move stations"], ["merge", "Take down a wall"], ["split", "Put up a wall"], ["door", "Cut a doorway"], ["undoor", "Brick up a doorway"], ["use", "Change a room's use"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tool = key; carrying = ""; _build(), 0)
 		b.disabled = tool == key
@@ -137,6 +137,7 @@ func _side_layout() -> void:
 		"split": "Move over one of your rooms and click to divide it along the dotted line; right-click (or the button) turns the line. A doorway is cut in the new wall.",
 		"door": "Click a wall between two of your rooms to cut a two-tile doorway there.",
 		"undoor": "Click a doorway between two of your rooms to brick it up.",
+		"use": "Click one of your rooms to switch it between workshop and living space. Stations only stand in workshop rooms; the shopfront serves customers and the stock hall stays a clear passage.",
 	}
 	side.add_child(UIKit.rich("[i]%s[/i]" % help[tool], 18))
 	if tool == "split":
@@ -240,6 +241,9 @@ func _layout_click(tile: Vector2) -> void:
 		"undoor":
 			var d := door_at(tile)
 			err = "Click on a doorway." if d.is_empty() else Property.remove_door(plan, d)
+		"use":
+			var r2 := Property.room_at_tile(plan["rooms"], tile)
+			err = "Click one of your rooms." if r2.is_empty() else Property.set_kind(plan, str(r2["id"]), "home" if Property.kind(r2) == "workshop" else "workshop")
 	if err != "":
 		Events.toast.emit(err, "bad")
 	else:
@@ -375,6 +379,9 @@ class PlanView extends Control:
 			if not owned:
 				name = str(Property.unit(uid).get("name", name))
 			draw_string(fb, px.position + Vector2(6, 18), name, HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 14, Color("#20140c", 0.85))
+			if owned:
+				var use: String = {"workshop": "workshop", "shop": "shop — customers", "store": "passage", "home": "living space"}.get(Property.kind(r), "")
+				draw_string(fb, px.position + Vector2(6, 34), use, HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 12, Color("#7e2418", 0.8) if use == "workshop" else Color("#5e421c", 0.75))
 		# walls between rooms (with doorway gaps)
 		var rs: Array = plan["rooms"]
 		for i in rs.size():

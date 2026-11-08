@@ -60,6 +60,7 @@ static func _fresh(units: Array, stations: Array) -> Dictionary:
 	for r in data().get("rooms", []):
 		var rr: Dictionary = (r as Dictionary).duplicate(true)
 		rr["unit"] = unit_of.get(r["id"], "start")
+		rr["kind"] = str(data().get("room_kinds", {}).get(r["id"], "workshop"))
 		rooms.append(rr)
 	var doors := []
 	for d in data().get("room_doors", []):
@@ -228,6 +229,17 @@ static func commit(plan: Dictionary) -> String:
 	return ""
 
 
+## How many stations a room can hold with working space around them: one per twelve square tiles.
+static func capacity(r: Dictionary) -> int:
+	var rr := rect(r)
+	return maxi(2, int(rr.size.x * rr.size.y / 12.0))
+
+
+## What a room is for: workshop, shop, store or home (rooms from before room kinds look it up by id).
+static func kind(r: Dictionary) -> String:
+	return str(r.get("kind", data().get("room_kinds", {}).get(str(r.get("id", "")), "workshop")))
+
+
 static func editable(r: Dictionary) -> bool:
 	return room_owned(r) and not (data().get("locked_rooms", []) as Array).has(r["id"])
 
@@ -250,6 +262,10 @@ static func merge(plan: Dictionary, a_id: String, b_id: String) -> String:
 		return "Only walls along a whole side can come down (the rooms must form a rectangle)."
 	var keep := a if ra.get_area() >= rb.get_area() else b
 	var gone := b if keep == a else a
+	if kind(a) == "workshop" or kind(b) == "workshop":
+		keep["kind"] = "workshop"
+	else:
+		keep["kind"] = kind(keep)
 	keep["rect"] = [int(u.position.x), int(u.position.y), int(u.size.x), int(u.size.y)]
 	(plan["rooms"] as Array).erase(gone)
 	for d in (plan["doors"] as Array).duplicate():
@@ -318,6 +334,21 @@ static func split(plan: Dictionary, rid: String, vertical: bool, at: int) -> Str
 	var span := rr.size.y if vertical else rr.size.x
 	var dat := int(span_lo + floor((span - DOOR_W) * 0.5))
 	(plan["doors"] as Array).append({"between": [rid, nid], "at": dat, "w": DOOR_W})
+	return ""
+
+
+## Turn an owned room into a workshop or back into living space (the shopfront and stock hall keep their use).
+static func set_kind(plan: Dictionary, rid: String, to: String) -> String:
+	var r := room_by_id(plan["rooms"], rid)
+	if r.is_empty() or not room_owned(r):
+		return "Only your own rooms can change their use."
+	if kind(r) in ["shop", "store"]:
+		return "The shopfront and the stock hall keep their use."
+	if to == "home":
+		for sid in plan["stations"]:
+			if rect(r).has_point(Vector2(float(plan["stations"][sid]["pos"][0]), float(plan["stations"][sid]["pos"][1]))):
+				return "Move the stations out first."
+	r["kind"] = to
 	return ""
 
 
@@ -448,6 +479,16 @@ static func spot_problem(plan: Dictionary, station_id: String, entry: Dictionary
 		return "It must stand wholly inside one room, clear of the walls."
 	if not room_owned(host):
 		return "That room is not yours."
+	var cap := capacity(host)
+	var here := 0
+	for other in plan["stations"]:
+		if other != station_id and rect(host).has_point(Vector2(float(plan["stations"][other]["pos"][0]), float(plan["stations"][other]["pos"][1]))):
+			here += 1
+	if here >= cap:
+		return "%s is full (%d stations) — buy or open up more space." % [host.get("name", "This room"), cap]
+	if kind(host) != "workshop":
+		return {"shop": "Keep the shopfront for customers.", "store": "The stock hall is a passage — keep it clear.",
+			"home": "That is your living space, not a workshop."}.get(kind(host), "Not a workshop room.")
 	for d in plan["doors"]:
 		var c := door_center(plan, d)
 		if c != Vector2.INF and fp.grow(0.9).has_point(c):

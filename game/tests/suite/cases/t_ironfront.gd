@@ -15,13 +15,13 @@ func test_match_rewards_deck_persist() -> void:
 	var opp := Ironfront.opponent("jory")
 	var m := Ironfront.new_match(deck, opp.get("deck", deck), "standard", 4242, {"opp": "jory"})
 	var guard := 0
-	while str(m.get("phase", "")) != "over" and guard < 400:
+	while not bool(m.get("over", false)) and guard < 400:
 		var side := int(m.get("turn", 0))
 		var mv := Ironfront.ai_move(m, side)
 		if not Ironfront.apply(m, side, mv):
 			Ironfront.apply(m, side, {"type": "pass"})
 		guard += 1
-	check(str(m.get("phase", "")) == "over", "the match is played to the end (%d moves)" % guard)
+	check(bool(m.get("over", false)) and int(m.get("winner", -1)) in [0, 1, 2], "the match is played to the end (%d moves)" % guard)
 	var rw := Ironfront.finish_reward(m)
 	check(rw.has("result") and rw.has("gold"), "rewards are settled (%s)" % str(rw.get("result", "")))
 	check(Ironfront.collection_size() >= cards0, "the collection never shrinks")

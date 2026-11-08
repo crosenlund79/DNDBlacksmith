@@ -35,8 +35,9 @@ func test_recruit_assign_expedition() -> void:
 	alloc["smithing"] = 100
 	check(Hire.set_alloc(h["id"], alloc), "work allocation set (100% smithing)")
 	var xp0 := int(h["skills"]["smithing"]["xp"]) + int(h["skills"]["smithing"]["lvl"]) * 1000
-	for hr in 8:
-		Hire.work_hour(9 + hr)
+	# a working day passes on the clock (hirelings work 9–18)
+	Game.advance_minutes(((24 + 9) * 60 - int(Game.state["minute"])) % 1440)
+	Game.advance_minutes(8 * 60)
 	var xp1 := int(h["skills"]["smithing"]["xp"]) + int(h["skills"]["smithing"]["lvl"]) * 1000
 	check(xp1 > xp0, "working gains experience")
 	# expedition: Borin to the forest, resolved by the day tick

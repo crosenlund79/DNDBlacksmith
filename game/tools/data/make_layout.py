@@ -245,6 +245,11 @@ s.update(rect=[18, 34, 30, 23], doors=[{"side": "n", "at": 13, "w": 2}], chimney
          rooms=SMITHY_ROOMS, room_doors=SMITHY_DOORS, furniture=SMITHY_FURNITURE, spots=SMITHY_SPOTS,
          interact=SMITHY_INTERACT, station_pos=SMITHY_STATIONS, customer_rooms=["shop"], units=SMITHY_UNITS,
          locked_rooms=["shop"], entrance=[14.0, 0.6],
+         # what each room is for: stations stand only in workshop rooms (not the shopfront, the stock-hall passage
+         # or the living quarters) — so a growing workshop needs more rooms
+         room_kinds={"forge_room": "workshop", "rune_room": "workshop", "alchemy_room": "workshop", "leather_room": "workshop",
+                     "arcane_room": "workshop", "material_store": "workshop", "shop": "shop", "stock_hall": "store",
+                     "study": "home", "living": "home", "bedroom": "home", "storage": "home", "pantry": "home"},
          starter_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel"])
 
 i = by_id["inn"]

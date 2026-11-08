@@ -1759,7 +1759,22 @@
     "crucible",
     "quench_trough",
     "grinding_wheel"
-   ]
+   ],
+   "room_kinds": {
+    "forge_room": "workshop",
+    "rune_room": "workshop",
+    "alchemy_room": "workshop",
+    "leather_room": "workshop",
+    "arcane_room": "workshop",
+    "material_store": "workshop",
+    "shop": "shop",
+    "stock_hall": "store",
+    "study": "home",
+    "living": "home",
+    "bedroom": "home",
+    "storage": "home",
+    "pantry": "home"
+   }
   },
   {
    "id": "inn",

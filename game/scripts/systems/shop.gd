@@ -539,6 +539,8 @@ static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 	if prop != "" and slot == "weapon":
 		stat = prop
 		need = 3 + int(a["level"]) / 3
+	# never ask for more than any craftable piece for that slot can give (found by the integrity suite)
+	need = mini(need, slot_ceiling(slot, stat))
 	var dest_name: String = DB.destinations.get(a.get("next_dest", ""), {}).get("name", "")
 	if note == "" and dest_name != "":
 		note = "For %s%s." % [dest_name, (" — they say the things there fear " + prop) if prop != "" else ""]
@@ -657,3 +659,43 @@ static func expire_orders() -> void:
 			o["status"] = "expired"
 			Social.change(o["npc"], -8.0, 2.0, "order_missed_" + o["id"], "The smith never delivered what I ordered.")
 	Events.orders_changed.emit()
+
+
+## Buys a workshop upgrade from the ledger ("" = done). Same rules as the ledger shows.
+static func buy_upgrade(id: String) -> String:
+	var u: Dictionary = DB.upgrades.get(id, {})
+	if u.is_empty():
+		return "No such upgrade."
+	if Game.has_upgrade(id):
+		return "Already installed."
+	var r: Dictionary = u.get("requires", {})
+	if r.has("skill") and Game.player_level(r["skill"][0]) < int(r["skill"][1]):
+		return "Needs %s %d." % [SkillSys.skill_name(r["skill"][0]), int(r["skill"][1])]
+	if r.has("flag") and not Game.has_flag(r["flag"]):
+		return "Needs mithril in your stores first."
+	if not Game.can_afford(int(u["cost"])):
+		return "You cannot afford it."
+	Game.add_gold(-int(u["cost"]), "upgrades", u["name"])
+	(Game.state["upgrades"] as Array).append(id)
+	if id == "arcane_foundry":
+		var sk := Game.player_skills()
+		if SkillSys.level(sk, "arcane_metalwork") < 1:
+			sk["arcane_metalwork"]["lvl"] = 1
+		Game.journal("The Arcane Foundry hums into life. The leyline answers.")
+	Events.world_flag_changed.emit("upgrade_" + id)
+	Events.toast.emit("Upgrade installed: " + str(u["name"]), "good")
+	Audio.play("sfx/level_up", -6.0)
+	return ""
+
+
+## The best a well-made craftable piece for `slot` reaches in `stat` (item range top × 1.2 for craftsmanship).
+static func slot_ceiling(slot: String, stat: String) -> int:
+	var best := 1
+	for r in DB.recipes.values():
+		var d := DB.item(str(r["output"]))
+		if str(d.get("slot", "")) != slot:
+			continue
+		var v: Variant = d.get("stats", {}).get(stat, 0)
+		var top := float(v[1]) if v is Array else float(v)
+		best = maxi(best, int(floor(top * 1.2)))
+	return best

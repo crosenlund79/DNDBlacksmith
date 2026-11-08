@@ -472,14 +472,7 @@ func _ledger_upgrades() -> void:
 
 
 func _buy(u: Dictionary) -> void:
-	Game.add_gold(-int(u["cost"]), "upgrades", u["name"])
-	Game.state["upgrades"].append(u["id"])
-	if u["id"] == "arcane_foundry":
-		var sk := Game.player_skills()
-		if SkillSys.level(sk, "arcane_metalwork") < 1:
-			sk["arcane_metalwork"]["lvl"] = 1
-		Game.journal("The Arcane Foundry hums into life. The leyline answers.")
-	Events.world_flag_changed.emit("upgrade_" + u["id"])
-	Events.toast.emit("Upgrade installed: " + u["name"], "good")
-	Audio.play("sfx/level_up", -6.0)
+	var err := Shop.buy_upgrade(str(u["id"]))
+	if err != "":
+		Events.toast.emit(err, "bad")
 	_build()
