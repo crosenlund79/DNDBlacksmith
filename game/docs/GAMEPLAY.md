@@ -478,3 +478,23 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Audio** | `assets/audio/inbox/` drop-in folder (override → inbox → shipped); Ironfront march, harbour and pond loops | `audio.gd` |
 
 **Screenshots:** `docs/screenshots/iteration_009/`.
+
+
+## Iteration 010 — adventurer depth, equipment, living village
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Character sheets** | Illustrated adventurer sheet (7 tabs, paper doll with durability) and a card roster | `dossier_panel.gd`, `adventurers_panel.gd` |
+| **Durability & demand** | Every used piece wears in fights and on the road; condition scales every stat (broken: half). Daily gear evaluation → buy, repair, commission, buy elsewhere, or save | `adventurers.gd`, `expeditions.gd`, `items.gd` |
+| **Companions** | `companion` slot: attack strikes, protection, scouting, healing, magic, carry; creatures follow adventurers in town | `companions.gd`, `scripts/world/companions.gd` |
+| **Tailoring & variety** | Loom, cutting table, tailor's bench; fibres → cloth → garments; 50 new recipes, Textiles & Tailoring branch (56 nodes, 7 branches) | `make_recipes.py`, `make_skilltree.py`, `extra_equipment010.py` |
+| **Weighted dice** | Craftsmanship sets advantage on stat dice; physical dice get shown modifiers; full breakdown stored on the item | `crafting.gd`, `dice_panel.gd`, `craft_result_panel.gd` |
+| **Multi-orders, Hall of Fame, Epic, ceremonies** | Customers' separate requests; the smithy's achievement board; Epic historical distinction; ceremonies in the square | `shop.gd`, `recognition.gd`, `ceremony.gd` |
+| **Hirelings** | HUD cards, camera focus, activity bubbles, death, funeral, graves, ghosts, flowers, vase | `hireling_hud.gd`, `activity_bubbles.gd`, `memorial.gd` |
+| **Navigation** | Click-to-move on a collision grid, quick-travel wheel that charges walking time | `player_nav.gd`, `quick_travel.gd` |
+| **Commerce** | Caravan, pawnshop, rival smith, creature merchants | `commerce.gd`, `make_commerce.py` |
+| **Village** | Signs, weathered roofs, shader-blended roads, lamps, wall-respecting animals, horses and cows, new venues, ceremony stage, graveyard plots | `village10.gd`, `village_ground.gd`, `animal_nav.gd` |
+| **Ironfront** | Day-one invitation from Barnaby, intro dialogue and coached first match | `ironfront.gd`, `talk.gd` |
+| **Windows installer** | Exported, packaged with NSIS, installed and self-checked on Windows in CI, published as a release | `.github/workflows/windows-installer.yml` |
+
+**Screenshots:** `docs/screenshots/iteration_010/`.

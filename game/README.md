@@ -6,6 +6,13 @@ You are Brannoc Ironhand, an aging, heavyset former adventurer who runs the forg
 
 **Art direction:** `docs/visual_exploration/ink_parchment_gothic_80_20/` (80% Ink & Parchment, 20% Gothic Noir).
 
+## Windows installer
+
+Every iteration publishes a Windows installer through GitHub Actions (`.github/workflows/windows-installer.yml`):
+the project is exported with Godot 4.3, packaged with NSIS (`installer/ember_and_ash.nsi`), installed silently and
+launched with its `--smoke-test` self-check on a Windows runner, then attached to a GitHub release.
+Latest: <https://github.com/crosenlund79/DNDBlacksmith/releases/latest/download/EmberAndAsh-Setup.exe>.
+
 ## Launching
 
 You need Godot 4.3 or newer (the standard build, not .NET).
@@ -40,7 +47,9 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 | Bottom toolbar | Inventory, Skill Tree (right-click: skill levels), Hirelings, Adventurers (right-click: Most Wanted), Commissions, Ledger, Crafting (equipment designer), Workshop (property), Map, Help |
 | I | Inventory |
 | H | Hirelings |
-| K | Skills |
+| K | Skill tree (U: skill levels) |
+| T | Quick travel (radial map of destinations; time passes as if you walked) |
+| Left click | Walk there / use an object / talk to a person (Settings → Click to move) |
 | J | Adventurers |
 | O | Commissions |
 | B | The MOST WANTED board (also at the board in the inn) |

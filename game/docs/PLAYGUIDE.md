@@ -204,6 +204,39 @@ minimap marks people who want a word with you; History buttons show the story of
 7. Barnaby's house → stairs → play a game of Ironfront.
 8. Save, quit, Continue: rooms, walls, stations, tree, decks and imports are as you left them.
 
+## Iteration 010: adventurers, equipment, a living village
+
+**Getting around.** Click the ground to walk there, click an object to use it, click a person to talk (keyboard
+still works). **T** opens the quick-travel wheel: the smith walks the real road at speed and the clock advances by the
+walking time. **K** opens the skill tree; **U** the skill levels. The bottom-left cards show your hirelings —
+click one to look at them (or to hear where they are away to).
+
+**Adventurers' character sheets** (Most Wanted board, J, or a dialogue's *Character sheet* button): overview,
+combat, a paper-doll of every slot with durability bars, current expedition, career and ambitions, relationships
+and history. Gear now wears out in real fights; broken gear works at half strength. Each morning adventurers look at
+their kit and, by wealth, class and ambition, buy from your display, ask for repairs, commission pieces, buy from the
+rival smith, buy a creature companion — or save up and risk it.
+
+**Tailoring.** The new Textiles & Tailoring branch: spin flax and wool (loom), cut and sew (cutting table, tailor's
+bench), weave silk, moonweave and spidersilk, and make tunics, gambesons, robes, cloaks and hoods — real magic and
+ward for spellcasters. **More equipment:** shortswords, greatswords, cutlasses, rapiers, hatchets, battle and great
+axes, war hammers, hide/studded/chain/half and full plate, bucklers and tower shields, short, recurve and war bows.
+
+**Craftsmanship weights the dice.** Good work rolls the stat dice with advantage (two or three dice, best kept); poor
+work with disadvantage. Physical dice keep your numbers and add a shown craftsmanship modifier. The result page
+explains every stat.
+
+**Customers** may bring several requests at once — something you cannot make yet, something you can, a repair: take
+the parts you want. **The Hall of Fame** on the shopfront wall records masterworks, legendary finds, commissions and
+deeds done with your work. A piece that helps slay a legend becomes **Epic** (its rarity unchanged): the village holds
+a **ceremony in the square** — be there.
+
+**Hirelings** can die on dangerous expeditions: a funeral, a grave in the churchyard, and sometimes a friendly ghost
+who leaves wildflowers on your step for the vase in your quarters.
+
+**New in the village:** the travelling caravan (north road), the Three Brass Balls pawnshop, Maren Tallowgate's rival forge, the Salt Anvil, and the Hales' menagerie (companion creatures for adventurers), horses
+and cows, signs on every building, worn roads and street lamps. **Ironfront:** Barnaby invites you on day one.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.

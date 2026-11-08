@@ -41,10 +41,10 @@ def apply(layout, by_id, room, door, F):
               sign="sign_pawn", sign_side=-1)
 
     # ================================================================== the rival smith (north lane, by the pond)
-    rv = ensure("rival_forge", name="Cinderwell Forge", rect=[21, 3, 9, 6], roof="slate", ridge="h", floor="floor_soot",
+    rv = ensure("rival_forge", name="The Salt Anvil", rect=[21, 3, 9, 6], roof="slate", ridge="h", floor="floor_soot",
                 doors=[{"side": "s", "at": 6, "w": 2}], chimneys=[[1, 1]])
-    rv.update(rooms=[room("rv_forge", "Cinderwell Forge — the rival's smithy", [0, 0, 5, 6], "floor_soot", [1.0, 0.92, 0.84], "wall_stone"),
-                     room("rv_shop", "Cinderwell Forge — wares", [5, 0, 4, 6], "floor_wood")],
+    rv.update(rooms=[room("rv_forge", "The Salt Anvil — the rival's smithy", [0, 0, 5, 6], "floor_soot", [1.0, 0.92, 0.84], "wall_stone"),
+                     room("rv_shop", "The Salt Anvil — wares", [5, 0, 4, 6], "floor_wood")],
               room_doors=[door("rv_forge", "rv_shop", 2, 2)],
               furniture=[F("rival_forge", 1.45, 1.25), F("rival_anvil", 2.9, 3.5), F("tool_wall", 3.6, 0.5), F("coal_pile", 0.85, 3.6, 90),
                          F("barrel", 0.65, 5.3), F("iron_bars", 3.9, 5.35), F("soot_decal", 2.4, 2.6),

@@ -4805,7 +4805,7 @@
   },
   {
    "id": "rival_forge",
-   "name": "Cinderwell Forge",
+   "name": "The Salt Anvil",
    "rect": [
     21,
     3,
@@ -4831,7 +4831,7 @@
    "rooms": [
     {
      "id": "rv_forge",
-     "name": "Cinderwell Forge \u2014 the rival's smithy",
+     "name": "The Salt Anvil \u2014 the rival's smithy",
      "rect": [
       0,
       0,
@@ -4848,7 +4848,7 @@
     },
     {
      "id": "rv_shop",
-     "name": "Cinderwell Forge \u2014 wares",
+     "name": "The Salt Anvil \u2014 wares",
      "rect": [
       5,
       0,

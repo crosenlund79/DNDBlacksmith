@@ -49,12 +49,24 @@ dice, so runs are deterministic.
 | `t_village10` | Every building has a non-solid sign clear of its doorway, the new venues (pawnshop, rival forge, the Hales, caravan camp, ceremony stage, graveyard plots) have their spots on the nav graph and their interactables, the caravan comes and goes, wander targets never fall inside a building, five simulated minutes of wandering never put an animal in a house or on a footprint, horses and cows stay in their paddocks |
 | `t_integrity` | Broken references (recipes, stations, loot, ships, tree), tree shape (unique ids, prerequisites exist, no cycles, every recipe and station learned from exactly one node, every station purchasable, every required knowledge findable), every required material has a source, every room can eventually be bought and the whole building is reachable, commissions never ask for more than a craftable piece can give |
 
+## Packaged-build check
+
+`EmberAndAsh.exe --headless -- --smoke-test` (or `godot --path game -- --smoke-test`) starts a new game, runs the
+world, and writes `SMOKE OK|FAIL …` (data counts, missing sprites, UI, logged errors) to stdout and
+`user://smoke_test.txt`, exiting 0 on success. The installer workflow runs it on the exported Linux build and on the
+installed Windows build before publishing a release.
+
 ## Bugs the suite has already caught (kept as regressions)
 
 - Every station fitted into the starting rooms, so the workshop never needed to grow. Stations now stand only in
   workshop rooms, each with a capacity (`t_progression` shows the rooms bought).
 - Belt commissions could ask for protection 14 when the best belt reaches 9 (`t_integrity.commissions_possible`).
 - The Arcane Foundry upgrade could only be bought through the UI; `Shop.buy_upgrade()` is now shared.
+- (iteration 010) The unit tests were unseeded and failed now and then; `test_runner` now seeds its RNG.
+- (iteration 010) A Journeyman loss "found dead" by an Apprentice search party broke the Apprentice no-death rule check:
+  the test helper that brings everyone home now clears stale missing records.
+- (iteration 010) The Hall of Fame board was rejected as clashing with the wall: furniture clash checks now account
+  for quarter-turn rotation.
 
 ## Every future iteration
 
