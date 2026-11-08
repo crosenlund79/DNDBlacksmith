@@ -227,7 +227,7 @@ def write_json(mini_layers, port_layers):
 def review(imgs_m, imgs_p):
     """Full renders of a few combinations next to each other (what the composite approximates)."""
     from contact import font
-    sheet = Image.new("RGB", (6 * 260 + 20, 2 * 400 + 20), (220, 199, 154))
+    sheet = Image.new("RGB", (6 * 260 + 20, 440), (220, 199, 154))
     fnt = font(14)
     from PIL import ImageDraw
     d = ImageDraw.Draw(sheet)

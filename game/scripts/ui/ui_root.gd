@@ -81,6 +81,9 @@ func _build_hud() -> void:
 	energy_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	energy_bar.show_percentage = false
 	energy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var efill := StyleBoxFlat.new()
+	efill.set_corner_radius_all(3)
+	energy_bar.add_theme_stylebox_override("fill", efill)
 	er.add_child(UIKit.label("Energy", 18, "body_bold"))
 	er.add_child(energy_bar)
 	er.add_child(energy_label)
@@ -178,7 +181,7 @@ func _refresh_hud() -> void:
 	energy_label.text = fb
 	var ecol: Color = {"Fresh": Color("#4e6a2e"), "Steady": Color("#6a6a2e"), "Tired": Color("#9a6a1e"),
 		"Weary": Color("#a4441e"), "Exhausted": UIKit.RUBRIC}.get(fb, UIKit.INK)
-	energy_bar.modulate = Color.WHITE if fb in ["Fresh", "Steady"] else ecol.lightened(0.35)
+	(energy_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = ecol.lightened(0.15)
 	energy_label.add_theme_color_override("font_color", ecol)
 	var obj := Objectives.text()
 	objective_label.visible = obj != "" and Settings.get_value("gameplay/show_hints", true)

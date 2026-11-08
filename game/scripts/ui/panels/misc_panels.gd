@@ -11,11 +11,20 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	var row := UIKit.hbox(14)
-	row.add_child(UIKit.label("Energy", 22, "body_bold"))
-	row.add_child(UIKit.bar(Vitality.energy(), Vitality.MAX, 220))
-	row.add_child(UIKit.label("%s — %s" % [Vitality.band(), Vitality.status_text()], 20, "body_italic"))
+	var el := UIKit.label("Energy", 22, "body_bold")
+	el.custom_minimum_size = Vector2(90, 0)
+	row.add_child(el)
+	var eb := UIKit.bar(Vitality.energy(), Vitality.MAX, 220)
+	eb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(eb)
+	var st := UIKit.label("%s — %s" % [Vitality.band(), Vitality.status_text()], 20, "body_italic")
+	st.custom_minimum_size = Vector2(460, 0)
+	row.add_child(st)
 	content.add_child(row)
-	content.add_child(UIKit.label("Sleep until six in the morning? The village carries on without you, and the game is saved.", 22))
+	var info := UIKit.label("Sleep until six in the morning? The village carries on without you, and the game is saved. "
+		+ "Or put your feet up for an hour to take the ache out of your arms.", 22)
+	info.custom_minimum_size = Vector2(800, 0)
+	content.add_child(info)
 	var h := UIKit.hbox()
 	h.add_child(UIKit.button("Sleep", func():
 		close()

@@ -11,6 +11,7 @@ class_name Appearance
 extends RefCounted
 
 const KEYS := ["hair", "hair_col", "beard", "beard_col", "skin", "shirt", "apron"]
+const RESIDUAL := 0.2
 const COLOUR_REGION := {"hair_col": "hair", "beard_col": "beard", "skin": "skin", "shirt": "shirt", "apron": "apron"}
 
 static var _layers := {}     # sprite id -> {img, mask, idx}
@@ -111,7 +112,7 @@ static func cycle(l: Dictionary, axis: String, dir: int) -> Dictionary:
 	var ids := option_ids(axis)
 	if ids.is_empty():
 		return out
-	var i := ids.find(str(out.get(axis, ids[0])))
+	var i: int = ids.find(str(out.get(axis, ids[0])))
 	out[axis] = ids[(i + dir + ids.size()) % ids.size()]
 	return out
 
@@ -263,30 +264,41 @@ static func _recolour(L: Dictionary, ramps: Array) -> Image:
 		var p := i * 4
 		if data_b[p + 3] == 0:
 			continue
-		var r := data_b[p] / 255.0
-		var g := data_b[p + 1] / 255.0
-		var b := data_b[p + 2] / 255.0
+		var r: float = data_b[p] / 255.0
+		var g: float = data_b[p + 1] / 255.0
+		var b: float = data_b[p + 2] / 255.0
 		for ch in 3:
 			var ramp: Variant = ramps[ch]
 			if ramp == null:
 				continue
-			var w := md[i * 3 + ch] / 255.0
+			var w: float = md[i * 3 + ch] / 255.0
 			if w <= 0.0:
 				continue
 			var lin: Array = ramp["lin"]
 			var cin: Array = ramp["in"]
 			var cout: Array = ramp["out"]
 			var l := _lum(r, g, b)
-			var k := 0
-			while k < 3 and l > float(lin[k + 1]):
-				k += 1
-			var span := float(lin[k + 1]) - float(lin[k])
-			var t := clampf((l - float(lin[k])) / span, 0.0, 1.0) if absf(span) > 0.0001 else 0.0
-			var ei: Color = (cin[k] as Color).lerp(cin[k + 1], t)
-			var eo: Color = (cout[k] as Color).lerp(cout[k + 1], t)
-			var nr := clampf(eo.r + (r - ei.r), 0.0, 1.0)
-			var ng := clampf(eo.g + (g - ei.g), 0.0, 1.0)
-			var nb := clampf(eo.b + (b - ei.b), 0.0, 1.0)
+			var ei: Color
+			var eo: Color
+			var lb := float(lin[2])
+			if l <= lb:
+				# shading below the base tone (hatching, soot, crescent shadows) darkens multiplicatively
+				var f := l / maxf(lb, 0.001)
+				ei = (cin[2] as Color) * f
+				eo = (cout[2] as Color) * f
+			else:
+				# lights: base → light tone → paper white
+				var k := 2
+				while k < 3 and l > float(lin[k + 1]):
+					k += 1
+				var span := float(lin[k + 1]) - float(lin[k])
+				var t := clampf((l - float(lin[k])) / span, 0.0, 1.0) if absf(span) > 0.0001 else 0.0
+				ei = (cin[k] as Color).lerp(cin[k + 1], t)
+				eo = (cout[k] as Color).lerp(cout[k + 1], t)
+			# a gradient map plus a little of the pixel's own colour drift (soot, blush, grain)
+			var nr := clampf(eo.r + RESIDUAL * (r - ei.r), 0.0, 1.0)
+			var ng := clampf(eo.g + RESIDUAL * (g - ei.g), 0.0, 1.0)
+			var nb := clampf(eo.b + RESIDUAL * (b - ei.b), 0.0, 1.0)
 			r = lerpf(r, nr, w)
 			g = lerpf(g, ng, w)
 			b = lerpf(b, nb, w)

@@ -257,6 +257,8 @@ static func opinion() -> String:
 		return "\"Show me something you've made first. I don't judge a clock by its case.\""
 	var q := float(best["quality"])
 	var nm := Items.display_name(best)
+	if not nm.contains("'"):
+		nm = nm.to_lower()
 	if q >= 90.0:
 		return "She weighs the %s for a long, silent moment. \"I'd hang that on a wall and charge for a look. Don't let it go to your head — it's already gone to mine.\"" % nm
 	if q >= 70.0:
