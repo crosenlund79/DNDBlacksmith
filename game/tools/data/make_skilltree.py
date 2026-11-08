@@ -58,7 +58,7 @@ def T(id, name, desc, quality=0, **flt):
 
 
 def N(id, branch, name, desc, x, y, skill=None, nodes=None, flags=None, stations=None, seen=None, items=None, gold=0,
-      recipes=None, unlock_stations=None, techniques=None, secret=False):
+      recipes=None, unlock_stations=None, techniques=None, secret=False, icon=""):
     req = {}
     if skill:
         req["skill"] = list(skill)
@@ -78,6 +78,8 @@ def N(id, branch, name, desc, x, y, skill=None, nodes=None, flags=None, stations
              unlocks=dict(recipes=recipes or [], stations=unlock_stations or [], techniques=techniques or []))
     if secret:
         n["secret"] = True
+    if icon:
+        n["icon"] = icon   # medallion picture; default: the first recipe's output, else the first station
     return n
 
 
@@ -88,7 +90,7 @@ NODES = [
     N("s_basic", "smithing", "Basic Ironworking & Repairs", "The apprentice's craft: heat, hammer, quench and grind honest iron.", 1, 0,
       recipes=["smelt_iron", "iron_longsword", "hand_axe", "flanged_mace", "round_shield", "iron_helm"],
       unlock_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel"],
-      techniques=[T("t_repairs", "Field repairs", "Dented and notched gear can be ground and re-tempered at the grinding wheel.")]),
+      techniques=[T("t_repairs", "Field repairs", "Dented and notched gear can be ground and re-tempered at the grinding wheel.")], icon="icons/sword_iron"),
     N("s_blades", "smithing", "Simple Blades & Armour", "Once your first sword has left the anvil: plate for the body and silver for the hand.", 1, 1,
       skill=("smithing", 4), nodes=["s_basic"], seen=["sword_iron"],
       recipes=["iron_cuirass", "silver_band"]),
@@ -98,14 +100,14 @@ NODES = [
     N("s_heat", "smithing", "Advanced Heat Treatment", "Interrupted quenches, oil tempering and the long, patient normalise.", 1, 3,
       skill=("smithing", 6), nodes=["s_steel"],
       recipes=["kite_shield"],
-      techniques=[T("t_quench", "Interrupted quench", "+2% craftsmanship on classic weapons.", 2, discipline=["classic"], category=["weapon"])]),
+      techniques=[T("t_quench", "Interrupted quench", "+2% craftsmanship on classic weapons.", 2, discipline=["classic"], category=["weapon"])], icon="icons/shield_kite"),
     N("s_runed", "smithing", "Runed Steel", "Steel, a set rune and a flame-quenched edge in one blade — four crafts meet at the anvil.", 1.42, 4.2,
       skill=("smithing", 6), nodes=["s_heat", "r_engrave", "al_simple"],
       recipes=["emberwarden_longsword"]),
     N("s_alloy", "smithing", "Alloy Production", "Reading a melt by its colour; mixing metals that do not want to mix.", 0.86, 4.6,
       skill=("smithing", 7), nodes=["s_heat", "m_rare"],
-      techniques=[T("t_alloy", "Alloy sense", "+2% craftsmanship when working steel or starmetal.", 2, material=["steel", "starmetal"])]),
-    N("s_starsteel", "smithing", "Forgotten Starsteel", "A smith's notes from another age describe a blade folded with fallen star-metal.", 0.5, 5.7,
+      techniques=[T("t_alloy", "Alloy sense", "+2% craftsmanship when working steel or starmetal.", 2, material=["steel", "starmetal"])], icon="icons/starmetal_fragment"),
+    N("s_starsteel", "smithing", "Forgotten Starsteel", "A smith's notes from another age describe a blade folded with fallen star-metal.", 0.62, 5.8,
       skill=("smithing", 7), nodes=["s_alloy"], flags=["recipe_starsteel"], secret=True,
       recipes=["starsteel_blade"]),
     N("s_master", "smithing", "Master Smithing", "The hand-and-a-half blade, kept straight over its whole length.", 1, 6.0,
@@ -114,27 +116,27 @@ NODES = [
       techniques=[T("t_master_eye", "Master's eye", "+2% craftsmanship on all classic smithing.", 2, discipline=["classic"])]),
     N("s_armour", "smithing", "Master Armourcraft", "Plate that moves with its wearer — the knowledge every legendary armour rests on.", 1, 7.4,
       skill=("smithing", 8), nodes=["s_master"], gold=250,
-      techniques=[T("t_armourcraft", "Master armourcraft", "+3% craftsmanship on all armour.", 3, category=["armour"])]),
+      techniques=[T("t_armourcraft", "Master armourcraft", "+3% craftsmanship on all armour.", 3, category=["armour"])], icon="icons/cuirass_steel"),
 
     # ------------------------------------------------------------ Mining & Metallurgy
     N("m_common", "mining", "Common Ores & Refining", "Sorting good ore from slag and keeping a clean melt.", 0, 0,
-      skill=("mining", 2), nodes=["s_basic"],
-      techniques=[T("t_assay", "Assayer's eye", "+2% craftsmanship when smelting and refining.", 2, category=["material"], discipline=["classic"])]),
+      skill=("mining", 2),
+      techniques=[T("t_assay", "Assayer's eye", "+2% craftsmanship when smelting and refining.", 2, category=["material"], discipline=["classic"])], icon="icons/ore_iron"),
     N("m_alloys", "mining", "Ordinary Alloys", "Iron and carbon become steel — with the bellows driving the heat.", 0, 1,
       skill=("mining", 2), nodes=["m_common"], gold=40,
       recipes=["smelt_steel"], unlock_stations=["bellows"]),
     N("m_rare", "mining", "Rare Mineral Identification", "Garnet from glass, moonstone from quartz, silver from tin.", 0, 2.2,
       skill=("mining", 3), nodes=["m_alloys"],
-      techniques=[T("t_rare_minerals", "Rare minerals", "Gems and rare ores in expedition loot are recognised at a glance.")]),
+      techniques=[T("t_rare_minerals", "Rare minerals", "Gems and rare ores in expedition loot are recognised at a glance.")], icon="icons/gem_garnet"),
     N("m_adv", "mining", "Advanced Processing", "Double refining, fluxes and slow cooling for flawless stock.", 0, 3.2,
       skill=("mining", 3), nodes=["m_rare"],
-      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material recipe.", 2, category=["material"])]),
+      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material recipe.", 2, category=["material"])], icon="icons/ingot_steel"),
     N("m_mithril", "mining", "Mithril", "The pale metal that drinks magic. It must be charged before it can be worked.", 0, 4.2,
       skill=("mining", 3), nodes=["m_adv"], seen=["ore_mithril"],
-      techniques=[T("t_mithril", "Mithril lore", "Mithril can be charged at the Arcane Crucible.")]),
+      techniques=[T("t_mithril", "Mithril lore", "Mithril can be charged at the Arcane Crucible.")], icon="icons/ore_mithril"),
     N("m_adamant", "mining", "Adamantine", "Near-unbreakable ore that only a bound ward can tame.", 0, 6.4,
       skill=("mining", 4), nodes=["m_mithril"], seen=["ore_adamantine"],
-      techniques=[T("t_adamant", "Adamantine lore", "Adamantine can be charged once metals can be charged.")]),
+      techniques=[T("t_adamant", "Adamantine lore", "Adamantine can be charged once metals can be charged.")], icon="icons/ore_adamantine"),
     N("m_magic", "mining", "Magical Alloys", "Orichalcum: copper-gold of the sea-kings, smelted with aether dust in warded fire.", 0, 7.6,
       skill=("mining", 4), nodes=["m_adamant", "ar_crucible"], seen=["ore_orichalcum"],
       recipes=["smelt_orichalcum"]),
@@ -142,7 +144,7 @@ NODES = [
     # ------------------------------------------------------------ Arcane Metalworking (initially locked)
     N("ar_energy", "arcane", "Magical Energy Handling", "Feeling the leyline in the metal — and surviving it. You sacrifice a nugget of mithril to learn how it drinks magic.", 2, 4.4,
       skill=("smithing", 6), nodes=["s_heat", "r_engrave", "m_mithril"], items={"ore_mithril": 1},
-      techniques=[T("t_leyline", "Leyline sense", "You can tell a charged ingot from a dead one by touch.")]),
+      techniques=[T("t_leyline", "Leyline sense", "You can tell a charged ingot from a dead one by touch.")], icon="icons/ingot_mithril"),
     N("ar_crucible", "arcane", "The Arcane Crucible", "Warded fire that melts mithril while binding magic into it.", 2, 5.4,
       skill=("arcane_metalwork", 0), nodes=["ar_energy"], gold=150,
       recipes=["charge_mithril"], unlock_stations=["arcane_crucible", "leyline_conductor", "aetheric_stabilizer"]),
@@ -160,22 +162,22 @@ NODES = [
       recipes=["adamantine_warplate"]),
     N("ar_intrinsic", "arcane", "Intrinsic Magical Properties", "The bound magic becomes part of the piece's nature.", 2, 10.4,
       skill=("arcane_metalwork", 4), nodes=["ar_adamant"],
-      techniques=[T("t_intrinsic", "Intrinsic properties", "+3% craftsmanship on all arcane metalwork.", 3, discipline=["arcane"])]),
+      techniques=[T("t_intrinsic", "Intrinsic properties", "+3% craftsmanship on all arcane metalwork.", 3, discipline=["arcane"])], icon="icons/warplate_adamantine"),
     N("ar_legend", "arcane", "Legendary Arcane Craftsmanship", "Master armourcraft, prepared dragon scale and bound magic: the dragon's own armour.", 2, 11.6,
       skill=("arcane_metalwork", 5), nodes=["ar_intrinsic", "s_armour", "l_dragon"],
-      recipes=["dragonscale_armor"]),
+      recipes=["dragonscale_armor"], icon="icons/dragonscale_armor"),
 
     # ------------------------------------------------------------ Runecrafting
     N("r_identify", "runecraft", "Identify Existing Runes", "Reading the runes already carved on relics and tablets.", 3, 0,
-      skill=("runecraft", 1), nodes=["s_basic"],
-      techniques=[T("t_rune_reading", "Rune reading", "You can name the runes on weathered tablets and old blades.")]),
+      skill=("runecraft", 1),
+      techniques=[T("t_rune_reading", "Rune reading", "You can name the runes on weathered tablets and old blades.")], icon="icons/relic_unknown_tablet"),
     N("r_clean", "runecraft", "Clean & Restore Runestones", "Washing away grave-crust and polishing an old face back.", 3, 1,
       skill=("runecraft", 1), nodes=["r_identify"], gold=40,
       recipes=["restore_runestone"], unlock_stations=["rune_cleansing_basin", "rune_polishing_wheel"]),
     N("r_blank", "runecraft", "Prepare Blank Stones", "Cleaving raw runestone along its grain into sound blanks.", 3, 2,
       skill=("runecraft", 1), nodes=["r_clean"], seen=["runestone_blank"], gold=40,
       unlock_stations=["rune_cutting_bench"],
-      techniques=[T("t_true_cleave", "True cleaving", "+2% craftsmanship on runestones.", 2, category=["runestone"])]),
+      techniques=[T("t_true_cleave", "True cleaving", "+2% craftsmanship on runestones.", 2, category=["runestone"])], icon="icons/runestone_blank"),
     N("r_engrave", "runecraft", "Engrave Basic Symbols", "The ward rune, and a garnet seated in silver.", 3, 3,
       skill=("runecraft", 2), nodes=["r_blank"],
       recipes=["ward_runestone", "garnet_ring"], unlock_stations=["rune_engraving_stand", "resonance_pedestal"]),
@@ -190,13 +192,13 @@ NODES = [
       recipes=["concord_runestone"]),
     N("r_master", "runecraft", "Master Runecrafting", "A rune-master's steadiness at every runecraft station.", 3, 7,
       skill=("runecraft", 6), nodes=["r_combo"], gold=200,
-      techniques=[T("t_runemaster", "Master runewright", "+3% craftsmanship on all runecraft.", 3, discipline=["runecraft"])]),
+      techniques=[T("t_runemaster", "Master runewright", "+3% craftsmanship on all runecraft.", 3, discipline=["runecraft"])], icon="icons/runestone_concord"),
 
     # ------------------------------------------------------------ Alchemy
     N("al_simple", "alchemy", "Simple Mixtures & Treatments", "Mortar, cauldron and rack: a healing draught and how to treat a blade.", 4, 0,
-      skill=("alchemy", 1), nodes=["s_basic"],
+      skill=("alchemy", 1),
       recipes=["healing_draught"], unlock_stations=["mortar_station", "cauldron", "infusion_rack"],
-      techniques=[T("t_treatments", "Treatments", "Oils and coatings can be brushed onto equipment at the infusion rack.")]),
+      techniques=[T("t_treatments", "Treatments", "Oils and coatings can be brushed onto equipment at the infusion rack.")], icon="icons/potion_healing"),
     N("al_oils", "alchemy", "Basic Weapon Oils", "Distilling emberleaf into whetstone oil.", 4, 1,
       skill=("alchemy", 1), nodes=["al_simple"], gold=25,
       recipes=["whetstone_oil"], unlock_stations=["alembic"]),
@@ -216,7 +218,7 @@ NODES = [
 
     # ------------------------------------------------------------ Leatherworking & Enchanted Stitching
     N("l_basic", "leather", "Ordinary Leatherwork", "Curing hides, cutting belts and gloves.", 5, 0,
-      recipes=["cure_leather", "leather_belt", "leather_gloves"], unlock_stations=["stitching_table", "leather_vat"]),
+      recipes=["cure_leather", "leather_belt", "leather_gloves"], unlock_stations=["stitching_table", "leather_vat"], icon="icons/leather_cured"),
     N("l_armour", "leather", "Boots, Belts & Simple Armour", "Jerkins, boots, and a ranger's bow; fitted on the mannequin.", 5, 1,
       skill=("enchanted_stitching", 1), nodes=["l_basic"], gold=20,
       recipes=["leather_boots", "leather_jerkin", "ranger_boots", "hunting_bow"], unlock_stations=["fitting_mannequin"]),
@@ -234,7 +236,7 @@ NODES = [
       recipes=["cure_troll_leather", "cure_wyvern_leather", "wyrmleather_boots"]),
     N("l_dragon", "leather", "Dragon-scale Preparation", "Brining, trimming and lacing true dragon scale without dulling its fire.", 5, 6.0,
       skill=("enchanted_stitching", 5), nodes=["l_exotic"], flags=["dragon_lore"], seen=["dragon_scale"],
-      techniques=[T("t_dragon_scale", "Dragon-scale preparation", "Dragon scale and bone can be worked into armour.")]),
+      techniques=[T("t_dragon_scale", "Dragon-scale preparation", "Dragon scale and bone can be worked into armour.")], icon="icons/dragon_scale"),
 ]
 
 

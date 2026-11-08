@@ -1079,6 +1079,201 @@ def lock(P):
     return J(b), ""
 
 
+# ------------------------------------------------------------- skill-tree progression (iteration 9: skill-tree worker)
+PAL.setdefault("bearleather", ("#a07450", "#6a4428", "#2e1a0c"))
+PAL.setdefault("wyrmleather", ("#8aa078", "#4a6040", "#1c2818"))
+PAL.setdefault("orichalcum", ("#f0b070", "#c0602e", "#5a240c"))
+PAL.setdefault("dragonscale", ("#d06a52", "#8a1e1a", "#3a0806"))
+PAL.setdefault("dragonbone", ("#f2e6c8", "#cbb68a", "#6e5a38"))
+PAL.setdefault("quint", ("#eef4f6", "#b8ccd4", "#5a7480"))
+PAL.setdefault("aether", ("#d8ccf4", "#9a82d8", "#3e2a74"))
+PAL.setdefault("wyrmfire", ("#ffb060", "#d0401c", "#5a0e04"))
+PAL.setdefault("brig_plate", ("#a8a49c", "#6c6862", "#2c2824"))
+
+
+def _scales(cx0, cy0, w, h, step=11, row=8):
+    """Overlapping scale arcs (path data) filling a rectangle; clip it to a shape."""
+    d = []
+    for r, y in enumerate(range(int(cy0), int(cy0 + h), row)):
+        for x in range(int(cx0) + (r % 2) * (step // 2), int(cx0 + w), step):
+            d.append(f"M{x - step / 2:.1f},{y} Q{x},{y + row * 1.35:.1f} {x + step / 2:.1f},{y}")
+    return " ".join(d)
+
+
+def _clip(P, cid, shape, inner):
+    P.defs.append(f'<clipPath id="{cid}"><path d="{shape}"/></clipPath>')
+    return f'<g clip-path="url(#{cid})">{inner}</g>'
+
+
+def leather_bear(P):
+    """A folded stack of thick dark leather with a tuft of bear fur on the top edge and a tie-thong."""
+    b = []
+    for i, y in enumerate((80, 64, 48)):
+        b.append(P.shape(poly([(20, y), (96, y - 12), (110, y + 6), (32, y + 20)]), "bearleather" if i != 1 else "brown", s=3))
+    fur = " ".join(f"M{24 + i * 7},{46 - i * 1.1:.1f} l{-2 + (i % 3)},-8" for i in range(11))
+    b.append(lin(fur, INK, 3.0, 0.9))
+    b.append(lin(fur, "#4a3020", 1.6))
+    b.append(P.shape(rect(52, 34, 9, 56, 2), "strap", s=1.5))
+    b.append(P.detail("M40,70 l10,-2 M74,58 l12,-2", "bearleather", 0.6))
+    b.append(P.shape(ell(56, 40, 6, 4), "bone" if "bone" in PAL else "dragonbone", s=1))
+    return J(b), ""
+
+
+def leather_wyrm(P):
+    """A rolled hide of scaled green-black wyrm leather tied with cord."""
+    hide = smooth([(18, 56), (60, 38), (104, 42), (112, 70), (98, 92), (52, 96), (22, 84)])
+    b = [P.shape(hide, "wyrmleather", s=6)]
+    b.append(_clip(P, "lw_clip", hide, lin(_scales(10, 34, 110, 66, 12, 8), INK, 1.1, 0.75) + lin(_scales(10, 35, 110, 66, 12, 8), "#c4d8a8", 0.5, 0.35)))
+    b.append(P.shape(ell(30, 70, 13, 22), "wyrmleather", s=3))
+    b.append(lin(ell(30, 70, 7, 13), INK, 1.4, 0.9))
+    b.append(P.shape(rect(62, 40, 7, 56, 2), "strap", s=1.5))
+    return J(b), ""
+
+
+def ingot_orichalcum(P):
+    b, e = ingot(P, "orichalcum", "M60,58 l5,-8 l5,8 l5,-8 l5,8", ("#ff9a4a", "#ffe0a8"))
+    e += glow(P, 66, 60, 40, "#ff8a3a", 0.25)
+    return b, e
+
+
+def reagent_quintessence(P):
+    """A slim corked phial of silvery quintessence beside a silverleaf sprig."""
+    b, e = potion(P, "quint", "#dfeef4", "tall")
+    b = f'<g transform="translate(16,0) scale(0.86)">{b}</g>'
+    leaf = smooth([(16, 104), (26, 84), (40, 74), (46, 82), (36, 98)])
+    b += P.shape(leaf, "silver", s=2) + P.detail("M18,102 Q32,86 44,78", "silver", 0.8)
+    e = f'<g transform="translate(16,0) scale(0.86)">{e}</g>'
+    e += fill(" ".join(sparkle(x, y, r) for x, y, r in [(92, 30, 5), (104, 50, 3.5)]), "#f4fcff", 0.95)
+    return b, e
+
+
+def runestone_original(P):
+    """Your own rune: a mirror-polished stone with a new, star-like sigil in gold."""
+    top = wobbly_ell(64, 58, 44, 32, 21, 0.05)
+    side = smooth([(20, 58), (22, 72), (40, 90), (64, 96), (88, 90), (106, 72), (108, 58), (88, 84), (64, 90), (40, 84)])
+    b = [P.shape(side, "obsidian", s=2, fill_override=PAL["obsidian"][2]), P.shape(top, "obsidian", s=5)]
+    sig = "M64,38 L64,78 M46,48 L82,68 M82,48 L46,68 M54,40 Q64,50 74,40 M54,76 Q64,66 74,76 " + ell(64, 58, 6)
+    b.append(lin(sig, INK, 4.6, 0.9))
+    b.append(fill(ell(48, 46, 10, 4), "#ffffff", 0.25))
+    e = glow(P, 64, 58, 36, RUNE_GOLD, 0.45) + lit_marks(P, sig, GILT, "#fff2c0", w=2.4, glow_w=8, op=1.0, blur=2.4)
+    return J(b), e
+
+
+def runestone_concord(P):
+    """Three interlocked runes on one stone: ember, ward and the smith's own, each its colour."""
+    top = wobbly_ell(64, 58, 46, 34, 23, 0.05)
+    side = smooth([(18, 58), (20, 74), (40, 92), (64, 98), (88, 92), (108, 74), (110, 58), (88, 86), (64, 92), (40, 86)])
+    b = [P.shape(side, "rune", s=2, fill_override=PAL["rune"][2]), P.shape(top, "rune", s=5)]
+    rings = [(50, 52, EMBER, EMBER_HOT), (78, 52, "#a8c8e8", "#f0f8ff"), (64, 72, GILT, "#fff2c0")]
+    e = glow(P, 64, 60, 40, "#e8d8a0", 0.35)
+    for i, (x, y, c1, c2) in enumerate(rings):
+        d = ell(x, y, 13) + " " + rune_glyphs(random.Random(31 + i), x, y, 6)
+        b.append(lin(d, INK, 4.0, 0.85))
+        e += lit_marks(P, d, c1, c2, w=1.8, glow_w=6, op=1.0, blur=2.0)
+    return J(b), e
+
+
+def infusion_aether(P):
+    b, e = potion(P, "aether", VIOLET, "round")
+    e += fill(" ".join(sparkle(x, y, r) for x, y, r in [(52, 90, 5), (74, 96, 4), (64, 84, 3), (84, 86, 3)]), VIOLET_HOT, 0.95)
+    e += fill(" ".join(sparkle(x, y, r) for x, y, r in [(40, 30, 4), (88, 24, 5)]), "#ece0ff", 0.85)
+    return b, e
+
+
+def coating_wyrmfire(P):
+    b, e = potion(P, "wyrmfire", "#ff6a2a", "tall")
+    flame = "M56,104 q-8,-14 4,-26 q0,10 6,12 q2,-10 -2,-16 q12,10 8,30 Z"
+    b += lin("M38,52 Q30,40 40,30 M90,50 Q100,38 90,26", "#5a0e04", 2.4, 0.7)
+    e += lit_marks(P, flame, "#ff6a2a", "#ffe08a", w=1.6, glow_w=6, op=1.0) + glow(P, 64, 94, 30, "#ff3a10", 0.35)
+    return b, e
+
+
+def _cuirass(P, role, rivet_role="metal", lw=None):
+    b = []
+    for sg in (-1, 1):
+        b.append(P.shape(smooth([(64 + sg * 22, 22), (64 + sg * 44, 26), (64 + sg * 50, 44), (64 + sg * 38, 50), (64 + sg * 26, 40)]), role, s=3))
+    bp = smooth([(40, 24), (64, 30), (88, 24), (96, 56), (88, 92), (64, 108), (40, 92), (32, 56)])
+    b.append(P.shape(bp, role, s=8) if lw is None else P.shape(bp, role, s=8, lw=lw))
+    b.append(P.shape(smooth([(46, 18), (64, 12), (82, 18), (80, 30), (64, 34), (48, 30)]), role, s=2))
+    riv = [(42, 36), (86, 36), (40, 78), (88, 78)]
+    b.append(fill(" ".join(ell(x, y, 2.3) for x, y in riv), PAL[rivet_role][0]))
+    b.append(lin(" ".join(ell(x, y, 2.3) for x, y in riv), INK, 0.8))
+    return b, bp
+
+
+def cuirass_steel(P):
+    """Bright steel breastplate with a crisp medial ridge and rolled, brass-trimmed edges."""
+    b, bp = _cuirass(P, "metal", "bronze")
+    b.append(P.detail("M64,32 L64,104 M44,92 Q64,104 84,92", "metal", 0.9))
+    b.append(lin(smooth([(40, 26), (64, 32), (88, 26)], close=False), PAL["bronze"][1], 2.4, 0.95))
+    b.append(lin(smooth([(42, 90), (64, 104), (86, 90)], close=False), PAL["bronze"][1], 2.4, 0.95))
+    b.append(fill(smooth([(44, 36), (56, 36), (58, 70), (50, 88), (42, 64)]), "#ffffff", 0.32))
+    b.append(fill(smooth([(70, 40), (80, 40), (84, 60), (76, 80)]), "#ffffff", 0.12))
+    return J(b), ""
+
+
+def mithril_plated_cuirass(P):
+    """Steel cuirass overlaid with pale charged-mithril plates, their seams glowing violet."""
+    b, bp = _cuirass(P, "metal", "gold")
+    plates = [poly([(42, 36), (62, 40), (62, 66), (40, 62)]), poly([(66, 40), (86, 36), (88, 62), (66, 66)]),
+              poly([(42, 68), (62, 72), (62, 98), (48, 92)]), poly([(66, 72), (86, 68), (80, 92), (66, 98)])]
+    for pl in plates:
+        b.append(P.shape(pl, "mithril", s=2))
+    seams = "M64,36 L64,102 M40,66 L88,66"
+    b.append(lin(seams, INK, 3.4, 0.85))
+    e = glow(P, 64, 66, 40, VIOLET, 0.28) + lit_marks(P, seams, VIOLET, VIOLET_HOT, w=1.2, glow_w=4.4, op=0.95, blur=1.8)
+    b.append(fill(" ".join(ell(x, y, 2) for x, y in [(52, 52), (76, 52), (54, 84), (74, 84)]), PAL["gold"][0]))
+    return J(b), e
+
+
+def bearhide_brigandine(P):
+    """Dark bear-leather jerkin studded with the rivet heads of hidden iron plates, a fur collar."""
+    sh = smooth([(40, 22), (54, 26), (64, 36), (74, 26), (88, 22), (104, 34), (100, 62), (96, 112), (64, 118), (32, 112), (28, 62), (24, 34)])
+    b = [P.shape(sh, "bearleather", s=7)]
+    b.append(P.detail("M64,38 L64,114", "bearleather", 1.0))
+    studs = [(x, y) for y in range(46, 108, 11) for x in (40, 51, 77, 88)]
+    b.append(fill(" ".join(ell(x, y, 2.4) for x, y in studs), PAL["brig_plate"][0]))
+    b.append(lin(" ".join(ell(x, y, 2.4) for x, y in studs), INK, 0.8))
+    fur = " ".join(f"M{36 + i * 5},{28 + abs(i - 6) * 0.9:.1f} l{-1 + (i % 3)},-9" for i in range(13))
+    b.append(lin(fur, INK, 3.2, 0.9))
+    b.append(lin(fur, "#5a3a24", 1.8))
+    b.append(P.shape(rect(30, 92, 68, 8, 2), "strap", s=1.5))
+    b.append(P.shape(rect(58, 90, 12, 12, 2), "darkiron", s=1))
+    return J(b), ""
+
+
+def boots_wyrmleather(P):
+    o = []
+    for x, y in ((54, 24), (30, 30)):
+        o.append(boot(P, x, y, 1, "wyrmleather", "orichalcum"))
+        s = smooth([(x, y), (x + 22, y), (x + 22, y + 46), (x + 30, y + 58), (x + 34, y + 68), (x + 30, y + 74), (x - 2, y + 74), (x - 3, y + 40)])
+        o.append(_clip(P, f"bw_clip{x}", s, lin(_scales(x - 6, y + 4, 44, 72, 8, 6), INK, 0.9, 0.6)))
+    e = lit_marks(P, "M36,58 l6,-4 l6,4 M60,52 l6,-4 l6,4", EMBER, EMBER_HOT, w=1.2, glow_w=4, op=0.9)
+    return J(o), e
+
+
+def dragonscale_armor(P):
+    """Legendary: a cuirass of deep-red dragon scales on a bone frame, gilt edges and an ember glow."""
+    b = []
+    for sg in (-1, 1):
+        sp = smooth([(64 + sg * 20, 20), (64 + sg * 46, 22), (64 + sg * 56, 42), (64 + sg * 42, 54), (64 + sg * 24, 40)])
+        b.append(P.shape(sp, "dragonscale", s=3))
+        b.append(_clip(P, f"ds_sp{sg + 1}", sp, lin(_scales(64 + min(0, sg * 60), 18, 60, 40, 9, 6), INK, 0.9, 0.7)))
+        b.append(P.shape(poly([(64 + sg * 50, 38), (64 + sg * 62, 26), (64 + sg * 56, 46)]), "dragonbone", s=1))
+    bp = smooth([(38, 24), (64, 30), (90, 24), (100, 56), (92, 96), (64, 114), (36, 96), (28, 56)])
+    b.append(P.shape(bp, "dragonscale", s=8, lw=3.6))
+    b.append(_clip(P, "ds_bp", bp, lin(_scales(24, 26, 82, 92, 11, 8), INK, 1.2, 0.8) + lin(_scales(24, 27, 82, 92, 11, 8), "#f4a080", 0.6, 0.45)))
+    b.append(P.shape(smooth([(44, 16), (64, 10), (84, 16), (82, 30), (64, 34), (46, 30)]), "dragonbone", s=2))
+    b.append(lin(smooth([(38, 26), (64, 32), (90, 26)], close=False), PAL["gold"][1], 2.6))
+    b.append(lin(smooth([(36, 96), (64, 114), (92, 96)], close=False), PAL["gold"][1], 2.6))
+    b.append(lin("M64,34 L64,110", PAL["dragonbone"][1], 3.0))
+    b.append(lin("M64,34 L64,110", INK, 0.8, 0.8))
+    b.append(fill(smooth([(42, 38), (52, 36), (54, 60), (46, 76), (40, 58)]), "#ffffff", 0.14))
+    e = glow(P, 64, 66, 48, EMBER, 0.32) + lit_marks(P, "M52,56 l12,10 l12,-10 M56,80 l8,6 l8,-6", EMBER, EMBER_HOT, w=1.3, glow_w=5, op=0.95, blur=2.0)
+    e += fill(" ".join(sparkle(x, y, r) for x, y, r in [(100, 22, 6), (24, 30, 4)]), "#fff2c0", 0.95)
+    return J(b), e
+
+
 ICONS = {k: v for k, v in globals().items() if callable(v)}
 
 

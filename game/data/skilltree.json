@@ -104,7 +104,8 @@
       "desc": "Dented and notched gear can be ground and re-tempered at the grinding wheel."
      }
     ]
-   }
+   },
+   "icon": "icons/sword_iron"
   },
   {
    "id": "s_blades",
@@ -197,7 +198,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/shield_kite"
   },
   {
    "id": "s_runed",
@@ -259,15 +261,16 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/starmetal_fragment"
   },
   {
    "id": "s_starsteel",
    "branch": "smithing",
    "name": "Forgotten Starsteel",
    "desc": "A smith's notes from another age describe a blade folded with fallen star-metal.",
-   "x": 0.5,
-   "y": 5.7,
+   "x": 0.62,
+   "y": 5.8,
    "requires": {
     "skill": [
      "smithing",
@@ -359,7 +362,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/cuirass_steel"
   },
   {
    "id": "m_common",
@@ -372,9 +376,6 @@
     "skill": [
      "mining",
      2
-    ],
-    "nodes": [
-     "s_basic"
     ]
    },
    "unlocks": {
@@ -396,7 +397,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/ore_iron"
   },
   {
    "id": "m_alloys",
@@ -451,7 +453,8 @@
       "desc": "Gems and rare ores in expedition loot are recognised at a glance."
      }
     ]
-   }
+   },
+   "icon": "icons/gem_garnet"
   },
   {
    "id": "m_adv",
@@ -485,7 +488,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/ingot_steel"
   },
   {
    "id": "m_mithril",
@@ -516,7 +520,8 @@
       "desc": "Mithril can be charged at the Arcane Crucible."
      }
     ]
-   }
+   },
+   "icon": "icons/ore_mithril"
   },
   {
    "id": "m_adamant",
@@ -547,7 +552,8 @@
       "desc": "Adamantine can be charged once metals can be charged."
      }
     ]
-   }
+   },
+   "icon": "icons/ore_adamantine"
   },
   {
    "id": "m_magic",
@@ -608,7 +614,8 @@
       "desc": "You can tell a charged ingot from a dead one by touch."
      }
     ]
-   }
+   },
+   "icon": "icons/ingot_mithril"
   },
   {
    "id": "ar_crucible",
@@ -778,7 +785,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/warplate_adamantine"
   },
   {
    "id": "ar_legend",
@@ -804,7 +812,8 @@
     ],
     "stations": [],
     "techniques": []
-   }
+   },
+   "icon": "icons/dragonscale_armor"
   },
   {
    "id": "r_identify",
@@ -817,9 +826,6 @@
     "skill": [
      "runecraft",
      1
-    ],
-    "nodes": [
-     "s_basic"
     ]
    },
    "unlocks": {
@@ -832,7 +838,8 @@
       "desc": "You can name the runes on weathered tablets and old blades."
      }
     ]
-   }
+   },
+   "icon": "icons/relic_unknown_tablet"
   },
   {
    "id": "r_clean",
@@ -900,7 +907,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/runestone_blank"
   },
   {
    "id": "r_engrave",
@@ -1040,7 +1048,8 @@
       }
      }
     ]
-   }
+   },
+   "icon": "icons/runestone_concord"
   },
   {
    "id": "al_simple",
@@ -1053,9 +1062,6 @@
     "skill": [
      "alchemy",
      1
-    ],
-    "nodes": [
-     "s_basic"
     ]
    },
    "unlocks": {
@@ -1074,7 +1080,8 @@
       "desc": "Oils and coatings can be brushed onto equipment at the infusion rack."
      }
     ]
-   }
+   },
+   "icon": "icons/potion_healing"
   },
   {
    "id": "al_oils",
@@ -1236,7 +1243,8 @@
      "leather_vat"
     ],
     "techniques": []
-   }
+   },
+   "icon": "icons/leather_cured"
   },
   {
    "id": "l_armour",
@@ -1411,7 +1419,8 @@
       "desc": "Dragon scale and bone can be worked into armour."
      }
     ]
-   }
+   },
+   "icon": "icons/dragon_scale"
   }
  ],
  "recipe_node": {

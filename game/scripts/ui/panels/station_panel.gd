@@ -5,13 +5,26 @@
 class_name StationPanel
 extends UIWindow
 
+## Recipe categories shown as chips (a recipe can belong to several: a leather boot is armour and leather).
+const CATS := [["all", "All"], ["weapons", "Weapons"], ["armour", "Armour"], ["jewellery", "Jewellery"], ["materials", "Materials"],
+	["alchemy", "Alchemy"], ["runes", "Runes"], ["leather", "Leather"], ["arcane", "Arcane"]]
+const AVAIL := [["all", "All recipes"], ["craftable", "Craftable now"], ["missing", "Known — missing materials"], ["locked", "Locked"]]
+
 var station_id := ""
+## Remembered between openings of any station panel.
+static var query := ""
+static var cat := "all"
+static var avail := "all"
+static var everywhere := false
+var list_box: VBoxContainer
+var chips_row: HBoxContainer
+var count_label: Label
 
 
 func _init(id: String) -> void:
 	station_id = id
 	var st := DB.station(id)
-	super._init(st.get("name", id), 980, 700)
+	super._init(st.get("name", id), 1220, 860)
 
 
 func _ready() -> void:
@@ -68,9 +81,10 @@ func _build() -> void:
 			body.add_child(UIKit.label("Next: %s at the %s." % [Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], 22, "body_italic"))
 		body.add_child(UIKit.button("Abandon work (return materials)", func(): Crafting.cancel(), 340))
 	else:
-		body.add_child(UIKit.label("Recipes using this station", 26, "heading"))
-		for rec in Crafting.recipes_for_station(station_id):
-			body.add_child(_recipe_row(rec))
+		content.add_child(_filter_bar())
+		list_box = UIKit.vbox(10)
+		body.add_child(list_box)
+		_fill_list()
 	if station_id == "rune_engraving_stand" and why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(_socket_ui())
@@ -80,7 +94,121 @@ func _build() -> void:
 	if why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(UIKit.button("Practise a check (no materials, a little experience)", _practice, 460))
-	content.add_child(UIKit.scroll(body, 470))
+	content.add_child(UIKit.scroll(body, 560 if job.is_empty() else 600))
+
+
+# ------------------------------------------------------------------ recipe search and filters
+func _filter_bar() -> Control:
+	var v := UIKit.vbox(6)
+	var top := UIKit.hbox(10)
+	var le := LineEdit.new()
+	le.placeholder_text = "Search recipes by name or type…"
+	le.text = query
+	le.custom_minimum_size = Vector2(380, 44)
+	le.add_theme_font_override("font", Assets.font("body"))
+	le.add_theme_font_size_override("font_size", 20)
+	le.clear_button_enabled = true
+	le.add_theme_color_override("font_color", UIKit.INK)
+	le.add_theme_color_override("font_placeholder_color", Color(UIKit.INK, 0.45))
+	le.text_changed.connect(func(t: String): query = t; _fill_list())
+	le.name = "RecipeSearch"
+	top.add_child(le)
+	var ob := OptionButton.new()
+	for i in AVAIL.size():
+		ob.add_item(AVAIL[i][1], i)
+		if AVAIL[i][0] == avail:
+			ob.select(i)
+	ob.add_theme_font_size_override("font_size", 18)
+	ob.item_selected.connect(func(i: int): avail = AVAIL[i][0]; _fill_list())
+	ob.name = "RecipeAvailability"
+	top.add_child(ob)
+	var cb := CheckBox.new()
+	cb.text = "All workshop recipes"
+	cb.button_pressed = everywhere
+	cb.add_theme_font_override("font", Assets.font("body"))
+	cb.add_theme_font_size_override("font_size", 18)
+	cb.add_theme_color_override("font_color", UIKit.INK)
+	cb.add_theme_color_override("font_pressed_color", UIKit.INK)
+	cb.add_theme_color_override("font_hover_color", UIKit.RUBRIC)
+	cb.toggled.connect(func(on: bool): everywhere = on; _fill_list())
+	top.add_child(cb)
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(sp)
+	top.add_child(UIKit.button("Design equipment…", func(): Events.open_panel.emit("designer", {"station": station_id}), 220))
+	top.add_child(UIKit.button("Skill tree", func(): Events.open_panel.emit("skilltree", {}), 140))
+	v.add_child(top)
+	chips_row = UIKit.hbox(6)
+	v.add_child(chips_row)
+	return v
+
+
+static func recipe_cats(r: Dictionary) -> Array:
+	var out := []
+	var c: String = {"weapon": "weapons", "armour": "armour", "jewellery": "jewellery", "material": "materials",
+		"alchemy": "alchemy", "runestone": "runes"}.get(str(r.get("category", "")), "")
+	if c != "":
+		out.append(c)
+	var d: String = {"stitching": "leather", "arcane": "arcane", "alchemy": "alchemy", "runecraft": "runes"}.get(str(r.get("discipline", "")), "")
+	if d != "" and not out.has(d):
+		out.append(d)
+	return out
+
+
+## "craftable" | "missing" | "locked"
+static func recipe_status(rid: String) -> String:
+	if Crafting.recipe_locked_reason(rid) != "":
+		return "locked"
+	return "craftable" if Crafting.missing_inputs(rid).is_empty() else "missing"
+
+
+static func recipe_matches(r: Dictionary, q: String) -> bool:
+	q = q.strip_edges().to_lower()
+	if q == "":
+		return true
+	var out := DB.item(str(r.get("output", "")))
+	var hay := " ".join([r.get("name", ""), r.get("category", ""), Crafting.DISCIPLINE_NAME.get(r.get("discipline", ""), ""),
+		out.get("name", ""), Items.type_label({"def": r.get("output", "")}), str(out.get("slot", "")), " ".join(recipe_cats(r)),
+		Crafting.material(str(r["id"])).get("name", "")]).to_lower()
+	for word in q.split(" ", false):
+		if not hay.contains(word):
+			return false
+	return true
+
+
+## Recipes in scope (this station or the whole workshop), visible, matching the query — before chip and availability filters.
+func _scoped() -> Array:
+	var src: Array = DB.recipes.values() if everywhere else Crafting.recipes_for_station(station_id)
+	return src.filter(func(r): return SkillTree.recipe_visible(str(r["id"])) and recipe_matches(r, query))
+
+
+func _fill_list() -> void:
+	if list_box == null or not is_instance_valid(list_box):
+		return
+	UIKit.clear(list_box)
+	var scoped := _scoped()
+	# category chips with counts
+	if chips_row and is_instance_valid(chips_row):
+		UIKit.clear(chips_row)
+		for c in CATS:
+			var key: String = c[0]
+			var n := scoped.filter(func(r): return key == "all" or recipe_cats(r).has(key)).size()
+			var b := UIKit.button("%s (%d)" % [c[1], n], func(): cat = key; _fill_list(), 0)
+			b.custom_minimum_size = Vector2(0, 38)
+			b.add_theme_font_size_override("font_size", 17)
+			b.disabled = cat == key
+			b.tooltip_text = "Show only %s" % str(c[1]).to_lower() if key != "all" else "Show every category"
+			chips_row.add_child(b)
+	var shown := scoped.filter(func(r): return (cat == "all" or recipe_cats(r).has(cat)) and (avail == "all" or recipe_status(str(r["id"])) == avail))
+	# craftable first, then known-but-missing, then locked
+	var rank := {"craftable": 0, "missing": 1, "locked": 2}
+	shown.sort_custom(func(a, b): return int(rank[recipe_status(str(a["id"]))]) < int(rank[recipe_status(str(b["id"]))]))
+	var scope_txt := "in the whole workshop" if everywhere else "using this station"
+	list_box.add_child(UIKit.label("Recipes %s — %d shown%s" % [scope_txt, shown.size(), (" for “%s”" % query) if query.strip_edges() != "" else ""], 24, "heading"))
+	if shown.is_empty():
+		list_box.add_child(UIKit.label("No recipe matches. Clear the search or choose another filter — or learn more in the skill tree.", 20, "body_italic"))
+	for rec in shown:
+		list_box.add_child(_recipe_row(rec))
 
 
 func _recipe_row(rec: Dictionary) -> Control:
