@@ -1,0 +1,657 @@
+{
+ "herbalist": {
+  "id": "herbalist",
+  "shop": "Fennimore's Simples",
+  "stock": [
+   [
+    "herb_emberleaf",
+    8,
+    [
+     4,
+     8
+    ]
+   ],
+   [
+    "herb_moonwort",
+    8,
+    [
+     4,
+     8
+    ]
+   ],
+   [
+    "reagent_salt",
+    6,
+    [
+     3,
+     6
+    ]
+   ],
+   [
+    "herb_bloodroot",
+    11,
+    [
+     3,
+     6
+    ]
+   ],
+   [
+    "herb_frostcap",
+    12,
+    [
+     2,
+     5
+    ]
+   ],
+   [
+    "herb_silverleaf",
+    16,
+    [
+     2,
+     4
+    ]
+   ],
+   [
+    "yew_stave",
+    17,
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "reagent_aether_dust",
+    78,
+    [
+     0,
+     2
+    ]
+   ]
+  ],
+  "lines": [
+   "\"Bloodroot for the bleeding, frostcap for the fever, and silverleaf when neither works.\"",
+   "\"Aether dust? Scraped off the old waystones by moonlight. That's why it costs what it costs.\"",
+   "\"Mind the jars on the left — those are for customers I like.\"",
+   "\"Your forge smoke turns my moonwort bitter, smith. I'll forgive it if you buy the bitter ones.\"",
+   "\"Everything fresh this morning. Well — fresh this week.\""
+  ]
+ },
+ "ships": {
+  "spice": {
+   "label": "Southern spice trader",
+   "sprite": "props/ship_spice",
+   "names": [
+    [
+     "The Gilded Heron",
+     "Captain Idris Sallah"
+    ],
+    [
+     "The Saffron Moon",
+     "Captain Nadira Vell"
+    ],
+    [
+     "The Amber Lantern",
+     "Captain Oren Kassim"
+    ]
+   ],
+   "desc": "Out of the southern ports with reagents, rare herbs and fine thread.",
+   "stock": [
+    [
+     "reagent_aether_dust",
+     1.5,
+     [
+      2,
+      5
+     ],
+     1.0
+    ],
+    [
+     "reagent_wyrm_ash",
+     1.6,
+     [
+      1,
+      3
+     ],
+     0.7
+    ],
+    [
+     "herb_silverleaf",
+     1.3,
+     [
+      4,
+      8
+     ],
+     0.9
+    ],
+    [
+     "herb_frostcap",
+     1.3,
+     [
+      3,
+      6
+     ],
+     0.7
+    ],
+    [
+     "herb_bloodroot",
+     1.3,
+     [
+      4,
+      8
+     ],
+     0.7
+    ],
+    [
+     "reagent_salt",
+     1.2,
+     [
+      6,
+      10
+     ],
+     0.8
+    ],
+    [
+     "thread_ethereal",
+     1.5,
+     [
+      2,
+      4
+     ],
+     0.6
+    ],
+    [
+     "gem_sapphire",
+     1.4,
+     [
+      1,
+      2
+     ],
+     0.5
+    ],
+    [
+     "gem_garnet",
+     1.4,
+     [
+      1,
+      3
+     ],
+     0.5
+    ]
+   ],
+   "equipment": [
+    [
+     "amulet_silver",
+     1.6,
+     0.4
+    ],
+    [
+     "ring_silver",
+     1.6,
+     0.4
+    ],
+    [
+     "coating_flame",
+     1.4,
+     0.4
+    ]
+   ],
+   "ironfront_chance": 0.35
+  },
+  "barge": {
+   "label": "Dwarven ore barge",
+   "sprite": "props/ship_barge",
+   "names": [
+    [
+     "The Stubborn Anvil",
+     "Skipper Durra Coalbrow"
+    ],
+    [
+     "The Iron Wife",
+     "Skipper Haldor Grimm"
+    ],
+    [
+     "The Deep Delver",
+     "Skipper Thrain Ashdeep"
+    ]
+   ],
+   "desc": "Broad-bellied and low in the water: ore, ingots and the odd dwarf-made piece.",
+   "stock": [
+    [
+     "ore_orichalcum",
+     1.6,
+     [
+      1,
+      3
+     ],
+     0.8
+    ],
+    [
+     "ore_mithril",
+     1.4,
+     [
+      2,
+      4
+     ],
+     0.9
+    ],
+    [
+     "ore_adamantine",
+     1.5,
+     [
+      1,
+      3
+     ],
+     0.7
+    ],
+    [
+     "ingot_steel",
+     1.3,
+     [
+      4,
+      8
+     ],
+     1.0
+    ],
+    [
+     "ore_silver",
+     1.3,
+     [
+      3,
+      6
+     ],
+     0.8
+    ],
+    [
+     "gem_starstone",
+     1.7,
+     [
+      1,
+      1
+     ],
+     0.25
+    ],
+    [
+     "runestone_blank",
+     1.4,
+     [
+      2,
+      4
+     ],
+     0.6
+    ],
+    [
+     "coal",
+     1.5,
+     [
+      10,
+      20
+     ],
+     0.6
+    ]
+   ],
+   "equipment": [
+    [
+     "sword_bastard",
+     1.5,
+     0.4
+    ],
+    [
+     "shield_kite",
+     1.5,
+     0.4
+    ],
+    [
+     "helm_iron",
+     1.5,
+     0.4
+    ],
+    [
+     "cuirass_iron",
+     1.5,
+     0.3
+    ]
+   ],
+   "ironfront_chance": 0.25
+  },
+  "whaler": {
+   "label": "Far-north whaler",
+   "sprite": "props/ship_whaler",
+   "names": [
+    [
+     "The Grey Widow",
+     "Captain Ottar Hrafnsson"
+    ],
+    [
+     "The Ice Lark",
+     "Captain Sigga Ulfsdottir"
+    ],
+    [
+     "The Long Winter",
+     "Captain Bram Kold"
+    ]
+   ],
+   "desc": "Tarred black and smelling of oil: furs, monster hides and things from the ice.",
+   "stock": [
+    [
+     "bear_pelt",
+     1.4,
+     [
+      2,
+      4
+     ],
+     0.9
+    ],
+    [
+     "troll_hide",
+     1.5,
+     [
+      1,
+      3
+     ],
+     0.8
+    ],
+    [
+     "wyvern_hide",
+     1.6,
+     [
+      1,
+      2
+     ],
+     0.6
+    ],
+    [
+     "leather_cured",
+     1.3,
+     [
+      4,
+      8
+     ],
+     0.8
+    ],
+    [
+     "leather_hide",
+     1.3,
+     [
+      6,
+      10
+     ],
+     0.8
+    ],
+    [
+     "herb_frostcap",
+     1.3,
+     [
+      4,
+      8
+     ],
+     0.6
+    ],
+    [
+     "dragon_scale",
+     2.0,
+     [
+      1,
+      1
+     ],
+     0.12
+    ],
+    [
+     "dragon_bone",
+     2.0,
+     [
+      1,
+      1
+     ],
+     0.08
+    ]
+   ],
+   "equipment": [
+    [
+     "boots_ranger",
+     1.5,
+     0.4
+    ],
+    [
+     "bow_yew",
+     1.5,
+     0.3
+    ],
+    [
+     "jerkin_leather",
+     1.5,
+     0.4
+    ]
+   ],
+   "ironfront_chance": 0.3
+  }
+ },
+ "schedule": {
+  "gap": [
+   3,
+   6
+  ],
+  "stay": 2,
+  "arrive_hour": 7,
+  "first_after_days": 2
+ },
+ "imports": {
+  "ingot_steel": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "ore_silver": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "leather_cured": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "thread_ethereal": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "herb_bloodroot": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "herb_frostcap": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "herb_silverleaf": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "herb_emberleaf": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "herb_moonwort": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "reagent_salt": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "yew_stave": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "gem_garnet": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "gem_sapphire": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "gem_moonstone": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "bear_pelt": {
+   "tier": "common",
+   "lead": [
+    2,
+    3
+   ],
+   "mult": 1.6
+  },
+  "ore_mithril": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "ore_adamantine": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "reagent_aether_dust": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "troll_hide": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "runestone_blank": {
+   "tier": "rare",
+   "lead": [
+    4,
+    6
+   ],
+   "mult": 1.8
+  },
+  "ore_orichalcum": {
+   "tier": "exotic",
+   "lead": [
+    6,
+    8
+   ],
+   "mult": 2.0
+  },
+  "wyvern_hide": {
+   "tier": "exotic",
+   "lead": [
+    6,
+    8
+   ],
+   "mult": 2.0
+  },
+  "reagent_wyrm_ash": {
+   "tier": "exotic",
+   "lead": [
+    6,
+    8
+   ],
+   "mult": 2.0
+  },
+  "gem_starstone": {
+   "tier": "exotic",
+   "lead": [
+    6,
+    8
+   ],
+   "mult": 2.0
+  },
+  "dragon_scale": {
+   "tier": "legendary",
+   "lead": [
+    9,
+    12
+   ],
+   "mult": 2.4
+  },
+  "dragon_bone": {
+   "tier": "legendary",
+   "lead": [
+    9,
+    12
+   ],
+   "mult": 2.4
+  }
+ },
+ "harbour": {
+  "id": "harbourmaster",
+  "deposit": 0.4,
+  "max_open": 4,
+  "lines": [
+   "\"Tide's right, the wind's from the south. Something will come in.\"",
+   "\"Write it in the book, pay the deposit, and I'll pass the word to the next captain out.\"",
+   "\"Dragon scale? Aye, it can be had. It's the getting it here alive that costs.\""
+  ]
+ }
+}

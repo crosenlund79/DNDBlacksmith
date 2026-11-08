@@ -36,6 +36,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_living_village()
+	_trade()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -546,6 +547,115 @@ func _loot() -> void:
 	check(items.size() >= 3, "loot: barrow table rolls items")
 	var c := Loot.make_container("bag_traveller", items, "test")
 	check(c["contents"].size() == items.size(), "loot: container keeps fixed contents")
+
+
+## Trade: the herbalist, merchant ships, special imports, persistence and genuine sources of exotic goods.
+func _trade() -> void:
+	Game.state["gold"] = 5000
+	# herbalist
+	var stock := Trade.herbalist_stock()
+	check(stock.size() >= 7, "trade: herbalist has a daily stock (%d lines)" % stock.size())
+	var e0: Dictionary = {}
+	for e in stock:
+		if e["def"] == "herb_bloodroot":
+			e0 = e
+	var have := Game.count("herb_bloodroot")
+	var g0 := Game.gold()
+	var err := Trade.buy_herbalist("herb_bloodroot", 2)
+	check(err == "" and Game.count("herb_bloodroot") == have + 2 and Game.gold() == g0 - int(e0.get("price", 0)) * 2,
+		"trade: herbalist purchase adds goods and costs gold (%s)" % err)
+	# ships: simulate days until one docks
+	Trade.st()["ship"] = {}
+	Trade._schedule_next(3)
+	var nx := Trade.next_arrival()
+	check(not nx.is_empty() and int(nx["days"]) >= 2, "trade: next ship is scheduled (%s in %d days)" % [nx.get("name", "?"), int(nx.get("days", -1))])
+	var guard := 0
+	while Trade.current_ship().is_empty() and guard < 8:
+		Game.advance_minutes(1440)
+		guard += 1
+	var ship := Trade.current_ship()
+	check(not ship.is_empty() and str(ship["name"]) == str(nx["name"]), "trade: the expected ship docks after enough days (%d)" % guard)
+	if ship.is_empty():
+		Trade.dev_force_ship("barge")
+		ship = Trade.current_ship()
+	var idx := -1
+	for i in (ship["stock"] as Array).size():
+		var se: Dictionary = ship["stock"][i]
+		if not se.has("card") and int(se["qty"]) > 0 and se["def"] != "":
+			idx = i
+			break
+	check(idx >= 0, "trade: the ship offers stock")
+	if idx >= 0:
+		var se2: Dictionary = ship["stock"][idx]
+		var sdef: String = se2["def"]
+		var c0 := Game.count(sdef)
+		var gb := Game.gold()
+		err = Trade.buy_from_ship(idx, 1)
+		check(err == "" and Game.count(sdef) == c0 + 1 and Game.gold() == gb - int(se2["price"]), "trade: buying from the ship works (%s)" % err)
+	# the ship leaves after its stay and the next is scheduled
+	Game.advance_minutes(3 * 1440)
+	check(Trade.current_ship().is_empty() and not Trade.next_arrival().is_empty(), "trade: the ship sails and another is expected")
+	# import order lifecycle
+	Trade.mark_seen("ore_orichalcum")
+	check(Trade.importables().any(func(x): return x["def"] == "ore_orichalcum"), "trade: a known material can be imported")
+	check(not Trade.importables().any(func(x): return x["def"] == "dragon_bone") or Trade.knows("dragon_bone"), "trade: unknown dragon parts are not listed")
+	var info := Trade.import_info("ore_orichalcum")
+	var led0: int = (Game.state["ledger"] as Array).size()
+	var gi := Game.gold()
+	err = Trade.place_import("ore_orichalcum", 2)
+	var o: Dictionary = Trade.imports()[-1] if not Trade.imports().is_empty() else {}
+	var total := int(info["unit"]) * 2
+	var dep := int(ceil(total * 0.4))
+	check(err == "" and o.get("status", "") == "ordered" and Game.gold() == gi - dep, "trade: import deposit paid (%d of %d g)" % [dep, total])
+	var last_led: Dictionary = Game.state["ledger"][-1]
+	check(last_led["cat"] == "imports" and int(last_led["amount"]) == -dep, "trade: deposit in the ledger under imports")
+	# save/load mid-order
+	check(Saves.save("trade_test_slot"), "trade: save with an open import")
+	Game.state["trade"]["orders"] = []
+	check(Saves.load_slot("trade_test_slot") and Trade.imports().size() >= 1 and str(Trade.imports()[-1]["id"]) == str(o.get("id", "")), "trade: import order survives save/load")
+	check(not Trade.next_arrival().is_empty() or not Trade.current_ship().is_empty(), "trade: ship schedule survives save/load")
+	Saves.delete("trade_test_slot")
+	var oid := str(o.get("id", ""))
+	var lead_days := int(o.get("due", 0)) - Game.day()
+	for i in maxi(1, lead_days):
+		Game.advance_minutes(1440)
+	check(Trade.deliveries().any(func(x): return x["id"] == oid), "trade: import arrives after its lead time (%d days)" % lead_days)
+	var cnt := Game.count("ore_orichalcum")
+	var gc := Game.gold()
+	err = Trade.collect_delivery(oid)
+	check(err == "" and Game.count("ore_orichalcum") == cnt + 2 and Game.gold() == gc - (total - dep), "trade: delivery collected, balance paid (%s)" % err)
+	var paid := 0
+	for l in (Game.state["ledger"] as Array).slice(led0):
+		if l["cat"] == "imports" and str(l["note"]).contains("Orichalcum"):
+			paid += int(l["amount"])
+	check(paid == -total, "trade: ledger import entries sum to the full price (%d)" % paid)
+	check(Chronicle.recent(20, ["trade"]).size() >= 3, "trade: chronicle records arrivals and imports")
+	# dev helpers
+	Trade.place_import("herb_bloodroot", 1)
+	Trade.dev_finish_imports()
+	check(not Trade.deliveries().is_empty(), "trade: dev_finish_imports lands open orders")
+	# every exotic material has a genuine source
+	var sources := {}
+	for t in DB.loot:
+		if DB.loot[t] is Dictionary:
+			for en in DB.loot[t].get("entries", []):
+				sources[str(en[0])] = true
+	for sh in Trade.cfg().get("ships", {}).values():
+		for en in sh.get("stock", []):
+			sources[str(en[0])] = true
+	for en in Trade.cfg().get("herbalist", {}).get("stock", []):
+		sources[str(en[0])] = true
+	var reg_loot := {}
+	for r in DB.expeditions.get("regions", {}).values():
+		for n in r["nodes"]:
+			if str(n.get("loot", "")) != "":
+				reg_loot[str(n["loot"])] = true
+	for ex in ["bear_pelt", "troll_hide", "wyvern_hide", "dragon_scale", "dragon_bone", "ore_orichalcum", "herb_bloodroot", "herb_frostcap",
+			"herb_silverleaf", "reagent_aether_dust", "reagent_wyrm_ash"]:
+		check(not DB.item(ex).is_empty() and sources.has(ex), "trade: %s exists and has a source" % ex)
+	for t2 in ["beast_bear", "beast_troll", "beast_wyvern", "herbs_wild", "deep_boss"]:
+		check(reg_loot.has(t2), "trade: expedition nodes use loot table %s" % t2)
+	check(DB.loot["deep_boss"]["entries"].any(func(x): return x[0] == "dragon_scale"), "trade: the Deep Ironroot boss can drop dragon scale")
 
 
 func _saves() -> void:

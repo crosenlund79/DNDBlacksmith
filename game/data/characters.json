@@ -718,5 +718,58 @@
   },
   "sprite": "chars/applicant_5",
   "portrait": "portraits/applicant_5"
+ },
+ {
+  "id": "herbalist",
+  "name": "Maud Fennimore",
+  "kind": "villager",
+  "look": {
+   "build": "slim",
+   "female": true,
+   "skin": "#e2c0a0",
+   "hair": "bun",
+   "hair_col": "#c8c4b8",
+   "beard": "none",
+   "armor": "robe",
+   "shirt": "#5e6e4a",
+   "cloak": "#4e5a3a",
+   "back": "none",
+   "hand": "basket",
+   "extras": []
+  },
+  "sprite": "chars/herbalist",
+  "portrait": "portraits/herbalist",
+  "age": 63,
+  "title": "Herbalist",
+  "work": "herbalist",
+  "personality": "Brisk and kindly; names every plant in Old Speech and every customer by their ailments."
+ },
+ {
+  "id": "harbourmaster",
+  "name": "Captain Hal Brackwater",
+  "kind": "villager",
+  "look": {
+   "build": "heavy",
+   "female": false,
+   "skin": "#c48a66",
+   "hair": "short",
+   "hair_col": "#6a6058",
+   "beard": "short",
+   "beard_col": "#8a8076",
+   "armor": "leather",
+   "shirt": "#3e4a6e",
+   "cloak": "#2e3450",
+   "back": "none",
+   "hand": "none",
+   "extras": [
+    "eyepatch"
+   ]
+  },
+  "sprite": "chars/harbourmaster",
+  "portrait": "portraits/harbourmaster",
+  "age": 57,
+  "title": "Harbourmaster",
+  "work": "harbour",
+  "personality": "Salt-cured and unhurried; knows every ship by her creak and every captain by his debts."
  }
 ]

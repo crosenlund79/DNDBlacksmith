@@ -197,6 +197,48 @@
    "desc": ""
   },
   {
+   "id": "bear",
+   "name": "Whisperwood Cave Bear",
+   "kind": "beast",
+   "hp": 30,
+   "atk": 5,
+   "dmg": "1d10+3",
+   "ac": 13,
+   "xp": 45,
+   "weak": "fire",
+   "resist": "",
+   "power": 26,
+   "desc": "Slow to anger, impossible to stop once it is."
+  },
+  {
+   "id": "troll",
+   "name": "Marsh Troll",
+   "kind": "giant",
+   "hp": 38,
+   "atk": 5,
+   "dmg": "2d6+2",
+   "ac": 13,
+   "xp": 60,
+   "weak": "fire",
+   "resist": "",
+   "power": 32,
+   "desc": "Its wounds close as you watch; fire keeps them open."
+  },
+  {
+   "id": "wyvern",
+   "name": "Barrow Wyvern",
+   "kind": "beast",
+   "hp": 34,
+   "atk": 6,
+   "dmg": "1d10+3",
+   "ac": 14,
+   "xp": 55,
+   "weak": "frost",
+   "resist": "",
+   "power": 30,
+   "desc": "Roosts on the high mounds; its tail-sting burns."
+  },
+  {
    "id": "revenant",
    "name": "The Dwarf-King's Revenant",
    "kind": "undead",
@@ -258,13 +300,29 @@
      "x": 340,
      "y": 280,
      "links": [
-      "tower"
+      "tower",
+      "bloodroot"
      ],
      "enemies": [],
      "dc": 12,
      "loot": "forest",
      "tier": 1,
      "desc": "Moonwort and emberleaf under the old oaks."
+    },
+    {
+     "id": "bloodroot",
+     "name": "Bloodroot hollow",
+     "kind": "resource",
+     "x": 520,
+     "y": 110,
+     "links": [
+      "tower"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "herbs_wild",
+     "tier": 1,
+     "desc": "Bloodroot, frostcap and silverleaf in the damp shade of the hollow."
     },
     {
      "id": "den",
@@ -274,7 +332,8 @@
      "y": 470,
      "links": [
       "tower",
-      "shrine"
+      "shrine",
+      "bear_cave"
      ],
      "enemies": [
       [
@@ -286,6 +345,26 @@
      "loot": "",
      "tier": 1,
      "desc": ""
+    },
+    {
+     "id": "bear_cave",
+     "name": "Bear cave",
+     "kind": "encounter",
+     "x": 720,
+     "y": 640,
+     "links": [
+      "shrine"
+     ],
+     "enemies": [
+      [
+       "bear",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "beast_bear",
+     "tier": 2,
+     "desc": "Bones at the mouth, and a smell like wet dog and old blood."
     },
     {
      "id": "tower",
@@ -549,7 +628,8 @@
      "y": 520,
      "links": [
       "bog",
-      "cache"
+      "cache",
+      "troll_ford"
      ],
      "enemies": [
       [
@@ -561,6 +641,26 @@
      "loot": "",
      "tier": 1,
      "desc": ""
+    },
+    {
+     "id": "troll_ford",
+     "name": "Troll's ford",
+     "kind": "encounter",
+     "x": 690,
+     "y": 650,
+     "links": [
+      "cache"
+     ],
+     "enemies": [
+      [
+       "troll",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "beast_troll",
+     "tier": 2,
+     "desc": "The ford nobody uses; the troll under it eats the ones who do."
     },
     {
      "id": "bog",
@@ -688,13 +788,34 @@
      "x": 900,
      "y": 420,
      "links": [
-      "vault"
+      "vault",
+      "roost"
      ],
      "enemies": [],
      "dc": 14,
      "loot": "",
      "tier": 1,
      "desc": ""
+    },
+    {
+     "id": "roost",
+     "name": "Wyvern roost",
+     "kind": "encounter",
+     "x": 1140,
+     "y": 380,
+     "links": [
+      "vault"
+     ],
+     "enemies": [
+      [
+       "wyvern",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "beast_wyvern",
+     "tier": 2,
+     "desc": "A wyvern nests on the tallest mound among stripped bones."
     },
     {
      "id": "ossuary",
@@ -822,7 +943,8 @@
      "y": 420,
      "links": [
       "seam",
-      "hall"
+      "hall",
+      "warren"
      ],
      "enemies": [
       [
@@ -834,6 +956,26 @@
      "loot": "",
      "tier": 1,
      "desc": ""
+    },
+    {
+     "id": "warren",
+     "name": "Troll warren",
+     "kind": "encounter",
+     "x": 790,
+     "y": 330,
+     "links": [
+      "hall"
+     ],
+     "enemies": [
+      [
+       "troll",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "beast_deep",
+     "tier": 3,
+     "desc": "Cave trolls den in the old smelting halls among hides and ore."
     },
     {
      "id": "seam",
@@ -868,7 +1010,7 @@
       ]
      ],
      "dc": 12,
-     "loot": "deep_mine",
+     "loot": "deep_boss",
      "tier": 3,
      "desc": ""
     }

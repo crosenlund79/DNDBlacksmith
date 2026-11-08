@@ -34,6 +34,10 @@ ENEMIES = [
     enemy("barrow_lord", "The Barrow Wight-Lord", "undead", 62, 7, "2d8+3", 16, 160, weak="fire", resist="frost", power=58),
     enemy("golem", "Stone Golem", "construct", 50, 6, "2d8+2", 17, 110, weak="frost", resist="fire", power=48, desc="Cracks when frozen."),
     enemy("shadow", "Shadow Crawler", "spirit", 22, 6, "1d10+2", 15, 40, weak="fire", resist="physical", power=26),
+    # trade worker: monsters whose hides reach the forge as offers at the shop counter
+    enemy("bear", "Whisperwood Cave Bear", "beast", 30, 5, "1d10+3", 13, 45, weak="fire", power=26, desc="Slow to anger, impossible to stop once it is."),
+    enemy("troll", "Marsh Troll", "giant", 38, 5, "2d6+2", 13, 60, weak="fire", power=32, desc="Its wounds close as you watch; fire keeps them open."),
+    enemy("wyvern", "Barrow Wyvern", "beast", 34, 6, "1d10+3", 14, 55, weak="frost", power=30, desc="Roosts on the high mounds; its tail-sting burns."),
     enemy("revenant", "The Dwarf-King's Revenant", "undead", 80, 8, "2d10+4", 17, 220, weak="fire", resist="frost", power=74),
 ]
 
@@ -43,8 +47,10 @@ REGIONS = {
         "nodes": [
             node("gate", "The western road", "entry", 90, 600, ["trail"]),
             node("trail", "Deer trail", "path", 300, 520, ["glade", "den"], dc=11),
-            node("glade", "Herb glade", "resource", 340, 280, ["tower"], loot="forest", desc="Moonwort and emberleaf under the old oaks."),
-            node("den", "Wolf den", "encounter", 560, 470, ["tower", "shrine"], enemies=[["wolf", 3]]),
+            node("glade", "Herb glade", "resource", 340, 280, ["tower", "bloodroot"], loot="forest", desc="Moonwort and emberleaf under the old oaks."),
+            node("bloodroot", "Bloodroot hollow", "resource", 520, 110, ["tower"], loot="herbs_wild", desc="Bloodroot, frostcap and silverleaf in the damp shade of the hollow."),
+            node("den", "Wolf den", "encounter", 560, 470, ["tower", "shrine", "bear_cave"], enemies=[["wolf", 3]]),
+            node("bear_cave", "Bear cave", "encounter", 720, 640, ["shrine"], enemies=[["bear", 1]], loot="beast_bear", tier=2, desc="Bones at the mouth, and a smell like wet dog and old blood."),
             node("tower", "Ruined watchtower", "chest", 700, 230, ["shrine", "hollow"], dc=12, loot="forest", tier=2),
             node("shrine", "Mossy wayshrine", "shrine", 880, 520, ["hollow"]),
             node("traveller", "A wounded trapper", "traveller", 980, 360, ["hollow"]),
@@ -65,7 +71,8 @@ REGIONS = {
             node("gate", "The eastern gate", "entry", 90, 360, ["mile"]),
             node("mile", "Mile-stone camp", "path", 280, 360, ["caravan", "bridge"], dc=10),
             node("caravan", "Wrecked caravan", "traveller", 420, 170, ["bog"], loot="trade"),
-            node("bridge", "The toll bridge", "encounter", 520, 520, ["bog", "cache"], enemies=[["bandit", 3]]),
+            node("bridge", "The toll bridge", "encounter", 520, 520, ["bog", "cache", "troll_ford"], enemies=[["bandit", 3]]),
+            node("troll_ford", "Troll's ford", "encounter", 690, 650, ["cache"], enemies=[["troll", 1]], loot="beast_troll", tier=2, desc="The ford nobody uses; the troll under it eats the ones who do."),
             node("bog", "Bog crossing", "encounter", 760, 280, ["cache", "captain"], enemies=[["bog_wraith", 1]]),
             node("cache", "Smugglers' cache", "chest", 860, 560, ["captain"], dc=14, loot="trade", tier=2),
             node("captain", "Vell's hideout", "boss", 1150, 380, [], enemies=[["bandit_captain", 1], ["bandit", 2]], loot="trade", tier=3),
@@ -75,7 +82,8 @@ REGIONS = {
             node("gate", "The south road", "entry", 640, 660, ["rows"]),
             node("rows", "Grave rows", "encounter", 640, 500, ["sarcophagus", "door"], enemies=[["skeleton", 3]]),
             node("sarcophagus", "Trapped sarcophagus", "trap", 360, 420, ["ossuary"], dc=14, loot="barrow", tier=2),
-            node("door", "The rune door", "puzzle", 900, 420, ["vault"], dc=14),
+            node("door", "The rune door", "puzzle", 900, 420, ["vault", "roost"], dc=14),
+            node("roost", "Wyvern roost", "encounter", 1140, 380, ["vault"], enemies=[["wyvern", 1]], loot="beast_wyvern", tier=2, desc="A wyvern nests on the tallest mound among stripped bones."),
             node("ossuary", "Ossuary", "encounter", 330, 220, ["lord"], enemies=[["wight", 2]]),
             node("vault", "Relic vault", "chest", 960, 200, ["lord"], dc=15, loot="barrow", tier=3),
             node("lord", "The Wight-Lord's barrow", "boss", 640, 120, [], enemies=[["barrow_lord", 1], ["skeleton", 2]], loot="barrow", tier=3),
@@ -85,9 +93,10 @@ REGIONS = {
             node("gate", "The deep stair", "entry", 120, 120, ["crystal"]),
             node("crystal", "Crystal cavern", "resource", 330, 230, ["forge", "rift"], loot="deep_mine", tier=2),
             node("forge", "The golem forge", "encounter", 560, 140, ["hall"], enemies=[["golem", 1]]),
-            node("rift", "Shadow rift", "encounter", 520, 420, ["seam", "hall"], enemies=[["shadow", 2]]),
+            node("rift", "Shadow rift", "encounter", 520, 420, ["seam", "hall", "warren"], enemies=[["shadow", 2]]),
+            node("warren", "Troll warren", "encounter", 790, 330, ["hall"], enemies=[["troll", 1]], loot="beast_deep", tier=3, desc="Cave trolls den in the old smelting halls among hides and ore."),
             node("seam", "Adamantine seam", "resource", 800, 560, ["hall"], loot="deep_mine", tier=3),
-            node("hall", "The Dwarf-King's hall", "boss", 1080, 300, [], enemies=[["revenant", 1], ["shadow", 1]], loot="deep_mine", tier=3),
+            node("hall", "The Dwarf-King's hall", "boss", 1080, 300, [], enemies=[["revenant", 1], ["shadow", 1]], loot="deep_boss", tier=3),
         ]},
 }
 

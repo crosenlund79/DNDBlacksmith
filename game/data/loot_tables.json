@@ -77,6 +77,14 @@
      1,
      1
     ]
+   ],
+   [
+    "ore_orichalcum",
+    0.6,
+    [
+     1,
+     1
+    ]
    ]
   ],
   "skill_entries": {
@@ -97,6 +105,14 @@
      [
       1,
       2
+     ]
+    ],
+    [
+     "ore_orichalcum",
+     1.5,
+     [
+      1,
+      1
      ]
     ]
    ]
@@ -187,6 +203,30 @@
      1,
      1
     ]
+   ],
+   [
+    "ore_orichalcum",
+    5,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "troll_hide",
+    1.5,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "wyvern_hide",
+    1,
+    [
+     1,
+     1
+    ]
    ]
   ],
   "rarity_bias": 25,
@@ -256,6 +296,38 @@
      1,
      1
     ]
+   ],
+   [
+    "herb_bloodroot",
+    8,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_frostcap",
+    5,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_silverleaf",
+    4,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "bear_pelt",
+    4,
+    [
+     1,
+     1
+    ]
    ]
   ]
  },
@@ -308,6 +380,14 @@
    [
     "equip:any",
     7,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "troll_hide",
+    1.5,
     [
      1,
      1
@@ -391,6 +471,14 @@
     [
      1,
      2
+    ]
+   ],
+   [
+    "wyvern_hide",
+    1.5,
+    [
+     1,
+     1
     ]
    ]
   ],
@@ -598,6 +686,279 @@
     [
      1,
      2
+    ]
+   ]
+  ],
+  "rarity_bias": 30
+ },
+ "beast_bear": {
+  "rolls": [
+   1,
+   2
+  ],
+  "entries": [
+   [
+    "bear_pelt",
+    70,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "leather_hide",
+    30,
+    [
+     1,
+     2
+    ]
+   ]
+  ]
+ },
+ "beast_troll": {
+  "rolls": [
+   1,
+   2
+  ],
+  "entries": [
+   [
+    "troll_hide",
+    60,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "leather_hide",
+    20,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_bloodroot",
+    20,
+    [
+     1,
+     2
+    ]
+   ]
+  ]
+ },
+ "beast_wyvern": {
+  "rolls": [
+   1,
+   2
+  ],
+  "entries": [
+   [
+    "wyvern_hide",
+    60,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_coin",
+    20,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "leather_cured",
+    20,
+    [
+     1,
+     2
+    ]
+   ]
+  ]
+ },
+ "beast_deep": {
+  "rolls": [
+   1,
+   2
+  ],
+  "entries": [
+   [
+    "troll_hide",
+    40,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "wyvern_hide",
+    20,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "ore_orichalcum",
+    25,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "leather_hide",
+    15,
+    [
+     1,
+     2
+    ]
+   ]
+  ]
+ },
+ "herbs_wild": {
+  "rolls": [
+   2,
+   3
+  ],
+  "entries": [
+   [
+    "herb_bloodroot",
+    35,
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "herb_frostcap",
+    25,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_silverleaf",
+    20,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_emberleaf",
+    10,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "herb_moonwort",
+    10,
+    [
+     1,
+     2
+    ]
+   ]
+  ]
+ },
+ "deep_boss": {
+  "rolls": [
+   4,
+   6
+  ],
+  "entries": [
+   [
+    "ore_mithril",
+    30,
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "ore_adamantine",
+    12,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "ore_orichalcum",
+    14,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "runestone_blank",
+    12,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "gem_starstone",
+    5,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "starmetal_fragment",
+    5,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "equip:weapon",
+    8,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "relic_crown_shard",
+    3,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "reagent_wyrm_ash",
+    7,
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "dragon_scale",
+    1,
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "dragon_bone",
+    0.6,
+    [
+     1,
+     1
     ]
    ]
   ],

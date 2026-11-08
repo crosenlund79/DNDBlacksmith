@@ -742,5 +742,37 @@
   ],
   "solid": false,
   "desc": "small flower clump rooted on the bottom edge (sway shader)"
+ },
+ "ship_spice": {
+  "size": [
+   512,
+   192
+  ],
+  "solid": true,
+  "desc": "moored southern spice trader seen from above: lateen sails furled, crates of spice on deck"
+ },
+ "ship_barge": {
+  "size": [
+   512,
+   192
+  ],
+  "solid": true,
+  "desc": "moored dwarven ore barge seen from above: broad flat hull, ore bins, square sail furled"
+ },
+ "ship_whaler": {
+  "size": [
+   512,
+   192
+  ],
+  "solid": true,
+  "desc": "moored far-north whaler seen from above: dark tarred hull, hides drying on deck"
+ },
+ "ship_flag": {
+  "size": [
+   48,
+   96
+  ],
+  "solid": false,
+  "desc": "harbour signal pole with a pennant: a ship is expected"
  }
 }
