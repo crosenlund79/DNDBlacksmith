@@ -313,6 +313,8 @@ static func tooltip(it: Dictionary) -> String:
 	if it.has("bound"):
 		var bd: Dictionary = it["bound"]
 		lines.append("[color=#b89cff]Bound into the metal: %s (+%d %s)[/color]" % [bd.get("name", ""), int(bd.get("value", 0)), str(bd.get("stat", "")).capitalize()])
+	if it.has("refine") and Refinement.tooltip_line(it) != "":
+		lines.append(Refinement.tooltip_line(it))   # UX iteration: refined / reworked / upgraded
 	if it.has("coating"):
 		var co: Dictionary = it["coating"]
 		lines.append("[color=#ffc070]Treated with %s: +%d %s for %d more expedition%s[/color]" % [co.get("name", ""), int(co.get("value", 0)), str(co.get("stat", "")).capitalize(), int(co.get("uses", 0)), "" if int(co.get("uses", 0)) == 1 else "s"])

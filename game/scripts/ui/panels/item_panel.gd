@@ -191,7 +191,7 @@ func _overview(it: Dictionary) -> void:
 		lines.append("[b]Recipe:[/b] %s (%d operations%s)" % [cr["recipe_name"], (cr.get("ops", []) as Array).size(), ", masterwork" if bool(cr.get("masterwork", false)) else ""])
 	var q0 := float(og.get("quality", it.get("quality", 0.0)))
 	var q1 := float(it.get("quality", 0.0))
-	lines.append("[b]Craftsmanship:[/b] %d%%%s" % [int(round(q0)), ("  →  %d%% after reforging" % int(round(q1))) if absf(q1 - q0) >= 0.5 else ""])
+	lines.append("[b]Craftsmanship:[/b] %d%%%s" % [int(round(q0)), ("  →  %d%% after work at the forge" % int(round(q1))) if absf(q1 - q0) >= 0.5 else ""])
 	lines.append("[b]Rarity at the anvil:[/b] %s" % Items.RARITY_LABEL.get(str(og.get("rarity", it.get("rarity", "common"))), "Common"))
 	ov.add_child(UIKit.rich("\n".join(PackedStringArray(lines)), 19))
 	oc.add_child(ov)
@@ -231,6 +231,12 @@ func _overview(it: Dictionary) -> void:
 	if it.has("craft"):
 		var it2 := it
 		row2.add_child(UIKit.button("Craft record", func(): _go("craft_result", {"item": it2, "fresh": false}), 0))
+	if not Game.find_uid(uid).is_empty():   # UX iteration: refine / rework / upgrade / reforge (RefinePanel)
+		var u := uid
+		var ib := UIKit.button("Improve it…", func(): _go("refine", {"uid": u}), 0)
+		ib.name = "ImproveIt"
+		ib.tooltip_text = "Refine, rework, upgrade or reforge it at the forge — the same piece, with one more line in its history."
+		row2.add_child(ib)
 	rv.add_child(row2)
 	rc.add_child(rv)
 	right.add_child(rc)

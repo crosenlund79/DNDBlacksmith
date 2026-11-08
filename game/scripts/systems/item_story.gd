@@ -39,7 +39,7 @@ const ORDINALS := ["", " the Second", " the Third", " the Fourth", " the Fifth"]
 ## History-row icon per Lore kind (ui/story_<kind>, drawn by tools/art/make_itemstory_art.py).
 const STORY_ICON := {"forged": "forged", "sold": "sale", "bought": "sale", "given": "sale", "pawned": "sale", "redeemed": "sale",
 	"found": "found", "looted": "found", "inherited": "inherited", "recovered": "inherited", "repaired": "repaired",
-	"reforged": "reforged", "enchanted": "enchanted", "treated": "treated", "sharpened": "sharpened", "battle": "battle",
+	"reforged": "reforged", "refined": "sharpened", "reworked": "enchanted", "upgraded": "reforged", "enchanted": "enchanted", "treated": "treated", "sharpened": "sharpened", "battle": "battle",
 	"slew": "battle", "victory": "battle", "survived": "survived", "discovery": "discovery", "cleared": "discovery",
 	"named": "named", "epic": "epic", "deed": "epic", "lost": "lost", "destroyed": "lost", "death": "lost", "returned": "reunion",
 	"reunion": "reunion", "commission": "commission", "commissioned": "commission", "note": "note", "received": "found", "offered": "found"}
@@ -126,7 +126,7 @@ static func earned_name(it: Dictionary) -> String:
 
 ## Can this piece earn a name? The smith's own work, or anything already exceptional.
 static func can_be_named(it: Dictionary) -> bool:
-	if it.is_empty() or not Items.is_equipment(it):
+	if it.is_empty() or not Items.is_equipment(it) or bool(it.get("dev", false)):
 		return false
 	return Provenance.is_workshop(it) or str(it.get("rarity", "")) in ["rare", "legendary", "unique", "set"]
 
@@ -235,7 +235,7 @@ static func on_boss_kill(w: Dictionary, adv_id: String, boss: String, foe_kind: 
 
 ## Optional: a 120%+ masterwork may be named by the smith at forging (Recognition.on_crafted).
 static func on_crafted(it: Dictionary) -> void:
-	if not Items.is_equipment(it) or float(it.get("quality", 0.0)) < 120.0 or is_named(it):
+	if bool(it.get("dev", false)) or not Items.is_equipment(it) or float(it.get("quality", 0.0)) < 120.0 or is_named(it):
 		return
 	var n := 0
 	for k in st()["famous"]:
@@ -305,7 +305,7 @@ static func check_names(it: Dictionary, a: Dictionary) -> void:
 # ======================================================================= famous creations
 ## Notes a deed of one of the smith's pieces in the famous-creations register (Hall of Fame).
 static func mark_famous(it: Dictionary, deed: String) -> void:
-	if it.is_empty() or not Provenance.is_workshop(it):
+	if it.is_empty() or bool(it.get("dev", false)) or not Provenance.is_workshop(it):
 		return
 	var key := str(it.get("uid", -1))
 	var f: Dictionary = st()["famous"].get(key, {})
@@ -670,38 +670,11 @@ static func sharpen(it: Dictionary, quality: float, payer := "") -> Dictionary:
 
 
 ## Reforging at forge and anvil: the piece is reworked — made whole, and if the work is better than the
-## original, its craftsmanship rises a little (at most +8 points). Maker, uid and name are kept.
-## Costs one coal. Returns {ok, text, before, after}.
+## original, its craftsmanship rises a little (at most +8 points, less each time, never past the ceiling).
+## Maker, uid and name are kept. Costs one coal. One of the four improvements (Refinement), same history format.
+## Returns {ok, text, before, after, kind, outcome, changes}.
 static func reforge(uid: int, quality: float) -> Dictionary:
-	var it := Game.find_uid(uid)
-	if it.is_empty() or not Items.is_equipment(it):
-		return {"ok": false, "text": "Nothing to reforge."}
-	if Game.count("coal") < 1:
-		return {"ok": false, "text": "You need a sack of coal to heat the forge for reforging."}
-	Game.remove_def("coal", 1)
-	var before := _snapshot(it)
-	var q0 := float(it.get("quality", 70.0))
-	var gain := clampf((quality - q0) * 0.3, 0.0, 8.0) if quality > q0 else 0.0
-	var q1 := minf(125.0, q0 + gain)
-	var f := (0.7 + 0.3 * minf(q1 / 100.0, 1.3)) / (0.7 + 0.3 * minf(q0 / 100.0, 1.3))
-	var st2: Dictionary = it.get("stats", {})
-	for k in st2.keys():
-		if k in ["durability", "durability_max"]:
-			continue
-		if st2[k] is float or st2[k] is int:
-			var v := int(st2[k])
-			st2[k] = maxi(v, int(round(float(v) * f))) if v > 0 else v
-	if st2.has("durability_max"):
-		st2["durability_max"] = maxi(int(st2["durability_max"]), int(round(float(st2["durability_max"]) * f)))
-		st2["durability"] = int(st2["durability_max"])
-	it.erase("broken")
-	it["quality"] = q1
-	var text := ("Reforged at the Ironhand forge (%d%%): craftsmanship %d%% → %d%%, made whole again." % [int(quality), int(round(q0)), int(round(q1))]) if gain >= 0.5 \
-		else "Reforged at the Ironhand forge (%d%%): made whole again; the rework could not better the original %d%%." % [int(quality), int(round(q0))]
-	Provenance.workshop(it, "reforged", text)
-	Game.grant_player_xp("smithing", 12)
-	Events.inventory_changed.emit()
-	return {"ok": true, "text": text, "before": before, "after": _snapshot(it), "kind": "reforged"}
+	return Refinement.perform(uid, "reforge", quality)
 
 
 static func _snapshot(it: Dictionary) -> Dictionary:

@@ -29,7 +29,8 @@ static func note_seen() -> void:
 		return
 	var s := seen()
 	for it in Game.inventory():
-		s[str(it["def"])] = true
+		if not bool(it.get("dev", false)):   # developer-tool spawns teach nothing
+			s[str(it["def"])] = true
 
 
 # ======================================================================= spoiler rules

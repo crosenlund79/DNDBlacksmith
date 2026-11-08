@@ -200,7 +200,8 @@ func inventory() -> Array:
 func add_item(item: Dictionary, notify := true) -> void:
 	if item.is_empty():
 		return
-	SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material"
+	if not bool(item.get("dev", false)):
+		SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material" (not by dev tools)
 	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov"):
 		ItemStory.on_returned(item, str(item.get("_arrives_how", "received")))   # "A Familiar Creation"
 		Provenance.transfer(item, "smith", str(item.get("_arrives_how", "received")), "brindlewick")
@@ -210,17 +211,19 @@ func add_item(item: Dictionary, notify := true) -> void:
 		# batches of different rarity (a flawless potion, an exquisite runestone) keep their own stack
 		var plain: bool = DB.item(item["def"]).get("type", "") == "material" or not item.has("craft")
 		for it in inv:
-			if plain and it["def"] == item["def"] and it.get("rarity", "common") == item.get("rarity", "common"):
+			if plain and it["def"] == item["def"] and it.get("rarity", "common") == item.get("rarity", "common") \
+					and bool(it.get("dev", false)) == bool(item.get("dev", false)):   # developer stacks stay apart
 				it["qty"] = int(it.get("qty", 1)) + int(item.get("qty", 1))
-				if item["def"] == "ore_mithril":
+				if item["def"] == "ore_mithril" and not bool(item.get("dev", false)):
 					set_flag("found_mithril")
 				Events.inventory_changed.emit()
 				return
 	inv.append(item)
-	if item["def"] == "ore_mithril" and not has_flag("found_mithril"):
+	var learns := not bool(item.get("dev", false))   # developer-tool spawns set no knowledge flags
+	if learns and item["def"] == "ore_mithril" and not has_flag("found_mithril"):
 		set_flag("found_mithril")
 		journal("Mithril! The Arcane Foundry is within reach.")
-	if item["def"] == "relic_map":
+	if learns and item["def"] == "relic_map":
 		set_flag("delve_map")
 	if notify:
 		Events.toast.emit("Received: " + Items.display_name(item), "legendary" if item.get("rarity") == "legendary" else "info")

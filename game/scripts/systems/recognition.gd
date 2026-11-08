@@ -78,7 +78,7 @@ static func recent(n := 100, kinds := []) -> Array:
 
 ## Made at the Ironhand forge — by the smith or by one of his apprentices (Provenance.is_workshop).
 static func made_by_smith(it: Dictionary) -> bool:
-	if it.is_empty():
+	if it.is_empty() or bool(it.get("dev", false)):   # developer-tool pieces never earn fame
 		return false
 	if str(it.get("crafted_by", "")).begins_with(SMITH):
 		return true
@@ -88,7 +88,7 @@ static func made_by_smith(it: Dictionary) -> bool:
 # ------------------------------------------------------------------ hooks
 ## Crafting.finish: exceptional work goes on the board.
 static func on_crafted(it: Dictionary) -> void:
-	if it.is_empty():
+	if it.is_empty() or bool(it.get("dev", false)):
 		return
 	var cr: Dictionary = it.get("craft", {})
 	var q := float(it.get("quality", 0))

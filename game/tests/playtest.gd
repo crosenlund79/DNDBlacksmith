@@ -3513,3 +3513,114 @@ func phase_story11() -> void:
 	Saves.delete("story11_pt")
 	await wait(1.5)
 	expect(ItemStory.earned_name(Game.find_uid_anywhere(uid)) == nm, "story11: the name survives save/load")
+
+
+# ======================================================================= UX iteration: refinement & the dev catalogue
+func _rux_node(n: String) -> Node:
+	return panel().find_child(n, true, false) if panel() != null else null
+
+
+func phase_refine_ux() -> void:
+	await click("New Game")
+	await wait(2.5)
+	for pair in [["ingot_iron", 8], ["leather_cured", 4], ["reagent_salt", 4], ["coal", 6]]:
+		Game.add_item(Items.make(str(pair[0]), {"qty": int(pair[1])}), false)
+	var it := _s11_craft("iron_longsword", 88.0, 1)
+	expect(not it.is_empty(), "refine_ux: a longsword is forged")
+	if it.is_empty():
+		return
+	var uid := int(it["uid"])
+	var rare := _s11_craft("iron_longsword", 96.0, 1)
+	if not rare.is_empty():
+		Items.apply_rarity(rare, "rare")
+	# --- the grinding wheel's station screen: the improvement block at a glance
+	Events.open_panel.emit("station", {"id": "grinding_wheel"})
+	await wait(0.8)
+	for c in panel().find_children("*", "ScrollContainer", true, false):
+		(c as ScrollContainer).scroll_vertical = 100000
+	await wait(0.3)
+	expect(_rux_node("OpenRefine") != null, "refine_ux: the grinding wheel offers the improvement bench")
+	await shot("refine_ux_station")
+	if _rux_node("OpenRefine") == null:
+		return
+	(_rux_node("OpenRefine") as Button).pressed.emit()
+	await wait(0.8)
+	expect(panel() is RefinePanel, "refine_ux: the improvement bench opens")
+	if not panel() is RefinePanel:
+		return
+	var rp := panel() as RefinePanel
+	rp._choose(uid)
+	await wait(0.4)
+	expect(_rux_node("BeginWork") != null and not (_rux_node("BeginWork") as Button).disabled, "refine_ux: refining is ready at the wheel")
+	await shot("refine_ux_before")
+	rp.show_details = true
+	rp._build()
+	await wait(0.3)
+	await shot("refine_ux_details")
+	# --- the real check: begin, then finish it (the playtest supplies a fine score if the check is not a ring)
+	(_rux_node("BeginWork") as Button).pressed.emit()
+	await wait(0.8)
+	var host := _check_host()
+	expect(host != null, "refine_ux: the precision check opens")
+	await shot("refine_ux_check")
+	if host is SkillCheckPanel:
+		await play_checks(true)
+	if is_instance_valid(host) and not host.is_queued_for_deletion():
+		host.queue_free()
+		await wait(0.3)
+	if rp.result.is_empty():
+		rp.finish(uid, "refine", "", [112.0])
+	await wait(0.6)
+	expect(not rp.result.is_empty() and bool(rp.result.get("ok", false)), "refine_ux: the work is done (%s)" % str(rp.result.get("outcome", "")))
+	expect(_rux_node("ResultHeading") != null, "refine_ux: the result shows before / after")
+	await shot("refine_ux_result")
+	(_rux_node("ReadHistory") as Button).pressed.emit()
+	await wait(0.8)
+	expect(_s11_overlay("ItemPanel") != null, "refine_ux: the item's history opens")
+	expect(ItemStory.events_of(Game.find_uid(uid)).any(func(e): return str(e.get("kind", "")) == "refined"), "refine_ux: 'refined' in its history")
+	await shot("refine_ux_history")
+	await _s11_close_overlays()
+	# --- rework on the rare piece at the anvil, and an upgrade that is not yet possible
+	if not rare.is_empty():
+		Events.open_panel.emit("refine", {"station": "anvil", "uid": int(rare["uid"]), "action": "rework"})
+		await wait(0.8)
+		await shot("refine_ux_rework")
+		(panel() as RefinePanel)._select("upgrade")
+		await wait(0.4)
+		await shot("refine_ux_upgrade_blocked")
+		await close_panel()
+	# --- the item inspection offers the bench
+	Events.open_panel.emit("item", {"uid": uid, "tab": "Overview"})
+	await wait(0.8)
+	await shot("refine_ux_item_overview")
+	await _s11_close_overlays()
+	# --- F10: the developer tools and the catalogue
+	await press("dev_panel")
+	await wait(0.8)
+	expect(panel() is DevPanel, "refine_ux: F10 opens the developer tools")
+	await shot("refine_ux_devpanel")
+	if _rux_node("OpenCatalogue") == null:
+		return
+	(_rux_node("OpenCatalogue") as Button).pressed.emit()
+	await wait(0.8)
+	expect(panel() is DevCataloguePanel, "refine_ux: the developer catalogue opens")
+	if not panel() is DevCataloguePanel:
+		return
+	var le := _rux_node("CatalogueSearch") as LineEdit
+	le.text = "sword"
+	le.text_changed.emit("sword")
+	await wait(0.4)
+	var row := _rux_node("Row_sword_steel") as Button
+	expect(row != null, "refine_ux: the search lists the steel longsword")
+	if row:
+		row.pressed.emit()
+		await wait(0.4)
+	(_rux_node("SpawnRarity") as OptionButton).select(2)
+	var n0 := Game.inventory().size()
+	(_rux_node("SpawnButton") as Button).pressed.emit()
+	await wait(0.4)
+	expect(Game.inventory().size() == n0 + 1 and bool(Game.inventory()[-1].get("dev", false)), "refine_ux: a developer sword spawned")
+	await click("+1000 g")
+	await wait(0.4)
+	await shot("refine_ux_catalogue")
+	await close_panel()

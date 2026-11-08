@@ -66,5 +66,7 @@ static func on_crafted(it: Dictionary) -> void:
 
 
 static func on_sold(npc: String, _it: Dictionary) -> void:
+	if bool(_it.get("dev", false)):
+		return   # a developer-tool piece never completes an objective
 	if npc == "mira":
 		complete("serve_mira")

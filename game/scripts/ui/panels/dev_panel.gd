@@ -27,12 +27,21 @@ func _ready() -> void:
 	super._ready()
 	out = UIKit.rich("", 19, true)
 	body = UIKit.vbox(8)
+	# UX iteration: the developer catalogue — every item, spawned with quantity / rarity / craftsmanship, and money
+	var cat := UIKit.vbox(4)
+	var cb := UIKit.button("Open the developer catalogue (every item, money)", func():
+		close()
+		Events.open_panel.emit.call_deferred("dev_catalogue", {}), 0)
+	cb.name = "OpenCatalogue"
+	cat.add_child(cb)
+	cat.add_child(UIKit.rich("[i][color=#c8b898]Spawned things are marked as developer items and never count for fame or knowledge.[/color][/i]", 17, true))
+	body.add_child(cat)
 	_section("Time", [
 		["+1 hour", func(): _adv(60)], ["+6 hours", func(): _adv(360)], ["+1 day", func(): _adv(1440)], ["+7 days", func(): _adv(1440 * 7)],
 		["Skip to 7:00 (departures)", func(): Game.skip_to_hour(7); _say("Morning.")],
 		["Skip to 19:00 (inn evening)", func(): Game.skip_to_hour(19); _say("Evening.")]])
 	_section("Purse & skills", [
-		["+1000 gold", func(): Game.add_gold(1000, "dev", "Developer funds"); _say("+1000 g")],
+		["+1000 gold", func(): DevTools.add_money(1000); _say("+1000 g")],
 		["+2 levels in every craft", func(): _skills()],
 		["Unlock every workshop upgrade", func(): _upgrades()]])
 	var kit_btns := []
@@ -110,19 +119,21 @@ func _upgrades() -> void:
 
 func _kit(k: String) -> void:
 	for pair in KITS[k]:
-		Game.add_item(Items.make(pair[0], {"qty": int(pair[1])}), false)
+		var kit_item := Items.make(pair[0], {"qty": int(pair[1])})
+		kit_item["dev"] = true
+		Game.add_item(kit_item, false)
 	Events.inventory_changed.emit()
 	_say(k + " added")
 
 
 func _item(def_id: String, q: float) -> void:
-	Game.add_item(Items.make(def_id, {"quality": q, "crafted_by": "Brannoc Ironhand"}), false)
-	Events.inventory_changed.emit()
+	DevTools.spawn(def_id, 1, "", q)
 	_say(DB.item(def_id)["name"] + " added")
 
 
 func _legend() -> void:
 	var it := Loot.random_equipment("legendary_demo")
+	it["dev"] = true
 	Game.add_item(it, false)
 	Events.legendary_found.emit(it)
 	_say("Legendary added")
@@ -131,6 +142,7 @@ func _legend() -> void:
 func _potions() -> void:
 	var p := Items.make("potion_healing", {"qty": 5, "quality": 90.0})
 	p["for_sale"] = true
+	p["dev"] = true
 	Game.inventory().append(p)
 	Events.inventory_changed.emit()
 	_say("Draughts on the shelf")
@@ -158,7 +170,7 @@ func _iter9_tools() -> void:
 	gold.placeholder_text = "gold (e.g. 5000 or -200)"
 	gold.custom_minimum_size = Vector2(240, 0)
 	row.add_child(gold)
-	row.add_child(UIKit.button("Grant gold", func(): Game.add_gold(int(gold.text), "dev", "Developer funds"); _say("%+d g" % int(gold.text)), 0))
+	row.add_child(UIKit.button("Grant gold", func(): DevTools.add_money(int(gold.text)); _say("%+d g" % int(gold.text)), 0))
 	var find := LineEdit.new()
 	find.placeholder_text = "item id or name…"
 	find.custom_minimum_size = Vector2(280, 0)
@@ -184,13 +196,7 @@ func _iter9_tools() -> void:
 			if str(it["id"]).contains(q) or str(it["name"]).to_lower().contains(q):
 				var def: String = it["id"]
 				var b := UIKit.button(str(it["name"]), func():
-					var stack := bool(DB.item(def).get("stack", false))
-					if stack:
-						Game.add_item(Items.make(def, {"qty": int(qty.value)}), false)
-					else:
-						for k in int(qty.value):
-							Game.add_item(Items.make(def, {"quality": 90.0}), false)
-					Events.inventory_changed.emit()
+					DevTools.spawn(def, int(qty.value), "", 90.0)
 					_say("%s ×%d added" % [DB.item(def)["name"], int(qty.value)]), 0)
 				b.add_theme_font_size_override("font_size", 16)
 				matches.add_child(b)
@@ -300,7 +306,7 @@ func _set_level(skill: String, lvl: int) -> void:
 
 
 func _buy_all_stations() -> void:
-	Game.add_gold(20000, "dev", "Developer funds for stations")
+	Game.add_gold(20000, "dev", "Developer tools: funds for stations")
 	var n := 0
 	for sid in DB.stations:
 		if not Property.is_owned_station(sid):

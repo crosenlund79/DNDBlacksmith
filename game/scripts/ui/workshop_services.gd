@@ -1,21 +1,26 @@
 ## WorkshopServices — station-panel sections for the services that add to a piece's history:
-## sharpening adventurers' blades at the grinding wheel and reforging a piece at the anvil (with the forge).
-## Both run a skill check, then ItemStory.sharpen / ItemStory.reforge record a Provenance.workshop event; the
-## result is shown on a parchment card (FamiliarCard, mode "service"). Enchanting and treatment already exist
-## (Rune Engraving Stand, Infusion Rack).
-## DA: Værkstedsydelser: slibning ved slibestenen og omsmedning ved ambolten — begge skriver i genstandens historie.
+## sharpening adventurers' blades at the grinding wheel, and improving the smith's own pieces (Refinement: refine,
+## rework, upgrade, reforge) — a short "at a glance" block that opens the improvement bench (RefinePanel).
+## Every service records ONE Provenance.workshop event; the result is shown with a before / after comparison.
+## Enchanting and treatment already exist (Rune Engraving Stand, Infusion Rack).
+## DA: Værkstedsydelser: slibning ved slibestenen og forbedring af udstyr — alt skrives i genstandens historie.
 class_name WorkshopServices
 extends RefCounted
 
 
-## The services section for a station ({} = none here). Returns null when the station offers none.
+## The services section for a station. Returns null when the station offers none.
 static func build(station_id: String) -> Control:
-	match station_id:
-		"grinding_wheel":
-			return _sharpen_ui()
-		"anvil":
-			return _reforge_ui()
-	return null
+	var v := UIKit.vbox(10)
+	if station_id == "grinding_wheel":
+		v.add_child(_sharpen_ui())
+	if not Refinement.actions_at(station_id).is_empty():
+		if v.get_child_count() > 0:
+			v.add_child(UIKit.divider())
+		v.add_child(_improve_ui(station_id))
+	if v.get_child_count() == 0:
+		v.free()
+		return null
+	return v
 
 
 static func _sharpen_ui() -> Control:
@@ -58,32 +63,37 @@ static func sharpen_done(aid: String, uid: int, q: float) -> void:
 	Events.open_panel.emit("familiar", {"mode": "service", "uid": uid, "result": r})
 
 
-static func _reforge_ui() -> Control:
+## Improving the smith's own pieces here: what this station does, the best candidate and its one obstacle, and
+## the button that opens the improvement bench (before / after, the check, the result).
+static func _improve_ui(station_id: String) -> Control:
 	var v := UIKit.vbox(6)
-	v.add_child(UIKit.label("Reforge a piece", 26, "heading"))
-	v.add_child(UIKit.label("Rework a piece at forge and anvil: it is made whole, and fine work can raise its craftsmanship a little. The maker's mark and any earned name are kept. One coal.", 18, "body_italic"))
+	var here: Array = Refinement.actions_at(station_id)
+	var names := PackedStringArray()
+	for a in here:
+		names.append(str(Refinement.LABEL[a]))
+	v.add_child(UIKit.label("Improve a piece — " + " · ".join(names), 26, "heading"))
 	var items := Game.inventory().filter(func(x): return Items.is_equipment(x))
 	if items.is_empty():
-		v.add_child(UIKit.label("Nothing in your stores to rework.", 19, "body_italic"))
+		v.add_child(UIKit.label("Nothing in your stores to improve.", 19, "body_italic"))
 		return v
-	var h := UIKit.hbox()
-	var ob := OptionButton.new()
-	ob.name = "ReforgeChoice"
-	for x in items:
-		ob.add_item("%s (%d%%)" % [Items.display_name(x), int(round(float(x.get("quality", 0))))], int(x["uid"]))
-	h.add_child(ob)
-	var b := UIKit.button("Reforge (1 coal)", func():
-		var u := ob.get_item_id(maxi(0, ob.selected))
-		if Game.count("coal") < 1:
-			Events.toast.emit("You need a sack of coal to heat the forge for reforging.", "bad")
-			return
-		var c := Crafting.check_params("anvil")
-		Events.open_panel.emit("skillcheck", {"station": "anvil", "count": 1, "speed": c["speed"], "zone": c["zone"], "title": "Reforging at the anvil",
-			"on_done": func(qs: Array): reforge_done(u, float(qs[0]))}), 240)
-	b.disabled = Game.count("coal") < 1
-	b.tooltip_text = "" if Game.count("coal") >= 1 else "You need coal."
-	h.add_child(b)
-	v.add_child(h)
+	# at a glance: how many pieces could take each action here right now
+	var bits := PackedStringArray()
+	for a in here:
+		var n := 0
+		var why := ""
+		for x in items:
+			var p := Refinement.plan(x, a, {"station": station_id})
+			if bool(p["ok"]) and str(p["station"]) == station_id:
+				n += 1
+			elif why == "" and str(p["station"]) == station_id:
+				why = str(p["why"])
+		bits.append(("[b]%s[/b] %d piece%s ready" % [Refinement.LABEL[a], n, "" if n == 1 else "s"]) if n > 0 else
+			"[b]%s[/b] [color=#9a2a14]%s[/color]" % [Refinement.LABEL[a], why if why != "" else "not here for these pieces"])
+	v.add_child(UIKit.rich(" · ".join(bits), 19))
+	var b := UIKit.button("Open the improvement bench (before / after)", func():
+		Events.open_panel.emit("refine", {"station": station_id}), 0)
+	b.name = "OpenRefine"
+	v.add_child(b)
 	return v
 
 

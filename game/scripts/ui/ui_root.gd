@@ -473,6 +473,12 @@ func _route(id: String, args: Dictionary) -> void:
 			open(ObserverPanel.new(str(args["id"])))
 		"workshop":   # iteration 012: the workshop ledger (apprentices, stations, work queue)
 			open(WorkshopPanel.new())
+		"refine":   # UX iteration: improving existing equipment (Refinement)
+			open(RefinePanel.new(args))
+		"dev_panel":
+			open(DevPanel.new())
+		"dev_catalogue":   # UX iteration: the developer catalogue (F10)
+			open(DevCataloguePanel.new(str(args.get("query", ""))))
 		"apprentice":   # iteration 012: a word with a workshop apprentice
 			if not Apprentices.get_a(str(args.get("id", ""))).is_empty():
 				open(ApprenticeTalkPanel.new(str(args["id"])))
@@ -509,7 +515,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("dev_panel"):
 		get_viewport().set_input_as_handled()
-		if current is DevPanel:
+		if current is DevPanel or current is DevCataloguePanel:
 			close_current()
 		else:
 			open(DevPanel.new())

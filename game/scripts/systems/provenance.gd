@@ -232,18 +232,20 @@ static func link(it: Dictionary, event_id: String) -> void:
 		while (it["history"] as Array).size() > 12:
 			(it["history"] as Array).pop_front()
 	# routine pieces keep a short memory; exceptional ones keep everything
+	# (the first event — how the piece came to be — is always kept)
 	if not is_notable(it):
 		while ev.size() > 24:
-			ev.pop_front()
+			ev.remove_at(1)
 
 
 ## Workshop work on a piece (repair, sharpening, reforging, enchanting, treatment) — recorded, maker untouched.
-static func workshop(it: Dictionary, kind: String, text: String) -> String:
+## `data` (refinement: smith, station, materials, check, outcome, stat changes) is kept on the Lore event.
+static func workshop(it: Dictionary, kind: String, text: String, data := {}) -> String:
 	if not applies(it):
 		return ""
 	if kind == "reforged":
 		st(it)["reforged"] = int(st(it).get("reforged", 0)) + 1
-	return Lore.record(kind, text, {"items": [it], "place": "brindlewick", "importance": 1 if is_notable(it) else 0})
+	return Lore.record(kind, text, {"items": [it], "place": "brindlewick", "importance": 1 if is_notable(it) else 0, "data": data})
 
 
 static func lose(it: Dictionary, where: String, how: String, place := "") -> void:

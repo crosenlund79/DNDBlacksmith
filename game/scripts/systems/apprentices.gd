@@ -1707,7 +1707,7 @@ static func famous_works(app: Dictionary) -> Array:
 	var out := []
 	for u in app.get("creations", []):
 		var it := ItemStory.find(int(u))
-		if it.is_empty():
+		if it.is_empty() or bool(it.get("dev", false)):
 			continue
 		var hall := Recognition.has_key("craft_%d" % int(u)) or Recognition.has_key("epic_%d" % int(u))
 		var notable := Provenance.is_notable(it) or it.has("epic") or ItemStory.is_named(it) or hall or str(it.get("rarity", "common")) in ["rare", "legendary"]
