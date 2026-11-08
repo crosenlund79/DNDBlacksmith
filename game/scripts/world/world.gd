@@ -2180,7 +2180,8 @@ func interact(e: Dictionary) -> void:
 			Events.open_panel.emit("shop", {"tab": "ledger"})
 		"wanted":
 			Events.open_panel.emit("wanted", {})
-		"harbour", "herbalist", "ironfront", "property", "customize", "help", "designer", "skilltree":
+		"harbour", "herbalist", "ironfront", "property", "customize", "help", "designer", "skilltree", \
+				"pawn", "rival_smith", "creatures", "caravan", "hall_of_fame":
 			# venues and desks added in iteration 009 open their panel; the id travels along
 			Events.open_panel.emit(e["kind"], {"id": e["id"]})
 		"bag":

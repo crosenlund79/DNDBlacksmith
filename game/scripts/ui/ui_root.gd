@@ -441,6 +441,18 @@ func _route(id: String, args: Dictionary) -> void:
 			open(MapPanel.new())
 		"customize":
 			open(CustomizePanel.new())
+		"pawn":
+			open(PawnPanel.new(args))
+		"rival_smith":
+			open(RivalSmithPanel.new(args))
+		"creatures":
+			open(CreaturesPanel.new(args))
+		"caravan":
+			open(CaravanPanel.new(args))
+		"hall_of_fame":
+			open(HallOfFamePanel.new(args))
+		"quick_travel":
+			open(QuickTravelMenu.new(args))
 		"wanted":
 			open(WantedPanel.new(str(args.get("tab", "wanted"))))
 		"dossier":

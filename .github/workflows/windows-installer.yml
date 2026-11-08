@@ -1,0 +1,132 @@
+# Ember & Ash — Windows installer.
+# Exports the Godot project for Windows (and Linux, for a packaged self-check), builds an NSIS installer,
+# installs and launches it on a real Windows runner (--smoke-test), and publishes it as a release asset.
+# Runs on demand (workflow_dispatch) and whenever the release version, the installer or the export presets change.
+name: Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "game/RELEASE_VERSION"
+      - "installer/**"
+      - "game/export_presets.cfg"
+      - ".github/workflows/windows-installer.yml"
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.3"
+  GODOT_RELEASE: "4.3-stable"
+
+jobs:
+  build:
+    name: Export & package
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: ver
+        name: Version
+        run: echo "version=$(cat game/RELEASE_VERSION).${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Godot and export templates
+        run: |
+          set -e
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          unzip -q "Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q "Godot_v${GODOT_RELEASE}_export_templates.tpz"
+          mv templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+          godot --version
+
+      - name: Import assets
+        run: godot --headless --path game --import || true
+
+      - name: Export Windows and Linux builds
+        run: |
+          set -e
+          mkdir -p build/windows build/linux
+          godot --headless --path game --export-release "Windows Desktop" ../build/windows/EmberAndAsh.exe
+          godot --headless --path game --export-release "Linux" ../build/linux/EmberAndAsh.x86_64
+          ls -la build/windows build/linux
+
+      - name: Self-check the packaged Linux build
+        run: |
+          set -e
+          timeout 180 ./build/linux/EmberAndAsh.x86_64 --headless -- --smoke-test | tee smoke_linux.txt
+          grep -q "SMOKE OK" smoke_linux.txt
+
+      - name: Build the installer (NSIS)
+        run: |
+          set -e
+          sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+          makensis -V2 -DVERSION="${{ steps.ver.outputs.version }}" installer/ember_and_ash.nsi
+          (cd build/windows && zip -q -r ../EmberAndAsh-Windows-portable.zip .)
+          ls -la build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EmberAndAsh-Windows-${{ steps.ver.outputs.version }}
+          path: |
+            build/EmberAndAsh-Setup.exe
+            build/EmberAndAsh-Windows-portable.zip
+          retention-days: 90
+
+  verify-windows:
+    name: Install & launch on Windows
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: EmberAndAsh-Windows-${{ needs.build.outputs.version }}
+          path: dist
+
+      - name: Silent install
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\EmberAndAsh-Setup.exe" -ArgumentList "/S", "/D=C:\EmberAndAsh" -Wait -PassThru
+          "installer exit code: $($p.ExitCode)"
+          Get-ChildItem C:\EmberAndAsh
+          if (-not (Test-Path "C:\EmberAndAsh\EmberAndAsh.exe")) { throw "game not installed" }
+
+      - name: Launch the installed game (self-check)
+        shell: pwsh
+        run: |
+          $exe = if (Test-Path "C:\EmberAndAsh\EmberAndAsh.console.exe") { "C:\EmberAndAsh\EmberAndAsh.console.exe" } else { "C:\EmberAndAsh\EmberAndAsh.exe" }
+          $p = Start-Process -FilePath $exe -ArgumentList "--headless", "--", "--smoke-test" -Wait -PassThru -NoNewWindow
+          "game exit code: $($p.ExitCode)"
+          $report = Join-Path $env:APPDATA "Godot\app_userdata\Ember & Ash\smoke_test.txt"
+          if (-not (Test-Path $report)) { throw "no smoke-test report at $report" }
+          $text = Get-Content $report -Raw
+          $text
+          if ($text -notmatch "SMOKE OK") { throw "packaged game self-check failed" }
+
+  release:
+    name: Publish release
+    needs: [build, verify-windows]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: EmberAndAsh-Windows-${{ needs.build.outputs.version }}
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ needs.build.outputs.version }}
+          name: Ember & Ash ${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          make_latest: "true"
+          body: |
+            Windows installer for Ember & Ash ${{ needs.build.outputs.version }} (commit ${{ github.sha }}).
+            The installer was installed silently and the game launched with its packaged self-check on a Windows runner before publishing.
+            Download **EmberAndAsh-Setup.exe** and run it; or unzip the portable build.
+          files: |
+            dist/EmberAndAsh-Setup.exe
+            dist/EmberAndAsh-Windows-portable.zip

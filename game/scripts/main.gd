@@ -11,6 +11,29 @@ var menu_layer: CanvasLayer
 func _ready() -> void:
 	get_tree().root.theme = Assets.theme
 	to_menu()
+	if OS.get_cmdline_user_args().has("--smoke-test") or OS.get_cmdline_args().has("--smoke-test"):
+		_smoke_test()
+
+
+## Packaged-build self-check (used by the installer CI): start a new game, let the world run a few
+## seconds, then report data, sprites and errors to stdout and user://smoke_test.txt and quit (0 = ok).
+func _smoke_test() -> void:
+	await get_tree().create_timer(1.0).timeout
+	new_game("journeyman")
+	await get_tree().create_timer(5.0).timeout
+	Game.advance_minutes(120)
+	await get_tree().create_timer(1.0).timeout
+	var ui_ok := is_instance_valid(ui) and ui.get_script() != null and ui.get("hud") != null
+	var ok := DB.items.size() > 50 and DB.recipes.size() > 30 and is_instance_valid(world) and ui_ok and Assets.missing.size() < 5 and Log.error_count == 0
+	var report := "SMOKE %s items=%d recipes=%d stations=%d missing_sprites=%d %s ui=%s log_errors=%d version=%s" % ["OK" if ok else "FAIL",
+		DB.items.size(), DB.recipes.size(), DB.stations.size(), Assets.missing.size(), str(Assets.missing.slice(0, 5)), str(ui_ok), Log.error_count,
+		Engine.get_version_info().get("string", "")]
+	print(report)
+	var f := FileAccess.open("user://smoke_test.txt", FileAccess.WRITE)
+	if f:
+		f.store_string(report + "\n")
+		f.close()
+	get_tree().quit(0 if ok else 1)
 
 
 func _clear() -> void:

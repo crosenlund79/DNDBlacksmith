@@ -743,6 +743,22 @@
   "solid": false,
   "desc": "small flower clump rooted on the bottom edge (sway shader)"
  },
+ "hall_of_fame_board": {
+  "size": [
+   192,
+   96
+  ],
+  "solid": true,
+  "desc": "the smithy's Hall of Fame: dark oak board with brass plaques, pinned parchment honours, a small hammer-and-anvil crest"
+ },
+ "vase": {
+  "size": [
+   48,
+   64
+  ],
+  "solid": true,
+  "desc": "small glazed earthenware vase on a doily; empty or holding wildflowers"
+ },
  "ship_spice": {
   "size": [
    512,

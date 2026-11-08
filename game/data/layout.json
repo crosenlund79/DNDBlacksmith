@@ -1095,6 +1095,18 @@
      0
     ],
     [
+     "hall_of_fame_board",
+     10.45,
+     3.4,
+     90
+    ],
+    [
+     "vase",
+     23.4,
+     7.6,
+     0
+    ],
+    [
      "workbench",
      3.0,
      13.0,
@@ -1511,6 +1523,26 @@
      ],
      "r": 90,
      "label": "Mirror \u2014 change your appearance"
+    },
+    {
+     "kind": "hall_of_fame",
+     "id": "smithy",
+     "pos": [
+      11.0,
+      3.4
+     ],
+     "r": 110,
+     "label": "The Hall of Fame \u2014 the smithy's proudest work"
+    },
+    {
+     "kind": "vase",
+     "id": "quarters",
+     "pos": [
+      23.4,
+      7.9
+     ],
+     "r": 80,
+     "label": "The vase"
     },
     {
      "kind": "customize",
