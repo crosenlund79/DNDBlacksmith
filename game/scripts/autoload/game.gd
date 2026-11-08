@@ -198,6 +198,7 @@ func inventory() -> Array:
 func add_item(item: Dictionary, notify := true) -> void:
 	if item.is_empty():
 		return
+	SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material"
 	var inv := inventory()
 	if DB.item(item["def"]).get("stack", false):
 		# batches of different rarity (a flawless potion, an exquisite runestone) keep their own stack

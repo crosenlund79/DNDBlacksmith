@@ -228,6 +228,34 @@
    "durability": 1.5,
    "difficulty": 2,
    "rarity_bonus": 10
+  },
+  "bearhide": {
+   "name": "Bear Leather",
+   "stat": 1.1,
+   "durability": 1.15,
+   "difficulty": 1,
+   "rarity_bonus": 3
+  },
+  "wyrmhide": {
+   "name": "Wyrm Leather",
+   "stat": 1.25,
+   "durability": 1.4,
+   "difficulty": 2,
+   "rarity_bonus": 8
+  },
+  "orichalcum": {
+   "name": "Orichalcum",
+   "stat": 1.4,
+   "durability": 1.6,
+   "difficulty": 3,
+   "rarity_bonus": 12
+  },
+  "dragonscale": {
+   "name": "Dragon Scale & Bone",
+   "stat": 1.6,
+   "durability": 2.0,
+   "difficulty": 4,
+   "rarity_bonus": 20
   }
  }
 }

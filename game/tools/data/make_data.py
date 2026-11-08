@@ -387,3 +387,7 @@ for _m in EXTRA:
     props.update(getattr(_m, "PROPS", {}))
 W("props.json", props)
 print("props ok", len(props))
+
+# the skill tree (validates that every recipe and station is taught by exactly one node)
+import make_skilltree
+make_skilltree.main()

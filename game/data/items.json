@@ -1184,6 +1184,226 @@
   ]
  },
  {
+  "id": "leather_bear",
+  "name": "Bear Leather",
+  "type": "material",
+  "slot": null,
+  "value": 30,
+  "stats": {},
+  "icon": "leather_bear",
+  "stack": true,
+  "desc": "Thick, warm leather cured from a bear pelt.",
+  "tags": [
+   "leather"
+  ]
+ },
+ {
+  "id": "leather_wyrm",
+  "name": "Wyrm Leather",
+  "type": "material",
+  "slot": null,
+  "value": 75,
+  "stats": {},
+  "icon": "leather_wyrm",
+  "stack": true,
+  "desc": "Troll or wyvern hide tanned until it no longer stinks of the swamp. Fire barely marks it.",
+  "tags": [
+   "leather",
+   "rare"
+  ]
+ },
+ {
+  "id": "ingot_orichalcum",
+  "name": "Orichalcum Ingot",
+  "type": "material",
+  "slot": null,
+  "value": 240,
+  "stats": {},
+  "icon": "ingot_orichalcum",
+  "stack": true,
+  "desc": "Red-gold magical alloy of the old sea-kings, smelted in warded fire.",
+  "tags": [
+   "arcane",
+   "rare"
+  ]
+ },
+ {
+  "id": "reagent_quintessence",
+  "name": "Silverleaf Quintessence",
+  "type": "material",
+  "slot": null,
+  "value": 45,
+  "stats": {},
+  "icon": "reagent_quintessence",
+  "stack": true,
+  "desc": "An advanced alchemical reagent that binds charged metal to plain steel.",
+  "tags": []
+ },
+ {
+  "id": "runestone_original",
+  "name": "Smith's Own Rune",
+  "type": "runestone",
+  "slot": null,
+  "value": 170,
+  "stats": {
+   "magic": 5,
+   "ward": 3
+  },
+  "icon": "runestone_original",
+  "stack": true,
+  "desc": "A rune of your own design — no tablet ever showed it. Set into equipment it lends magic and a ward.",
+  "tags": []
+ },
+ {
+  "id": "runestone_concord",
+  "name": "Concord Runestone",
+  "type": "runestone",
+  "slot": null,
+  "value": 280,
+  "stats": {
+   "fire": 4,
+   "ward": 4,
+   "magic": 4
+  },
+  "icon": "runestone_concord",
+  "stack": true,
+  "desc": "Three runes tuned to one chord: fire, ward and your own.",
+  "tags": []
+ },
+ {
+  "id": "infusion_aether",
+  "name": "Aether Infusion",
+  "type": "potion",
+  "slot": null,
+  "value": 95,
+  "stats": {
+   "magic": 3
+  },
+  "icon": "infusion_aether",
+  "stack": true,
+  "desc": "Brushed onto equipment at the infusion rack: it lends magic for three expeditions.",
+  "tags": []
+ },
+ {
+  "id": "coating_wyrmfire",
+  "name": "Wyrmfire Coating",
+  "type": "potion",
+  "slot": null,
+  "value": 140,
+  "stats": {
+   "fire": 4
+  },
+  "icon": "coating_wyrmfire",
+  "stack": true,
+  "desc": "Bloodroot and wyrm ash: a blade brushed with it burns like dragon's breath.",
+  "tags": []
+ },
+ {
+  "id": "cuirass_steel",
+  "name": "Steel Cuirass",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 230,
+  "stats": {
+   "protection": [
+    13,
+    18
+   ],
+   "durability": 130
+  },
+  "icon": "cuirass_steel",
+  "stack": false,
+  "desc": "Folded steel plate, lighter than iron and harder to dent.",
+  "tags": []
+ },
+ {
+  "id": "bearhide_brigandine",
+  "name": "Bearhide Brigandine",
+  "type": "armor_leather",
+  "slot": "armor",
+  "value": 160,
+  "stats": {
+   "protection": [
+    9,
+    13
+   ],
+   "durability": 100
+  },
+  "icon": "bearhide_brigandine",
+  "stack": false,
+  "desc": "Bear leather over riveted iron plates: a hunter's armour.",
+  "tags": []
+ },
+ {
+  "id": "boots_wyrmleather",
+  "name": "Wyrmleather Boots",
+  "type": "boots",
+  "slot": "boots",
+  "value": 260,
+  "stats": {
+   "protection": [
+    3,
+    5
+   ],
+   "durability": 95,
+   "speed": 4,
+   "fire": 2
+  },
+  "icon": "boots_wyrmleather",
+  "stack": false,
+  "desc": "Monster leather embroidered with heat-wards.",
+  "tags": [
+   "enchanted"
+  ]
+ },
+ {
+  "id": "mithril_plated_cuirass",
+  "name": "Mithril-plated Cuirass",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 580,
+  "stats": {
+   "protection": [
+    17,
+    23
+   ],
+   "durability": 170,
+   "ward": 4,
+   "magic": 3
+  },
+  "icon": "mithril_plated_cuirass",
+  "stack": false,
+  "desc": "Charged mithril plates hammered over steel; they hum when struck.",
+  "tags": [
+   "arcane"
+  ]
+ },
+ {
+  "id": "dragonscale_armor",
+  "name": "Dragonscale Armour",
+  "type": "armor_metal",
+  "slot": "armor",
+  "value": 1800,
+  "stats": {
+   "protection": [
+    22,
+    30
+   ],
+   "durability": 240,
+   "fire": 8,
+   "ward": 8,
+   "magic": 6
+  },
+  "icon": "dragonscale_armor",
+  "stack": false,
+  "desc": "True dragon scale on a dragon-bone frame. Legendary-grade armour; few smiths alive could make it.",
+  "tags": [
+   "arcane",
+   "legendary_grade",
+   "dragon"
+  ]
+ },
+ {
   "id": "bear_pelt",
   "name": "Bear Pelt",
   "type": "material",

@@ -697,6 +697,7 @@ func craft_ui(rid: String, frac: float, dice_mode: String, phys := {}, tag := ""
 func phase_craft() -> void:
 	await click("New Game")
 	await wait(2.5)
+	SkillTree.unlock_all()   # these phases exercise advanced crafting, not skill-tree progression
 	Settings.set_value("gameplay/dice_mode", "auto")
 	# the arcane room is locked but can be inspected
 	await use("station", "arcane_crucible")
@@ -943,6 +944,7 @@ func phase_iter2() -> void:
 	Events.toast.connect(_on_toast)
 	await click("New Game")
 	await wait(2.5)
+	SkillTree.unlock_all()   # these phases exercise advanced crafting, not skill-tree progression
 	# --- figures: no sprite rotation, directional poses instead
 	var rotated := 0
 	for id in W().npcs:
@@ -1164,6 +1166,7 @@ func phase_slice() -> void:
 	Events.toast.connect(_on_toast)
 	await click("New Game")
 	await wait(2.5)
+	SkillTree.unlock_all()   # these phases exercise advanced crafting, not skill-tree progression
 	Settings.set_value("gameplay/dice_mode", "auto")
 	# developer tools (F10) — separate from normal play
 	await press("dev_panel")
@@ -1523,6 +1526,7 @@ func phase_village_reload() -> void:
 func grant_full_workshop() -> void:
 	await wait(1.5)
 	Property.dev_grant_all()
+	SkillTree.unlock_all()
 	main.call("rebuild_world")
 	await wait(2.0)
 
@@ -2334,3 +2338,113 @@ func _ironfront_match(button: String, tag: String) -> void:
 	await wait(3.0)
 	await shot("ironfront_%s_result" % tag)
 	expect(b.m.has("reward"), "ironfront: %s reward applied (%s)" % [tag, str(b.m.get("reward", {}))])
+
+# ======================================================================= iteration 9: skill tree
+## The Blacksmith's Skill Tree, the station panel's search and filters, and the equipment designer.
+func phase_skilltree() -> void:
+	Events.toast.connect(_on_toast)
+	await click("New Game")
+	await wait(2.5)
+	Settings.set_value("gameplay/dice_mode", "auto")
+	expect(SkillTree.learned().size() == 2, "skilltree: a new game knows two nodes")
+	Events.open_panel.emit("skilltree", {})
+	await wait(0.8)
+	expect(panel() is SkillTreePanel, "skilltree: the panel opens")
+	await shot("st_tree_start")
+	# learn a few nodes through the panel (with the skills and gold a few weeks of work would bring)
+	var tp := panel() as SkillTreePanel
+	tp.canvas.select("m_common")
+	await wait(0.3)
+	expect(await click("✦ Learn"), "skilltree: Learn button for Common Ores & Refining")
+	await wait(0.4)
+	expect(SkillTree.is_unlocked("m_common"), "skilltree: learned Common Ores & Refining from the panel")
+	Game.add_item(Items.make("sword_iron", {"quality": 80.0}), false)
+	for sk in ["smithing", "runecraft", "alchemy", "enchanted_stitching"]:
+		Game.grant_player_xp(sk, SkillSys.xp_needed(Game.player_level(sk) + 1))
+	Game.add_gold(300, "test", "playtest funds")
+	for id in ["s_blades", "m_alloys", "s_steel", "r_identify", "r_clean", "r_blank", "al_simple", "al_oils", "l_armour"]:
+		var why := SkillTree.unlock(id)
+		expect(why == "", "skilltree: learned %s %s" % [id, why])
+	tp.canvas.select("")
+	await wait(0.5)
+	await shot("st_tree_progress")
+	# details of a locked node with mixed requirements
+	tp.canvas.select("r_engrave")
+	await wait(0.4)
+	await shot("st_node_details")
+	tp.canvas.select("ar_plating")
+	await wait(0.4)
+	await shot("st_node_details_arcane")
+	tp.canvas.zoom_at(Vector2(600, 400), 1.0 / 1.12 / 1.12 / 1.12)
+	tp.canvas.fit_all()
+	await wait(0.3)
+	await shot("st_tree_fit")
+	await close_panel()
+	# ---- the station panel: search, category chips and availability filters
+	await use("station", "anvil")
+	await wait(0.5)
+	expect(panel() is StationPanel, "station: the anvil panel opens")
+	await shot("st_station_all")
+	var sp := panel() as StationPanel
+	var le := sp.find_child("RecipeSearch", true, false) as LineEdit
+	expect(le != null, "station: search box present")
+	if le:
+		le.text = "steel"
+		le.text_changed.emit("steel")
+	await wait(0.3)
+	var txt := ""
+	for b in _buttons(sp):
+		if b.text == "Begin":
+			txt += _row_text(b).substr(0, 20) + " | "
+	expect(txt.contains("Steel") and not txt.contains("Iron Longsword"), "station: typing 'steel' filters the list (%s)" % txt)
+	await shot("st_station_search")
+	le.text = ""
+	le.text_changed.emit("")
+	await click("Armour (")
+	var ob := sp.find_child("RecipeAvailability", true, false) as OptionButton
+	ob.select(3)
+	ob.item_selected.emit(3)
+	await wait(0.3)
+	await shot("st_station_armour_locked")
+	ob.select(0)
+	ob.item_selected.emit(0)
+	await click("All (")
+	await close_panel()
+	# ---- the equipment designer: a plan that still lacks a few things
+	Game.add_item(Items.make("runestone_ward"), false)
+	Events.open_panel.emit("designer", {})
+	await wait(0.6)
+	expect(panel() is DesignerPanel, "designer: opens")
+	await click("Body armour")
+	await click("Steel — Steel Cuirass")
+	await click("Ward Runestone")
+	await click("Whetstone Oil")
+	await wait(0.3)
+	await shot("st_designer_missing")
+	var miss := DesignerPanel.checklist("steel_cuirass", "runestone_ward", "oil_whetstone").filter(func(q): return not q["ok"])
+	expect(miss.size() >= 2, "designer: the plan lists what is missing (%d)" % miss.size())
+	# a plan that works: an iron longsword with nothing extra — Begin crafting starts the recipe
+	await click("Sword")
+	await click("Iron — Iron Longsword")
+	await click("None")
+	await wait(0.2)
+	var nb := find_button(panel(), "None")
+	if nb:
+		nb.pressed.emit()
+	await wait(0.3)
+	await shot("st_designer_ready")
+	expect(await click("Begin crafting"), "designer: Begin crafting enabled when everything is met")
+	await wait(0.4)
+	expect(Crafting.active() and Crafting.job()["recipe"] == "iron_longsword" and not DesignerPanel.plan().is_empty(), "designer: the base recipe began and the plan is remembered")
+	Crafting.cancel()
+	Game.state.erase("design_plan")
+	# ---- the secret node shows as ??? once its predecessor is known
+	SkillTree.unlock_node_force("s_heat")
+	SkillTree.unlock_node_force("s_alloy")
+	Events.open_panel.emit("skilltree", {})
+	await wait(0.8)
+	(panel() as SkillTreePanel).canvas.select("s_starsteel")
+	await wait(0.4)
+	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
+	await shot("st_tree_secret")
+	await close_panel()

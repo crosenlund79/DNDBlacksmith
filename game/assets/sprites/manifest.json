@@ -714,6 +714,10 @@
    64,
    64
   ],
+  "icons/template_bearhide_brigandine.png": [
+   64,
+   64
+  ],
   "icons/template_belt_leather.png": [
    64,
    64
@@ -723,6 +727,10 @@
    64
   ],
   "icons/template_boots_ranger.png": [
+   64,
+   64
+  ],
+  "icons/template_boots_wyrmleather.png": [
    64,
    64
   ],
@@ -758,7 +766,15 @@
    64,
    64
   ],
+  "icons/template_coating_wyrmfire.png": [
+   64,
+   64
+  ],
   "icons/template_cuirass_iron.png": [
+   64,
+   64
+  ],
+  "icons/template_cuirass_steel.png": [
    64,
    64
   ],
@@ -771,6 +787,10 @@
    64
   ],
   "icons/template_dragon_scale.png": [
+   64,
+   64
+  ],
+  "icons/template_dragonscale_armor.png": [
    64,
    64
   ],
@@ -838,6 +858,10 @@
    64,
    64
   ],
+  "icons/template_infusion_aether.png": [
+   64,
+   64
+  ],
   "icons/template_ingot_adamantine.png": [
    64,
    64
@@ -850,11 +874,19 @@
    64,
    64
   ],
+  "icons/template_ingot_orichalcum.png": [
+   64,
+   64
+  ],
   "icons/template_ingot_steel.png": [
    64,
    64
   ],
   "icons/template_jerkin_leather.png": [
+   64,
+   64
+  ],
+  "icons/template_leather_bear.png": [
    64,
    64
   ],
@@ -866,11 +898,19 @@
    64,
    64
   ],
+  "icons/template_leather_wyrm.png": [
+   64,
+   64
+  ],
   "icons/template_lock.png": [
    32,
    32
   ],
   "icons/template_mace_flanged.png": [
+   64,
+   64
+  ],
+  "icons/template_mithril_plated_cuirass.png": [
    64,
    64
   ],
@@ -915,6 +955,10 @@
    64
   ],
   "icons/template_reagent_aether_dust.png": [
+   64,
+   64
+  ],
+  "icons/template_reagent_quintessence.png": [
    64,
    64
   ],
@@ -970,11 +1014,19 @@
    64,
    64
   ],
+  "icons/template_runestone_concord.png": [
+   64,
+   64
+  ],
   "icons/template_runestone_ember.png": [
    64,
    64
   ],
   "icons/template_runestone_frost.png": [
+   64,
+   64
+  ],
+  "icons/template_runestone_original.png": [
    64,
    64
   ],
@@ -1261,6 +1313,10 @@
   "ui/template_pin.png": [
    32,
    32
+  ],
+  "ui/template_recipe_plaque.png": [
+   44,
+   44
   ],
   "ui/template_skillcheck_ring.png": [
    384,
