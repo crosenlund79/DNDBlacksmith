@@ -201,5 +201,128 @@
     "resist": "frost"
    }
   ]
+ },
+ {
+  "id": "ravens_hold",
+  "name": "Raven's Hold",
+  "exit": "east",
+  "kind": "trade",
+  "days": [
+   2,
+   3
+  ],
+  "danger": 4,
+  "skill": "travelling",
+  "loot": "trade",
+  "requires_flag": "site_ravens_hold",
+  "desc": "A bandit hillfort on the crags north of the Highmarsh road. Plunder, hounds and crossbows.",
+  "threats": [
+   {
+    "name": "hold crossbowmen",
+    "kind": "bandit",
+    "power": 20,
+    "dmg": 8,
+    "weak": "",
+    "resist": ""
+   },
+   {
+    "name": "war-hounds",
+    "kind": "beast",
+    "power": 16,
+    "dmg": 7,
+    "weak": "fire",
+    "resist": ""
+   },
+   {
+    "name": "Black Maud's guard",
+    "kind": "bandit",
+    "power": 26,
+    "dmg": 10,
+    "weak": "",
+    "resist": ""
+   }
+  ]
+ },
+ {
+  "id": "sunken_temple",
+  "name": "The Sunken Temple",
+  "exit": "west",
+  "kind": "relics",
+  "days": [
+   2,
+   3
+  ],
+  "danger": 4,
+  "skill": "relic_hunting",
+  "loot": "barrow",
+  "requires_flag": "site_sunken_temple",
+  "desc": "A drowned temple in the south-western marsh. Relics under the water — and the drowned who keep them.",
+  "threats": [
+   {
+    "name": "drowned acolytes",
+    "kind": "undead",
+    "power": 22,
+    "dmg": 8,
+    "weak": "fire",
+    "resist": "frost"
+   },
+   {
+    "name": "a temple serpent",
+    "kind": "beast",
+    "power": 26,
+    "dmg": 10,
+    "weak": "frost",
+    "resist": ""
+   },
+   {
+    "name": "the Oracle's voice",
+    "kind": "spirit",
+    "power": 30,
+    "dmg": 10,
+    "weak": "magic",
+    "resist": ""
+   }
+  ]
+ },
+ {
+  "id": "drakes_crag",
+  "name": "Drake's Crag",
+  "exit": "north",
+  "kind": "mining",
+  "days": [
+   3,
+   4
+  ],
+  "danger": 6,
+  "skill": "mining",
+  "loot": "mine",
+  "requires_flag": "site_drakes_crag",
+  "desc": "A smoking crag in the north-western mountains: obsidian, ore cracked by drake-fire, and a drake.",
+  "threats": [
+   {
+    "name": "crag harpies",
+    "kind": "beast",
+    "power": 20,
+    "dmg": 8,
+    "weak": "fire",
+    "resist": ""
+   },
+   {
+    "name": "ashen drakelings",
+    "kind": "beast",
+    "power": 30,
+    "dmg": 12,
+    "weak": "frost",
+    "resist": "fire"
+   },
+   {
+    "name": "drake-fire",
+    "kind": "hazard",
+    "power": 36,
+    "dmg": 16,
+    "weak": "",
+    "resist": ""
+   }
+  ]
  }
 ]

@@ -51,6 +51,7 @@ const DEFAULT_KEYS := {
 	"time_slower": [KEY_MINUS, KEY_KP_SUBTRACT],
 	"quick_travel": [KEY_T],
 	"panel_skill_levels": [KEY_U],
+	"panel_world_map": [KEY_G],          # the world map (iteration 011)
 }
 
 

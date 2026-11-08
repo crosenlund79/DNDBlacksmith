@@ -238,6 +238,8 @@ static func on_hour(h: int) -> void:
 			if a["status"] == "in_town" and a.get("activity", "") in ["recovering", ""] and float(a["hp"]) >= float(a["hp_max"]) * 0.9:
 				a["activity"] = "at_inn"
 	match h:
+		5:
+			WorldSites.daily()   # the world moves on: regrowth, threats, successors, rumours
 		6:
 			form_parties()
 		11:
@@ -284,8 +286,10 @@ static func form_parties() -> void:
 		for m in members:
 			m["activity"] = "recruiting"
 		var names := ids.map(func(i): return Adv.get_a(i)["name"])
+		var why: String = str(plan.get("why", ""))
+		st()["parties"][pid]["why"] = why
 		Chronicle.add("party", "%s gathered %s at the Wyvern, bound for %s%s." % [leader["name"], ("a party: " + ", ".join(names.slice(1))) if ids.size() > 1 else "no one — going alone", region(plan["dest"])["name"],
-			" to search for the missing" if plan["goal"] == "search" else ""], {"adv": leader["id"], "party": ids, "dest": plan["dest"]})
+			" to search for the missing" if plan["goal"] == "search" else ((" — " + why) if why != "" else "")], {"adv": leader["id"], "party": ids, "dest": plan["dest"]})
 		made += 1
 	Events.expeditions_changed.emit()
 
@@ -328,12 +332,25 @@ static func choose_destination(members: Array) -> Dictionary:
 			return {"dest": str(mi["dest"]), "goal": "search"}
 	var best := ""
 	var best_s := -1e9
+	var best_why := ""
+	var known := []
 	for rid in cfg().get("regions", {}):
+		# only places the village knows of (WorldSites: discovered, or revealed by the delve map)
+		if not WorldSites.is_discovered(rid):
+			continue
 		var dd: Dictionary = DB.destinations.get(rid, {})
-		if dd.has("requires_flag") and not Game.has_flag(str(dd["requires_flag"])):
+		if dd.has("requires_flag") and not Game.has_flag(str(dd["requires_flag"])) and not WorldSites.cfg().has(rid):
+			continue
+		known.append(rid)
+		# capability: a party does not walk into a place far beyond its strength
+		if not WorldSites.capable(rid, strength, risk):
 			continue
 		var want := strength * (0.6 + risk * 0.8)
 		var s := -absf(rating(rid) * float(diff().get("enemy", 1.0)) - want) + randf() * 18.0
+		# interests, opportunities and ambitions (class and trait, rumours, a lost comrade's gear, rich
+		# resources, an uncleared master for the strong, the leader's plan)
+		var ap := WorldSites.appeal(members, rid, strength, risk)
+		s += float(ap["score"])
 		# a change of scene: the leader went there last time
 		var hist: Array = members[0].get("history", [])
 		if not hist.is_empty() and str(hist[-1].get("dest", "")) == rid:
@@ -341,20 +358,27 @@ static func choose_destination(members: Array) -> Dictionary:
 		if s > best_s:
 			best_s = s
 			best = rid
+			best_why = str(ap["why"])
+	if best == "" and not known.is_empty():
+		# nothing fits: the least dangerous known place (with a little variety among the easiest)
+		known.sort_custom(func(x, y): return rating(x) < rating(y))
+		var easy: Array = known.filter(func(r): return rating(r) <= rating(known[0]) * 1.15)
+		best = str(easy[randi() % easy.size()])
 	if best == "":
 		return {}
-	return {"dest": best, "goal": "explore"}
+	return {"dest": best, "goal": "explore", "why": best_why}
 
 
-## A rough danger rating for a region (strongest group the party may meet).
+## A rough danger rating for a region (strongest group the party may meet), as the site stands now:
+## a slain master is gone, growing threats put more foes at the dens (WorldSites.enemies_at).
 static func rating(rid: String) -> float:
 	var r := 0.0
 	for n in region(rid).get("nodes", []):
 		var p := 0.0
-		for e in n.get("enemies", []):
+		for e in WorldSites.enemies_at(rid, n):
 			p += float(DB.enemies.get(e[0], {}).get("power", 10)) * int(e[1])
 		r = maxf(r, p)
-	return r
+	return r * WorldSites.danger_factor(rid)
 
 
 ## 07:00 — preparing: draughts from the smith's shelf, a last drink.
@@ -470,6 +494,7 @@ static func step(e: Dictionary) -> void:
 		"travel_out":
 			e["at"] = "gate"
 			_j(e, "The party entered %s." % region(e["dest"]).get("name", e["dest"]), "arrive")
+			WorldSites.on_arrive(e)
 			_next_leg(e)
 		"moving":
 			var nid: String = e["leg"]["to"]
@@ -477,6 +502,8 @@ static func step(e: Dictionary) -> void:
 			if not (e["explored"] as Array).has(nid):
 				e["explored"].append(nid)
 			var dur := resolve_node(e, node_of(e["dest"], nid))
+			if not _standing(e).is_empty():
+				WorldSites.on_node(e, node_of(e["dest"], nid))   # gear lost here by an earlier party
 			e["phase"] = "acting"
 			e["next_at"] = Game.now() + dur
 		"acting":
@@ -560,6 +587,8 @@ static func _wiped(e: Dictionary) -> bool:
 ## Resolves what happens at a node; returns how many game minutes it takes.
 static func resolve_node(e: Dictionary, n: Dictionary) -> int:
 	var kind := str(n.get("kind", "path"))
+	if kind in ["encounter", "boss"] and WorldSites.enemies_at(str(e["dest"]), n).is_empty():
+		return WorldSites.visit_cleared(e, n)   # the master is dead and nothing has moved in
 	match kind:
 		"encounter", "boss":
 			return fight(e, n)
@@ -659,8 +688,12 @@ static func chest(e: Dictionary, n: Dictionary) -> int:
 	var r := _check(picker, "dex", dc, "locks")
 	var rec := {"kind": "chest", "node": n["id"], "node_name": n["name"], "t": Game.now(), "checks": [{"who": picker["name"], "what": "open the lock", "txt": r["txt"], "ok": r["ok"]}]}
 	if r["ok"]:
-		var got := _loot(e, str(n.get("loot", "barrow")), int(n.get("tier", 1)) + 1)
-		var g := randi_range(10, 30) * int(n.get("tier", 1))
+		# an emptied cache gives little until it is restocked (WorldSites: depletion and slow regrowth)
+		var rich := WorldSites.take(str(e["dest"]), str(n["id"]))
+		var got := _loot(e, str(n.get("loot", "barrow")), int(n.get("tier", 1)) + 1, rich)
+		var g := int(randi_range(10, 30) * int(n.get("tier", 1)) * maxf(0.15, rich))
+		if rich < 0.3:
+			rec["depleted"] = true
 		e["gold"] = int(e["gold"]) + g
 		rec["loot"] = got
 		_j(e, "%s opened the %s (%s): %d gold%s." % [picker["name"], n["name"].to_lower(), r["txt"], g, (" and " + ", ".join(got)) if not got.is_empty() else ""], "loot", _rec(e, rec))
@@ -674,8 +707,11 @@ static func gather(e: Dictionary, n: Dictionary) -> int:
 	if who.is_empty():
 		who = Adv.get_a(_standing(e)[0])
 	var r := _check(who, "wis", 11, "survival")
-	var got := _loot(e, str(n.get("loot", "forest")), int(n.get("tier", 1)) + (1 if r["ok"] else 0))
-	_j(e, "Gathered at %s%s: %s." % [n["name"], (" — %s knew where to look (%s)" % [who["name"], r["txt"]]) if r["ok"] else "", ", ".join(got) if not got.is_empty() else "little worth carrying"], "loot")
+	# a picked-over place gives less; it grows back slowly (WorldSites)
+	var rich := WorldSites.take(str(e["dest"]), str(n["id"]))
+	var got := _loot(e, str(n.get("loot", "forest")), int(n.get("tier", 1)) + (1 if r["ok"] else 0), rich)
+	_j(e, "Gathered at %s%s: %s%s." % [n["name"], (" — %s knew where to look (%s)" % [who["name"], r["txt"]]) if r["ok"] else "", ", ".join(got) if not got.is_empty() else "little worth carrying",
+		" (it has been picked over)" if rich < 0.5 else ""], "loot")
 	return 60
 
 
@@ -693,7 +729,9 @@ static func puzzle(e: Dictionary, n: Dictionary) -> int:
 		rec["loot"] = [relic["name"]]
 		sage["renown"] = int(sage.get("renown", 0)) + 6
 		_j(e, "%s read the runes of %s (%s); it opened on %s." % [sage["name"], n["name"], r["txt"], relic["name"]], "discovery", _rec(e, rec))
-		Chronicle.add("relic", "%s opened %s in %s and found %s." % [sage["name"], n["name"], region(e["dest"])["name"], relic["name"]], {"adv": sage["id"], "exp": e["id"]})
+		# one Lore event for the find, placed at the site (it also reaches the news feed)
+		Lore.record("discovery", "%s opened %s in %s and found %s." % [sage["name"], n["name"], region(e["dest"])["name"], relic["name"]],
+			{"actors": [sage["id"]], "items": [relic], "place": str(e["dest"]), "importance": 2, "chronicle": true, "data": {"exp": e["id"], "node": n["id"]}})
 	else:
 		_j(e, "%s puzzled over %s, but it stayed shut (%s)." % [sage["name"], n["name"], r["txt"]], "fail", _rec(e, rec))
 	return 45
@@ -717,9 +755,12 @@ static func traveller(e: Dictionary, n: Dictionary) -> int:
 
 
 ## Rolls loot into the expedition's pack; returns the names (difficulty and tier raise the odds).
-static func _loot(e: Dictionary, table: String, tier: int) -> Array:
+## `scale` (0..1) is how rich the place still is: a depleted node yields fewer items, or none.
+static func _loot(e: Dictionary, table: String, tier: int, scale := 1.0) -> Array:
 	var items := Loot.roll_table(table, (tier - 1) * 8.0 + (float(diff().get("loot", 1.0)) - 1.0) * 30.0, tier * 2)
 	items = items.slice(0, mini(items.size(), 1 + tier + _carry(e) / 4))
+	if scale < 1.0:
+		items = items.slice(0, 0 if scale < 0.15 else maxi(1, int(ceil(items.size() * scale))))
 	var names := []
 	for it in items:
 		it["found"] = {"day": Game.day(), "where": region(e["dest"]).get("name", ""), "exp": e["id"]}
@@ -735,7 +776,8 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 	var df := float(diff().get("enemy", 1.0))
 	var foes := []
 	var size_adj := maxi(0, (e["party"] as Array).size() - 2)
-	for spec in n.get("enemies", []):
+	# the site as it stands: a slain master stays dead (or a successor holds the lair), threats add foes
+	for spec in WorldSites.enemies_at(str(e["dest"]), n):
 		var en: Dictionary = DB.enemies.get(spec[0], {})
 		for i in int(spec[1]) + (size_adj if int(spec[1]) > 1 and en.get("power", 10) < 30 else 0):
 			foes.append({"key": "%s_%d" % [spec[0], i], "id": spec[0], "name": en["name"] + ("" if int(spec[1]) == 1 else " %d" % (i + 1)),
@@ -852,7 +894,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 		var got := _loot(e, str(n.get("loot", "")), int(n.get("tier", 1))) if str(n.get("loot", "")) != "" else []
 		rec["loot"] = got
 		var key_action := _key_moment(rec)
-		_j(e, "Fought %s at %s and won%s.%s" % [_group_name(n), n["name"], (" — " + key_action) if key_action != "" else "", (" Loot: " + ", ".join(got) + ".") if not got.is_empty() else ""], "victory", _rec(e, rec))
+		_j(e, "Fought %s at %s and won%s.%s" % [_group_name({"enemies": WorldSites.enemies_at(str(e["dest"]), n)}), n["name"], (" — " + key_action) if key_action != "" else "", (" Loot: " + ", ".join(got) + ".") if not got.is_empty() else ""], "victory", _rec(e, rec))
 		for id in _standing(e):
 			var a := Adv.get_a(id)
 			a["renown"] = int(a.get("renown", 0)) + (12 if rec["boss"] else 3)
@@ -860,7 +902,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 		if rec["boss"]:
 			_boss_down(e, n, rec)
 	else:
-		_j(e, "Fought %s at %s — %s." % [_group_name(n), n["name"], "driven off" if rec["outcome"] == "retreat" else "overwhelmed"], "defeat", _rec(e, rec))
+		_j(e, "Fought %s at %s — %s." % [_group_name({"enemies": WorldSites.enemies_at(str(e["dest"]), n)}), n["name"], "driven off" if rec["outcome"] == "retreat" else "overwhelmed"], "defeat", _rec(e, rec))
 		e["outcome"] = "retreated" if rec["outcome"] == "retreat" else e["outcome"]
 		for id in e["party"]:
 			var a := Adv.get_a(id)
@@ -868,6 +910,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 	# the fallen: death saves depend on difficulty
 	_down_checks(e, rec)
 	companion_heal(e, rec)
+	WorldSites.on_fight(e, n, rec)   # threat changes; notable fights become one Lore event at the site
 	if rec["outcome"] == "retreat":
 		e["outcome"] = "retreated"
 		_force_home(e)
@@ -1149,6 +1192,7 @@ static func _kill(e: Dictionary, a: Dictionary, where: String) -> void:
 			o["morale"] = maxf(0.0, float(o["morale"]) - 25.0)
 			if relation(o, a["id"]) > 20.0:
 				o["achievements"].append({"day": Game.day(), "text": "Lost %s at %s." % [a["name"], where]})
+	WorldSites.on_death(e, a, where)   # the death, once, in the world's memory (place = the site)
 	var mine := Adv._crafted_by_player(a)
 	Adv._die_consequences(a, mine, region(e["dest"]).get("name", where))
 
@@ -1166,8 +1210,9 @@ static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
 	for x in rec["actions"]:
 		if x.get("kind", "") in ["attack", "spell"] and x.get("target_key", "") == str(rec["enemies"][0].get("key", "")) and int(x.get("hp_after", 1)) == 0:
 			killer = x
-	var names: Array = e["party"].map(func(i): return Adv.get_a(i)["name"])
-	Chronicle.add("victory", "%s defeated %s in %s." % [_and(names), boss_name, region(e["dest"])["name"]], {"party": e["party"], "exp": e["id"], "dest": e["dest"]}, true)
+	# the deed, written once (killer, weapon instance, the armour that held, the site — which is now
+	# cleared for good) and posted to the news feed: WorldSites keeps the lair empty from now on
+	WorldSites.on_boss_down(e, n, rec, killer)
 	for id in _standing(e):
 		achieve(Adv.get_a(id), "Defeated %s." % boss_name, 25)
 	if killer.is_empty():
@@ -1176,7 +1221,6 @@ static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
 	var w := Game.find_uid_anywhere(int(killer.get("weapon_uid", -1)))
 	if a.is_empty() or w.is_empty():
 		return
-	Items.add_history(w, "Felled %s in %s, wielded by %s." % [boss_name, region(e["dest"])["name"], a["name"]])
 	# exceptional work earns a name of its own
 	if not w.has("title") and str(w.get("crafted_by", "")).begins_with("Brannoc"):
 		var bane: String = BANE.get("spider" if boss_name.contains("Brood") else foe_kind, "Banebringer")
@@ -1222,6 +1266,7 @@ static func _wipe(e: Dictionary) -> void:
 		a["status"] = "missing"
 		a["activity"] = "missing"
 		w["missing"][id] = {"dest": e["dest"], "node": e["at"], "since": Game.day(), "alive": alive, "exp": e["id"], "searched": false}
+	WorldSites.on_wipe(e)   # one Lore event for the loss; the already-fallen leave their gear at the site
 	Chronicle.add("missing", "%s did not return from %s." % [_and(names), region(e["dest"])["name"]], {"party": e["party"], "exp": e["id"], "dest": e["dest"]}, true)
 	Events.toast.emit("%s have not come back from %s." % [_and(names), region(e["dest"])["name"]], "bad")
 	_archive(e)
@@ -1275,6 +1320,10 @@ static func _reveal_fate(a: Dictionary, mi: Dictionary, finder: String) -> void:
 			w["owner"] = "smith"
 			Game.state["returns"].append(Loot.make_container("chest_recovered", [w], finder, "%s brought back %s's weapon: \"It should come home to the forge that made it.\"" % [finder, a["name"]]))
 			Events.inventory_changed.emit()
+	else:
+		# nobody found them: their gear lies where they fell, until a later party comes across it
+		WorldSites.on_death({"dest": str(mi["dest"]), "id": str(mi.get("exp", ""))}, a, str(node_of(str(mi["dest"]), str(mi["node"])).get("name", "the wilds")))
+		WorldSites.leave_gear(a, str(mi["dest"]), str(mi["node"]), "lost with %s" % a["name"])
 
 
 ## Home again: wounds, experience, levels, loot, gold, renown, the smith's work judged.
@@ -1300,6 +1349,9 @@ static func finish(e: Dictionary) -> void:
 		var fa := Adv.get_a(fid)
 		if fa.get("status", "") == "dead" and int(fa.get("died_day", -1)) >= int(int(e.get("start", 0)) / 1440) + 1 and not alive.is_empty():
 			Adv.bequeath(fa, alive, str(e["dest"]), reg.get("name", ""))
+	# explorers may have spotted a new place nearby (WorldSites: discovery)
+	if not alive.is_empty():
+		WorldSites.on_finish(e)
 	var share := int(e["gold"]) / maxi(1, alive.size())
 	var xp_each := int(e.get("xp", 0)) / maxi(1, alive.size())
 	for id in alive:
@@ -1360,7 +1412,11 @@ static func finish(e: Dictionary) -> void:
 
 static func _share_loot(e: Dictionary, alive: Array) -> void:
 	var offers := []
+	var finders := {}   # uid -> who found a lost piece at the site (it already carries its "found" event)
 	for it in e["loot"]:
+		if it.has("_site_found"):
+			finders[int(it.get("uid", -1))] = Provenance.owner_id(it)
+			it.erase("_site_found")
 		var placed := false
 		if Items.is_equipment(it):
 			for id in alive:
@@ -1370,8 +1426,12 @@ static func _share_loot(e: Dictionary, alive: Array) -> void:
 					if a["equipment"].has(s):
 						a["loot"].append(a["equipment"][s])
 					a["equipment"][s] = it
-					it["owner"] = id
-					Items.add_history(it, "Found in %s by %s." % [region(e["dest"])["name"], a["name"]])
+					if finders.has(int(it.get("uid", -1))):
+						if str(finders[int(it.get("uid", -1))]) != str(id):
+							Provenance.transfer(it, str(id), "given", str(e["dest"]))
+					else:
+						it["owner"] = id
+						Items.add_history(it, "Found in %s by %s." % [region(e["dest"])["name"], a["name"]])
 					placed = true
 					break
 		if not placed and alive.size() > 0:
@@ -1388,6 +1448,9 @@ static func _share_loot(e: Dictionary, alive: Array) -> void:
 	var notable := []
 	for it in offers:
 		var seller := Adv.get_a(alive[randi() % alive.size()])
+		var fd := str(finders.get(int(it.get("uid", -1)), ""))
+		if fd != "" and alive.has(fd):
+			seller = Adv.get_a(fd)   # the finder offers what they found (no second hand-over in its story)
 		Shop.add_offer(seller["id"], it, false)
 		if Regions.is_unidentified(it) or it.get("rarity", "common") in ["rare", "legendary", "unique"] or DB.item(it["def"]).get("tags", []).has("rare"):
 			notable.append(Items.display_name(it))

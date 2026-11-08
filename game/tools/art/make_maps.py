@@ -1348,9 +1348,339 @@ def rock_(M, x, y, r, seed):
     return rock(M, x, y, r, seed, "slate")
 
 
+# ====================================================================== iteration 011 sites (world worker)
+# --- Raven's Hold: a bandit hillfort on the crags
+def rock_pile(M, x, y, s=1.0):
+    o = [shadow_ell(M, x + 3, y, 30 * s, 5 * s)]
+    rnd = random.Random(int(x) + int(y))
+    for i, (dx, dy, r) in enumerate([(-18, -2, 9), (-2, -8, 12), (14, -1, 8), (24, -6, 6), (-8, 2, 6)]):
+        o.append(rock(M, x + dx * s, y + dy * s, r * s, rnd.randint(1, 999)))
+    return J(o)
+
+
+def kennels(M, x, y, s=1.0):
+    """A low plank kennel with a fenced run, gnawed bones and chains."""
+    P = M.P
+    o = [shadow_ell(M, x + 3, y, 40 * s, 6 * s)]
+    o.append(P.shape(rect(x - 30 * s, y - 20 * s, 30 * s, 20 * s, 1), "wood", s=2))
+    o.append(P.shape(poly([(x - 34 * s, y - 18 * s), (x - 15 * s, y - 34 * s), (x + 4 * s, y - 18 * s)]), "straw", s=2))
+    for dx in (-24, -12):
+        o.append(fill(f"M{x+dx*s:.1f},{y:.1f} v{-8*s:.1f} a{3.5*s:.1f},{3.5*s:.1f} 0 0 1 {7*s:.1f},0 v{8*s:.1f} Z", "#140c08"))
+    o.append(palisade(M, x + 22 * s, y + 2 * s, 40 * s, s * 0.6, h=14))
+    o.append(lin(" ".join(f"M{x+dx*s:.1f},{y+dy*s:.1f} l{5*s:.1f},{-2*s:.1f}" for dx, dy in [(8, -2), (14, 1), (26, -1)]), "#efe8dc", 1.8 * s))
+    o.append(lin(f"M{x+2*s:.1f},{y-10*s:.1f} q{6*s:.1f},{6*s:.1f} {12*s:.1f},{2*s:.1f}", PAL["darkiron"][2], 1.4 * s, 0.9, extra='stroke-dasharray="2 1.5"'))
+    return J(o)
+
+
+def hold_wall(M, x, y, s=1.0):
+    """A breached stretch of palisade with a crossbow platform and a crow-black banner."""
+    P = M.P
+    o = [shadow_ell(M, x + 4, y, 52 * s, 7 * s)]
+    o.append(palisade(M, x - 26 * s, y, 44 * s, s, h=22))
+    o.append(palisade(M, x + 30 * s, y + 2 * s, 34 * s, s, h=22))
+    # the breach: fallen stakes
+    o.append(lin(f"M{x-2*s:.1f},{y:.1f} l{10*s:.1f},{-6*s:.1f} M{x+2*s:.1f},{y+2*s:.1f} l{12*s:.1f},{-2*s:.1f}", "#3e2a18", 3 * s) +
+             lin(f"M{x-2*s:.1f},{y:.1f} l{10*s:.1f},{-6*s:.1f} M{x+2*s:.1f},{y+2*s:.1f} l{12*s:.1f},{-2*s:.1f}", "#7a5636", 1.6 * s))
+    # platform on posts
+    for dx in (-40, -24):
+        o.append(lin(f"M{x+dx*s:.1f},{y-20*s:.1f} v{-16*s:.1f}", "#3e2a18", 2.6 * s))
+    o.append(P.shape(rect(x - 44 * s, y - 40 * s, 24 * s, 5 * s, 1), "wood", s=1, lw=1.8))
+    o.append(banner(M, x + 44 * s, y - 20 * s, s, "#2a2224", True))
+    return J(o)
+
+
+def plunder_store(M, x, y, s=1.0):
+    """A storehouse with barrels and crates stacked outside."""
+    P = M.P
+    o = [shadow_ell(M, x + 3, y, 40 * s, 6 * s)]
+    o.append(P.shape(rect(x - 24 * s, y - 26 * s, 34 * s, 26 * s, 1), "wood", s=2))
+    o.append(P.shape(poly([(x - 28 * s, y - 24 * s), (x - 7 * s, y - 40 * s), (x + 14 * s, y - 24 * s)]), "roof_b", s=2))
+    o.append(fill(rect(x - 12 * s, y - 16 * s, 10 * s, 16 * s, 1), "#1a120c"))
+    for i, (dx, dy) in enumerate([(18, 0), (28, -2), (23, -12)]):
+        bx, by = x + dx * s, y + dy * s
+        o.append(P.shape(f"M{bx-5*s:.1f},{by:.1f} q-1,{-6*s:.1f} 0,{-12*s:.1f} h{10*s:.1f} q1,{6*s:.1f} 0,{12*s:.1f} Z", "wood", s=1, lw=1.6))
+        o.append(lin(f"M{bx-5.5*s:.1f},{by-3*s:.1f} h{11*s:.1f} M{bx-5.5*s:.1f},{by-9*s:.1f} h{11*s:.1f}", PAL["darkiron"][2], 1.2 * s))
+    o.append(P.shape(rect(x - 40 * s, y - 9 * s, 12 * s, 9 * s, 1), "burlap", s=1, lw=1.6))
+    o.append(P.shape(rect(x - 36 * s, y - 17 * s, 9 * s, 8 * s, 1), "wood", s=1, lw=1.6))
+    return J(o)
+
+
+def muster_yard(M, x, y, s=1.0):
+    """Trampled mud with a tripwire bell post and red-inked caltrops."""
+    P = M.P
+    o = [fill(blob(x, y - 6 * s, 40 * s, 7, 0.15, 3, squash=0.4), "#8a7050", 0.55)]
+    o.append(lin(f"M{x-22*s:.1f},{y:.1f} v{-30*s:.1f} h{12*s:.1f}", "#3e2a18", 2.4 * s))
+    o.append(fill(f"M{x-12*s:.1f},{y-30*s:.1f} q{-3*s:.1f},{3*s:.1f} {-3*s:.1f},{8*s:.1f} h{8*s:.1f} q0,{-5*s:.1f} {-3*s:.1f},{-8*s:.1f} Z", PAL["bronze"][1]) +
+             lin(f"M{x-12*s:.1f},{y-30*s:.1f} q{-3*s:.1f},{3*s:.1f} {-3*s:.1f},{8*s:.1f} h{8*s:.1f} q0,{-5*s:.1f} {-3*s:.1f},{-8*s:.1f} Z", INK, 1.0))
+    o.append(lin(f"M{x-22*s:.1f},{y-4*s:.1f} L{x+30*s:.1f},{y-2*s:.1f}", INK, 0.8, 0.8))
+    cal = " ".join(f"M{x+dx*s:.1f},{y+dy*s:.1f} l{2*s:.1f},{-3*s:.1f} l{2*s:.1f},{3*s:.1f} M{x+dx*s+2*s:.1f},{y+dy*s-1*s:.1f} v{2.5*s:.1f}" for dx, dy in
+                   [(-8, -10), (4, -14), (14, -8), (-2, -4), (22, -12), (10, 0)])
+    o.append(lin(cal, RUB, 1.2, 0.95))
+    return J(o)
+
+
+def maud_keep(M, x, y, s=1.0):
+    """Black Maud's hall: a stone keep inside the palisade, raven banners, a red skull."""
+    P = M.P
+    o = [shadow_ell(M, x + 4, y, 54 * s, 8 * s)]
+    o.append(P.shape(rect(x - 16 * s, y - 64 * s, 26 * s, 44 * s, 1), "stone", s=3))
+    rim = " ".join(f"h{4*s:.1f} v{-4*s:.1f} h{3*s:.1f} v{4*s:.1f}" for _ in range(4))
+    o.append(P.shape(f"M{x-17*s:.1f},{y-64*s:.1f} {rim} v{4*s:.1f} h{-29*s:.1f} Z", "stone", s=1, lw=1.6))
+    o.append(fill(rect(x - 6 * s, y - 52 * s, 4 * s, 8 * s, 1) + " " + rect(x + 2 * s, y - 40 * s, 4 * s, 7 * s, 1), "#1a120c"))
+    o.append(P.shape(rect(x - 38 * s, y - 36 * s, 24 * s, 16 * s, 1), "wood", s=2))
+    o.append(P.shape(poly([(x - 42 * s, y - 34 * s), (x - 26 * s, y - 48 * s), (x - 10 * s, y - 34 * s)]), "straw", s=2))
+    o.append(palisade(M, x, y, 104 * s, s, h=20))
+    o.append(fill(f"M{x-8*s:.1f},{y:.1f} v{-15*s:.1f} h{16*s:.1f} v{15*s:.1f} Z", "#1a120c"))
+    o.append(banner(M, x - 2 * s, y - 64 * s, s * 0.9, "#2a2224", True))
+    o.append(banner(M, x + 44 * s, y - 20 * s, s * 0.8, RUB, False))
+    o.append(skull(M, x + 34 * s, y - 62 * s, 1.0))
+    return J(o)
+
+
+def ravens_hold(M):
+    N = M.N if hasattr(M, "N") else M.nodes
+    # crags: hachured ridges along the north and east, a scree fan in the middle
+    for pts in [[(30, 140), (150, 90), (260, 130), (380, 70), (470, 110)], [(760, 60), (880, 120), (1000, 70), (1120, 120), (1250, 80)],
+                [(1180, 440), (1230, 540), (1200, 660)], [(380, 700), (480, 640), (600, 690)]]:
+        M.ground.append(hachure_ridge(M, pts, depth=24, side=1, w=1.1))
+    entry_road(M, "gate", (40, 750), [(60, 690)], 13)
+    track = [(N["scree"]["x"], N["scree"]["y"]), (440, 540), (N["kennels"]["x"], N["kennels"]["y"]), (720, 480), (N["yard"]["x"], N["yard"]["y"]),
+             (1000, 330), (N["keep"]["x"], N["keep"]["y"])]
+    M.ground.append(road(M, track, 12))
+    M.corr.append((track, 12))
+    place(M, "gate", signpost, dy=-32)
+    place(M, "scree", rock_pile, dy=-30)
+    place(M, "lookout", stone_tower, dy=-30)
+    M.mark(N["lookout"]["x"] + 34, N["lookout"]["y"] - 30, chest(M, N["lookout"]["x"] + 34, N["lookout"]["y"] - 30, 0.9), 14)
+    place(M, "kennels", kennels, dy=-30)
+    place(M, "wall", hold_wall, dy=-30)
+    place(M, "storehouse", plunder_store, dy=-30)
+    place(M, "yard", muster_yard, dy=-26)
+    place(M, "keep", maud_keep, dy=-26, s=0.95)
+    M.scatter(70, pine, 9, 15, tries=30, bk=0.5)
+    M.scatter(60, rock, 4, 10, tries=30)
+    M.scatter(20, dead_tree, 9, 13, tries=30, bk=0.6)
+    M.ground.append(tufts(M, 160, (30, 30, W - 30, H - 30), op=0.32))
+
+
+# --- the Sunken Temple: a drowned ruin in the marsh
+def column_stump(M, x, y, r, seed):
+    P = M.P
+    rnd = random.Random(seed)
+    h = r * rnd.uniform(1.2, 2.6)
+    o = [fill(ell(x + 2, y, r * 1.1, r * 0.35), "#2e3a30", 0.5)]
+    body = f"M{x-r*0.5:.1f},{y:.1f} v{-h:.1f} l{r*0.3:.1f},{-r*0.25:.1f} l{r*0.35:.1f},{r*0.2:.1f} l{r*0.35:.1f},{-r*0.15:.1f} v{h+r*0.2:.1f} Z"
+    o.append(P.shape(body, "stone", s=1.2, lw=1.8))
+    o.append(lin(f"M{x-r*0.2:.1f},{y-1:.1f} v{-h*0.85:.1f} M{x+r*0.15:.1f},{y-1:.1f} v{-h*0.85:.1f}", INK, 0.6, 0.6))
+    o.append(lin(f"M{x-r*0.9:.1f},{y:.1f} q{r*0.9:.1f},{r*0.3:.1f} {r*1.8:.1f},0", "#e8f0ea", 1.0, 0.7))
+    return J(o)
+
+
+def flooded_court(M, x, y, s=1.0):
+    """A ring of broken columns standing in dark water, a fallen capital."""
+    o = [fill(blob(x, y - 8 * s, 46 * s, 8, 0.1, 5, squash=0.45), PAL["water"][1], 0.8) + lin(blob(x, y - 8 * s, 46 * s, 8, 0.1, 5, squash=0.45), INK, 1.3)]
+    cols = sorted([(x + math.cos(a) * 34 * s, y - 8 * s + math.sin(a) * 14 * s) for a in [i * math.tau / 7 + 0.3 for i in range(7)]], key=lambda p: p[1])
+    for i, (cx, cy) in enumerate(cols):
+        o.append(column_stump(M, cx, cy, 6.5 * s, i + 3))
+    o.append(M.P.shape(rect(x - 8 * s, y - 14 * s, 16 * s, 7 * s, 1), "stone", s=1, lw=1.6))
+    return J(o)
+
+
+def silted_shrine(M, x, y, s=1.0):
+    o = [fill(blob(x, y - 2 * s, 30 * s, 7, 0.12, 2, squash=0.35), PAL["water"][1], 0.75)]
+    o.append(wayshrine(M, x, y - 2 * s, s * 0.9))
+    o.append(lin(f"M{x-26*s:.1f},{y:.1f} q{12*s:.1f},{4*s:.1f} {24*s:.1f},0 M{x+6*s:.1f},{y+2*s:.1f} q{8*s:.1f},{3*s:.1f} {18*s:.1f},0", "#e8f0ea", 1.0, 0.7))
+    return J(o)
+
+
+def lotus_beds(M, x, y, s=1.0):
+    P = M.P
+    o = [pool(M, x, y - 8 * s, 40 * s, 16 * s, 7)]
+    rnd = random.Random(4)
+    for i in range(9):
+        px, py = x + rnd.uniform(-32, 32) * s, y - 8 * s + rnd.uniform(-11, 9) * s
+        o.append(fill(ell(px, py, 5 * s, 3 * s), "#7a9a5a") + lin(ell(px, py, 5 * s, 3 * s), INK, 0.8))
+        if i % 2 == 0:
+            o.append(fill(" ".join(ell(px + math.cos(a) * 1.8 * s, py - 2 * s + math.sin(a) * 1.2 * s, 1.6 * s, 1.0 * s) for a in [k * math.tau / 5 for k in range(5)]), "#f2e6ee") +
+                     fill(ell(px, py - 2 * s, 0.9 * s), GILT))
+    o.append(lin(" ".join(f"M{x+dx*s:.1f},{y+2*s:.1f} l{-1*s:.1f},{-10*s:.1f} M{x+dx*s+2*s:.1f},{y+2*s:.1f} l{1*s:.1f},{-12*s:.1f}" for dx in (-44, -36, 40, 46)), "#4c5834", 1.2))
+    return J(o)
+
+
+def serpent_pool(M, x, y, s=1.0):
+    """A round pool with a great serpent's coils breaking the surface."""
+    P = M.P
+    o = [pool(M, x, y - 8 * s, 42 * s, 17 * s, 11)]
+    for (cx, cy, r) in [(-18, -10, 9), (2, -14, 11), (20, -9, 8)]:
+        d = f"M{x+(cx-r)*s:.1f},{y+cy*s:.1f} a{r*s:.1f},{r*0.8*s:.1f} 0 0 1 {2*r*s:.1f},0"
+        o.append(lin(d, INK, 7.5 * s) + lin(d, "#4e6a54", 5.2 * s) + lin(d, "#8aa07a", 1.4 * s, 0.8, extra='stroke-dasharray="2 2.5"'))
+    hx, hy = x + 30 * s, y - 16 * s
+    head = f"M{hx-6*s:.1f},{hy+2*s:.1f} q{4*s:.1f},{-10*s:.1f} {12*s:.1f},{-6*s:.1f} q{4*s:.1f},{3*s:.1f} {-1*s:.1f},{7*s:.1f} Z"
+    o.append(fill(head, "#4e6a54") + lin(head, INK, 1.4))
+    o.append(fill(ell(hx + 3 * s, hy - 4 * s, 1.0 * s), "#e8d070"))
+    o.append(lin(f"M{hx+5*s:.1f},{hy+1*s:.1f} l{4*s:.1f},{2*s:.1f} m0,0 l{1.5*s:.1f},{-1.5*s:.1f} m{-1.5*s:.1f},{1.5*s:.1f} l{1.5*s:.1f},{1.5*s:.1f}", RUB, 0.9))
+    return J(o)
+
+
+def sanctum(M, x, y, s=1.0):
+    """The temple sanctum half under water: pediment, columns, a drowned doorway, a red skull."""
+    P = M.P
+    o = [shadow_ell(M, x + 4, y, 50 * s, 7 * s)]
+    o.append(P.shape(rect(x - 34 * s, y - 42 * s, 68 * s, 40 * s, 1), "stone", s=3))
+    for dx in (-26, -13, 13, 26):
+        o.append(P.shape(rect(x + dx * s - 3 * s, y - 42 * s, 6 * s, 40 * s, 1), "stone", s=1, lw=1.4))
+    o.append(P.shape(poly([(x - 40 * s, y - 42 * s), (x, y - 62 * s), (x + 40 * s, y - 42 * s)]), "stone", s=2))
+    o.append(lin(f"M{x-28*s:.1f},{y-45*s:.1f} L{x:.1f},{y-58*s:.1f} L{x+28*s:.1f},{y-45*s:.1f}", INK, 0.8, 0.7))
+    o.append(fill(f"M{x-8*s:.1f},{y-2*s:.1f} v{-20*s:.1f} a{8*s:.1f},{8*s:.1f} 0 0 1 {16*s:.1f},0 v{20*s:.1f} Z", "#0e1210"))
+    # the water line across the lower third
+    wl = blob(x, y - 4 * s, 58 * s, 8, 0.08, 9, squash=0.22)
+    o.append(fill(wl, PAL["water"][1], 0.85) + lin(wl, INK, 1.2))
+    o.append(lin(f"M{x-40*s:.1f},{y-6*s:.1f} h{18*s:.1f} M{x+10*s:.1f},{y-2*s:.1f} h{22*s:.1f}", "#e8f0ea", 1.0, 0.75))
+    M.emit.append(glow(M.P, x, y - 14 * s, 18 * s, "#9ad0c0", 0.45))
+    o.append(skull(M, x + 44 * s, y - 56 * s, 1.0))
+    return J(o)
+
+
+def sunken_temple(M):
+    N = M.N if hasattr(M, "N") else M.nodes
+    # broad marsh water and reeds
+    bf = blur_filter(M.P, 8)
+    M.ground.append(fill(blob(760, 380, 420, 10, 0.1, 6, squash=0.62), "#8e9468", 0.4, bf))
+    rr = random.Random(21)
+    for i in range(16):
+        x, y = rr.uniform(420, 1200), rr.uniform(120, 660)
+        rx = rr.uniform(26, 60)
+        if M.free(x, y, rx * 0.6, link=10):
+            M.ground.append(pool(M, x, y, rx, rx * 0.4, i + 20))
+            M.blocks.append((x, y, rx * 0.7))
+    # the broken causeway: stone slabs along the main line
+    cw = [(N["gate"]["x"], N["gate"]["y"]), (N["causeway"]["x"], N["causeway"]["y"]), (N["court"]["x"], N["court"]["y"]), (840, 330), (N["sanctum"]["x"], N["sanctum"]["y"])]
+    q = cr_points(cw, 12)
+    slabs = []
+    for i in range(0, len(q) - 1, 2):
+        if i % 9 == 5:
+            continue   # broken gaps
+        (ax, ay), (bx, by) = q[i], q[i + 1]
+        slabs.append(f"M{ax:.1f},{ay:.1f} L{bx:.1f},{by:.1f}")
+    d = " ".join(slabs)
+    M.ground.append(lin(d, INK, 15, 0.9) + lin(d, "#b8ae98", 11, 1) + lin(d, "#d8ccb0", 3, 0.5))
+    M.corr.append((cw, 12))
+    entry_road(M, "gate", (-20, 400), [(40, 380)], 12)
+    place(M, "gate", signpost, dy=-32)
+    place(M, "causeway", lambda M, x, y, s: J([column_stump(M, x - 18, y, 6 * s, 1), column_stump(M, x + 16, y + 2, 5 * s, 2)]), dy=-28)
+    place(M, "pool", silted_shrine, dy=-28)
+    place(M, "lotus", lotus_beds, dy=-26)
+    place(M, "court", flooded_court, dy=-24)
+    place(M, "serpent", serpent_pool, dy=-26)
+    place(M, "door", rune_door, dy=-30)
+    place(M, "sanctum", sanctum, dy=-26, s=0.95)
+    M.scatter(12, column_stump, 5, 8, tries=60, bk=0.6)
+    M.scatter(26, dead_tree, 10, 15, tries=60, bk=0.6)
+    M.scatter(60, tree, 11, 16, area=lambda x, y: x < 260 or y > 660 or y < 80, tries=30)
+    M.ground.append(tufts(M, 320, (30, 30, W - 30, H - 30), kind="reed", op=0.55))
+
+
+# --- Drake's Crag: a smoking mountain with a hoard
+def obsidian_scree(M, x, y, s=1.0):
+    o = [shadow_ell(M, x + 3, y, 34 * s, 6 * s)]
+    for i, (dx, r) in enumerate([(-20, 10), (-4, 14), (14, 9), (26, 7)]):
+        o.append(crystal_small(M, x + dx * s, y, r * s, i + 31, "obsidian", "#a07ad0"))
+    o.append(rock(M, x - 30 * s, y + 2 * s, 7 * s, 5, "slate"))
+    return J(o)
+
+
+def harpy_nests(M, x, y, s=1.0):
+    """Twig nests on a rock spur, eggs and feathers."""
+    P = M.P
+    o = [rock_pile(M, x, y, s)]
+    for (dx, dy) in [(-10, -16), (16, -12)]:
+        nx, ny = x + dx * s, y + dy * s
+        ring = ell(nx, ny, 11 * s, 5 * s)
+        o.append(fill(ring, "#7a5636") + lin(ring, INK, 1.2))
+        o.append(lin(" ".join(f"M{nx+math.cos(a)*10*s:.1f},{ny+math.sin(a)*4.5*s:.1f} l{math.cos(a+1.4)*6*s:.1f},{math.sin(a+1.4)*2.5*s:.1f}" for a in [k * math.tau / 10 for k in range(10)]), "#3e2a18", 1.0))
+        o.append(fill(ell(nx - 3 * s, ny - 1 * s, 2.6 * s, 2 * s) + " " + ell(nx + 3 * s, ny, 2.4 * s, 1.9 * s), "#e8e0cc") +
+                 lin(ell(nx - 3 * s, ny - 1 * s, 2.6 * s, 2 * s) + " " + ell(nx + 3 * s, ny, 2.4 * s, 1.9 * s), INK, 0.7))
+    o.append(lin(f"M{x+30*s:.1f},{y-4*s:.1f} q{4*s:.1f},{-6*s:.1f} {10*s:.1f},{-4*s:.1f}", "#5a4a42", 1.6 * s))
+    return J(o)
+
+
+def bone_field(M, x, y, s=1.0):
+    """Bones of knights and sheep, a broken shield, a purse-chest."""
+    P = M.P
+    rnd = random.Random(8)
+    o = [fill(blob(x, y - 6 * s, 40 * s, 7, 0.15, 3, squash=0.4), "#b8a888", 0.5)]
+    bones = " ".join(f"M{x+rnd.uniform(-36,30)*s:.1f},{y+rnd.uniform(-16,2)*s:.1f} l{rnd.uniform(-6,6)*s:.1f},{rnd.uniform(-3,3)*s:.1f}" for _ in range(14))
+    o.append(lin(bones, INK, 3.0 * s) + lin(bones, "#efe8dc", 1.8 * s))
+    for (dx, dy) in [(-20, -8), (8, -14)]:
+        o.append(fill(ell(x + dx * s, y + dy * s, 3.5 * s, 3 * s), "#efe8dc") + lin(ell(x + dx * s, y + dy * s, 3.5 * s, 3 * s), INK, 0.9) +
+                 fill(ell(x + dx * s - 1.2 * s, y + dy * s, 0.8 * s) + " " + ell(x + dx * s + 1.2 * s, y + dy * s, 0.8 * s), INK))
+    sh = f"M{x-34*s:.1f},{y-14*s:.1f} h{12*s:.1f} v{6*s:.1f} q{-6*s:.1f},{8*s:.1f} {-6*s:.1f},{8*s:.1f} q0,0 {-6*s:.1f},{-8*s:.1f} Z"
+    o.append(P.shape(sh, "metal", s=1, lw=1.6))
+    o.append(lin(f"M{x-28*s:.1f},{y-14*s:.1f} v{12*s:.1f}", RUB, 1.4))
+    o.append(chest(M, x + 26 * s, y, s * 0.8, "wood"))
+    return J(o)
+
+
+def ash_vents(M, x, y, s=1.0):
+    """Cracked black ground breathing smoke and ember light."""
+    P = M.P
+    o = [fill(blob(x, y - 8 * s, 44 * s, 8, 0.15, 7, squash=0.42), "#3a302a", 0.85) + lin(blob(x, y - 8 * s, 44 * s, 8, 0.15, 7, squash=0.42), INK, 1.2)]
+    cracks = f"M{x-36*s:.1f},{y-6*s:.1f} l{14*s:.1f},{-4*s:.1f} l{10*s:.1f},{5*s:.1f} l{12*s:.1f},{-8*s:.1f} l{14*s:.1f},{4*s:.1f} M{x-6*s:.1f},{y-5*s:.1f} l{4*s:.1f},{-10*s:.1f}"
+    o.append(lin(cracks, INK, 3.0))
+    M.emit.append(lin(cracks, EMBER, 1.6, 0.95))
+    M.emit.append(glow(M.P, x, y - 8 * s, 40 * s, EMBER, 0.45))
+    for (dx, h) in [(-16, 30), (10, 38)]:
+        sm = f"M{x+dx*s:.1f},{y-10*s:.1f} q{-6*s:.1f},{-h*0.3*s:.1f} 0,{-h*0.55*s:.1f} q{6*s:.1f},{-h*0.25*s:.1f} {-2*s:.1f},{-h*0.45*s:.1f}"
+        o.append(lin(sm, "#6a6058", 5 * s, 0.45) + lin(sm, INK, 1.0, 0.5))
+    return J(o)
+
+
+def drake_lair(M, x, y, s=1.0):
+    """A great cave in the crag with a spill of gold, a scorched rim and a red skull."""
+    P = M.P
+    o = [cave_mouth(M, x, y, s * 1.35, "slate", dark="#0e0805")]
+    o.append(fill(blob(x + 2 * s, y - 2 * s, 30 * s, 7, 0.2, 9, squash=0.25), "#1a1210", 0.6))
+    coins = " ".join(ell(x + dx * s, y + dy * s, 2.2 * s, 1.4 * s) for dx, dy in [(-12, -2), (-6, 1), (0, -1), (6, 2), (12, -1), (-2, 3), (4, -3), (16, 2), (-16, 2)])
+    o.append(fill(coins, GILT) + lin(coins, INK, 0.6))
+    M.emit.append(glow(M.P, x, y - 6 * s, 26 * s, EMBER, 0.5))
+    o.append(lin(f"M{x-40*s:.1f},{y-48*s:.1f} q{8*s:.1f},{-6*s:.1f} {16*s:.1f},0 M{x+26*s:.1f},{y-52*s:.1f} q{8*s:.1f},{-8*s:.1f} {16*s:.1f},{-2*s:.1f}", "#2a2018", 3 * s, 0.6))
+    o.append(skull(M, x + 50 * s, y - 50 * s, 1.0))
+    return J(o)
+
+
+def drakes_crag(M):
+    N = M.N if hasattr(M, "N") else M.nodes
+    M.patch_cols = ["#a89270", "#8e8068", "#b8a07a"]
+    # the mountain: concentric hachured ridges climbing to the lair at the top
+    for k, (ry, rx) in enumerate([(560, 600), (430, 520), (300, 430), (190, 300)]):
+        pts = [(640 + math.cos(a) * rx, 120 + ry + math.sin(a) * ry * 0.45) for a in [math.pi + i * math.pi / 10 for i in range(11)]]
+        M.ground.append(hachure_ridge(M, pts, depth=18 + k * 2, side=1, w=1.0, op=0.6))
+    # ash fields and a lava crack
+    bf = blur_filter(M.P, 10)
+    for (x, y, r) in [(980, 260, 120), (650, 130, 140), (300, 420, 90)]:
+        M.ground.append(fill(blob(x, y, r, 7, 0.15, int(x), squash=0.6), "#4a4038", 0.35, bf))
+    entry_road(M, "gate", (640, 760), [(640, 715)], 12)
+    path = [(N["ledge"]["x"], N["ledge"]["y"]), (760, 470), (N["nests"]["x"], N["nests"]["y"]), (980, 380), (N["vents"]["x"], N["vents"]["y"]), (820, 170), (N["hoard"]["x"], N["hoard"]["y"])]
+    M.ground.append(road(M, path, 10, ruts=False))
+    M.corr.append((path, 10))
+    place(M, "gate", signpost, dy=-32)
+    place(M, "ledge", rock_pile, dy=-28)
+    place(M, "obsidian", obsidian_scree, dy=-26)
+    place(M, "nests", harpy_nests, dy=-24)
+    place(M, "bones", bone_field, dy=-24)
+    place(M, "vents", ash_vents, dy=-24)
+    place(M, "hoard", drake_lair, dy=-22, s=0.9)
+    M.scatter(90, rock_, 4, 10, tries=30)
+    M.scatter(70, pine, 9, 14, area=lambda x, y: y > 540 or x < 160 or x > 1140, tries=40)
+    M.scatter(14, dead_tree, 9, 13, tries=40, bk=0.6)
+    for i in range(30):
+        x, y = M.rnd.uniform(500, 1100), M.rnd.uniform(60, 360)
+        M.emit.append(fill(ell(x, y, 1.3), M.rnd.choice([EMBER, EMBER_HOT]), 0.6))
+
+
 BUILDERS = dict(whisperwood=whisperwood, ironroot_mine=ironroot_mine, highmarsh_road=highmarsh_road, barrow_fields=barrow_fields,
-                deep_ironroot=deep_ironroot)
-TONES = dict(deep_ironroot="#a68e68", barrow_fields="#d4c294")
+                deep_ironroot=deep_ironroot, ravens_hold=ravens_hold, sunken_temple=sunken_temple, drakes_crag=drakes_crag)
+TONES = dict(deep_ironroot="#a68e68", barrow_fields="#d4c294", drakes_crag="#c8b48c", sunken_temple="#d0c49a")
 
 
 def jobs():
