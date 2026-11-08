@@ -11,3 +11,8 @@ static func init_new() -> void:
 ## "" when the station is installed in an owned room, otherwise the reason.
 static func station_reason(_station_id: String) -> String:
 	return ""
+
+
+## Is the station installed (placed in an owned room)?
+static func is_installed(_station_id: String) -> bool:
+	return true
