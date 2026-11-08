@@ -8,6 +8,9 @@ var main: Node
 var shots := 0
 var log_lines: Array[String] = []
 var fails := 0
+var current_phase := ""
+## Phases written before iteration 009 exercise crafting with the whole workshop (rooms, stations, skills).
+const FULL_WORKSHOP_PHASES := ["full", "stations", "interiors", "nav", "minigames", "craft", "iter2", "slice", "village"]
 
 
 func _ready() -> void:
@@ -16,6 +19,7 @@ func _ready() -> void:
 	get_tree().root.add_child.call_deferred(main)
 	var args := OS.get_cmdline_user_args()
 	var phase: String = args[0] if args.size() > 0 else "smoke"
+	current_phase = phase
 	await get_tree().create_timer(1.5).timeout
 	await call("phase_" + phase)
 	note("DONE phase %s — %d failures" % [phase, fails])
@@ -121,6 +125,8 @@ func click(text: String, root: Node = null) -> bool:
 			d.pressed.emit()
 			await get_tree().process_frame
 			await get_tree().process_frame
+		if current_phase in FULL_WORKSHOP_PHASES:
+			await grant_full_workshop()
 	return true
 
 
@@ -1507,3 +1513,111 @@ func phase_village_reload() -> void:
 	Events.open_panel.emit("wanted", {"tab": "legends"})
 	await wait(0.6)
 	await shot("village_reload_legends")
+
+
+## Older phases: the whole building, every station and every skill-tree node (as before iteration 009).
+func grant_full_workshop() -> void:
+	await wait(1.5)
+	Property.dev_grant_all()
+	main.call("rebuild_world")
+	await wait(2.0)
+
+
+# ======================================================================= iteration 009: property & workshop
+func _plan_view() -> PropertyPanel.PlanView:
+	var pp := panel() as PropertyPanel
+	return pp.view if pp else null
+
+
+func phase_property() -> void:
+	expect(await click("New Game"), "property: new game")
+	await wait(2.5)
+	Game.state["gold"] = 4000
+	# the modest starting smithy, seen from inside
+	await tp(W().bpos("smithy", 8.0, 7.0))
+	W().camera.zoom = Vector2(0.55, 0.55)
+	await wait(0.6)
+	await shot("prop_start_world")
+	W().camera.zoom = Vector2(1, 1)
+	expect(Property.is_installed("anvil") and not Property.is_installed("rune_engraving_stand"), "1. a modest smithy with only essential stations")
+	# the plan
+	await use("property", "deeds")
+	expect(panel() is PropertyPanel, "property: the deeds open the plan")
+	await shot("prop_plan_start")
+	var pp := panel() as PropertyPanel
+	pp.plan_click(Vector2(3.5, 14.0), MOUSE_BUTTON_LEFT)
+	await wait(0.3)
+	await shot("prop_plan_selected")
+	expect(await click("Buy for"), "property: buy the cobblery")
+	await wait(0.4)
+	expect(Property.owns("cobbler"), "4. the cobblery is bought")
+	pp.plan_click(Vector2(9.5, 14.0), MOUSE_BUTTON_LEFT)
+	await click("Buy for")
+	await wait(0.3)
+	expect(Property.owns("laundry"), "4. the laundry is bought too")
+	# equipment: buy two stations (the skill tree may still forbid some — that is part of progression)
+	await click("Equipment")
+	await wait(0.3)
+	await shot("prop_equipment")
+	for sid in ["rune_engraving_stand", "bellows"]:
+		var err := Property.buy_station(sid)
+		note("   buy %s: %s" % [sid, err if err != "" else "ok"])
+	pp.plan = Property.plan_copy()
+	# layout: place the engraving stand, divide the laundry, cut a doorway
+	await click("Workshop layout")
+	await wait(0.3)
+	if (pp.plan["stored"] as Array).has("rune_engraving_stand"):
+		pp.carrying = "rune_engraving_stand"
+		pp.plan_click(Vector2(3.5, 13.2), MOUSE_BUTTON_LEFT)
+	if (pp.plan["stored"] as Array).has("bellows"):
+		pp.carrying = "bellows"
+		pp.plan_click(Vector2(4.5, 1.8), MOUSE_BUTTON_LEFT)
+	pp.tool = "split"
+	pp.split_vertical = false
+	pp.plan_click(Vector2(10.0, 14.0), MOUSE_BUTTON_LEFT)
+	pp.tool = "door"
+	pp.plan_click(Vector2(7.0, 15.0), MOUSE_BUTTON_LEFT)
+	pp._build()
+	await wait(0.3)
+	var pv := _plan_view()
+	if pv:
+		pv.hover = Vector2(4.0, 6.0)
+		pv.queue_redraw()
+	await shot("prop_plan_edited")
+	expect(Property.validate(pp.plan) == "", "5. the edited layout keeps everything reachable (%s)" % Property.validate(pp.plan))
+	pp._apply()
+	await wait(0.4)
+	await close_panel()
+	await wait(3.0)
+	expect(W() != null and Property.is_installed("rune_engraving_stand") == (Property.st()["stations"] as Dictionary).has("rune_engraving_stand"), "5. the world was rebuilt with the new layout")
+	# walk into the new room and use the relocated station
+	await tp(W().bpos("smithy", 3.5, 14.6))
+	W().camera.zoom = Vector2(0.6, 0.6)
+	await wait(0.5)
+	await shot("prop_world_expanded")
+	W().camera.zoom = Vector2(1, 1)
+	if Property.is_installed("rune_engraving_stand"):
+		await use("station", "rune_engraving_stand")
+		expect(panel() is StationPanel, "6. the relocated station still opens its recipes")
+		await shot("prop_station_relocated")
+		await close_panel()
+	# the room seen with its new decor, and a neighbour's locked room
+	await tp(W().bpos("smithy", 15.0, 12.0))
+	await shot("prop_world_neighbour")
+	# save / restart / load
+	expect(Saves.save("prop_test"), "12. saved")
+	var units := (Property.st()["units"] as Array).size()
+	var rooms_n := Property.rooms().size()
+	main.call("load_slot", "prop_test")
+	await wait(3.0)
+	expect((Property.st()["units"] as Array).size() == units and Property.rooms().size() == rooms_n, "12. property and layout restored")
+	Saves.delete("prop_test")
+	# everything bought: the master's workshop
+	Property.dev_grant_all()
+	main.call("rebuild_world")
+	await wait(3.0)
+	await tp(W().bpos("smithy", 15.0, 11.5))
+	W().camera.zoom = Vector2(0.42, 0.42)
+	await wait(0.6)
+	await shot("prop_world_master")
+	W().camera.zoom = Vector2(1, 1)

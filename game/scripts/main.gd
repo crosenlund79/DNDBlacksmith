@@ -45,6 +45,12 @@ func new_game(difficulty := "journeyman") -> void:
 	_start_world()
 
 
+## Rebuild the village after the smith bought rooms or rearranged the workshop (state is kept; the player
+## stays where he stood).
+func rebuild_world() -> void:
+	_start_world()
+
+
 func continue_game() -> void:
 	var s := Saves.latest_slot()
 	if s != "":

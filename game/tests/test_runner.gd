@@ -21,6 +21,10 @@ func check(cond: bool, name: String) -> void:
 
 func _ready() -> void:
 	Game.new_game()
+	_property()            # needs a genuine new game: a modest smithy
+	# the older crafting-mechanics tests below exercise every discipline: give them the whole workshop
+	Game.new_game()
+	Property.dev_grant_all()
 	_dice()
 	_quality()
 	_skills()
@@ -115,7 +119,7 @@ func _crafting() -> void:
 	var easy := Crafting.check_params("anvil", "hand_axe")
 	check(hard["zone"] < easy["zone"] and hard["speed"] > easy["speed"], "crafting: difficulty narrows the zone and speeds the needle")
 	check(Crafting.recipe_locked_reason("steel_bastard_sword") != "", "crafting: expert recipe locked for a mid-level smith")
-	check(Crafting.recipe_locked_reason("ember_runestone") == "" and Crafting.recipe_locked_reason("healing_draught") == "", "crafting: runecraft and alchemy open from the start")
+	check(Crafting.recipe_locked_reason("ember_runestone") == "" and Crafting.recipe_locked_reason("healing_draught") == "", "crafting: runecraft and alchemy open once the workshop has their stations")
 	check(Crafting.station_locked_reason("arcane_crucible") != "", "crafting: arcane crucible starts locked")
 	# the continuous curve: closer to the centre is always better
 	check(Crafting.check_quality(1.0, 30.0) > Crafting.check_quality(3.0, 30.0), "quality: continuous, closer is better")
@@ -702,6 +706,57 @@ func _living_village() -> void:
 	_run_out(live_id)
 	check(not Expeditions.active().has(live_id), "saves: a restored expedition runs on to its end")
 	Saves.delete("test_exp")
+
+
+## Iteration 009: the smith owns part of a building, buys rooms, edits walls and doors, places stations.
+func _property() -> void:
+	check(Property.owns("start") and not Property.owns("cobbler") and (Property.st()["units"] as Array).size() == 1, "property: a new game owns only the modest smithy")
+	check(Property.is_installed("forge") and Property.is_installed("anvil") and not Property.is_installed("rune_engraving_stand") and not Property.is_installed("arcane_crucible"), "property: only the essential stations are installed")
+	check(Crafting.recipe_locked_reason("iron_longsword") == "" and Crafting.recipe_locked_reason("ember_runestone") != "", "property: an iron longsword can be made, a runestone cannot (%s)" % Crafting.recipe_locked_reason("ember_runestone"))
+	check(Property.validate(Property.plan_copy()) == "", "property: the starting layout is fully reachable (%s)" % Property.validate(Property.plan_copy()))
+	check(Property.unit_state("cobbler") == "available" and Property.unit_state("cellar") == "unavailable", "property: only adjoining rooms are for sale")
+	Game.state["gold"] = 5000
+	check(Property.buy_unit("cellar") != "", "property: a room that does not adjoin cannot be bought")
+	check(Property.buy_unit("cobbler") == "" and Property.owns("cobbler") and Game.gold() == 5000 - Property.unit_price("cobbler"), "property: buying the cobblery")
+	check(Property.unit_state("cellar") == "available", "property: the vault adjoins once the cobblery is yours")
+	# a doorway that already existed between forge room and cobblery is now open
+	var opened := false
+	for d in Property.doors():
+		if (d["between"] as Array).has("rune_room") and Property.door_open(Property.st(), d):
+			opened = true
+	check(opened, "property: the old door to the bought room opens")
+	# station: buy, place, validate
+	check(Property.buy_station("rune_engraving_stand") == "" and not Property.is_installed("rune_engraving_stand"), "property: a bought station waits in storage")
+	var plan := Property.plan_copy()
+	check(Property.place(plan, "rune_engraving_stand", Vector2(3.5, 13.0)) == "", "property: placing a station in the cobblery")
+	check(Property.place(plan, "anvil", Vector2(10.0, 4.0)) != "", "property: a station cannot straddle a wall")
+	check(Property.commit(plan) == "" and Property.is_installed("rune_engraving_stand"), "property: the placement is applied")
+	# walls: put one up, take it down
+	plan = Property.plan_copy()
+	var n0 := (plan["rooms"] as Array).size()
+	check(Property.split(plan, "rune_room", false, 15) == "" and (plan["rooms"] as Array).size() == n0 + 1, "property: a new partition divides the cobblery")
+	check(Property.validate(plan) == "", "property: the divided rooms stay reachable (%s)" % Property.validate(plan))
+	var new_id: String = plan["rooms"][-1]["id"]
+	check(Property.merge(plan, "rune_room", new_id) == "" and (plan["rooms"] as Array).size() == n0, "property: and the wall comes down again")
+	check(Property.split(plan, "shop", true, 14) != "", "property: the shopfront keeps its walls")
+	# a layout that traps a room is refused
+	plan = Property.plan_copy()
+	for d in (plan["doors"] as Array).duplicate():
+		if (d["between"] as Array).has("rune_room") and Property.door_open(plan, d):
+			(plan["doors"] as Array).erase(d)
+	check(Property.commit(plan) != "", "property: bricking up the only door is refused (%s)" % Property.validate(plan))
+	# doors: cut a new one between two owned rooms
+	plan = Property.plan_copy()
+	check(Property.add_door(plan, "forge_room", "rune_room", 6) == "" and Property.commit(plan) == "", "property: a second doorway is cut")
+	# persistence
+	check(Saves.save("test_property"), "property: save")
+	Game.state["property"] = {}
+	Game.state.erase("property")
+	check(Saves.load_slot("test_property") and Property.owns("cobbler") and Property.is_installed("rune_engraving_stand"), "property: ownership and stations survive save/load")
+	Saves.delete("test_property")
+	# an old save without the key keeps the whole building
+	Game.state.erase("property")
+	check(Property.owns("cellar") and Property.is_installed("arcane_anvil"), "property: an old save keeps the whole building")
 
 
 ## Regressions for the failures found when first launching in Godot 4.3.

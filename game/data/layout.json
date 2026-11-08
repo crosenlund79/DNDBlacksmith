@@ -416,7 +416,7 @@
     },
     {
      "id": "study",
-     "name": "Study",
+     "name": "Back Room \u2014 your quarters",
      "rect": [
       19,
       7,
@@ -663,85 +663,99 @@
      "rune_shelf",
      6.55,
      13.7,
-     90
+     90,
+     "ws:runecraft"
     ],
     [
      "rune_glyph_decal",
      3.6,
      14.0,
-     0
+     0,
+     "ws:runecraft"
     ],
     [
      "stone_blocks",
      6.2,
      17.2,
-     0
+     0,
+     "ws:runecraft"
     ],
     [
      "candle",
      3.8,
      16.8,
-     0
+     0,
+     "own"
     ],
     [
      "herb_rack",
      9.0,
      10.55,
-     0
+     0,
+     "ws:alchemy"
     ],
     [
      "bottle_shelf",
      11.0,
      17.6,
-     0
+     0,
+     "ws:alchemy"
     ],
     [
      "spill_decal",
      10.0,
      14.4,
-     0
+     0,
+     "ws:alchemy"
     ],
     [
      "pattern_board",
      14.0,
      10.55,
-     0
+     0,
+     "ws:stitching"
     ],
     [
      "thread_spools",
      18.3,
      10.9,
-     0
+     0,
+     "ws:stitching"
     ],
     [
      "hide_rack",
      18.1,
      17.3,
-     0
+     0,
+     "ws:stitching"
     ],
     [
      "arcane_glyph_decal",
      5.4,
      20.6,
-     0
+     0,
+     "ws:arcane"
     ],
     [
      "arcane_rack",
      3.4,
      22.3,
-     0
+     0,
+     "ws:arcane"
     ],
     [
      "coal_pile",
      13.4,
      19.0,
-     0
+     0,
+     "own"
     ],
     [
      "ore_pile",
      15.0,
      22.2,
-     0
+     0,
+     "own"
     ],
     [
      "barrel",
@@ -759,31 +773,36 @@
      "crate",
      17.0,
      22.2,
-     0
+     0,
+     "own"
     ],
     [
      "woodpile",
      17.4,
      20.6,
-     0
+     0,
+     "own"
     ],
     [
      "grain_sacks",
      13.4,
      22.0,
-     0
+     0,
+     "own"
     ],
     [
      "ingredient_crates",
      13.4,
      20.6,
-     0
+     0,
+     "own"
     ],
     [
      "leather_bundle",
      18.2,
      22.2,
-     0
+     0,
+     "own"
     ],
     [
      "dining_table",
@@ -862,6 +881,236 @@
      22.8,
      9.6,
      0
+    ],
+    [
+     "bed",
+     20.4,
+     11.0,
+     0
+    ],
+    [
+     "workbench",
+     3.0,
+     13.0,
+     0,
+     "occ"
+    ],
+    [
+     "leather_bundle",
+     1.4,
+     16.4,
+     0,
+     "occ"
+    ],
+    [
+     "shelf",
+     3.5,
+     10.55,
+     0,
+     "occ"
+    ],
+    [
+     "chair",
+     4.4,
+     14.2,
+     0,
+     "occ"
+    ],
+    [
+     "candle",
+     3.0,
+     12.8,
+     0,
+     "occ"
+    ],
+    [
+     "crate",
+     5.8,
+     16.8,
+     0,
+     "occ"
+    ],
+    [
+     "rug_brown",
+     3.4,
+     15.4,
+     0,
+     "occ"
+    ],
+    [
+     "washtub",
+     8.6,
+     12.0,
+     0,
+     "occ"
+    ],
+    [
+     "washtub",
+     11.2,
+     12.0,
+     0,
+     "occ"
+    ],
+    [
+     "barrel",
+     12.0,
+     16.8,
+     0,
+     "occ"
+    ],
+    [
+     "sack",
+     8.3,
+     16.8,
+     0,
+     "occ"
+    ],
+    [
+     "table_round",
+     10.0,
+     15.0,
+     0,
+     "occ"
+    ],
+    [
+     "chair",
+     9.0,
+     15.0,
+     0,
+     "occ"
+    ],
+    [
+     "shelf",
+     10.0,
+     10.55,
+     0,
+     "occ"
+    ],
+    [
+     "workbench",
+     15.6,
+     12.6,
+     0,
+     "occ"
+    ],
+    [
+     "chair",
+     16.4,
+     13.8,
+     0,
+     "occ"
+    ],
+    [
+     "chest",
+     14.2,
+     17.0,
+     0,
+     "occ"
+    ],
+    [
+     "rug_red",
+     16.0,
+     15.2,
+     0,
+     "occ"
+    ],
+    [
+     "crate",
+     13.5,
+     19.2,
+     0,
+     "occ"
+    ],
+    [
+     "crate",
+     14.7,
+     19.2,
+     0,
+     "occ"
+    ],
+    [
+     "sack",
+     13.5,
+     21.8,
+     0,
+     "occ"
+    ],
+    [
+     "shelf",
+     16.0,
+     18.55,
+     0,
+     "occ"
+    ],
+    [
+     "barrel",
+     2.0,
+     19.6,
+     0,
+     "occ"
+    ],
+    [
+     "barrel",
+     2.0,
+     20.8,
+     0,
+     "occ"
+    ],
+    [
+     "washtub",
+     5.0,
+     20.4,
+     0,
+     "occ"
+    ],
+    [
+     "washtub",
+     7.6,
+     20.4,
+     0,
+     "occ"
+    ],
+    [
+     "crate",
+     10.4,
+     21.8,
+     0,
+     "occ"
+    ],
+    [
+     "woodpile",
+     10.6,
+     19.4,
+     0,
+     "occ"
+    ],
+    [
+     "sack",
+     2.0,
+     11.4,
+     0,
+     "bare"
+    ],
+    [
+     "crate",
+     8.4,
+     16.8,
+     0,
+     "bare"
+    ],
+    [
+     "crate",
+     17.8,
+     16.8,
+     0,
+     "bare"
+    ],
+    [
+     "sack",
+     1.6,
+     21.8,
+     0,
+     "bare"
     ],
     [
      "bed_double",
@@ -1028,6 +1277,26 @@
      "label": "Your bed \u2014 sleep until morning (autosave)"
     },
     {
+     "kind": "bed",
+     "id": "cot",
+     "pos": [
+      20.4,
+      11.0
+     ],
+     "r": 100,
+     "label": "Your cot \u2014 sleep until morning (autosave)"
+    },
+    {
+     "kind": "property",
+     "id": "deeds",
+     "pos": [
+      23.0,
+      12.4
+     ],
+     "r": 100,
+     "label": "Deeds, plans & workshop equipment"
+    },
+    {
      "kind": "ledger",
      "id": "study_desk",
      "pos": [
@@ -1156,6 +1425,104 @@
    },
    "customer_rooms": [
     "shop"
+   ],
+   "units": [
+    {
+     "id": "start",
+     "name": "Ironhand Smithy",
+     "rooms": [
+      "shop",
+      "forge_room",
+      "stock_hall",
+      "study"
+     ],
+     "price": 0,
+     "occupant": "Brannoc Ironhand",
+     "desc": "A modest shopfront, a smoky smithing hall, a narrow stock hall and a back room with a cot."
+    },
+    {
+     "id": "cobbler",
+     "name": "Hesketh's Cobblery",
+     "rooms": [
+      "rune_room"
+     ],
+     "price": 320,
+     "occupant": "Old Hesketh, cobbler",
+     "desc": "Stone-walled and cool, behind your forge. Hesketh wants to retire to his daughter's farm.",
+     "becomes": "a runecrafting room"
+    },
+    {
+     "id": "laundry",
+     "name": "Widow Marla's Laundry",
+     "rooms": [
+      "alchemy_room"
+     ],
+     "price": 360,
+     "occupant": "Marla Wend, laundress",
+     "desc": "Steam, tubs and lye. Good ventilation \u2014 an alchemist's dream.",
+     "becomes": "an alchemy room"
+    },
+    {
+     "id": "weaver",
+     "name": "The Weaver's Room",
+     "rooms": [
+      "leather_room"
+     ],
+     "price": 340,
+     "occupant": "Ilse the weaver",
+     "desc": "Bright, with long tables. Ilse is moving to the harbour lofts.",
+     "becomes": "a leatherworking and stitching room"
+    },
+    {
+     "id": "chandler",
+     "name": "Chandler's Storeroom",
+     "rooms": [
+      "material_store"
+     ],
+     "price": 240,
+     "occupant": "Pell's chandlery (storage)",
+     "desc": "Dry, with a loading door to the yard. Room for ore, coal and hides.",
+     "becomes": "a material store"
+    },
+    {
+     "id": "cellar",
+     "name": "The Old Dye-Works",
+     "rooms": [
+      "arcane_room"
+     ],
+     "price": 950,
+     "occupant": "nobody \u2014 sealed since the dye-works closed",
+     "desc": "A long stone vault with old vats and strange stains. Thick walls, fit to hold arcane energies.",
+     "becomes": "an arcane foundry"
+    },
+    {
+     "id": "apartment",
+     "name": "The Ashby Apartment",
+     "rooms": [
+      "living",
+      "bedroom",
+      "storage",
+      "pantry"
+     ],
+     "price": 700,
+     "occupant": "the Ashby family",
+     "desc": "A proper home: a living room with a hearth, a bedroom, storage and a pantry with a bath.",
+     "becomes": "your home"
+    }
+   ],
+   "locked_rooms": [
+    "shop"
+   ],
+   "entrance": [
+    14.0,
+    0.6
+   ],
+   "starter_stations": [
+    "forge",
+    "anvil",
+    "crucible",
+    "quench_trough",
+    "grinding_wheel"
    ]
   },
   {

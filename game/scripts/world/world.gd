@@ -368,6 +368,8 @@ func _interior_walls(b: Dictionary, r: Rect2) -> void:
 
 
 func _build_building(b: Dictionary, is_area: bool) -> void:
+	if str(b.get("id", "")) == Property.BID and not is_area:
+		b = _smithy_view(b)
 	var r := brect(b)
 	if is_area:
 		# interior areas live outside the village map: frame them with dim roof timbers, not a void
@@ -382,6 +384,8 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 		_tex_poly(_rect_pts(rr), room.get("floor", "floor_wood"), floor_layer, tint)
 		rooms_info.append({"id": room["id"], "name": room.get("name", room["id"]), "rect": rr})
 	_interior_walls(b, r)
+	if str(b.get("id", "")) == Property.BID and not is_area:
+		_smithy_overlays(r)
 	var wall_tex := "wall_timber" if b.get("roof", "") == "thatch" else "wall_stone"
 	_draw_walls(_wall_segments(r, b.get("doors", [])), wall_tex)
 	# doors: mat + light outside
@@ -555,10 +559,16 @@ func _furnish() -> void:
 
 # ======================================================================= stations
 func _build_stations() -> void:
-	var override: Dictionary = DB.building("smithy").get("station_pos", {})
-	for st in DB.stations.values():
-		var p: Array = override.get(st["id"], st["pos"])
-		var pos := bpos("smithy", float(p[0]), float(p[1]))
+	# only the stations installed in rooms the smith owns, where he placed them (Property)
+	var mains := Property.main_stations()
+	for sid in Property.st()["stations"]:
+		if not Property.is_installed(sid):
+			continue
+		var st := DB.station(sid)
+		if st.is_empty():
+			continue
+		var tpos := Property.pos_of(sid)
+		var pos := bpos("smithy", tpos.x, tpos.y)
 		var size := Vector2(float(st["size"][0]), float(st["size"][1]))
 		var tex := Assets.get_tex("stations/" + st["id"], Vector2i(int(size.x), int(size.y)))
 		_station_base(st["id"], pos, size)
@@ -572,12 +582,17 @@ func _build_stations() -> void:
 			node.add_child(s)
 			ysort.add_child(node)
 			_solid(Rect2(pos - size * Vector2(0.38, 0.28), size * Vector2(0.76, 0.56)))
+			s.flip_h = Property.flipped(sid)
 			station_sprites[st["id"]] = s
 		else:
 			var fs := _sprite("stations/" + st["id"], pos, floor_layer)
+			fs.flip_h = Property.flipped(sid)
 			station_sprites[st["id"]] = fs
 			node = fs
-		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", st["id"], st["name"])
+		var is_main := mains.has(sid)
+		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", st["id"], str(st["name"]) + (" — choose recipes here" if is_main else ""))
+		if is_main:
+			_main_station_mark(pos, size)
 		for fx in st.get("fx", []):
 			_station_fx(fx, pos, size)
 	_refresh_station_locks()
@@ -673,8 +688,8 @@ func _station_fx(fx: String, pos: Vector2, size: Vector2) -> void:
 
 
 func station_pos(id: String) -> Vector2:
-	var p: Array = DB.building("smithy").get("station_pos", {}).get(id, DB.station(id).get("pos", [0, 0]))
-	return bpos("smithy", float(p[0]), float(p[1]))
+	var tpos := Property.pos_of(id)
+	return bpos("smithy", tpos.x, tpos.y)
 
 
 ## Ember marker bobbing over the station the current crafting job needs next.
@@ -787,7 +802,7 @@ func _build_atmosphere() -> void:
 		shade.uv = PackedVector2Array([Vector2(0, 0), Vector2(256, 0), Vector2(256, 256), Vector2(0, 256)])
 		shade.z_index = 1
 		floor_layer.add_child(shade)
-		var fp := station_pos("forge")
+		var fp := station_pos("forge") if Property.is_installed("forge") else fr.get_center()
 		var glow := FX.light(Color("#ff7a20"), 380.0, 0.9, true)
 		glow.position = fp + Vector2(0, 30)
 		add_child(glow)
@@ -1423,6 +1438,52 @@ func _update_focus() -> void:
 	if best.get("label", "") != _focus.get("label", ""):
 		_focus = best
 		Events.open_panel.emit("prompt", {"text": best.get("label", "")})
+		_set_highlight(best)
+	if _hl_ring and _hl_ring.visible:
+		_hl_t += get_process_delta_time()
+		_hl_ring.modulate.a = 0.55 + 0.35 * sin(_hl_t * 4.0)
+		if _focus.get("kind", "") == "npc" and npcs.has(_focus.get("id", "")):
+			_hl_ring.position = (npcs[_focus["id"]] as Node2D).position + Vector2(0, 6)
+
+
+var _hl_ring: Line2D
+var _hl_sprite: CanvasItem
+var _hl_t := 0.0
+
+
+## Highlights whatever the smith would use: a gilt ring on the floor and a brighter sprite for stations.
+func _set_highlight(e: Dictionary) -> void:
+	if _hl_ring == null:
+		_hl_ring = Line2D.new()
+		var pts := PackedVector2Array()
+		for i in 33:
+			var a := TAU * i / 32.0
+			pts.append(Vector2(cos(a) * 46.0, sin(a) * 22.0))
+		_hl_ring.points = pts
+		_hl_ring.width = 3.5
+		_hl_ring.default_color = Color("#e8c060")
+		_hl_ring.z_index = -1
+		floor_layer.add_child(_hl_ring)
+	if is_instance_valid(_hl_sprite):
+		_hl_sprite.self_modulate = Color.WHITE
+	_hl_sprite = null
+	if e.is_empty():
+		_hl_ring.visible = false
+		return
+	_hl_ring.visible = true
+	var pos: Vector2 = e.get("pos", Vector2.ZERO)
+	var radius := 46.0
+	if e.get("kind", "") == "station" and station_sprites.has(e.get("id", "")):
+		var size: Array = DB.station(str(e["id"]))["size"]
+		radius = float(size[0]) * 0.55
+		pos += Vector2(0, float(size[1]) * 0.42)
+		_hl_sprite = station_sprites[e["id"]]
+		_hl_sprite.self_modulate = Color(1.18, 1.12, 0.98)
+	elif e.get("kind", "") == "npc":
+		radius = 34.0
+		pos += Vector2(0, 6)
+	_hl_ring.scale = Vector2(radius / 46.0, radius / 46.0)
+	_hl_ring.position = pos
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1471,6 +1532,197 @@ func interact(e: Dictionary) -> void:
 					ex = x
 			var dest: Dictionary = DB.destinations.get(ex.get("region", ""), {})
 			Events.toast.emit("%s — %s Send hirelings from the Hirelings ledger [H]." % [ex.get("label", ""), dest.get("desc", "")], "info")
+
+
+# ======================================================================= the smith's property
+## The smithy as the smith owns and arranged it: his rooms and partitions, open and locked doors, the
+## neighbours' furnishings in rooms he has not bought, workshop clutter where his stations stand.
+func _smithy_view(src: Dictionary) -> Dictionary:
+	var b := src.duplicate()
+	var rooms := []
+	for rm in Property.rooms():
+		var r2: Dictionary = (rm as Dictionary).duplicate(true)
+		if not Property.room_owned(rm):
+			var t: Array = r2.get("tint", [1.0, 1.0, 1.0])
+			r2["tint"] = [float(t[0]) * 0.62, float(t[1]) * 0.58, float(t[2]) * 0.55]
+		rooms.append(r2)
+	b["rooms"] = rooms
+	var open := []
+	for d in Property.doors():
+		if Property.door_open(Property.st(), d):
+			open.append(d)
+	b["room_doors"] = open
+	b["furniture"] = _smithy_furniture(src)
+	var inter := []
+	for it in src.get("interact", []):
+		var ip: Array = it["pos"]
+		var host := Property.room_at_tile(Property.rooms(), Vector2(float(ip[0]), float(ip[1])))
+		if not host.is_empty() and Property.room_owned(host):
+			inter.append(it)
+	b["interact"] = inter
+	b["spots"] = _smithy_spots(src)
+	return b
+
+
+func _prop_rect_tiles(id: String, p: Vector2) -> Rect2:
+	var info: Dictionary = DB.props.get(id, {"size": [64, 64]})
+	var sz := Vector2(float(info["size"][0]), float(info["size"][1])) / T
+	return Rect2(p - sz * 0.5, sz)
+
+
+## Would a piece of furniture at tile `p` clash with a station, block a doorway or straddle a wall?
+func _furniture_clashes(id: String, p: Vector2, host: Dictionary) -> bool:
+	var fr := _prop_rect_tiles(id, p).grow(-0.08)
+	if not Property.rect(host).grow(0.15).encloses(fr):
+		return true
+	for sid in Property.st()["stations"]:
+		if Property.is_installed(sid) and fr.intersects(Property.footprint(sid, Property.st()["stations"][sid]).grow(0.15)):
+			return true
+	for d in Property.doors():
+		var c := Property.door_center(Property.st(), d)
+		if c != Vector2.INF and fr.grow(0.55).has_point(c):
+			return true
+	return false
+
+
+const CLUTTER := {
+	"classic": ["coal_pile", "iron_bars", "ore_pile", "soot_decal"],
+	"runecraft": ["stone_blocks", "rune_glyph_decal", "rune_shelf", "candle"],
+	"alchemy": ["ingredient_crates", "spill_decal", "bottle_shelf", "herb_rack"],
+	"stitching": ["leather_bundle", "hide_rack", "thread_spools", "pattern_board"],
+	"arcane": ["arcane_rack", "arcane_glyph_decal", "candle", "crate"],
+}
+
+
+func _smithy_furniture(src: Dictionary) -> Array:
+	var out := []
+	var rooms := Property.rooms()
+	var decorated := {}
+	for f in src.get("furniture", []):
+		var p := Vector2(float(f[1]), float(f[2]))
+		var host := Property.room_at_tile(rooms, p)
+		if host.is_empty():
+			continue
+		var owned := Property.room_owned(host)
+		var tag := str(f[4]) if (f as Array).size() > 4 else ""
+		var show := true
+		if tag == "occ":
+			show = not owned
+		elif tag == "own":
+			show = owned
+		elif tag == "bare":
+			show = owned and Property.stations_in(host).is_empty()
+		elif tag.begins_with("ws:"):
+			show = owned and Property.room_discipline(host) == tag.substr(3)
+			if show:
+				decorated[str(host["id"])] = true
+		if show and owned and _furniture_clashes(str(f[0]), p, host):
+			show = false
+		if show:
+			out.append(f)
+	# rooms the smith has turned into workshops get the clutter of their trade
+	for rm in rooms:
+		if not Property.room_owned(rm) or decorated.has(str(rm["id"])):
+			continue
+		var disc := Property.room_discipline(rm)
+		if disc == "" or not CLUTTER.has(disc) or str(rm["id"]) == "forge_room":
+			continue
+		var rr := Property.rect(rm)
+		var corners := [rr.position + Vector2(0.9, 0.9), Vector2(rr.end.x - 0.9, rr.position.y + 0.9), Vector2(rr.position.x + 0.9, rr.end.y - 0.9), rr.end - Vector2(0.9, 0.9)]
+		var items: Array = CLUTTER[disc]
+		for i in corners.size():
+			var c: Vector2 = corners[i]
+			var pid: String = items[i % items.size()]
+			if not _furniture_clashes(pid, c, rm):
+				out.append([pid, c.x, c.y, 0])
+	return out
+
+
+## Spots inside the smithy must be in rooms he owns; hirelings work next to the station of their craft.
+func _smithy_spots(src: Dictionary) -> Dictionary:
+	var out := {}
+	var rooms := Property.rooms()
+	var fallback := Vector2(21.5, 9.0)
+	for r in rooms:
+		if r["id"] == "study" and Property.room_owned(r):
+			fallback = Property.rect(r).get_center()
+	var work_disc := {"work_smithing": "classic", "work_alchemy": "alchemy", "work_runecraft": "runecraft"}
+	for name in src.get("spots", {}):
+		var a: Array = src["spots"][name]
+		var p := Vector2(float(a[0]), float(a[1]))
+		if work_disc.has(name):
+			for sid in Property.st()["stations"]:
+				if Property.is_installed(sid) and str(DB.station(sid).get("discipline", "")) == work_disc[name]:
+					var size: Array = DB.station(sid)["size"]
+					var cand := Property.pos_of(sid) + Vector2(0, float(size[1]) / T * 0.5 + 0.7)
+					var h2 := Property.room_at_tile(rooms, cand)
+					if not h2.is_empty() and Property.room_owned(h2):
+						p = cand
+						break
+		var host := Property.room_at_tile(rooms, p)
+		if host.is_empty() or not Property.room_owned(host):
+			p = fallback
+		out[name] = [p.x, p.y]
+	return out
+
+
+## Locked doors into the neighbours' rooms and a quiet note of whose rooms they are.
+func _smithy_overlays(r: Rect2) -> void:
+	for d in Property.doors():
+		if Property.door_open(Property.st(), d):
+			continue
+		var c := Property.door_center(Property.st(), d)
+		if c == Vector2.INF:
+			continue
+		var e := Property._door_edge(Property.st(), d)
+		var vertical := bool(e[0])
+		var half := Vector2(WALL * 0.5 + 3.0, float(d["w"]) * T * 0.5 - 6.0) if vertical else Vector2(float(d["w"]) * T * 0.5 - 6.0, WALL * 0.5 + 3.0)
+		var wp := r.position + c * T
+		var pts := _rect_pts(Rect2(wp - half, half * 2.0))
+		var door := Polygon2D.new()
+		door.polygon = pts
+		door.color = Color("#5a3a22")
+		door.z_index = 1
+		floor_layer.add_child(door)
+		_outline(pts, 2.5, floor_layer)
+		var lock := Polygon2D.new()
+		lock.polygon = _rect_pts(Rect2(wp - Vector2(5, 5), Vector2(10, 10)))
+		lock.color = Color("#b8923e")
+		lock.z_index = 2
+		floor_layer.add_child(lock)
+	for rm in Property.rooms():
+		if Property.room_owned(rm):
+			continue
+		var u := Property.unit(str(rm.get("unit", "")))
+		var rr := Property.rect(rm)
+		var lab := Label.new()
+		lab.text = "%s\n%s" % [u.get("name", "Private"), ("For sale — %d g (see Property & Workshop)" % Property.unit_price(str(u.get("id", "")))) if Property.unit_state(str(u.get("id", ""))) == "available" else "Private"]
+		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lab.add_theme_font_override("font", Assets.font("heading_italic"))
+		lab.add_theme_font_size_override("font_size", 22)
+		lab.add_theme_color_override("font_color", Color(0.94, 0.89, 0.8, 0.85))
+		lab.add_theme_color_override("font_outline_color", Color("#20140c"))
+		lab.add_theme_constant_override("outline_size", 6)
+		lab.size = Vector2(rr.size.x * T, 70)
+		lab.position = r.position + Vector2(rr.position.x * T, rr.get_center().y * T - 35)
+		lab.z_index = 3
+		floor_layer.add_child(lab)
+	# arcane rooms breathe a violet haze
+	for rm2 in Property.rooms():
+		if Property.room_owned(rm2) and Property.room_discipline(rm2) == "arcane":
+			var ar := Property.rect(rm2)
+			var fog := _dust(r.position + ar.get_center() * T, ar.size * T * 0.45, 26, Color("#b08cff"))
+			fog.modulate = Color(1, 1, 1, 0.8)
+			add_child(fog)
+
+
+## The main recipe-selection station of each room carries a small brass recipe plaque, always visible.
+func _main_station_mark(pos: Vector2, size: Vector2) -> void:
+	var m := Sprite2D.new()
+	m.texture = Assets.get_tex("ui/recipe_plaque", Vector2i(44, 44))
+	m.position = pos + Vector2(size.x * 0.42, -size.y * 0.42)
+	m.z_index = 25
+	add_child(m)
 
 
 # ======================================================================= light
