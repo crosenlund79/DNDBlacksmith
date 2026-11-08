@@ -87,7 +87,7 @@ func _header(it: Dictionary) -> Control:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sub := "%s %s" % [Items.RARITY_LABEL.get(str(it.get("rarity", "common")), ""), Items.type_label(it)]
 	if ItemStory.is_named(it):
-		sub += " · once a plain %s" % str(it.get("base_name", Items.def(it).get("name", "")))
+		sub += " · once called %s" % str(it.get("base_name", Items.def(it).get("name", "")))
 	v.add_child(UIKit.label(sub, 22, "heading_italic", UIKit.RUBRIC))
 	var chips := UIKit.hbox(8)
 	if str(it.get("rarity", "")) in ["legendary", "unique", "set", "rare"]:
@@ -171,9 +171,11 @@ func _overview(it: Dictionary) -> void:
 	om.add_child(UIKit.icon(ItemStory.mark_icon(it), 48))
 	var day := int(mk.get("day", 0))
 	var where := str(mk.get("place", ""))
-	om.add_child(UIKit.rich("Made by [b]%s[/b]%s%s.\n[i]%s — %s.[/i]" % [str(mk.get("name", "an unknown smith")),
+	var omt := UIKit.rich("Made by [b]%s[/b]%s%s.\n[i]%s — %s.[/i]" % [str(mk.get("name", "an unknown smith")),
 		(" on day %d" % day) if day > 0 else "", (" at " + where) if where != "" else "", str(Provenance.mark(it).get("name", "")).capitalize(),
-		str(Provenance.mark(it).get("desc", ""))], 19))
+		str(Provenance.mark(it).get("desc", ""))], 19)
+	omt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	om.add_child(omt)
 	ov.add_child(om)
 	var cr: Dictionary = it.get("craft", {})
 	var lines := []
@@ -260,7 +262,7 @@ func _event_row(e: Dictionary) -> Control:
 		sb.border_color = Color(UIKit.INK, 0.2)
 	sb.set_content_margin_all(6)
 	var h := UIKit.hbox(12)
-	var ic := UIKit.icon(ItemStory.story_icon(str(e.get("kind", "note"))), 44)
+	var ic := UIKit.icon(ItemStory.story_icon(str(e.get("kind", "note")), str(e.get("text", ""))), 44)
 	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(ic)
 	var v := UIKit.vbox(2)
@@ -307,16 +309,17 @@ func _owners(it: Dictionary) -> void:
 	var first := _card()
 	var fh := UIKit.hbox(14)
 	fh.add_child(UIKit.icon(ItemStory.mark_icon(it), 56))
-	fh.add_child(UIKit.rich("[b]Forged by %s[/b]%s\n[i]%s[/i]" % [str(mk.get("name", "an unknown smith")), (" — day %d" % int(mk.get("day", 0))) if int(mk.get("day", 0)) > 0 else "",
-		str(mk.get("place", ""))], 20))
+	var fr := UIKit.rich("[b]%s by %s[/b]%s\n[i]%s · %s[/i]" % ["Forged" if Provenance.is_mine(it) else "Made", str(mk.get("name", "an unknown smith")),
+		(" — day %d" % int(mk.get("day", 0))) if int(mk.get("day", 0)) > 0 else "", str(mk.get("place", "")) if str(mk.get("place", "")) != "" else "place unknown",
+		str(Provenance.mark(it).get("name", ""))], 20)
+	fr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fh.add_child(fr)
 	first.add_child(fh)
 	page.add_child(first)
-	var ow := Provenance.owners(it)
-	var i := 0
+	var ow := ItemStory.owners_shown(it)
 	for o in ow:
-		i += 1
 		if str(o.get("id", "")) == Provenance.SMITH_ID and str(o.get("how", "")) == "forged":
-			continue
+			continue   # the maker's own hands: the card above
 		page.add_child(UIKit.label("    ↓  %s" % _how_word(str(o.get("how", ""))), 17, "body_italic", Color("#6e5a40")))
 		var c := _card()
 		var h := UIKit.hbox(14)
@@ -355,6 +358,6 @@ func _owners(it: Dictionary) -> void:
 
 static func _how_word(how: String) -> String:
 	return {"forged": "forged", "sold": "sold", "bought": "bought", "given": "given", "found": "found", "looted": "taken as spoils",
-		"inherited": "inherited from the fallen", "recovered": "carried home", "pawned": "pawned", "redeemed": "redeemed from the pawnbroker",
+		"inherited": "inherited", "recovered": "carried home", "pawned": "pawned", "redeemed": "redeemed from the pawnbroker",
 		"commissioned": "made to order", "offered": "offered at the counter", "returned": "returned", "received": "came to the forge",
 		"held": "held"}.get(how, how)

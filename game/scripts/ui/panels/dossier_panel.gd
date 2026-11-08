@@ -283,8 +283,6 @@ func _equipment_histories(a: Dictionary) -> void:
 		if it.is_empty() or not Provenance.applies(it):
 			continue
 		var n := ItemStory.events_of(it).size()
-		if n == 0 and not Provenance.is_mine(it):
-			continue
 		rows.append([n + (100 if ItemStory.is_named(it) or it.has("epic") else 0), it])
 	if rows.is_empty():
 		return

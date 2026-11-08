@@ -3264,6 +3264,7 @@ func phase_story11() -> void:
 	UIRoot.hide_tooltip()
 	await close_panel()
 	# --- talking to the owner: "Ask about … — its travels"
+	a2["status"] = "in_town"
 	var r := Talk.choose(str(a2["id"]), "itemstory_%d" % uid, "village")
 	expect(str(r.get("text", "")).contains("Day"), "story11: the owner tells the blade's travels")
 	expect(Talk.options(str(a2["id"]), "village").any(func(o): return str(o["id"]) == "itemstory_%d" % uid), "story11: the dialogue offers to ask about it")

@@ -105,7 +105,7 @@ func test_boss_naming_persists() -> void:
 	var w := Game.find_uid_anywhere(uid)
 	check(ItemStory.is_named(w), "the killing blow on a boss names the blade")
 	var nm := ItemStory.earned_name(w)
-	check(nm in ["Gravebane", "the Barrow-Breaker", "Bane of the Barrow King"], "the name follows an authored pattern naming the real foe ('%s')" % nm)
+	check(nm in ["Gravebane", "The Barrow-Breaker", "Bane of the Barrow King"], "the name follows an authored pattern naming the real foe ('%s')" % nm)
 	eq(str(w["name"]), nm, "the piece is called by its name")
 	eq(str(w["base_name"]), base, "and remembers what it was")
 	check(str(w["named"].get("why", "")).contains("The Barrow King"), "the reason names the enemy")

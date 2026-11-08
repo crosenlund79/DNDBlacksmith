@@ -44,6 +44,8 @@ const STORY_ICON := {"forged": "forged", "sold": "sale", "bought": "sale", "give
 	"named": "named", "epic": "epic", "lost": "lost", "destroyed": "lost", "death": "lost", "returned": "reunion",
 	"reunion": "reunion", "commission": "commission", "commissioned": "commission", "note": "note", "received": "found", "offered": "found"}
 const MARK_TEX := "marks/"
+## Lore kinds that are only changes of hands (shown in the journey, not as achievements).
+const TRANSFER_KINDS := ["sold", "bought", "given", "found", "looted", "pawned", "redeemed", "commissioned", "offered", "returned", "received", "held"]
 
 
 # ======================================================================= state
@@ -59,7 +61,12 @@ static func st() -> Dictionary:
 	return s
 
 
-static func story_icon(kind: String) -> String:
+static func story_icon(kind: String, text := "") -> String:
+	if kind == "note" and text != "":
+		var t := text.to_lower()
+		for pair in [["felled", "battle"], ["slew", "battle"], ["killing blow", "battle"], ["repaired", "repaired"], ["sold to", "sale"], ["found", "found"], ["named", "named"]]:
+			if t.contains(str(pair[0])):
+				return "ui/story_" + str(pair[1])
 	return "ui/story_" + str(STORY_ICON.get(kind, "note"))
 
 
@@ -157,7 +164,7 @@ static func bane_name(it: Dictionary, boss: String, foe_kind: String) -> String:
 		b = "the " + b
 	elif b.to_lower().begins_with("the "):
 		b = "the " + b.substr(4)
-	return _pick(it, [bane, "the %s-Breaker" % word, "Bane of %s" % b])
+	return _pick(it, [bane, "The %s-Breaker" % word, "Bane of %s" % b])
 
 
 ## Gives a piece its earned name. Returns false if it already has one (names are never re-rolled).
@@ -429,6 +436,13 @@ static func summary(it: Dictionary) -> String:
 		parts.append(t.trim_suffix(".") if t.length() <= 70 else t.substr(0, 68) + "…")
 	elif it.has("named"):
 		parts.append(str(it["named"].get("why", "")))
+	else:
+		var ow := Provenance.owners(it)
+		if ow.is_empty():
+			parts.append("carried since before you knew them; no deeds on record")
+		elif int(ow[-1].get("to", -1)) == -1 and str(ow[-1].get("id", "")) != Provenance.SMITH_ID:
+			var since := int(ow[-1].get("from", 0))
+			parts.append("carried since %s; no great deeds yet" % ("day %d" % since if since > 0 else "before you knew them"))
 	var rep := events_of(it).filter(func(e): return str(e.get("kind", "")) == "repaired").size()
 	if rep > 0:
 		parts.append("repaired %s" % (["once", "twice"][rep - 1] if rep <= 2 else "%d times" % rep))
@@ -436,6 +450,19 @@ static func summary(it: Dictionary) -> String:
 	if rf > 0:
 		parts.append("reforged" + ("" if rf == 1 else " ×%d" % rf))
 	return " · ".join(PackedStringArray(parts))
+
+
+## The owners' journey as shown: the maker's own first entry reads "forged" on the day it was made.
+static func owners_shown(it: Dictionary) -> Array:
+	var out := []
+	var ow := Provenance.owners(it)
+	for i in ow.size():
+		var o: Dictionary = (ow[i] as Dictionary).duplicate()
+		if i == 0 and str(o.get("id", "")) == Provenance.SMITH_ID and Provenance.is_mine(it):
+			o["how"] = "forged"
+			o["from"] = int(Provenance.maker(it).get("day", o.get("from", 0)))
+		out.append(o)
+	return out
 
 
 ## Rich record or a short one: exceptional pieces tell everything, routine ones a few lines.
@@ -511,24 +538,22 @@ static func card_data(it: Dictionary, occasion: String, who := "") -> Dictionary
 		occ = occ % (Talk.npc_name(who) if who != "" else "Someone")
 	var ach := []
 	if it.has("named"):
-		ach.append("Named “%s” — %s." % [earned_name(it), str(it["named"].get("why", ""))])
+		ach.append({"kind": "named", "text": "Named “%s” — %s." % [earned_name(it), str(it["named"].get("why", ""))]})
 	if it.has("epic"):
-		ach.append("Epic — %s." % str(it["epic"].get("deed", "")))
-	for e in deeds(it):
-		if str(e.get("kind", "")) in ["named", "epic"]:
-			continue
-		var t := str(e.get("text", ""))
-		if not ach.has(t):
-			ach.append(t)
+		ach.append({"kind": "epic", "text": "Epic — %s." % str(it["epic"].get("deed", ""))})
+	var more := deeds(it).filter(func(e): return str(e.get("kind", "")) not in ["named", "epic", "forged", "commission", "inherited", "recovered", "reunion"] \
+		and not str(e.get("kind", "")) in TRANSFER_KINDS)
+	for e in more.slice(maxi(0, more.size() - (4 - ach.size()))):
+		ach.append({"kind": str(e.get("kind", "note")), "text": str(e.get("text", ""))})
 	var journey := []
-	for o in Provenance.owners(it):
+	for o in owners_shown(it):
 		journey.append({"id": str(o.get("id", "")), "name": str(o.get("name", "")), "how": str(o.get("how", "")), "from": int(o.get("from", 0)), "to": int(o.get("to", -1))})
 	var day := int(m.get("day", 0))
 	return {"uid": int(it.get("uid", -1)), "name": Items.display_name(it), "base": str(it.get("base_name", Items.def(it).get("name", ""))),
 		"named": earned_name(it), "mark": str(m.get("mark", "unknown")), "mark_name": str(Provenance.mark(it).get("name", "")),
 		"maker": str(m.get("name", "")), "day": day, "days_ago": maxi(0, Game.day() - day),
 		"occasion": occasion, "occasion_text": occ.substr(0, 1).to_upper() + occ.substr(1) + ".", "who": who,
-		"achievements": ach.slice(maxi(0, ach.size() - 4)), "journey": journey, "rich": is_rich(it)}
+		"achievements": ach, "journey": journey, "rich": is_rich(it)}
 
 
 ## The workshop counter: a waiting customer's piece (a repair) is recognised when the smith deals with them.

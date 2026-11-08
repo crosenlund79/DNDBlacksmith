@@ -43,11 +43,12 @@ func _reunion(it: Dictionary, d: Dictionary) -> void:
 	h.add_child(col)
 	var v := UIKit.vbox(6)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.custom_minimum_size = Vector2(720, 0)
 	var nm := UIKit.label(str(d.get("name", "")), 34, "title", Items.color(it, false) if not it.is_empty() else UIKit.INK)
 	nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(nm)
 	if str(d.get("named", "")) != "":
-		v.add_child(UIKit.label("once a plain %s" % str(d.get("base", "")), 18, "heading_italic", Color("#6e5a40")))
+		v.add_child(UIKit.label("once called %s" % str(d.get("base", "")), 18, "heading_italic", Color("#6e5a40")))
 	var day := int(d.get("day", 0))
 	var ago := int(d.get("days_ago", 0))
 	v.add_child(UIKit.rich("[b]You forged this on day %d[/b]%s." % [day, (" — %d day%s ago" % [ago, "" if ago == 1 else "s"]) if ago > 0 else ", this very day"], 22))
@@ -56,9 +57,9 @@ func _reunion(it: Dictionary, d: Dictionary) -> void:
 		v.add_child(UIKit.label("What it has done", 22, "heading"))
 		for t in ach:
 			var r := UIKit.hbox(8)
-			var t_s := str(t)
-			var kind := "named" if t_s.begins_with("Named") else ("epic" if t_s.begins_with("Epic") else "battle")
-			r.add_child(UIKit.icon(ItemStory.story_icon(kind), 30))
+			var t_s := str(t.get("text", "")) if t is Dictionary else str(t)
+			var kind := str(t.get("kind", "note")) if t is Dictionary else "note"
+			r.add_child(UIKit.icon(ItemStory.story_icon(kind, t_s), 30))
 			var l := UIKit.rich(t_s, 18)
 			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			r.add_child(l)
@@ -86,12 +87,15 @@ func _service(it: Dictionary, r: Dictionary) -> void:
 		h.add_child(s)
 	var v := UIKit.vbox(6)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.custom_minimum_size = Vector2(720, 0)
 	if not it.is_empty():
 		v.add_child(UIKit.label(Items.display_name(it), 30, "title", Items.color(it, false)))
 		var mk := Provenance.maker(it)
 		var mh := UIKit.hbox(6)
 		mh.add_child(UIKit.icon(ItemStory.mark_icon(it), 32))
-		mh.add_child(UIKit.label("Made by %s — the maker and the name stay as they were." % str(mk.get("name", "")), 17, "body_italic"))
+		var ml := UIKit.label("Made by %s — the maker and the name stay as they were." % str(mk.get("name", "")), 17, "body_italic")
+		ml.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		mh.add_child(ml)
 		v.add_child(mh)
 	var b: Dictionary = r.get("before", {})
 	var a: Dictionary = r.get("after", {})

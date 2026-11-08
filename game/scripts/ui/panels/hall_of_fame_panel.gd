@@ -147,7 +147,6 @@ func _creation(f: Dictionary) -> Control:
 		left.add_child(ItemSlot.new(it, 96.0))
 	else:
 		left.add_child(UIKit.icon("ui/story_lost", 80))
-	left.add_child(UIKit.icon("marks/ironhand", 32))
 	h.add_child(left)
 	var v := UIKit.vbox(2)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
