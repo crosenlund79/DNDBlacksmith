@@ -370,6 +370,22 @@
    128,
    40
   ],
+  "props/template_ship_barge.png": [
+   512,
+   192
+  ],
+  "props/template_ship_flag.png": [
+   48,
+   96
+  ],
+  "props/template_ship_spice.png": [
+   512,
+   192
+  ],
+  "props/template_ship_whaler.png": [
+   512,
+   192
+  ],
   "props/template_shop_counter.png": [
    256,
    64
@@ -498,6 +514,10 @@
    64,
    64
   ],
+  "icons/template_bear_pelt.png": [
+   64,
+   64
+  ],
   "icons/template_belt_leather.png": [
    64,
    64
@@ -550,6 +570,14 @@
    64,
    64
   ],
+  "icons/template_dragon_bone.png": [
+   64,
+   64
+  ],
+  "icons/template_dragon_scale.png": [
+   64,
+   64
+  ],
   "icons/template_gem_garnet.png": [
    64,
    64
@@ -586,11 +614,23 @@
    64,
    64
   ],
+  "icons/template_herb_bloodroot.png": [
+   64,
+   64
+  ],
   "icons/template_herb_emberleaf.png": [
    64,
    64
   ],
+  "icons/template_herb_frostcap.png": [
+   64,
+   64
+  ],
   "icons/template_herb_moonwort.png": [
+   64,
+   64
+  ],
+  "icons/template_herb_silverleaf.png": [
    64,
    64
   ],
@@ -658,6 +698,10 @@
    64,
    64
   ],
+  "icons/template_ore_orichalcum.png": [
+   64,
+   64
+  ],
   "icons/template_ore_silver.png": [
    64,
    64
@@ -674,7 +718,15 @@
    64,
    64
   ],
+  "icons/template_reagent_aether_dust.png": [
+   64,
+   64
+  ],
   "icons/template_reagent_salt.png": [
+   64,
+   64
+  ],
+  "icons/template_reagent_wyrm_ash.png": [
    64,
    64
   ],
@@ -786,7 +838,15 @@
    64,
    64
   ],
+  "icons/template_troll_hide.png": [
+   64,
+   64
+  ],
   "icons/template_warplate_adamantine.png": [
+   64,
+   64
+  ],
+  "icons/template_wyvern_hide.png": [
    64,
    64
   ],
@@ -1006,6 +1066,10 @@
    384,
    192
   ],
+  "enemies/template_bear.png": [
+   256,
+   128
+  ],
   "enemies/template_boar.png": [
    256,
    128
@@ -1042,6 +1106,10 @@
    256,
    128
   ],
+  "enemies/template_troll.png": [
+   256,
+   128
+  ],
   "enemies/template_wight.png": [
    256,
    128
@@ -1053,6 +1121,10 @@
   "enemies/template_wolf_alpha.png": [
    384,
    192
+  ],
+  "enemies/template_wyvern.png": [
+   256,
+   128
   ]
  }
 }

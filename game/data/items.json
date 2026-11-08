@@ -1182,5 +1182,172 @@
   "tags": [
    "set"
   ]
+ },
+ {
+  "id": "bear_pelt",
+  "name": "Bear Pelt",
+  "type": "material",
+  "slot": null,
+  "value": 32,
+  "stats": {},
+  "icon": "bear_pelt",
+  "stack": true,
+  "desc": "A raw Whisperwood bear pelt, thick-furred and heavy. Tanned and cured it becomes bear leather.",
+  "tags": [
+   "hide",
+   "exotic"
+  ]
+ },
+ {
+  "id": "troll_hide",
+  "name": "Troll Hide",
+  "type": "material",
+  "slot": null,
+  "value": 72,
+  "stats": {},
+  "icon": "troll_hide",
+  "stack": true,
+  "desc": "Grey-green, knobbled and still faintly warm. It knits itself shut where it is cut — slowly.",
+  "tags": [
+   "hide",
+   "rare",
+   "exotic"
+  ]
+ },
+ {
+  "id": "wyvern_hide",
+  "name": "Wyvern Hide",
+  "type": "material",
+  "slot": null,
+  "value": 140,
+  "stats": {},
+  "icon": "wyvern_hide",
+  "stack": true,
+  "desc": "Scaled hide from a wyvern's flank: light, tough and stubborn about catching fire.",
+  "tags": [
+   "hide",
+   "rare",
+   "exotic"
+  ]
+ },
+ {
+  "id": "dragon_scale",
+  "name": "Dragon Scale",
+  "type": "material",
+  "slot": null,
+  "value": 620,
+  "stats": {},
+  "icon": "dragon_scale",
+  "stack": true,
+  "desc": "A single scale the size of a palm, black-red and warm to the touch. Nothing in Brindlewick can cut it cold.",
+  "tags": [
+   "rare",
+   "exotic",
+   "dragon"
+  ]
+ },
+ {
+  "id": "dragon_bone",
+  "name": "Dragon Bone",
+  "type": "material",
+  "slot": null,
+  "value": 520,
+  "stats": {},
+  "icon": "dragon_bone",
+  "stack": true,
+  "desc": "A length of dragon bone, hollow and lighter than oak, harder than good steel.",
+  "tags": [
+   "rare",
+   "exotic",
+   "dragon"
+  ]
+ },
+ {
+  "id": "ore_orichalcum",
+  "name": "Orichalcum Ore",
+  "type": "material",
+  "slot": null,
+  "value": 165,
+  "stats": {},
+  "icon": "ore_orichalcum",
+  "stack": true,
+  "desc": "Red-gold ore that rings like a bell when struck. The dwarves of the deep halls prized it above mithril.",
+  "tags": [
+   "rare",
+   "exotic"
+  ]
+ },
+ {
+  "id": "herb_bloodroot",
+  "name": "Bloodroot",
+  "type": "material",
+  "slot": null,
+  "value": 8,
+  "stats": {},
+  "icon": "herb_bloodroot",
+  "stack": true,
+  "desc": "A knotted red root; its sap stops bleeding and stings like nettles.",
+  "tags": [
+   "herb"
+  ]
+ },
+ {
+  "id": "herb_frostcap",
+  "name": "Frostcap",
+  "type": "material",
+  "slot": null,
+  "value": 9,
+  "stats": {},
+  "icon": "herb_frostcap",
+  "stack": true,
+  "desc": "A pale mushroom that grows where the frost stays longest. Cold to hold, even in summer.",
+  "tags": [
+   "herb"
+  ]
+ },
+ {
+  "id": "herb_silverleaf",
+  "name": "Silverleaf",
+  "type": "material",
+  "slot": null,
+  "value": 12,
+  "stats": {},
+  "icon": "herb_silverleaf",
+  "stack": true,
+  "desc": "Narrow leaves with a silver underside; steeped, they calm a fever and clear a fouled wound.",
+  "tags": [
+   "herb"
+  ]
+ },
+ {
+  "id": "reagent_aether_dust",
+  "name": "Aether Dust",
+  "type": "material",
+  "slot": null,
+  "value": 48,
+  "stats": {},
+  "icon": "reagent_aether_dust",
+  "stack": true,
+  "desc": "Glittering blue-violet dust scraped from leyline stones. Binds magic to metal and cloth.",
+  "tags": [
+   "reagent",
+   "rare"
+  ]
+ },
+ {
+  "id": "reagent_wyrm_ash",
+  "name": "Wyrm Ash",
+  "type": "material",
+  "slot": null,
+  "value": 95,
+  "stats": {},
+  "icon": "reagent_wyrm_ash",
+  "stack": true,
+  "desc": "Ash from a wyrm's pyre, still glowing at its heart. A pinch in the quench makes steel remember fire.",
+  "tags": [
+   "reagent",
+   "rare",
+   "exotic"
+  ]
  }
 ]
