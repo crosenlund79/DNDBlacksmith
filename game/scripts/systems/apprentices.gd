@@ -1044,6 +1044,14 @@ static func _assign() -> void:
 		return
 	var q := open_tasks().filter(func(t): return str(t.get("worker", "")) == "")
 	q.sort_custom(func(x, y): return int(x["priority"]) > int(y["priority"]) or (int(x["priority"]) == int(y["priority"]) and int(x["id"]) < int(y["id"])))
+	# an apprentice the smith has pinned to work that is ready for them is kept for it: automatic assignment
+	# never hands them something else first (that left the pinned task waiting behind a lower-priority one)
+	var reserved := {}
+	for t0 in q:
+		if bool(t0.get("manual", false)) and task_problem(t0) == "":
+			var a0 := get_a(str(t0["assignee"]))
+			if not a0.is_empty() and eligible(a0, t0) == "":
+				reserved[str(a0["id"])] = true
 	for t in q:
 		var prob := task_problem(t)
 		if prob != "":
@@ -1074,7 +1082,7 @@ static func _assign() -> void:
 				ids.sort()
 				for aid in ids:
 					var a2 := get_a(str(aid))
-					if int(a2.get("task", -1)) != -1 or not on_shift(a2):
+					if int(a2.get("task", -1)) != -1 or not on_shift(a2) or reserved.has(str(aid)):
 						continue
 					var e := eligible(a2, t)
 					if e != "":
@@ -1092,6 +1100,7 @@ static func _assign() -> void:
 				t["state"] = "queued" if why_not.begins_with("Everyone") or why_not.begins_with("Waiting") else "blocked"
 			continue
 		t["worker"] = str(pick["id"])
+		reserved.erase(str(pick["id"]))
 		t["blocker"] = ""
 		if str(t["recipe"]) == "" and str(t["kind"]) == "commission":
 			t["recipe"] = commission_recipe(_order(str(t["order_id"])), pick)

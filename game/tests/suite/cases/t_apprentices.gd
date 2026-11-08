@@ -700,3 +700,22 @@ func test_old_save_without_key() -> void:
 	eq(Apprentices.staff().size(), 0, "no apprentices")
 	check(Game.state.has("apprentices"), "the state is created lazily on first touch")
 	check(Apprentices.bottlenecks() is Array, "queries work on the fresh state")
+
+
+## Automatic assignment never takes a hand away from work the smith pinned to them (found in the workshop12 playtest).
+func test_pinned_hand_kept_for_its_task() -> void:
+	var crew := _setup(2, 1)
+	if crew.size() < 2:
+		return
+	var a: Dictionary = crew[0]
+	var b: Dictionary = crew[1]
+	_skills(a, "journeyman", {"smithing": 6})   # the better hand: automatic assignment would want them first
+	_skills(b, "apprentice", {"smithing": 3})
+	give("ore_iron", 8)
+	give("coal", 4)
+	var pinned := Apprentices.add_task("prep", {"recipe": "smelt_iron", "assignee": str(a["id"]), "priority": 1})
+	var free := Apprentices.add_task("prep", {"recipe": "smelt_iron", "priority": 3})
+	_to_shift()
+	Game.advance_minutes(10)
+	eq(str(pinned["worker"]), str(a["id"]), "the pinned task gets its apprentice")
+	eq(str(free["worker"]), str(b["id"]), "the unpinned, higher-priority task goes to the other hand")
