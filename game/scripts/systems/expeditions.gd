@@ -1070,6 +1070,11 @@ static func _kill(e: Dictionary, a: Dictionary, where: String) -> void:
 
 
 static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
+	# now and then a strange painted card turns up in a lair: the villagers' Ironfront craze reaches everywhere
+	if randf() < 0.2:
+		var cid := Ironfront.random_card("special")
+		if cid != "" and Ironfront.grant_card(cid, "expedition"):
+			_j(e, "Among the spoils: a strange painted card — %s. Barnaby will want to see it." % Ironfront.card(cid).get("name", cid), "loot")
 	var foe_kind: String = str(rec["enemies"][0]["kind"]) if not rec["enemies"].is_empty() else "beast"
 	var boss_name: String = str(rec["enemies"][0]["name"]) if not rec["enemies"].is_empty() else n["name"]
 	# whose blow felled it, and with what
