@@ -803,20 +803,20 @@ def tactic(f, art):
         for i in range(1, 8):
             f.line([(W * 0.06 + i * W * 0.11, H * 0.08), (W * 0.06 + i * W * 0.11, H * 0.92)], 1, (120, 100, 70))
             f.line([(W * 0.06, H * 0.08 + i * H * 0.105), (W * 0.94, H * 0.08 + i * H * 0.105)], 1, (120, 100, 70))
-        cx, cy = W * 0.58, H * 0.5
+        cx, cy = W * 0.62, H * 0.5
         f.circ(cx, cy, 46, 5, col=INK)
         for sd in (-1, 1):
+            p0, c1, p1 = (W * 0.14, cy + sd * 30), (W * 0.36, cy + sd * 230), (cx + 30, cy + sd * 70)
             pts = []
             for i in range(30):
                 t = i / 29
-                a = math.radians(180 + sd * (150 - 120 * t))
-                pts.append((cx + math.cos(a) * (210 - 110 * t) - 40, cy + math.sin(a) * (170 - 90 * t) * sd * -1))
+                pts.append(((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * c1[0] + t * t * p1[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * c1[1] + t * t * p1[1]))
             f.line(pts, 16, (126, 36, 24))
             ex, ey = pts[-1]
-            px, py = pts[-3]
+            px, py = pts[-4]
             a = math.atan2(ey - py, ex - px)
-            f.dd.polygon([(ex + math.cos(a) * 30, ey + math.sin(a) * 30), (ex + math.cos(a + 2.3) * 28, ey + math.sin(a + 2.3) * 28),
-                          (ex + math.cos(a - 2.3) * 28, ey + math.sin(a - 2.3) * 28)], fill=(126, 36, 24, 255))
+            f.dd.polygon([(ex + math.cos(a) * 34, ey + math.sin(a) * 34), (ex + math.cos(a + 2.3) * 30, ey + math.sin(a + 2.3) * 30),
+                          (ex + math.cos(a - 2.3) * 30, ey + math.sin(a - 2.3) * 30)], fill=(126, 36, 24, 255))
     elif art in ("tac_codebreakers", "tac_enigma"):
         if art == "tac_codebreakers":
             f.rect(W * 0.12, H * 0.2, W * 0.88, H * 0.86, r=8)

@@ -72,6 +72,7 @@ def make_palette(base_pal, look):
     pal["hoodc"] = pal["cloak"] if look.get("cloak") else tri(mix(look.get("shirt", "#6a5a40"), "#2a2018", 0.25), 0.08)
     pal["ivory"] = ("#fbf4e2", "#eee2c4", "#9a8c6c")
     pal["chain"] = ("#d4d2ca", "#9e9c92", "#55544a")
+    pal["olive"] = ("#8a9a5c", "#5e6e3c", "#2e3a1e")     # Ironfront M1 helmet (helmet_m1 extra)
     return pal
 
 

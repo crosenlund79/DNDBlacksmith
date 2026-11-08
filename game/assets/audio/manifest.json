@@ -24,6 +24,11 @@
     "duration": 91.429,
     "loop": true
   },
+  "music/ironfront": {
+    "bus": "Music",
+    "duration": 49.655,
+    "loop": true
+  },
   "music/tavern": {
     "bus": "Music",
     "duration": 60.0,

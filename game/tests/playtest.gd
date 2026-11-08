@@ -1507,3 +1507,124 @@ func phase_village_reload() -> void:
 	Events.open_panel.emit("wanted", {"tab": "legends"})
 	await wait(0.6)
 	await shot("village_reload_legends")
+
+
+# ======================================================================= Ironfront (card game)
+## Opens Barnaby's war-room, visits every page, then plays a Standard and a Blitzkrieg match through the
+## board UI (the player's moves are chosen by the engine's AI but performed by clicking cards and buttons).
+func phase_ironfront() -> void:
+	await click("New Game")
+	await wait(2.5)
+	Game.add_gold(400, "test", "playtest")
+	var opts := Talk.options("barnaby", "village")
+	expect(opts.any(func(o): return o["id"] == "ironfront_play") and opts.any(func(o): return o["id"] == "ironfront_ask"),
+		"ironfront: Barnaby offers a game and lore")
+	var music_before: String = str(Audio.get("_music_id"))
+	Events.open_panel.emit("ironfront", {"id": "barnaby"})
+	await wait(0.8)
+	var p := panel() as IronfrontPanel
+	expect(p != null, "ironfront: panel opens from open_panel")
+	if p == null:
+		return
+	expect(Game.ui_blockers > 0, "ironfront: game time is blocked while the war-room is open")
+	await shot("ironfront_menu")
+	await click("Deck Builder")
+	await wait(0.6)
+	await click("+")
+	await wait(0.3)
+	await shot("ironfront_decks")
+	await click("Collection")
+	await wait(0.6)
+	await shot("ironfront_collection")
+	await click("Barnaby's Shelf")
+	await wait(0.4)
+	var before := Ironfront.collection_size()
+	await click("Buy a pack")
+	await wait(0.6)
+	expect(Ironfront.collection_size() == before + 5, "ironfront: a pack adds five cards")
+	await shot("ironfront_shop")
+	await click("Rules & Tutorial")
+	await wait(0.5)
+	await shot("ironfront_rules")
+	await click("Tutorial match with Barnaby")
+	await wait(1.2)
+	var tb: IronfrontBoard = p.board
+	expect(tb != null and tb.m.get("tutorial", false), "ironfront: tutorial match starts")
+	if tb:
+		tb.ai_delay = 0.2
+		while int(tb.m["turn"]) != 0 and not tb.m["over"]:
+			await wait(0.3)
+		await wait(0.4)
+		await shot("ironfront_tutorial")
+	await click("Concede")
+	await wait(0.8)
+	expect(tb != null and tb.m["over"] and int(tb.m["winner"]) == 1, "ironfront: conceding ends the match")
+	await click("Back to the war-room")
+	await wait(0.5)
+	await click("The Table")
+	await wait(0.5)
+	await _ironfront_match("Standard", "standard")
+	await click("Back to the war-room")
+	await wait(0.6)
+	await _ironfront_match("Blitzkrieg", "blitz")
+	await click("Back to the war-room")
+	await wait(0.6)
+	expect(str(Audio.get("_music_id")) == music_before, "ironfront: previous music restored after the match")
+	await close_panel()
+	await wait(0.3)
+	expect(panel() == null and Game.ui_blockers == 0, "ironfront: closing the war-room releases the clock")
+
+
+func _ironfront_match(button: String, tag: String) -> void:
+	var p := panel() as IronfrontPanel
+	await click(button)
+	await wait(1.0)
+	var b: IronfrontBoard = p.board
+	expect(b != null, "ironfront: %s match board opens" % tag)
+	if b == null:
+		return
+	expect(str(Audio.get("_music_id")) == "music/ironfront", "ironfront: match music plays")
+	b.ai_delay = 0.25
+	var guard := 0
+	var mid_shot := false
+	while not b.m["over"] and guard < 300:
+		guard += 1
+		if int(b.m["turn"]) != 0 or b.busy:
+			await wait(0.25)
+			continue
+		var mv := Ironfront.ai_move(b.m, 0)
+		match str(mv.get("type", "pass")):
+			"pass":
+				await click("Pass")
+			"commander":
+				await click("Order:")
+			_:
+				var hv: IronfrontCard = null
+				for v: IronfrontCard in b.hand_views():
+					if int(v.inst["uid"]) == int(mv["uid"]):
+						hv = v
+				if hv == null:
+					await click("Pass")
+				else:
+					hv.clicked.emit(hv)
+					await wait(0.15)
+					if mv.has("target"):
+						var tv: IronfrontCard = b.views.get(int(mv["target"]))
+						if tv:
+							tv.clicked.emit(tv)
+					else:
+						for v: IronfrontCard in b.hand_views():
+							if int(v.inst["uid"]) == int(mv["uid"]):
+								v.clicked.emit(v)
+		await wait(0.45)
+		var on_table := 0
+		for s: Dictionary in b.m["sides"]:
+			for r: String in Ironfront.ROWS:
+				on_table += s["rows"][r].size()
+		if not mid_shot and on_table >= 7:
+			mid_shot = true
+			await shot("ironfront_%s_mid" % tag)
+	expect(b.m["over"], "ironfront: %s match played to the end through the board (%d steps)" % [tag, guard])
+	await wait(3.0)
+	await shot("ironfront_%s_result" % tag)
+	expect(b.m.has("reward"), "ironfront: %s reward applied (%s)" % [tag, str(b.m.get("reward", {}))])

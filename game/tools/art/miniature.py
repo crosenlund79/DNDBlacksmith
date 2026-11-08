@@ -634,6 +634,12 @@ class Fig:
             self.add(lin(f"M{hx-rx*0.05:.1f},{hy-ry*0.85:.1f} l3,-1.6 M{hx+rx*0.1:.1f},{hy-ry*0.7:.1f} l3,-1.6", "#8a4a3a", 0.8))
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "S")
+        if "spectacles" in ex:
+            for sd in (-1, 1):
+                self.det(ell(hx + sd * rx * 0.38, ey, 3.4, 3.0), None, 0.9)
+            self.add(lin(f"M{hx-rx*0.38+3.4:.1f},{ey:.1f} L{hx+rx*0.38-3.4:.1f},{ey:.1f}", INK, 0.9))
+        if "helmet_m1" in ex:
+            self.m1_helmet(hx, hy, rx, ry, "S")
 
     def hair_front(self, hx, hy, rx, ry, hair):
         P = self.P
@@ -719,6 +725,15 @@ class Fig:
         # moustache
         self.sh(smooth([(hx - rx * 0.62, hy + ry * 0.55), (hx - rx * 0.2, hy + ry * 0.32), (hx, hy + ry * 0.4), (hx + rx * 0.2, hy + ry * 0.32),
                         (hx + rx * 0.62, hy + ry * 0.55), (hx, hy + ry * 0.55)], t=0.45), "beard", s=1, lw=1.6)
+
+    def m1_helmet(self, hx, hy, rx, ry, view):
+        """Ironfront: the green M1-style steel helmet Barnaby wears at his card table."""
+        top = hy - ry * 1.2
+        dx = 2 if view == "E" else 0
+        self.sh(smooth([(hx + dx - rx * 1.2, hy - ry * 0.18), (hx + dx - rx * 1.02, hy - ry * 0.98), (hx + dx, top - 3), (hx + dx + rx * 1.02, hy - ry * 0.98),
+                        (hx + dx + rx * 1.2, hy - ry * 0.18)], t=0.5), "olive", s=2.4)
+        self.sh(ell(hx + dx, hy - ry * 0.2, rx * 1.36, 3.4), "olive", s=1.2)
+        self.det(f"M{hx+dx-rx*0.7:.1f},{hy-ry*0.75:.1f} Q{hx+dx:.1f},{hy-ry*0.95:.1f} {hx+dx+rx*0.7:.1f},{hy-ry*0.75:.1f}", "olive", 0.6, 0.7)
 
     def miner_helmet(self, hx, hy, rx, ry, view):
         P = self.P
@@ -862,6 +877,8 @@ class Fig:
             self.det(f"M{hx:.1f},{hy-ry*0.95:.1f} Q{hx-rx*0.2:.1f},{hy:.1f} {hx-rx*0.1:.1f},{hy+ry*0.8:.1f}", "hair", 0.6, 0.7)
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "N")
+        if "helmet_m1" in ex:
+            self.m1_helmet(hx, hy, rx, ry, "N")
 
     # ============================================================ side view (facing right / east)
     def side(self):
@@ -1223,6 +1240,11 @@ class Fig:
                 self.det(f"M{hx+rx*0.5:.1f},{hy+ry*0.8:.1f} L{hx+rx*0.5+sw:.1f},{hy+ln*0.85:.1f}", "beard", 0.6, 0.7)
         if "helmet_miner" in ex:
             self.miner_helmet(hx, hy, rx, ry, "E")
+        if "spectacles" in ex:
+            self.det(ell(hx + rx * 0.62, ey, 3.2, 3.0), None, 0.9)
+            self.add(lin(f"M{hx+rx*0.3:.1f},{ey-1:.1f} L{hx-rx*0.2:.1f},{ey-2:.1f}", INK, 0.8))
+        if "helmet_m1" in ex:
+            self.m1_helmet(hx, hy, rx, ry, "E")
         if "pauldron" in ex:
             pass
 

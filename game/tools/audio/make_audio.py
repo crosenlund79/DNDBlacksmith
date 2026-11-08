@@ -1693,6 +1693,46 @@ def m_title(rng):
     return soft_limit(y, 0.75)
 
 
+@sound("music/ironfront", bus="Music")
+def m_ironfront(rng):
+    """Barnaby's war-room: a jaunty brass march over snare and bass drum (loops seamlessly)."""
+    pc = Piece("music/ironfront", 58, IONIAN, 116, 4, 24)
+    r = pc.rng
+    rhythms = [[1, 0.5, 0.5, 1, 1], [0.75, 0.25, 1, 0.75, 0.25, 1], [1, 1, 0.5, 0.5, 1], [0.5, 0.5, 1, 1, 1]]
+    cads = [[1, 1, 2], [0.75, 0.25, 1, 2], [2, 2]]
+    A = [0, 4, 0, 4, 0, 3, 4, 0]
+    B = [3, 0, 4, 0, 3, 0, 4, 4]
+    strong = (0, 2)
+    melA, motif = section_melody(r, A, 4, strong, rhythms, cads, 0, 9, 4)
+    melB, _ = section_melody(r, B, 4, strong, rhythms, cads, 2, 11, 5, targets=(4, 2, 4, 0))
+    plan = A + B + A
+    render_melody(pc, "brass", melA, 0, brass, 0.75, 0.82, 0, strong)
+    render_melody(pc, "brass", melB, 8, brass, 0.75, 0.82, 0, strong)
+    render_melody(pc, "brass", melA, 16, brass, 0.8, 0.82, 0, strong)
+    render_melody(pc, "fife", melB, 8, flute, 0.35, 0.8, 1, strong)
+    for bar, root in enumerate(plan):
+        # oom-pah: bass on 1 and 3, chord stabs on 2 and 4
+        for beat, deg in ((0, root - 14), (2, root - 10)):
+            pc.add("bass", pc.at(bar, beat), brass(mtof(pc.midi(deg)), 0.42, 0.8, r), 0.004)
+        for beat in (1, 3):
+            for k in chord_degs(root):
+                pc.add("stab", pc.at(bar, beat), brass(mtof(pc.midi(k - 7)), 0.22, 0.32, r), 0.004)
+        # bass drum on 1 and 3, snare rudiments
+        for beat in (0, 2):
+            pc.add("drum", pc.at(bar, beat), frame_drum(r, 0.9, "dum", 0.5), 0.003)
+        roll = [1, 3, 3.5] if bar % 4 != 3 else [1, 2.5, 2.75, 3, 3.25, 3.5, 3.75]
+        for beat in roll:
+            n = N(0.18)
+            t = tt(n)
+            sn = (0.8 * bp(r.standard_normal(n), 2600, 0.9) + 0.4 * np.sin(TAU * 190 * t)) * np.exp(-t / 0.045)
+            pc.add("snare", pc.at(bar, beat), sn * (0.9 if beat == int(beat) else 0.6), 0.003)
+    y = mix_down(pc, {"brass": 0.5, "fife": 0.35, "bass": 0.5, "stab": 0.45, "drum": 0.7, "snare": 0.35},
+                 {"brass": 0.35, "fife": 0.4, "bass": 0.15, "stab": 0.2, "drum": 0.25, "snare": 0.25}, t60=1.1, wet=0.28,
+                 posts={"brass": lambda f: r_lp(f, 4200) * r_peak(f, 900, 1.2, 3), "stab": lambda f: r_lp(f, 3000),
+                        "fife": lambda f: r_lp(f, 6000), "drum": lambda f: r_lp(f, 1500)})
+    return soft_limit(y, 0.72)
+
+
 # ----------------------------------------------------------------------------
 # output / verification
 # ----------------------------------------------------------------------------

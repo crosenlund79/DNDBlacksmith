@@ -74,6 +74,9 @@ static func options(npc: String, area: String) -> Array:
 				out.append({"id": "court", "label": "Ask to court her"})
 			if stage == "courting":
 				out.append({"id": "propose", "label": "Propose (offer a silver band)"})
+	if npc == "barnaby":   # Ironfront host
+		out.append({"id": "ironfront_play", "label": "Play a game of Ironfront"})
+		out.append({"id": "ironfront_ask", "label": "Ask about Ironfront"})
 	if npc == "hilde":
 		out.append({"id": "ale", "label": "Buy a round for the room (6 g)"})
 	if area == "inn" and (npc == "hilde" or (not a.is_empty() and a["status"] in ["in_town", "injured"])):
@@ -108,6 +111,11 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			return {"text": "\"Right then, boss. Where do you want me?\"", "action": "hirelings"}
 		"delivery":
 			return {"text": Sim.take_delivery()}
+		"ironfront_play":
+			Events.open_panel.emit.call_deferred("ironfront", {"id": npc})
+			return {"text": "\"Splendid! Helmet on — regulations.\"", "action": "close"}
+		"ironfront_ask":
+			return {"text": Ironfront.barnaby_lore()}
 		"serve":
 			return {"text": "", "action": "shop"}
 		"refund":

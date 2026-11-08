@@ -902,6 +902,16 @@ static func _end_round(m: Dictionary) -> void:
 		m["turn"] = 1 - int(m["turn"])
 
 
+## The side gives up: the match ends at once in the opponent's favour.
+static func concede(m: Dictionary, side: int) -> void:
+	if m.get("over", false):
+		return
+	m["over"] = true
+	m["winner"] = 1 - side
+	_log(m, "%s concedes the match." % m["sides"][side]["name"])
+	_ev(m, {"k": "match_end", "winner": m["winner"]})
+
+
 ## Every card uid in the match (deck, hand, rows, discard of both sides) — for conservation checks.
 static func all_uids(m: Dictionary) -> Array:
 	var out: Array = []
@@ -1102,3 +1112,21 @@ static func finish_reward(m: Dictionary) -> Dictionary:
 		st()["tutorial_done"] = true
 	m["reward"] = out
 	return out
+
+
+# =========================================================================== flavour
+const LORE := [
+	"\"Ironfront? Only the finest game ever played on felt! Three fronts — Infantry, Armour, Air. Best of three rounds. The trick is to win a round with as few cards as you can. Restraint, my friend. Restraint!\"",
+	"\"The machines? Oh, they're real — or real somewhere. A tinker's widow left me crates of the cards: steel beetles that breathe thunder, iron birds with spinning noses, wagons of organ pipes that sing fire. I've painted miniatures of every one.\"",
+	"\"The Tiger I is a beetle the size of a barn. Shells bounce off it like hail. But it's slow, and Mud Season turns it into a very expensive bathtub.\"",
+	"\"Never underestimate the codebreakers. A dozen clever folk in a country house, reading the other fellow's letters. Steals a card right out of your hand. Delicious.\"",
+	"\"Operation Fortitude! An entire army made of painted canvas and rubber, inflated with bicycle pumps. You put a decoy down and take your real unit back to play again. The other side never knows.\"",
+	"\"Blitzkrieg is the quick game: one round, eight cards, everyone hits as they land. Good for when the forge is cooling and you've only an hour.\"",
+	"\"Some cards are found only on the road — merchants trade them, adventurers dig them out of ruins. I'd give my second-best helmet for a Tiger II.\"",
+]
+
+
+static func barnaby_lore() -> String:
+	var n := int(st().get("lore", 0))
+	st()["lore"] = n + 1
+	return LORE[n % LORE.size()]
