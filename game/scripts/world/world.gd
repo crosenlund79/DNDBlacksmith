@@ -71,6 +71,7 @@ func _ready() -> void:
 	_build_nav()
 	_spawn_player()
 	_spawn_npcs()
+	ysort.add_child(CompanionFollowers.new(self))   # adventurers' creature companions trot behind them
 	_spawn_animals()
 	_refresh_bags()
 	_refresh_display()
@@ -1835,6 +1836,9 @@ func spot_for(id: String) -> String:
 			return ["inn_t%d" % (1 + seed % 6), "inn_t%db" % (1 + (seed / 7) % 6), "inn_bar", "inn_hearth"][(seed + h) % 4]
 		return ["square_%d" % (seed % 6), "notice", "well", "inn_garden", "square_%d" % ((seed + 3) % 6), "pond_%d" % (1 + seed % 3),
 			"harbour_quay"][(seed + h) % 7]
+	var cs := Commerce.spot_for(id, h)   # caravan master, pawnbroker, rival smith, the Hales
+	if cs != "-":
+		return cs if spots.has(cs) else ""
 	match id:
 		"aldric":
 			if Game.state["world"].get("delivery_pending", false) and h >= 9 and h < 17:

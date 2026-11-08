@@ -2448,3 +2448,181 @@ func phase_skilltree() -> void:
 	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
 	await shot("st_tree_secret")
 	await close_panel()
+
+
+# ======================================================================= iteration 10: commerce
+## Commerce worker: the caravan, the pawnshop, the rival smith, both creature merchants, the creatures panel and an
+## adventurer walking through the village with a companion at heel (panels opened directly — venues are built
+## by the village worker).
+func phase_commerce10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(10, 0)
+	Game.state["gold"] = 6000
+	Events.gold_changed.emit(Game.gold())
+	# ---- caravan
+	Events.open_panel.emit("caravan", {"id": "caravan"})
+	await wait(0.8)
+	expect(panel() is CaravanPanel, "c10: caravan panel opens")
+	await shot("c10_caravan_away")
+	await close_panel()
+	Commerce.dev_force_caravan()
+	expect(Commerce.caravan_present(), "c10: the caravan arrives")
+	var w: Dictionary = Commerce.caravan()["wanted"][0]
+	c10_give(str(w["def"]), 2)
+	Events.open_panel.emit("caravan", {"id": "caravan"})
+	await wait(0.8)
+	var g0 := Game.gold()
+	expect(await click("Buy 1"), "c10: caravan stock has buy buttons")
+	await wait(0.3)
+	expect(Game.gold() < g0, "c10: bought from the caravan")
+	await shot("c10_caravan_wagons")
+	await click("Goods Wanted")
+	await wait(0.4)
+	var g1 := Game.gold()
+	expect(await click("Sell 1"), "c10: a wanted good can be sold")
+	await wait(0.3)
+	expect(Game.gold() > g1, "c10: the caravan paid")
+	await shot("c10_caravan_wanted")
+	await close_panel()
+	# ---- pawnshop
+	c10_give("ring_silver", 1)
+	c10_give("relic_coin", 1)
+	c10_give("ingot_steel", 4)
+	Events.open_panel.emit("pawn", {"id": "pawn"})
+	await wait(0.8)
+	expect(panel() is PawnPanel, "c10: pawn panel opens")
+	await shot("c10_pawn_pledge")
+	var g2 := Game.gold()
+	expect(await click("Pawn"), "c10: pawn button")
+	await wait(0.3)
+	expect(Game.gold() > g2 and Commerce.pledges().size() == 1, "c10: an item was pledged")
+	await click("Your Tickets")
+	await wait(0.3)
+	await shot("c10_pawn_tickets")
+	await click("The Shelf")
+	await wait(0.3)
+	await shot("c10_pawn_shelf")
+	await close_panel()
+	# ---- rival smith
+	Events.open_panel.emit("rival_smith", {"id": "rival_smith"})
+	await wait(0.8)
+	expect(panel() is RivalSmithPanel, "c10: rival smith panel opens")
+	var g3 := Game.gold()
+	expect(await click("Buy —"), "c10: rival stock has buy buttons")
+	await wait(0.3)
+	expect(Game.gold() < g3, "c10: bought at the Salt Anvil")
+	await shot("c10_rival_shop")
+	await close_panel()
+	Events.open_panel.emit("dialogue", {"npc": "rival_smith", "area": "village"})
+	await wait(0.6)
+	expect(await click("Ask for a smith's tip"), "c10: the rival gives tips")
+	await wait(0.3)
+	await shot("c10_rival_talk")
+	await close_panel()
+	# ---- the creature merchants (and the other commerce characters)
+	for who in ["hale_elder", "hale_younger", "pawnbroker", "caravan_master"]:
+		Events.open_panel.emit("dialogue", {"npc": who, "area": "village"})
+		await wait(0.6)
+		expect(panel() is DialoguePanel, "c10: %s talks" % who)
+		if who.begins_with("hale"):
+			await click("Ask about the creatures")
+			await wait(0.3)
+		await shot("c10_talk_" + who)
+		await close_panel()
+	Events.open_panel.emit("creatures", {"id": "hale"})
+	await wait(0.8)
+	expect(panel() is CreaturesPanel, "c10: creatures panel opens")
+	await shot("c10_creatures")
+	var adv_a: Dictionary = {}
+	for a in Adv.all().values():
+		if a["status"] == "in_town":
+			adv_a = a
+			break
+	expect(not adv_a.is_empty(), "c10: an adventurer is in town")
+	await click(str(adv_a["name"]) + " (")
+	await wait(0.4)
+	await shot("c10_creatures_for_adv")
+	expect(await click("as a gift"), "c10: gift a creature")
+	await wait(0.4)
+	expect(not Companions.of(Adv.get_a(str(adv_a["id"]))).is_empty(), "c10: the adventurer keeps the creature")
+	await shot("c10_creatures_given")
+	await close_panel()
+	# ---- in the village: two adventurers with companions (a ground beast and a flyer) walking about
+	var walkers := []
+	for a in Adv.all().values():
+		if a["status"] == "in_town" and walkers.size() < 2:
+			walkers.append(a)
+	for a in walkers:
+		var old := Companions.of(a)
+		if not old.is_empty():
+			a["equipment"].erase("companion")
+	Companions.give(walkers[0], Companions.make("comp_war_hound", 92.0, "Bramble"))
+	if walkers.size() >= 2:
+		Companions.give(walkers[1], Companions.make("comp_hunting_falcon", 92.0, "Skye"))
+	await wait(1.3)
+	var cf: CompanionFollowers = W().ysort.get_node_or_null("CompanionFollowers")
+	expect(cf != null, "c10: the companion follower node is in the world")
+	var T := 64.0
+	var start := Vector2(54 * T, 35 * T)
+	var i := 0
+	for a in walkers:
+		var n: NPCActor = W().npcs[a["id"]]
+		n.set_meta("travelling", true)   # keep the schedule from re-routing them during the shot
+		n.visible = true
+		n.position = start + Vector2(i * 150, i * 40)
+		n.go(W().path_to(n.position, "harbour_quay"))
+		i += 1
+	# the commerce characters stand by for a line-up (their venues come from the village worker)
+	var j := 0
+	for id in Commerce.NPCS:
+		var m: NPCActor = W().npcs.get(id)
+		if m:
+			m.set_meta("travelling", true)
+			m.visible = true
+			m.path = PackedVector2Array()
+			m.position = start + Vector2(-420 + j * 90, -170)
+			m.show_name(true)
+			j += 1
+	await tp(start + Vector2(0, 60))
+	W().camera.zoom = Vector2(1.6, 1.6)
+	await wait(1.2)
+	await shot("c10_village_lineup")
+	var f0: Node2D = cf.follower_of(str(walkers[0]["id"])) if cf else null
+	expect(f0 != null and f0.visible, "c10: the hound follows its adventurer")
+	for k in 3:
+		var n0: NPCActor = W().npcs[walkers[0]["id"]]
+		W().player.position = n0.position + Vector2(0, 80)
+		W().camera.reset_smoothing()
+		await wait(1.4)
+		await shot("c10_village_walk_%d" % k)
+	if f0:
+		var n1: NPCActor = W().npcs[walkers[0]["id"]]
+		expect(f0.position.distance_to(n1.position) < 140.0, "c10: the companion keeps close (%.0f px)" % f0.position.distance_to(n1.position))
+	W().camera.zoom = Vector2.ONE
+	expect(await c10_save_load(), "c10: save/load with companions and commerce state")
+
+
+func c10_give(def: String, n := 1) -> void:
+	if bool(DB.item(def).get("stack", false)):
+		Game.add_item(Items.make(def, {"qty": n}), false)
+	else:
+		for k in n:
+			Game.add_item(Items.make(def, {"quality": 80.0}), false)
+
+
+func c10_save_load() -> bool:
+	var comp_name := ""
+	for a in Adv.all().values():
+		if not Companions.of(a).is_empty():
+			comp_name = str(Companions.of(a)["name"])
+	if not Saves.save("c10_commerce"):
+		return false
+	var ok := Saves.load_slot("c10_commerce")
+	Saves.delete("c10_commerce")
+	await wait(0.5)
+	var found := false
+	for a in Adv.all().values():
+		if str(Companions.of(a).get("name", "")) == comp_name:
+			found = true
+	return ok and found and Commerce.caravan_present()
