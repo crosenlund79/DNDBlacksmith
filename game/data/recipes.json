@@ -34,7 +34,8 @@
    "purity": "1d6"
   },
   "xp": {
-   "smithing": 12
+   "smithing": 12,
+   "mining": 20
   },
   "requires": {},
   "desc": ""
@@ -81,7 +82,8 @@
    "purity": "1d6"
   },
   "xp": {
-   "smithing": 18
+   "smithing": 18,
+   "mining": 24
   },
   "requires": {},
   "desc": ""
@@ -1109,7 +1111,8 @@
    "purity": "1d6"
   },
   "xp": {
-   "arcane_metalwork": 40
+   "arcane_metalwork": 40,
+   "mining": 30
   },
   "requires": {},
   "desc": ""
@@ -1641,7 +1644,8 @@
    "purity": "1d6"
   },
   "xp": {
-   "arcane_metalwork": 50
+   "arcane_metalwork": 50,
+   "mining": 40
   },
   "requires": {},
   "desc": ""
@@ -1830,5 +1834,914 @@
    "enchanted_stitching": 2
   },
   "desc": "Taller than its archer. Needs a sure hand at the grinding wheel."
+ },
+ {
+  "id": "steel_cuirass",
+  "name": "Steel Cuirass",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "steel",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel plates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "bellows",
+    "op": "Hold the yellow heat",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "anvil",
+    "op": "Dish and raise the breastplate",
+    "checks": 3,
+    "weight": 1.4
+   },
+   {
+    "station": "forge",
+    "op": "Re-heat for the backplate",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "anvil",
+    "op": "Planish and roll the edges",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "quench_trough",
+    "op": "Oil-temper the plates",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet the straps",
+    "checks": 1,
+    "weight": 0.6
+   }
+  ],
+  "steps": [
+   "forge",
+   "bellows",
+   "anvil",
+   "forge",
+   "anvil",
+   "quench_trough",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_steel": 3,
+   "leather_cured": 1
+  },
+  "output": "cuirass_steel",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 60
+  },
+  "requires": {},
+  "desc": "Folded steel plate: lighter than iron and far harder to dent."
+ },
+ {
+  "id": "kite_shield",
+  "name": "Steel Kite Shield",
+  "discipline": "classic",
+  "category": "armour",
+  "material": "steel",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the long plate",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Raise the kite and band the rim",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "quench_trough",
+    "op": "Harden the rim",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Dress the edges",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil",
+   "quench_trough",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_steel": 2,
+   "leather_cured": 1
+  },
+  "output": "shield_kite",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "smithing": 45
+  },
+  "requires": {},
+  "desc": "A rider's shield; the hardened rim turns a falling blade."
+ },
+ {
+  "id": "smelt_orichalcum",
+  "name": "Smelt Orichalcum",
+  "discipline": "arcane",
+  "category": "material",
+  "material": "ore",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "arcane_crucible",
+    "op": "Melt orichalcum with aether dust",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "bellows",
+    "op": "Drive the heat white",
+    "checks": 1,
+    "weight": 0.7
+   },
+   {
+    "station": "aetheric_stabilizer",
+    "op": "Settle the singing alloy",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "arcane_crucible",
+   "bellows",
+   "aetheric_stabilizer"
+  ],
+  "inputs": {
+   "ore_orichalcum": 2,
+   "reagent_aether_dust": 1,
+   "coal": 2
+  },
+  "output": "ingot_orichalcum",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "arcane_metalwork": 50,
+   "mining": 45
+  },
+  "requires": {},
+  "desc": "The red-gold metal of the old sea-kings, made workable only in warded fire."
+ },
+ {
+  "id": "restore_runestone",
+  "name": "Restore an Old Runestone",
+  "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 1,
+  "operations": [
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Soak away the grave-crust",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_polishing_wheel",
+    "op": "Polish the old face back",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "rune_cleansing_basin",
+   "rune_polishing_wheel"
+  ],
+  "inputs": {
+   "relic_unknown_tablet": 1
+  },
+  "output": "runestone_blank",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "runecraft": 45,
+   "relic_hunting": 10
+  },
+  "requires": {},
+  "desc": "Cleaning a weathered tablet yields two sound blanks — and teaches how the old runes were built.",
+  "teaches_flag": "rune_knowledge"
+ },
+ {
+  "id": "frost_runestone",
+  "name": "Frost Runestone",
+  "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "rune_cutting_bench",
+    "op": "Cleave the blank",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Engrave the frost rune",
+    "checks": 2,
+    "weight": 1.4
+   },
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Wash in snowmelt",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "resonance_pedestal",
+    "op": "Tune the hum",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "rune_cutting_bench",
+   "rune_engraving_stand",
+   "rune_cleansing_basin",
+   "resonance_pedestal"
+  ],
+  "inputs": {
+   "runestone_blank": 1,
+   "herb_moonwort": 1
+  },
+  "output": "runestone_frost",
+  "qty": 1,
+  "dice": {
+   "resonance": "1d10",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "runecraft": 35
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "original_runestone",
+  "name": "Original Rune (your own design)",
+  "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "rune_cutting_bench",
+    "op": "Cleave a flawless blank",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "rune_engraving_stand",
+    "op": "Engrave a rune of your own design",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Wash away the chaos",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "resonance_pedestal",
+    "op": "Find the note no one has sung",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "rune_polishing_wheel",
+    "op": "Polish to a mirror",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "rune_cutting_bench",
+   "rune_engraving_stand",
+   "rune_cleansing_basin",
+   "resonance_pedestal",
+   "rune_polishing_wheel"
+  ],
+  "inputs": {
+   "runestone_blank": 1,
+   "gem_moonstone": 1
+  },
+  "output": "runestone_original",
+  "qty": 1,
+  "dice": {
+   "resonance": "1d10",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "runecraft": 70
+  },
+  "requires": {},
+  "desc": "Not copied from any tablet: a rune the smith designs, the first of its kind."
+ },
+ {
+  "id": "concord_runestone",
+  "name": "Concord Runestone",
+  "discipline": "runecraft",
+  "category": "runestone",
+  "material": "runestone",
+  "difficulty": 6,
+  "operations": [
+   {
+    "station": "rune_engraving_stand",
+    "op": "Interlace three rune patterns",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "rune_cleansing_basin",
+    "op": "Wash out the clash",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "resonance_pedestal",
+    "op": "Tune three runes to one chord",
+    "checks": 3,
+    "weight": 1.4
+   }
+  ],
+  "steps": [
+   "rune_engraving_stand",
+   "rune_cleansing_basin",
+   "resonance_pedestal"
+  ],
+  "inputs": {
+   "runestone_original": 1,
+   "runestone_ember": 1,
+   "runestone_ward": 1
+  },
+  "output": "runestone_concord",
+  "qty": 1,
+  "dice": {
+   "resonance": "1d10",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "runecraft": 100
+  },
+  "requires": {},
+  "desc": "A complex combination: fire, ward and your own rune singing as one."
+ },
+ {
+  "id": "mithril_plated_cuirass",
+  "name": "Mithril-plated Cuirass",
+  "discipline": "arcane",
+  "category": "armour",
+  "material": "mithril",
+  "difficulty": 7,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the steel under-plate",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "arcane_crucible",
+    "op": "Run the charged mithril into plate",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "arcane_anvil",
+    "op": "Hammer the mithril onto the cuirass",
+    "checks": 3,
+    "weight": 1.5
+   },
+   {
+    "station": "aetheric_stabilizer",
+    "op": "Settle the charge",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet and strap",
+    "checks": 1,
+    "weight": 0.5
+   }
+  ],
+  "steps": [
+   "forge",
+   "arcane_crucible",
+   "arcane_anvil",
+   "aetheric_stabilizer",
+   "stitching_table"
+  ],
+  "inputs": {
+   "ingot_mithril": 2,
+   "ingot_steel": 2,
+   "reagent_quintessence": 1,
+   "leather_cured": 1
+  },
+  "output": "mithril_plated_cuirass",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "arcane_metalwork": 90,
+   "smithing": 35
+  },
+  "requires": {},
+  "desc": "Steel beneath, charged mithril above; the plates hum when struck."
+ },
+ {
+  "id": "cure_bear_leather",
+  "name": "Cure Bear Leather",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "bearhide",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Flesh and soak the pelt",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "leather_vat",
+    "op": "Tan in oak-bark liquor",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "leather_vat"
+  ],
+  "inputs": {
+   "bear_pelt": 1,
+   "reagent_salt": 1
+  },
+  "output": "leather_bear",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 28
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "bearhide_brigandine",
+  "name": "Bearhide Brigandine",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "bearhide",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Harden the bear leather",
+    "checks": 1,
+    "weight": 0.8
+   },
+   {
+    "station": "anvil",
+    "op": "Punch the iron plates",
+    "checks": 2,
+    "weight": 1.1
+   },
+   {
+    "station": "stitching_table",
+    "op": "Rivet the plates beneath the leather",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit and balance",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "anvil",
+   "stitching_table",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "leather_bear": 3,
+   "ingot_iron": 2,
+   "thread_linen": 1
+  },
+  "output": "bearhide_brigandine",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 55,
+   "smithing": 15
+  },
+  "requires": {},
+  "desc": "Thick bear leather over hidden iron plates: a hunter's armour."
+ },
+ {
+  "id": "cure_troll_leather",
+  "name": "Cure Troll Hide",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "wyrmhide",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Burn out the troll-rot",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "leather_vat",
+    "op": "Tan with quicksalt",
+    "checks": 1,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "leather_vat"
+  ],
+  "inputs": {
+   "troll_hide": 1,
+   "reagent_salt": 2
+  },
+  "output": "leather_wyrm",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 40
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "cure_wyvern_leather",
+  "name": "Cure Wyvern Hide",
+  "discipline": "stitching",
+  "category": "material",
+  "material": "wyrmhide",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Scrape the venom glands clean",
+    "checks": 1,
+    "weight": 1.1
+   },
+   {
+    "station": "leather_vat",
+    "op": "Tan with quicksalt",
+    "checks": 2,
+    "weight": 1.2
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "leather_vat"
+  ],
+  "inputs": {
+   "wyvern_hide": 1,
+   "reagent_salt": 1
+  },
+  "output": "leather_wyrm",
+  "qty": 2,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "enchanted_stitching": 50
+  },
+  "requires": {},
+  "desc": ""
+ },
+ {
+  "id": "wyrmleather_boots",
+  "name": "Wyrmleather Boots",
+  "discipline": "stitching",
+  "category": "armour",
+  "material": "wyrmhide",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "leather_vat",
+    "op": "Steam-shape the wyrm leather",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "stitching_table",
+    "op": "Stitch with ghost-thread",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "embroidery_frame",
+    "op": "Embroider heat-wards",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit to the stride",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "leather_vat",
+   "stitching_table",
+   "embroidery_frame",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "leather_wyrm": 2,
+   "thread_ethereal": 1
+  },
+  "output": "boots_wyrmleather",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "enchanted_stitching": 70
+  },
+  "requires": {},
+  "desc": "Monster leather that shrugs off fire and never wears through."
+ },
+ {
+  "id": "distil_quintessence",
+  "name": "Silverleaf Quintessence",
+  "discipline": "alchemy",
+  "category": "material",
+  "material": "herbal",
+  "difficulty": 4,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Bruise the silverleaf",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "alembic",
+    "op": "Distil the silver spirit",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "reagent_table",
+    "op": "Separate the quintessence",
+    "checks": 1,
+    "weight": 1.1
+   }
+  ],
+  "steps": [
+   "mortar_station",
+   "alembic",
+   "reagent_table"
+  ],
+  "inputs": {
+   "herb_silverleaf": 2,
+   "reagent_salt": 1
+  },
+  "output": "reagent_quintessence",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "alchemy": 40
+  },
+  "requires": {},
+  "desc": "An advanced reagent: binds charged metal to plain steel."
+ },
+ {
+  "id": "aether_infusion",
+  "name": "Aether Infusion",
+  "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "alembic",
+    "op": "Distil the frostcap essence",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "cauldron",
+    "op": "Stir in the aether dust",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "infusion_rack",
+    "op": "Steep under moonlight",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "alembic",
+   "cauldron",
+   "infusion_rack"
+  ],
+  "inputs": {
+   "reagent_aether_dust": 1,
+   "herb_frostcap": 1
+  },
+  "output": "infusion_aether",
+  "qty": 1,
+  "dice": {
+   "potency": "1d8",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "alchemy": 55
+  },
+  "requires": {},
+  "desc": "A magical infusion: brushed onto equipment at the infusion rack, it lends magic for three expeditions."
+ },
+ {
+  "id": "wyrmfire_coating",
+  "name": "Wyrmfire Coating",
+  "discipline": "alchemy",
+  "category": "alchemy",
+  "material": "herbal",
+  "difficulty": 6,
+  "operations": [
+   {
+    "station": "mortar_station",
+    "op": "Grind bloodroot with wyrm ash",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "reagent_table",
+    "op": "Draw off the fire oil",
+    "checks": 1,
+    "weight": 1.2
+   },
+   {
+    "station": "cauldron",
+    "op": "Reduce to a coating",
+    "checks": 2,
+    "weight": 1.3
+   }
+  ],
+  "steps": [
+   "mortar_station",
+   "reagent_table",
+   "cauldron"
+  ],
+  "inputs": {
+   "reagent_wyrm_ash": 1,
+   "herb_bloodroot": 2
+  },
+  "output": "coating_wyrmfire",
+  "qty": 1,
+  "dice": {
+   "potency": "1d8",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "alchemy": 70
+  },
+  "requires": {},
+  "desc": "An exotic compound: a blade brushed with it burns like dragon's breath."
+ },
+ {
+  "id": "dragonscale_armor",
+  "name": "Dragonscale Armour",
+  "discipline": "arcane",
+  "category": "armour",
+  "material": "dragonscale",
+  "difficulty": 5,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Heat the dragon-bone frame",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "leather_vat",
+    "op": "Prepare the scales in wyrm-ash brine",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "arcane_anvil",
+    "op": "Set and imprint every scale",
+    "checks": 4,
+    "weight": 1.6
+   },
+   {
+    "station": "spellbinding_array",
+    "op": "Bind the dragon's fire-ward",
+    "checks": 2,
+    "weight": 1.3
+   },
+   {
+    "station": "stitching_table",
+    "op": "Lace the scales onto wyrm leather",
+    "checks": 2,
+    "weight": 1.2
+   },
+   {
+    "station": "fitting_mannequin",
+    "op": "Fit the legendary harness",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "leather_vat",
+   "arcane_anvil",
+   "spellbinding_array",
+   "stitching_table",
+   "fitting_mannequin"
+  ],
+  "inputs": {
+   "dragon_scale": 4,
+   "dragon_bone": 2,
+   "leather_wyrm": 2,
+   "ingot_orichalcum": 1
+  },
+  "output": "dragonscale_armor",
+  "qty": 1,
+  "dice": {
+   "guard": "1d20",
+   "spellweave": "1d12",
+   "temper": "1d12",
+   "fortune": "1d100"
+  },
+  "xp": {
+   "arcane_metalwork": 160,
+   "smithing": 60,
+   "enchanted_stitching": 60
+  },
+  "requires": {},
+  "desc": "Legendary armour of true dragon scale on a dragon-bone frame. It never leaves the forge below rare.",
+  "min_rarity": "rare"
  }
 ]

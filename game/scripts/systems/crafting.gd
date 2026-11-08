@@ -279,7 +279,8 @@ static func base_quality(j := {}) -> float:
 
 
 static func skill_bonus(recipe_id: String) -> float:
-	return float(cfg("skill").get("quality_per_level", 0.4)) * Game.player_level(recipe_skill(recipe_id)) + hireling_assist(recipe_id)
+	return float(cfg("skill").get("quality_per_level", 0.4)) * Game.player_level(recipe_skill(recipe_id)) + hireling_assist(recipe_id) \
+		+ SkillTree.quality_bonus(recipe_id)
 
 
 ## A skilled hand at work in the forge steadies the smith's work: +0.25% per level of the best
@@ -417,6 +418,10 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 			it["bound"] = {"name": bname, "stat": bstat, "value": bval}
 			it["affixes"].append({"id": "bound", "stat": bstat, "value": bval})
 	var rar: String = rev["rarity"]
+	# legendary-grade recipes (dragon scale) never leave the forge below their minimum rarity
+	var min_rank := SkillTree.min_rarity_rank(rid)
+	if int(SkillTree.RARITY_RANK.get(rar, 0)) < min_rank:
+		rar = str(r.get("min_rarity", rar))
 	if it["rarity"] == "common" and rar != "common":
 		if Items.is_equipment(it):
 			Items.apply_rarity(it, rar)
@@ -453,6 +458,13 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 	Game.state["stats"]["crafted"] += 1
 	if out_def == "ingot_mithril" or out_def == "sword_mithril":
 		Game.set_flag("crafted_arcane")
+	# some work teaches the smith something (restoring an old runestone → rune lore)
+	var teach := str(r.get("teaches_flag", ""))
+	if teach != "" and not Game.has_flag(teach):
+		Game.set_flag(teach)
+		var fi := SkillTree.flag_info(teach)
+		Game.journal("Working on the %s taught me something new: %s." % [r.get("name", rid), str(fi.get("name", teach)).to_lower()])
+		Events.toast.emit("New knowledge: %s" % fi.get("name", teach), "good")
 	Game.add_item(it, false)
 	Events.crafting_changed.emit()
 	Events.item_crafted.emit(it)
@@ -474,7 +486,8 @@ static func _apply_rarity_plain(it: Dictionary, rar: String) -> void:
 		it["stats"][k] = int(round(float(it["stats"][k]) * float(p[1])))
 
 
-const TREATMENTS := {"oil_whetstone": ["attack", "Whetstone Oil"], "coating_flame": ["fire", "Flame Coating"], "coating_frost": ["frost", "Frost Coating"]}
+const TREATMENTS := {"oil_whetstone": ["attack", "Whetstone Oil"], "coating_flame": ["fire", "Flame Coating"], "coating_frost": ["frost", "Frost Coating"],
+	"infusion_aether": ["magic", "Aether Infusion"], "coating_wyrmfire": ["fire", "Wyrmfire Coating"]}
 
 
 ## Brushes a treatment onto equipment: its effect lasts three expeditions (used by the encounters).

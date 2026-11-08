@@ -36,6 +36,7 @@ func _ready() -> void:
 	_social()
 	_loot()
 	_living_village()
+	_skilltree()
 	_saves()
 	await _startup_regressions()
 	report.append("\n%d passed, %d failed" % [passed, failed])
@@ -95,6 +96,8 @@ func _craft(recipe: String, q: float, dice: Dictionary, mode := "digital") -> Di
 
 
 func _crafting() -> void:
+	# these older tests exercise crafting mechanics across many recipes: open the whole skill tree first
+	SkillTree.unlock_all()
 	check(Crafting.missing_inputs("iron_longsword").is_empty(), "crafting: starter materials cover a sword")
 	# every recipe has a sequence of operations at real stations, and the dice it needs are configured
 	var bad := []
@@ -546,6 +549,172 @@ func _loot() -> void:
 	check(items.size() >= 3, "loot: barrow table rolls items")
 	var c := Loot.make_container("bag_traveller", items, "test")
 	check(c["contents"].size() == items.size(), "loot: container keeps fixed contents")
+
+## Iteration 9: the Blacksmith's Skill Tree — data integrity, the new-game state, learning nodes,
+## gating, techniques, knowledge flags, legacy saves and the whole path to dragon armour.
+func _skilltree() -> void:
+	var keep: Dictionary = Game.state.duplicate(true)
+	# the trade module defines the raw exotic materials; until it is merged, stand in for them here only
+	var temp := []
+	for id in ["bear_pelt", "troll_hide", "wyvern_hide", "dragon_scale", "dragon_bone", "ore_orichalcum", "herb_bloodroot",
+			"herb_frostcap", "herb_silverleaf", "reagent_aether_dust", "reagent_wyrm_ash"]:
+		if DB.item(id).is_empty():
+			DB.items[id] = {"id": id, "name": id.capitalize(), "type": "material", "slot": null, "value": 50, "stats": {}, "icon": id, "stack": true, "desc": "", "tags": []}
+			temp.append(id)
+	Game.new_game()
+	# ---- data integrity
+	var by := {}
+	for n in SkillTree.nodes():
+		by[n["id"]] = n
+	check(SkillTree.branches().size() == 6, "skilltree: six branches")
+	var sizes := []
+	for b in SkillTree.branches():
+		sizes.append(SkillTree.branch_nodes(b["id"]).size())
+	check(sizes.all(func(x): return x >= 5 and x <= 9), "skilltree: every branch has 5-9 nodes %s" % [sizes])
+	var bad := []
+	for n in SkillTree.nodes():
+		for p in n["requires"].get("nodes", []):
+			if not by.has(p):
+				bad.append("%s->%s" % [n["id"], p])
+	check(bad.is_empty(), "skilltree: every prerequisite exists %s" % [bad])
+	# no cycles: repeatedly take nodes whose prerequisites are all taken
+	var done := {}
+	var progress := true
+	while progress:
+		progress = false
+		for n in SkillTree.nodes():
+			if done.has(n["id"]):
+				continue
+			if (n["requires"].get("nodes", []) as Array).all(func(p): return done.has(p)):
+				done[n["id"]] = true
+				progress = true
+	check(done.size() == by.size(), "skilltree: no prerequisite cycles (%d/%d ordered)" % [done.size(), by.size()])
+	var rcount := {}
+	var scount := {}
+	for n in SkillTree.nodes():
+		for r in n["unlocks"]["recipes"]:
+			rcount[r] = int(rcount.get(r, 0)) + 1
+		for s in n["unlocks"]["stations"]:
+			scount[s] = int(scount.get(s, 0)) + 1
+	var rbad := DB.recipes.keys().filter(func(r): return int(rcount.get(r, 0)) != 1)
+	var sbad := DB.stations.keys().filter(func(s): return int(scount.get(s, 0)) != 1)
+	check(rbad.is_empty() and rcount.size() == DB.recipes.size(), "skilltree: every recipe is unlocked by exactly one node %s" % [rbad])
+	check(sbad.is_empty() and scount.size() == DB.stations.size(), "skilltree: every station is unlocked by exactly one node %s" % [sbad])
+	var order_bad := []
+	for rid in DB.recipes:
+		var anc := _st_ancestors(SkillTree.recipe_node(rid), by)
+		for s in DB.recipe(rid)["steps"]:
+			if not anc.has(SkillTree.station_node(s)):
+				order_bad.append("%s@%s" % [rid, s])
+	check(order_bad.is_empty(), "skilltree: every recipe's stations are unlocked by the same or an earlier node %s" % [order_bad])
+	var secrets := DB.recipes.values().filter(func(r): return str(r.get("requires_flag", "")) != "")
+	check(not secrets.is_empty() and secrets.all(func(r): return not SkillTree.recipe_visible(r["id"]) and not SkillTree.recipe_known(r["id"])), "skilltree: secret recipes are hidden")
+	check(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret starsteel node is hidden")
+	# ---- a new game
+	check(SkillTree.is_unlocked("s_basic") and SkillTree.is_unlocked("l_basic") and SkillTree.learned().size() == 2, "skilltree: new game knows basic ironworking and leatherwork only")
+	check(Crafting.recipe_locked_reason("iron_longsword") == "" and Crafting.missing_inputs("iron_longsword").is_empty(), "skilltree: iron longsword craftable from the start")
+	for rid in ["steel_longsword", "ward_runestone", "ember_runestone", "charge_mithril", "mithril_plated_cuirass", "dragonscale_armor"]:
+		var why := Crafting.recipe_locked_reason(rid)
+		check(why.contains("Skill tree"), "skilltree: %s locked with a reason (%s)" % [rid, why])
+	check(Crafting.station_locked_reason("bellows") != "" and Crafting.station_locked_reason("forge") == "", "skilltree: bellows locked, forge open")
+	check(SkillTree.node_state("s_blades") == "locked", "skilltree: simple blades wait for the first iron sword")
+	var sword := _craft("iron_longsword", 95.0, {"edge": 10, "temper": 6, "fortune": 30})
+	check(not sword.is_empty(), "skilltree: crafted an iron longsword on a new game")
+	check(SkillTree.node_state("s_blades") == "available", "skilltree: holding the sword makes Simple Blades available")
+	check(SkillTree.unlock("s_blades") == "" and Crafting.recipe_locked_reason("iron_cuirass") == "", "skilltree: learning Simple Blades opens the iron cuirass")
+	check(Chronicle.entries()[-1]["kind"] == "skill", "skilltree: learning is written to the chronicle")
+	# ---- unlocking with skill requirements
+	var g0 := Game.gold()
+	check(SkillTree.unlock("m_common") == "" and SkillTree.unlock("m_alloys") == "" and Game.gold() == g0 - 40, "skilltree: tuition paid for ordinary alloys")
+	check(Crafting.station_locked_reason("bellows") == "", "skilltree: bellows unlocked by ordinary alloys")
+	var why_steel := SkillTree.can_unlock("s_steel")
+	check(why_steel.contains("Smithing") and SkillTree.unlock("s_steel") != "" and not SkillTree.is_unlocked("s_steel"), "skilltree: steelworking refused at smithing 4 (%s)" % why_steel)
+	check(SkillTree.requirements_text("s_steel")[0].begins_with("✗") and SkillTree.requirements_text("s_steel")[0].contains("(you: 4)"), "skilltree: requirement text marks ✗ with the current level")
+	while Game.player_level("smithing") < 5:
+		Game.grant_player_xp("smithing", 50)
+	check(SkillTree.requirements_text("s_steel")[0].begins_with("✓"), "skilltree: requirement turns ✓ after the skill rises")
+	check(SkillTree.unlock("s_steel") == "" and SkillTree.recipe_reason("steel_longsword") == "" and Crafting.recipe_locked_reason("steel_longsword") == "", "skilltree: steelworking learned after training; recipe reason clears")
+	# ---- techniques, knowledge flags, hidden nodes
+	var qb := SkillTree.quality_bonus("iron_longsword")
+	SkillTree.unlock_node_force("s_heat")
+	check(is_equal_approx(SkillTree.quality_bonus("iron_longsword"), qb + 2.0), "skilltree: interrupted quench adds +2%% craftsmanship to classic weapons")
+	SkillTree.unlock_node_force("s_alloy")
+	check(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: starsteel stays hidden without its notes")
+	Game.set_flag("recipe_starsteel")
+	check(SkillTree.node_state("s_starsteel") != "hidden" and SkillTree.recipe_visible("starsteel_blade"), "skilltree: the notes reveal the starsteel node")
+	Game.add_item(Items.make("relic_unknown_tablet"), false)
+	for nid in ["r_identify", "r_clean"]:
+		SkillTree.unlock_node_force(nid)
+	var blanks := _craft("restore_runestone", 90.0, {"purity": 3})
+	check(not blanks.is_empty() and Game.has_flag("rune_knowledge"), "skilltree: restoring an old runestone teaches rune lore")
+	Game.add_item(Items.make("dragon_scale"), false)
+	check(Game.has_flag("dragon_lore") and SkillTree.seen("dragon_scale"), "skilltree: holding a dragon scale teaches dragon lore and counts as seen")
+	# ---- legacy save: no "skilltree" key → every node whose skill requirement is met
+	Game.state.erase("skilltree")
+	Game.state.erase("items_seen")
+	check(Saves.save("st_legacy_test"), "skilltree: legacy save written")
+	check(Saves.load_slot("st_legacy_test"), "skilltree: legacy save read")
+	Saves.delete("st_legacy_test")
+	check(SkillTree.is_unlocked("s_steel") and SkillTree.is_unlocked("r_clean") and SkillTree.is_unlocked("al_simple") and not SkillTree.is_unlocked("r_original"),
+		"skilltree: legacy save keeps the nodes its skills meet")
+	check(not SkillTree.is_unlocked("s_master") and Crafting.recipe_locked_reason("iron_longsword") == "", "skilltree: legacy save keeps ordinary crafting, not mastery")
+	# ---- the whole path: learn every node legitimately (train skills, find materials and lore, pay tuition)
+	Game.new_game()
+	Game.state["upgrades"].append("arcane_foundry")
+	var guard := 0
+	var key_nodes := ["ar_energy", "ar_crucible", "ar_plating", "r_original", "l_dragon", "ar_legend"]
+	while SkillTree.learned().size() < by.size() and guard < 60:
+		guard += 1
+		for n in SkillTree.nodes():
+			var id: String = n["id"]
+			if SkillTree.is_unlocked(id) or not (n["requires"].get("nodes", []) as Array).all(func(p): return SkillTree.is_unlocked(p)):
+				continue
+			var r: Dictionary = n["requires"]
+			if r.has("skill"):
+				while Game.player_level(str(r["skill"][0])) < int(r["skill"][1]):
+					Game.grant_player_xp(str(r["skill"][0]), 40)
+			for f in r.get("flags", []):
+				Game.set_flag(str(f))
+			for dd in r.get("items_seen", []):
+				Game.add_item(Items.make(str(dd)), false)
+			for dd in r.get("items", {}):
+				Game.add_item(Items.make(str(dd), {"qty": int(r["items"][dd])}), false)
+			if Game.gold() < int(r.get("gold", 0)):
+				Game.add_gold(int(r["gold"]), "test", "test tuition")
+			var res := SkillTree.unlock(id)
+			if id in key_nodes:
+				check(res == "", "skilltree path: learned %s %s" % [id, res])
+	check(SkillTree.is_unlocked("ar_legend") and SkillTree.recipe_reason("dragonscale_armor") == "", "skilltree path: legendary arcane craftsmanship reached (%d rounds)" % guard)
+	check(SkillTree.learned().size() == by.size(), "skilltree path: every node learned, the secret one too (%d/%d)" % [SkillTree.learned().size(), by.size()])
+	# dragon armour: legendary-grade, never below rare even from rough work
+	for pair in [["dragon_scale", 4], ["dragon_bone", 2], ["leather_wyrm", 2], ["ingot_orichalcum", 1]]:
+		Game.add_item(Items.make(pair[0], {"qty": pair[1]}), false)
+	check(Crafting.recipe_locked_reason("dragonscale_armor") == "" and Crafting.missing_inputs("dragonscale_armor").is_empty(), "skilltree path: dragonscale armour craftable (%s)" % Crafting.recipe_locked_reason("dragonscale_armor"))
+	var drag := _craft("dragonscale_armor", 55.0, {"guard": 8, "spellweave": 5, "temper": 6, "fortune": 10})
+	check(not drag.is_empty() and drag.get("rarity") in ["rare", "legendary"] and Items.stat(drag, "protection") > 20, "skilltree path: dragonscale armour forged (%s, protection %d)" % [drag.get("rarity"), Items.stat(drag, "protection")])
+	# ---- dev helpers
+	SkillTree.reset_new()
+	check(SkillTree.learned().size() == 2, "skilltree: reset_new returns to the starting nodes")
+	SkillTree.unlock_all()
+	check(SkillTree.learned().size() == by.size(), "skilltree: unlock_all learns every node")
+	for id in temp:
+		DB.items.erase(id)
+	Game.state = keep
+
+
+## A node, its prerequisites (transitively) and the starting nodes.
+func _st_ancestors(id: String, by: Dictionary) -> Dictionary:
+	var out := {id: true}
+	for s in SkillTree.data().get("start", []):
+		out[s] = true
+	var todo: Array = (by.get(id, {}).get("requires", {}).get("nodes", []) as Array).duplicate()
+	while not todo.is_empty():
+		var p: String = todo.pop_back()
+		if out.has(p):
+			continue
+		out[p] = true
+		todo.append_array(by.get(p, {}).get("requires", {}).get("nodes", []))
+	return out
 
 
 func _saves() -> void:

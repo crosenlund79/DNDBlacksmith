@@ -1,0 +1,1499 @@
+{
+ "_doc": "Generates game/data/skilltree.json — the Blacksmith's Skill Tree.",
+ "branches": [
+  {
+   "id": "mining",
+   "name": "Mining & Metallurgy",
+   "skill": "mining",
+   "x": 0,
+   "colour": "#8a6a3a",
+   "desc": "Ores, refining and alloys — from honest iron to orichalcum."
+  },
+  {
+   "id": "smithing",
+   "name": "Traditional Smithing",
+   "skill": "smithing",
+   "x": 1,
+   "colour": "#7e2418",
+   "desc": "The forge and the anvil: blades, armour and the master's eye."
+  },
+  {
+   "id": "arcane",
+   "name": "Arcane Metalworking",
+   "skill": "arcane_metalwork",
+   "x": 2,
+   "colour": "#5a3e8a",
+   "desc": "Magic bound into the metal itself. Opens once a smith can handle leyline energy."
+  },
+  {
+   "id": "runecraft",
+   "name": "Runecrafting",
+   "skill": "runecraft",
+   "x": 3,
+   "colour": "#2e4e6e",
+   "desc": "Reading, restoring, engraving and finally inventing runes."
+  },
+  {
+   "id": "alchemy",
+   "name": "Alchemy",
+   "skill": "alchemy",
+   "x": 4,
+   "colour": "#3e6a2e",
+   "desc": "Oils, distillations, reagents, infusions and exotic compounds."
+  },
+  {
+   "id": "leather",
+   "name": "Leatherworking & Enchanted Stitching",
+   "skill": "enchanted_stitching",
+   "x": 5,
+   "colour": "#6a4422",
+   "desc": "Hides to monster leather, linen to ethereal thread — and dragon scale."
+  }
+ ],
+ "flags": {
+  "rune_knowledge": {
+   "name": "Rune lore",
+   "hint": "learned by restoring an old runestone from a weathered tablet"
+  },
+  "dragon_lore": {
+   "name": "Dragon lore",
+   "hint": "rumoured in the harbour taverns — or learned by studying a dragon's scale or bone"
+  },
+  "recipe_starsteel": {
+   "name": "The starsteel notes",
+   "hint": "a Forgotten Recipe found among the relics"
+  },
+  "found_mithril": {
+   "name": "Mithril found",
+   "hint": "hold mithril ore for the first time"
+  }
+ },
+ "start": [
+  "s_basic",
+  "l_basic"
+ ],
+ "nodes": [
+  {
+   "id": "s_basic",
+   "branch": "smithing",
+   "name": "Basic Ironworking & Repairs",
+   "desc": "The apprentice's craft: heat, hammer, quench and grind honest iron.",
+   "x": 1,
+   "y": 0,
+   "requires": {},
+   "unlocks": {
+    "recipes": [
+     "smelt_iron",
+     "iron_longsword",
+     "hand_axe",
+     "flanged_mace",
+     "round_shield",
+     "iron_helm"
+    ],
+    "stations": [
+     "forge",
+     "anvil",
+     "crucible",
+     "quench_trough",
+     "grinding_wheel"
+    ],
+    "techniques": [
+     {
+      "id": "t_repairs",
+      "name": "Field repairs",
+      "desc": "Dented and notched gear can be ground and re-tempered at the grinding wheel."
+     }
+    ]
+   }
+  },
+  {
+   "id": "s_blades",
+   "branch": "smithing",
+   "name": "Simple Blades & Armour",
+   "desc": "Once your first sword has left the anvil: plate for the body and silver for the hand.",
+   "x": 1,
+   "y": 1,
+   "requires": {
+    "skill": [
+     "smithing",
+     4
+    ],
+    "nodes": [
+     "s_basic"
+    ],
+    "items_seen": [
+     "sword_iron"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "iron_cuirass",
+     "silver_band"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "s_steel",
+   "branch": "smithing",
+   "name": "Steelworking",
+   "desc": "Folded, normalised steel: keener edges and lighter plate.",
+   "x": 1,
+   "y": 2,
+   "requires": {
+    "skill": [
+     "smithing",
+     5
+    ],
+    "nodes": [
+     "s_blades",
+     "m_alloys"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "steel_longsword",
+     "steel_cuirass"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "s_heat",
+   "branch": "smithing",
+   "name": "Advanced Heat Treatment",
+   "desc": "Interrupted quenches, oil tempering and the long, patient normalise.",
+   "x": 1,
+   "y": 3,
+   "requires": {
+    "skill": [
+     "smithing",
+     6
+    ],
+    "nodes": [
+     "s_steel"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "kite_shield"
+    ],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_quench",
+      "name": "Interrupted quench",
+      "desc": "+2% craftsmanship on classic weapons.",
+      "quality": 2,
+      "filter": {
+       "discipline": [
+        "classic"
+       ],
+       "category": [
+        "weapon"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "s_runed",
+   "branch": "smithing",
+   "name": "Runed Steel",
+   "desc": "Steel, a set rune and a flame-quenched edge in one blade — four crafts meet at the anvil.",
+   "x": 1.42,
+   "y": 4.2,
+   "requires": {
+    "skill": [
+     "smithing",
+     6
+    ],
+    "nodes": [
+     "s_heat",
+     "r_engrave",
+     "al_simple"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "emberwarden_longsword"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "s_alloy",
+   "branch": "smithing",
+   "name": "Alloy Production",
+   "desc": "Reading a melt by its colour; mixing metals that do not want to mix.",
+   "x": 0.86,
+   "y": 4.6,
+   "requires": {
+    "skill": [
+     "smithing",
+     7
+    ],
+    "nodes": [
+     "s_heat",
+     "m_rare"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_alloy",
+      "name": "Alloy sense",
+      "desc": "+2% craftsmanship when working steel or starmetal.",
+      "quality": 2,
+      "filter": {
+       "material": [
+        "steel",
+        "starmetal"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "s_starsteel",
+   "branch": "smithing",
+   "name": "Forgotten Starsteel",
+   "desc": "A smith's notes from another age describe a blade folded with fallen star-metal.",
+   "x": 0.5,
+   "y": 5.7,
+   "requires": {
+    "skill": [
+     "smithing",
+     7
+    ],
+    "nodes": [
+     "s_alloy"
+    ],
+    "flags": [
+     "recipe_starsteel"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "starsteel_blade"
+    ],
+    "stations": [],
+    "techniques": []
+   },
+   "secret": true
+  },
+  {
+   "id": "s_master",
+   "branch": "smithing",
+   "name": "Master Smithing",
+   "desc": "The hand-and-a-half blade, kept straight over its whole length.",
+   "x": 1,
+   "y": 6.0,
+   "requires": {
+    "skill": [
+     "smithing",
+     8
+    ],
+    "nodes": [
+     "s_alloy"
+    ],
+    "gold": 150
+   },
+   "unlocks": {
+    "recipes": [
+     "steel_bastard_sword"
+    ],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_master_eye",
+      "name": "Master's eye",
+      "desc": "+2% craftsmanship on all classic smithing.",
+      "quality": 2,
+      "filter": {
+       "discipline": [
+        "classic"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "s_armour",
+   "branch": "smithing",
+   "name": "Master Armourcraft",
+   "desc": "Plate that moves with its wearer — the knowledge every legendary armour rests on.",
+   "x": 1,
+   "y": 7.4,
+   "requires": {
+    "skill": [
+     "smithing",
+     8
+    ],
+    "nodes": [
+     "s_master"
+    ],
+    "gold": 250
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_armourcraft",
+      "name": "Master armourcraft",
+      "desc": "+3% craftsmanship on all armour.",
+      "quality": 3,
+      "filter": {
+       "category": [
+        "armour"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_common",
+   "branch": "mining",
+   "name": "Common Ores & Refining",
+   "desc": "Sorting good ore from slag and keeping a clean melt.",
+   "x": 0,
+   "y": 0,
+   "requires": {
+    "skill": [
+     "mining",
+     2
+    ],
+    "nodes": [
+     "s_basic"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_assay",
+      "name": "Assayer's eye",
+      "desc": "+2% craftsmanship when smelting and refining.",
+      "quality": 2,
+      "filter": {
+       "category": [
+        "material"
+       ],
+       "discipline": [
+        "classic"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_alloys",
+   "branch": "mining",
+   "name": "Ordinary Alloys",
+   "desc": "Iron and carbon become steel — with the bellows driving the heat.",
+   "x": 0,
+   "y": 1,
+   "requires": {
+    "skill": [
+     "mining",
+     2
+    ],
+    "nodes": [
+     "m_common"
+    ],
+    "gold": 40
+   },
+   "unlocks": {
+    "recipes": [
+     "smelt_steel"
+    ],
+    "stations": [
+     "bellows"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "m_rare",
+   "branch": "mining",
+   "name": "Rare Mineral Identification",
+   "desc": "Garnet from glass, moonstone from quartz, silver from tin.",
+   "x": 0,
+   "y": 2.2,
+   "requires": {
+    "skill": [
+     "mining",
+     3
+    ],
+    "nodes": [
+     "m_alloys"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_rare_minerals",
+      "name": "Rare minerals",
+      "desc": "Gems and rare ores in expedition loot are recognised at a glance."
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_adv",
+   "branch": "mining",
+   "name": "Advanced Processing",
+   "desc": "Double refining, fluxes and slow cooling for flawless stock.",
+   "x": 0,
+   "y": 3.2,
+   "requires": {
+    "skill": [
+     "mining",
+     3
+    ],
+    "nodes": [
+     "m_rare"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_processing",
+      "name": "Advanced processing",
+      "desc": "+2% craftsmanship on every material recipe.",
+      "quality": 2,
+      "filter": {
+       "category": [
+        "material"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_mithril",
+   "branch": "mining",
+   "name": "Mithril",
+   "desc": "The pale metal that drinks magic. It must be charged before it can be worked.",
+   "x": 0,
+   "y": 4.2,
+   "requires": {
+    "skill": [
+     "mining",
+     3
+    ],
+    "nodes": [
+     "m_adv"
+    ],
+    "items_seen": [
+     "ore_mithril"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_mithril",
+      "name": "Mithril lore",
+      "desc": "Mithril can be charged at the Arcane Crucible."
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_adamant",
+   "branch": "mining",
+   "name": "Adamantine",
+   "desc": "Near-unbreakable ore that only a bound ward can tame.",
+   "x": 0,
+   "y": 6.4,
+   "requires": {
+    "skill": [
+     "mining",
+     4
+    ],
+    "nodes": [
+     "m_mithril"
+    ],
+    "items_seen": [
+     "ore_adamantine"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_adamant",
+      "name": "Adamantine lore",
+      "desc": "Adamantine can be charged once metals can be charged."
+     }
+    ]
+   }
+  },
+  {
+   "id": "m_magic",
+   "branch": "mining",
+   "name": "Magical Alloys",
+   "desc": "Orichalcum: copper-gold of the sea-kings, smelted with aether dust in warded fire.",
+   "x": 0,
+   "y": 7.6,
+   "requires": {
+    "skill": [
+     "mining",
+     4
+    ],
+    "nodes": [
+     "m_adamant",
+     "ar_crucible"
+    ],
+    "items_seen": [
+     "ore_orichalcum"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "smelt_orichalcum"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_energy",
+   "branch": "arcane",
+   "name": "Magical Energy Handling",
+   "desc": "Feeling the leyline in the metal — and surviving it. You sacrifice a nugget of mithril to learn how it drinks magic.",
+   "x": 2,
+   "y": 4.4,
+   "requires": {
+    "skill": [
+     "smithing",
+     6
+    ],
+    "nodes": [
+     "s_heat",
+     "r_engrave",
+     "m_mithril"
+    ],
+    "items": {
+     "ore_mithril": 1
+    }
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_leyline",
+      "name": "Leyline sense",
+      "desc": "You can tell a charged ingot from a dead one by touch."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ar_crucible",
+   "branch": "arcane",
+   "name": "The Arcane Crucible",
+   "desc": "Warded fire that melts mithril while binding magic into it.",
+   "x": 2,
+   "y": 5.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     0
+    ],
+    "nodes": [
+     "ar_energy"
+    ],
+    "gold": 150
+   },
+   "unlocks": {
+    "recipes": [
+     "charge_mithril"
+    ],
+    "stations": [
+     "arcane_crucible",
+     "leyline_conductor",
+     "aetheric_stabilizer"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_spellbind",
+   "branch": "arcane",
+   "name": "Spellbinding",
+   "desc": "Locking a spell pattern into cooling metal on the floor circle.",
+   "x": 2,
+   "y": 6.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     1
+    ],
+    "nodes": [
+     "ar_crucible"
+    ],
+    "stations_installed": [
+     "arcane_crucible"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "mithril_runeblade"
+    ],
+    "stations": [
+     "spellbinding_array",
+     "arcane_anvil"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_charged",
+   "branch": "arcane",
+   "name": "Charged Metals",
+   "desc": "Charging the stubborn metals: adamantine takes a bound ward.",
+   "x": 2,
+   "y": 7.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     2
+    ],
+    "nodes": [
+     "ar_spellbind",
+     "m_adamant"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "charge_adamantine"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_plating",
+   "branch": "arcane",
+   "name": "Mithril Armour Plating",
+   "desc": "Running charged mithril into plate and hammering it over steel.",
+   "x": 2,
+   "y": 8.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     3
+    ],
+    "nodes": [
+     "ar_charged",
+     "al_reagents"
+    ],
+    "stations_installed": [
+     "arcane_crucible"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "mithril_plated_cuirass"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_adamant",
+   "branch": "arcane",
+   "name": "Adamantine Equipment",
+   "desc": "Warplate with the ward in the metal itself.",
+   "x": 2,
+   "y": 9.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     4
+    ],
+    "nodes": [
+     "ar_plating"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "adamantine_warplate"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "ar_intrinsic",
+   "branch": "arcane",
+   "name": "Intrinsic Magical Properties",
+   "desc": "The bound magic becomes part of the piece's nature.",
+   "x": 2,
+   "y": 10.4,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     4
+    ],
+    "nodes": [
+     "ar_adamant"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_intrinsic",
+      "name": "Intrinsic properties",
+      "desc": "+3% craftsmanship on all arcane metalwork.",
+      "quality": 3,
+      "filter": {
+       "discipline": [
+        "arcane"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "ar_legend",
+   "branch": "arcane",
+   "name": "Legendary Arcane Craftsmanship",
+   "desc": "Master armourcraft, prepared dragon scale and bound magic: the dragon's own armour.",
+   "x": 2,
+   "y": 11.6,
+   "requires": {
+    "skill": [
+     "arcane_metalwork",
+     5
+    ],
+    "nodes": [
+     "ar_intrinsic",
+     "s_armour",
+     "l_dragon"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "dragonscale_armor"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_identify",
+   "branch": "runecraft",
+   "name": "Identify Existing Runes",
+   "desc": "Reading the runes already carved on relics and tablets.",
+   "x": 3,
+   "y": 0,
+   "requires": {
+    "skill": [
+     "runecraft",
+     1
+    ],
+    "nodes": [
+     "s_basic"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_rune_reading",
+      "name": "Rune reading",
+      "desc": "You can name the runes on weathered tablets and old blades."
+     }
+    ]
+   }
+  },
+  {
+   "id": "r_clean",
+   "branch": "runecraft",
+   "name": "Clean & Restore Runestones",
+   "desc": "Washing away grave-crust and polishing an old face back.",
+   "x": 3,
+   "y": 1,
+   "requires": {
+    "skill": [
+     "runecraft",
+     1
+    ],
+    "nodes": [
+     "r_identify"
+    ],
+    "gold": 40
+   },
+   "unlocks": {
+    "recipes": [
+     "restore_runestone"
+    ],
+    "stations": [
+     "rune_cleansing_basin",
+     "rune_polishing_wheel"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_blank",
+   "branch": "runecraft",
+   "name": "Prepare Blank Stones",
+   "desc": "Cleaving raw runestone along its grain into sound blanks.",
+   "x": 3,
+   "y": 2,
+   "requires": {
+    "skill": [
+     "runecraft",
+     1
+    ],
+    "nodes": [
+     "r_clean"
+    ],
+    "items_seen": [
+     "runestone_blank"
+    ],
+    "gold": 40
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [
+     "rune_cutting_bench"
+    ],
+    "techniques": [
+     {
+      "id": "t_true_cleave",
+      "name": "True cleaving",
+      "desc": "+2% craftsmanship on runestones.",
+      "quality": 2,
+      "filter": {
+       "category": [
+        "runestone"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "r_engrave",
+   "branch": "runecraft",
+   "name": "Engrave Basic Symbols",
+   "desc": "The ward rune, and a garnet seated in silver.",
+   "x": 3,
+   "y": 3,
+   "requires": {
+    "skill": [
+     "runecraft",
+     2
+    ],
+    "nodes": [
+     "r_blank"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "ward_runestone",
+     "garnet_ring"
+    ],
+    "stations": [
+     "rune_engraving_stand",
+     "resonance_pedestal"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_stabilise",
+   "branch": "runecraft",
+   "name": "Stabilise Magical Inscriptions",
+   "desc": "Runes that burn or freeze without cracking their stone.",
+   "x": 3,
+   "y": 4,
+   "requires": {
+    "skill": [
+     "runecraft",
+     3
+    ],
+    "nodes": [
+     "r_engrave"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "ember_runestone",
+     "frost_runestone",
+     "sapphire_amulet"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_original",
+   "branch": "runecraft",
+   "name": "Create Original Runes",
+   "desc": "Designing a rune no tablet ever showed — your own.",
+   "x": 3,
+   "y": 5,
+   "requires": {
+    "skill": [
+     "runecraft",
+     4
+    ],
+    "nodes": [
+     "r_stabilise"
+    ],
+    "flags": [
+     "rune_knowledge"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "original_runestone"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_combo",
+   "branch": "runecraft",
+   "name": "Complex Runic Combinations",
+   "desc": "Three runes tuned to sing as one chord.",
+   "x": 3,
+   "y": 6,
+   "requires": {
+    "skill": [
+     "runecraft",
+     5
+    ],
+    "nodes": [
+     "r_original"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "concord_runestone"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "r_master",
+   "branch": "runecraft",
+   "name": "Master Runecrafting",
+   "desc": "A rune-master's steadiness at every runecraft station.",
+   "x": 3,
+   "y": 7,
+   "requires": {
+    "skill": [
+     "runecraft",
+     6
+    ],
+    "nodes": [
+     "r_combo"
+    ],
+    "gold": 200
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_runemaster",
+      "name": "Master runewright",
+      "desc": "+3% craftsmanship on all runecraft.",
+      "quality": 3,
+      "filter": {
+       "discipline": [
+        "runecraft"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "al_simple",
+   "branch": "alchemy",
+   "name": "Simple Mixtures & Treatments",
+   "desc": "Mortar, cauldron and rack: a healing draught and how to treat a blade.",
+   "x": 4,
+   "y": 0,
+   "requires": {
+    "skill": [
+     "alchemy",
+     1
+    ],
+    "nodes": [
+     "s_basic"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "healing_draught"
+    ],
+    "stations": [
+     "mortar_station",
+     "cauldron",
+     "infusion_rack"
+    ],
+    "techniques": [
+     {
+      "id": "t_treatments",
+      "name": "Treatments",
+      "desc": "Oils and coatings can be brushed onto equipment at the infusion rack."
+     }
+    ]
+   }
+  },
+  {
+   "id": "al_oils",
+   "branch": "alchemy",
+   "name": "Basic Weapon Oils",
+   "desc": "Distilling emberleaf into whetstone oil.",
+   "x": 4,
+   "y": 1,
+   "requires": {
+    "skill": [
+     "alchemy",
+     1
+    ],
+    "nodes": [
+     "al_simple"
+    ],
+    "gold": 25
+   },
+   "unlocks": {
+    "recipes": [
+     "whetstone_oil"
+    ],
+    "stations": [
+     "alembic"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "al_purify",
+   "branch": "alchemy",
+   "name": "Purification & Distillation",
+   "desc": "Separating volatile oils into flame and frost coatings.",
+   "x": 4,
+   "y": 2,
+   "requires": {
+    "skill": [
+     "alchemy",
+     2
+    ],
+    "nodes": [
+     "al_oils"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "flame_coating",
+     "frost_coating"
+    ],
+    "stations": [
+     "reagent_table"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "al_reagents",
+   "branch": "alchemy",
+   "name": "Advanced Reagents",
+   "desc": "Silverleaf quintessence: the binder for charged plate.",
+   "x": 4,
+   "y": 3.4,
+   "requires": {
+    "skill": [
+     "alchemy",
+     3
+    ],
+    "nodes": [
+     "al_purify"
+    ],
+    "items_seen": [
+     "herb_silverleaf"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "distil_quintessence"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "al_infusion",
+   "branch": "alchemy",
+   "name": "Magical Infusions",
+   "desc": "Aether dust steeped into an infusion that lends magic.",
+   "x": 4,
+   "y": 4.6,
+   "requires": {
+    "skill": [
+     "alchemy",
+     4
+    ],
+    "nodes": [
+     "al_reagents"
+    ],
+    "items_seen": [
+     "reagent_aether_dust"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "aether_infusion"
+    ],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_infusions",
+      "name": "Magical infusions",
+      "desc": "Infusions can be brushed onto equipment like coatings."
+     }
+    ]
+   }
+  },
+  {
+   "id": "al_exotic",
+   "branch": "alchemy",
+   "name": "Exotic Compounds",
+   "desc": "Wyrm ash and bloodroot: fire that clings.",
+   "x": 4,
+   "y": 5.8,
+   "requires": {
+    "skill": [
+     "alchemy",
+     5
+    ],
+    "nodes": [
+     "al_infusion"
+    ],
+    "items_seen": [
+     "reagent_wyrm_ash"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "wyrmfire_coating"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_basic",
+   "branch": "leather",
+   "name": "Ordinary Leatherwork",
+   "desc": "Curing hides, cutting belts and gloves.",
+   "x": 5,
+   "y": 0,
+   "requires": {},
+   "unlocks": {
+    "recipes": [
+     "cure_leather",
+     "leather_belt",
+     "leather_gloves"
+    ],
+    "stations": [
+     "stitching_table",
+     "leather_vat"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_armour",
+   "branch": "leather",
+   "name": "Boots, Belts & Simple Armour",
+   "desc": "Jerkins, boots, and a ranger's bow; fitted on the mannequin.",
+   "x": 5,
+   "y": 1,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     1
+    ],
+    "nodes": [
+     "l_basic"
+    ],
+    "gold": 20
+   },
+   "unlocks": {
+    "recipes": [
+     "leather_boots",
+     "leather_jerkin",
+     "ranger_boots",
+     "hunting_bow"
+    ],
+    "stations": [
+     "fitting_mannequin"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_threads",
+   "branch": "leather",
+   "name": "Magical Threads",
+   "desc": "Spinning moonlit thread that holds an enchantment.",
+   "x": 4.68,
+   "y": 2.2,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     3
+    ],
+    "nodes": [
+     "l_armour"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "yew_longbow"
+    ],
+    "stations": [
+     "thread_spinner"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_hides",
+   "branch": "leather",
+   "name": "Special Hides & Bear Leather",
+   "desc": "Curing a bear pelt into thick, warm leather — and armour from it.",
+   "x": 5.32,
+   "y": 2.2,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     2
+    ],
+    "nodes": [
+     "l_armour"
+    ],
+    "items_seen": [
+     "bear_pelt"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "cure_bear_leather",
+     "bearhide_brigandine"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_enchanted",
+   "branch": "leather",
+   "name": "Enchanted Stitching",
+   "desc": "Ward sigils embroidered into leather and cloth.",
+   "x": 4.68,
+   "y": 3.4,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     3
+    ],
+    "nodes": [
+     "l_threads"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "warded_gloves",
+     "embroidered_hood"
+    ],
+    "stations": [
+     "embroidery_frame"
+    ],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_exotic",
+   "branch": "leather",
+   "name": "Exotic Monster Materials",
+   "desc": "Troll and wyvern hide tanned into wyrm leather.",
+   "x": 5,
+   "y": 4.6,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     4
+    ],
+    "nodes": [
+     "l_enchanted",
+     "l_hides"
+    ],
+    "items_seen": [
+     "troll_hide"
+    ]
+   },
+   "unlocks": {
+    "recipes": [
+     "cure_troll_leather",
+     "cure_wyvern_leather",
+     "wyrmleather_boots"
+    ],
+    "stations": [],
+    "techniques": []
+   }
+  },
+  {
+   "id": "l_dragon",
+   "branch": "leather",
+   "name": "Dragon-scale Preparation",
+   "desc": "Brining, trimming and lacing true dragon scale without dulling its fire.",
+   "x": 5,
+   "y": 6.0,
+   "requires": {
+    "skill": [
+     "enchanted_stitching",
+     5
+    ],
+    "nodes": [
+     "l_exotic"
+    ],
+    "flags": [
+     "dragon_lore"
+    ],
+    "items_seen": [
+     "dragon_scale"
+    ]
+   },
+   "unlocks": {
+    "recipes": [],
+    "stations": [],
+    "techniques": [
+     {
+      "id": "t_dragon_scale",
+      "name": "Dragon-scale preparation",
+      "desc": "Dragon scale and bone can be worked into armour."
+     }
+    ]
+   }
+  }
+ ],
+ "recipe_node": {
+  "smelt_iron": "s_basic",
+  "iron_longsword": "s_basic",
+  "hand_axe": "s_basic",
+  "flanged_mace": "s_basic",
+  "round_shield": "s_basic",
+  "iron_helm": "s_basic",
+  "iron_cuirass": "s_blades",
+  "silver_band": "s_blades",
+  "steel_longsword": "s_steel",
+  "steel_cuirass": "s_steel",
+  "kite_shield": "s_heat",
+  "emberwarden_longsword": "s_runed",
+  "starsteel_blade": "s_starsteel",
+  "steel_bastard_sword": "s_master",
+  "smelt_steel": "m_alloys",
+  "smelt_orichalcum": "m_magic",
+  "charge_mithril": "ar_crucible",
+  "mithril_runeblade": "ar_spellbind",
+  "charge_adamantine": "ar_charged",
+  "mithril_plated_cuirass": "ar_plating",
+  "adamantine_warplate": "ar_adamant",
+  "dragonscale_armor": "ar_legend",
+  "restore_runestone": "r_clean",
+  "ward_runestone": "r_engrave",
+  "garnet_ring": "r_engrave",
+  "ember_runestone": "r_stabilise",
+  "frost_runestone": "r_stabilise",
+  "sapphire_amulet": "r_stabilise",
+  "original_runestone": "r_original",
+  "concord_runestone": "r_combo",
+  "healing_draught": "al_simple",
+  "whetstone_oil": "al_oils",
+  "flame_coating": "al_purify",
+  "frost_coating": "al_purify",
+  "distil_quintessence": "al_reagents",
+  "aether_infusion": "al_infusion",
+  "wyrmfire_coating": "al_exotic",
+  "cure_leather": "l_basic",
+  "leather_belt": "l_basic",
+  "leather_gloves": "l_basic",
+  "leather_boots": "l_armour",
+  "leather_jerkin": "l_armour",
+  "ranger_boots": "l_armour",
+  "hunting_bow": "l_armour",
+  "yew_longbow": "l_threads",
+  "cure_bear_leather": "l_hides",
+  "bearhide_brigandine": "l_hides",
+  "warded_gloves": "l_enchanted",
+  "embroidered_hood": "l_enchanted",
+  "cure_troll_leather": "l_exotic",
+  "cure_wyvern_leather": "l_exotic",
+  "wyrmleather_boots": "l_exotic"
+ },
+ "station_node": {
+  "forge": "s_basic",
+  "anvil": "s_basic",
+  "crucible": "s_basic",
+  "quench_trough": "s_basic",
+  "grinding_wheel": "s_basic",
+  "bellows": "m_alloys",
+  "arcane_crucible": "ar_crucible",
+  "leyline_conductor": "ar_crucible",
+  "aetheric_stabilizer": "ar_crucible",
+  "spellbinding_array": "ar_spellbind",
+  "arcane_anvil": "ar_spellbind",
+  "rune_cleansing_basin": "r_clean",
+  "rune_polishing_wheel": "r_clean",
+  "rune_cutting_bench": "r_blank",
+  "rune_engraving_stand": "r_engrave",
+  "resonance_pedestal": "r_engrave",
+  "mortar_station": "al_simple",
+  "cauldron": "al_simple",
+  "infusion_rack": "al_simple",
+  "alembic": "al_oils",
+  "reagent_table": "al_purify",
+  "stitching_table": "l_basic",
+  "leather_vat": "l_basic",
+  "fitting_mannequin": "l_armour",
+  "thread_spinner": "l_threads",
+  "embroidery_frame": "l_enchanted"
+ }
+}

@@ -81,6 +81,10 @@ crafting = {
   "jewel": {"name": "Silver & Gemstone", "stat": 1.15, "durability": 0.8, "difficulty": 1, "rarity_bonus": 8},
   "adamantine": {"name": "Charged Adamantine", "stat": 1.45, "durability": 1.8, "difficulty": 4, "rarity_bonus": 12},
   "starmetal": {"name": "Steel & Starmetal", "stat": 1.3, "durability": 1.5, "difficulty": 2, "rarity_bonus": 10},
+  "bearhide": {"name": "Bear Leather", "stat": 1.1, "durability": 1.15, "difficulty": 1, "rarity_bonus": 3},
+  "wyrmhide": {"name": "Wyrm Leather", "stat": 1.25, "durability": 1.4, "difficulty": 2, "rarity_bonus": 8},
+  "orichalcum": {"name": "Orichalcum", "stat": 1.4, "durability": 1.6, "difficulty": 3, "rarity_bonus": 12},
+  "dragonscale": {"name": "Dragon Scale & Bone", "stat": 1.6, "durability": 2.0, "difficulty": 4, "rarity_bonus": 20},
  },
 }
 
@@ -101,13 +105,17 @@ def op(station, name, checks=1, weight=1.0):
 
 
 def rc(id, name, disc, category, material, difficulty, ops, inputs, out, qty=1, dice=None, xp=None,
-       requires=None, desc="", flag=""):
+       requires=None, desc="", flag="", teaches="", min_rarity=""):
     r = dict(id=id, name=name, discipline=disc, category=category, material=material,
              difficulty=difficulty, operations=ops, steps=[o["station"] for o in ops],
              inputs=inputs, output=out, qty=qty, dice=dice or {}, xp=xp or {},
              requires=requires or {}, desc=desc)
     if flag:
         r["requires_flag"] = flag   # learned from a forgotten recipe found among relics
+    if teaches:
+        r["teaches_flag"] = teaches  # finishing the work teaches the smith something (a knowledge flag)
+    if min_rarity:
+        r["min_rarity"] = min_rarity  # legendary-grade work never comes out below this rarity
     return r
 
 
@@ -115,11 +123,11 @@ recipes = [
  # ---- materials (short: one or two operations)
  rc("smelt_iron", "Smelt Iron Ingots", "classic", "material", "ore", 1,
     [op("crucible", "Melt the ore", 1), op("forge", "Cast and cool the ingots", 1)],
-    {"ore_iron": 2, "coal": 1}, "ingot_iron", 2, DM, {"smithing": 12}),
+    {"ore_iron": 2, "coal": 1}, "ingot_iron", 2, DM, {"smithing": 12, "mining": 20}),
  rc("smelt_steel", "Fold Steel Ingot", "classic", "material", "iron", 3,
     [op("crucible", "Melt iron with carbon", 1), op("bellows", "Drive the heat up", 2, 0.7),
      op("forge", "Fold and weld the bloom", 2, 1.2)],
-    {"ingot_iron": 2, "coal": 2}, "ingot_steel", 1, DM, {"smithing": 18}),
+    {"ingot_iron": 2, "coal": 2}, "ingot_steel", 1, DM, {"smithing": 18, "mining": 24}),
  # ---- weapons
  rc("iron_longsword", "Iron Longsword", "classic", "weapon", "iron", 2,
     [op("forge", "Heat the billet", 1), op("anvil", "Draw out the blade", 2, 1.4),
@@ -211,7 +219,7 @@ recipes = [
  rc("charge_mithril", "Charge Mithril", "arcane", "material", "ore", 4,
     [op("arcane_crucible", "Melt mithril in warded fire", 2), op("leyline_conductor", "Draw the leyline", 1),
      op("aetheric_stabilizer", "Stabilise the charge", 1)],
-    {"ore_mithril": 2, "coal": 2}, "ingot_mithril", 1, DM, {"arcane_metalwork": 40}),
+    {"ore_mithril": 2, "coal": 2}, "ingot_mithril", 1, DM, {"arcane_metalwork": 40, "mining": 30}),
  rc("mithril_runeblade", "Mithril Runeblade", "arcane", "weapon", "mithril", 7,
     [op("forge", "Heat the charged billet", 1), op("arcane_crucible", "Re-melt the fuller channel", 1),
      op("spellbinding_array", "Bind the spell pattern", 2, 1.3), op("arcane_anvil", "Imprint the glowing runes", 3, 1.5),
@@ -258,7 +266,7 @@ recipes = [
  rc("charge_adamantine", "Charge Adamantine", "arcane", "material", "ore", 5,
     [op("arcane_crucible", "Melt adamantine in warded fire", 2), op("leyline_conductor", "Draw the leyline", 1),
      op("aetheric_stabilizer", "Stabilise the bound ward", 1, 1.2)],
-    {"ore_adamantine": 2, "gem_moonstone": 1, "coal": 2}, "ingot_adamantine", 1, DM, {"arcane_metalwork": 50}),
+    {"ore_adamantine": 2, "gem_moonstone": 1, "coal": 2}, "ingot_adamantine", 1, DM, {"arcane_metalwork": 50, "mining": 40}),
  rc("adamantine_warplate", "Adamantine Warplate", "arcane", "armour", "adamantine", 7,
     [op("forge", "Heat the charged plates", 1), op("arcane_crucible", "Re-melt the ward seams", 1),
      op("arcane_anvil", "Imprint the ward into the plate", 3, 1.5), op("spellbinding_array", "Bind the ward pattern", 2, 1.3),
@@ -276,6 +284,99 @@ recipes = [
      op("thread_spinner", "Spin a ghost-thread string", 1), op("stitching_table", "Wrap the grip and nock", 1, 0.7)],
     {"yew_stave": 2, "thread_ethereal": 1, "leather_cured": 1}, "bow_yew", 1, DW, {"enchanted_stitching": 45, "smithing": 10},
     requires={"enchanted_stitching": 2}, desc="Taller than its archer. Needs a sure hand at the grinding wheel."),
+]
+
+# ---- iteration 9: the skill-tree progression (refined exotic materials, steel and mithril plate,
+#      original runes, monster leathers, infusions and the legendary dragon-scale armour).
+#      Raw exotic materials (bear_pelt, troll_hide, wyvern_hide, dragon_scale, dragon_bone,
+#      ore_orichalcum, herb_*, reagent_aether_dust, reagent_wyrm_ash) come from the trade module.
+#      Which skill-tree node teaches each recipe lives in make_skilltree.py.
+recipes += [
+ rc("steel_cuirass", "Steel Cuirass", "classic", "armour", "steel", 5,
+    [op("forge", "Heat the steel plates", 1), op("bellows", "Hold the yellow heat", 1, 0.7),
+     op("anvil", "Dish and raise the breastplate", 3, 1.4), op("forge", "Re-heat for the backplate", 1, 0.8),
+     op("anvil", "Planish and roll the edges", 2, 1.2), op("quench_trough", "Oil-temper the plates", 1, 1.1),
+     op("stitching_table", "Rivet the straps", 1, 0.6)],
+    {"ingot_steel": 3, "leather_cured": 1}, "cuirass_steel", 1, DA, {"smithing": 60},
+    desc="Folded steel plate: lighter than iron and far harder to dent."),
+ rc("kite_shield", "Steel Kite Shield", "classic", "armour", "steel", 4,
+    [op("forge", "Heat the long plate", 1), op("anvil", "Raise the kite and band the rim", 2, 1.3),
+     op("quench_trough", "Harden the rim", 1), op("grinding_wheel", "Dress the edges", 1)],
+    {"ingot_steel": 2, "leather_cured": 1}, "shield_kite", 1, DA, {"smithing": 45},
+    desc="A rider's shield; the hardened rim turns a falling blade."),
+ rc("smelt_orichalcum", "Smelt Orichalcum", "arcane", "material", "ore", 5,
+    [op("arcane_crucible", "Melt orichalcum with aether dust", 2, 1.2), op("bellows", "Drive the heat white", 1, 0.7),
+     op("aetheric_stabilizer", "Settle the singing alloy", 1)],
+    {"ore_orichalcum": 2, "reagent_aether_dust": 1, "coal": 2}, "ingot_orichalcum", 1, DM, {"arcane_metalwork": 50, "mining": 45},
+    desc="The red-gold metal of the old sea-kings, made workable only in warded fire."),
+ rc("restore_runestone", "Restore an Old Runestone", "runecraft", "runestone", "runestone", 1,
+    [op("rune_cleansing_basin", "Soak away the grave-crust", 1), op("rune_polishing_wheel", "Polish the old face back", 1)],
+    {"relic_unknown_tablet": 1}, "runestone_blank", 2, DM, {"runecraft": 45, "relic_hunting": 10},
+    desc="Cleaning a weathered tablet yields two sound blanks — and teaches how the old runes were built.",
+    teaches="rune_knowledge"),
+ rc("frost_runestone", "Frost Runestone", "runecraft", "runestone", "runestone", 3,
+    [op("rune_cutting_bench", "Cleave the blank", 1), op("rune_engraving_stand", "Engrave the frost rune", 2, 1.4),
+     op("rune_cleansing_basin", "Wash in snowmelt", 1, 0.8), op("resonance_pedestal", "Tune the hum", 2, 1.2)],
+    {"runestone_blank": 1, "herb_moonwort": 1}, "runestone_frost", 1, DR, {"runecraft": 35}),
+ rc("original_runestone", "Original Rune (your own design)", "runecraft", "runestone", "runestone", 5,
+    [op("rune_cutting_bench", "Cleave a flawless blank", 1), op("rune_engraving_stand", "Engrave a rune of your own design", 3, 1.5),
+     op("rune_cleansing_basin", "Wash away the chaos", 1, 0.8), op("resonance_pedestal", "Find the note no one has sung", 2, 1.3),
+     op("rune_polishing_wheel", "Polish to a mirror", 1)],
+    {"runestone_blank": 1, "gem_moonstone": 1}, "runestone_original", 1, DR, {"runecraft": 70},
+    desc="Not copied from any tablet: a rune the smith designs, the first of its kind."),
+ rc("concord_runestone", "Concord Runestone", "runecraft", "runestone", "runestone", 6,
+    [op("rune_engraving_stand", "Interlace three rune patterns", 3, 1.5), op("rune_cleansing_basin", "Wash out the clash", 1, 0.8),
+     op("resonance_pedestal", "Tune three runes to one chord", 3, 1.4)],
+    {"runestone_original": 1, "runestone_ember": 1, "runestone_ward": 1}, "runestone_concord", 1, DR, {"runecraft": 100},
+    desc="A complex combination: fire, ward and your own rune singing as one."),
+ rc("mithril_plated_cuirass", "Mithril-plated Cuirass", "arcane", "armour", "mithril", 7,
+    [op("forge", "Heat the steel under-plate", 1), op("arcane_crucible", "Run the charged mithril into plate", 2, 1.2),
+     op("arcane_anvil", "Hammer the mithril onto the cuirass", 3, 1.5), op("aetheric_stabilizer", "Settle the charge", 1),
+     op("stitching_table", "Rivet and strap", 1, 0.5)],
+    {"ingot_mithril": 2, "ingot_steel": 2, "reagent_quintessence": 1, "leather_cured": 1}, "mithril_plated_cuirass", 1, DXA,
+    {"arcane_metalwork": 90, "smithing": 35}, desc="Steel beneath, charged mithril above; the plates hum when struck."),
+ rc("cure_bear_leather", "Cure Bear Leather", "stitching", "material", "bearhide", 2,
+    [op("leather_vat", "Flesh and soak the pelt", 1), op("leather_vat", "Tan in oak-bark liquor", 1, 1.2)],
+    {"bear_pelt": 1, "reagent_salt": 1}, "leather_bear", 2, DM, {"enchanted_stitching": 28}),
+ rc("bearhide_brigandine", "Bearhide Brigandine", "stitching", "armour", "bearhide", 4,
+    [op("leather_vat", "Harden the bear leather", 1, 0.8), op("anvil", "Punch the iron plates", 2, 1.1),
+     op("stitching_table", "Rivet the plates beneath the leather", 2, 1.3), op("fitting_mannequin", "Fit and balance", 1)],
+    {"leather_bear": 3, "ingot_iron": 2, "thread_linen": 1}, "bearhide_brigandine", 1, DA, {"enchanted_stitching": 55, "smithing": 15},
+    desc="Thick bear leather over hidden iron plates: a hunter's armour."),
+ rc("cure_troll_leather", "Cure Troll Hide", "stitching", "material", "wyrmhide", 4,
+    [op("leather_vat", "Burn out the troll-rot", 1, 1.1), op("leather_vat", "Tan with quicksalt", 1, 1.2)],
+    {"troll_hide": 1, "reagent_salt": 2}, "leather_wyrm", 1, DM, {"enchanted_stitching": 40}),
+ rc("cure_wyvern_leather", "Cure Wyvern Hide", "stitching", "material", "wyrmhide", 5,
+    [op("leather_vat", "Scrape the venom glands clean", 1, 1.1), op("leather_vat", "Tan with quicksalt", 2, 1.2)],
+    {"wyvern_hide": 1, "reagent_salt": 1}, "leather_wyrm", 2, DM, {"enchanted_stitching": 50}),
+ rc("wyrmleather_boots", "Wyrmleather Boots", "stitching", "armour", "wyrmhide", 5,
+    [op("leather_vat", "Steam-shape the wyrm leather", 1), op("stitching_table", "Stitch with ghost-thread", 2, 1.3),
+     op("embroidery_frame", "Embroider heat-wards", 1, 1.2), op("fitting_mannequin", "Fit to the stride", 1)],
+    {"leather_wyrm": 2, "thread_ethereal": 1}, "boots_wyrmleather", 1, DA, {"enchanted_stitching": 70},
+    desc="Monster leather that shrugs off fire and never wears through."),
+ rc("distil_quintessence", "Silverleaf Quintessence", "alchemy", "material", "herbal", 4,
+    [op("mortar_station", "Bruise the silverleaf", 1), op("alembic", "Distil the silver spirit", 2, 1.2),
+     op("reagent_table", "Separate the quintessence", 1, 1.1)],
+    {"herb_silverleaf": 2, "reagent_salt": 1}, "reagent_quintessence", 1, DM, {"alchemy": 40},
+    desc="An advanced reagent: binds charged metal to plain steel."),
+ rc("aether_infusion", "Aether Infusion", "alchemy", "alchemy", "herbal", 5,
+    [op("alembic", "Distil the frostcap essence", 1), op("cauldron", "Stir in the aether dust", 2, 1.3),
+     op("infusion_rack", "Steep under moonlight", 1)],
+    {"reagent_aether_dust": 1, "herb_frostcap": 1}, "infusion_aether", 1, DP, {"alchemy": 55},
+    desc="A magical infusion: brushed onto equipment at the infusion rack, it lends magic for three expeditions."),
+ rc("wyrmfire_coating", "Wyrmfire Coating", "alchemy", "alchemy", "herbal", 6,
+    [op("mortar_station", "Grind bloodroot with wyrm ash", 1), op("reagent_table", "Draw off the fire oil", 1, 1.2),
+     op("cauldron", "Reduce to a coating", 2, 1.3)],
+    {"reagent_wyrm_ash": 1, "herb_bloodroot": 2}, "coating_wyrmfire", 1, DP, {"alchemy": 70},
+    desc="An exotic compound: a blade brushed with it burns like dragon's breath."),
+ rc("dragonscale_armor", "Dragonscale Armour", "arcane", "armour", "dragonscale", 5,
+    [op("forge", "Heat the dragon-bone frame", 1), op("leather_vat", "Prepare the scales in wyrm-ash brine", 2, 1.2),
+     op("arcane_anvil", "Set and imprint every scale", 4, 1.6), op("spellbinding_array", "Bind the dragon's fire-ward", 2, 1.3),
+     op("stitching_table", "Lace the scales onto wyrm leather", 2, 1.2), op("fitting_mannequin", "Fit the legendary harness", 1)],
+    {"dragon_scale": 4, "dragon_bone": 2, "leather_wyrm": 2, "ingot_orichalcum": 1}, "dragonscale_armor", 1, DXA,
+    {"arcane_metalwork": 160, "smithing": 60, "enchanted_stitching": 60},
+    desc="Legendary armour of true dragon scale on a dragon-bone frame. It never leaves the forge below rare.",
+    min_rarity="rare"),
 ]
 
 if __name__ == "__main__":
