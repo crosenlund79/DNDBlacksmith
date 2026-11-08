@@ -139,7 +139,13 @@ func _work_column(cr: Dictionary) -> Control:
 		if not adv.is_empty():
 			v.add_child(UIKit.rich("[i][color=#c8b898]%d%% craftsmanship → [b]%s[/b] on the stat dice%s[/color][/i]" % [int(round(q)), str(adv.get("word", "")),
 				" (physical rolls get a modifier instead)" if cr.get("dice_mode", "") == "physical" else ""], 19, true))
-		v.add_child(UIKit.rich("[color=#efe4cc]%s[/color]" % "\n".join(PackedStringArray(bd.map(func(x): return str(x)))), 19, true))
+		var lines_bd := PackedStringArray(bd.map(func(x): return str(x)))
+		var aff := PackedStringArray()
+		for a in item.get("affixes", []):
+			aff.append("%+d %s" % [int(a.get("value", 0)), str(a.get("stat", "")).capitalize()])
+		if not aff.is_empty():
+			lines_bd.append("then the %s rarity adds %s" % [Items.RARITY_LABEL.get(str(item.get("rarity", "common")), ""), ", ".join(aff)])
+		v.add_child(UIKit.rich("[color=#efe4cc]%s[/color]" % "\n".join(lines_bd), 19, true))
 	return v
 
 

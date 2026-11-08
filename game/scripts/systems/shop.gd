@@ -758,7 +758,7 @@ static func _equipment_recipes() -> Dictionary:
 	var locked := []
 	for r in DB.recipes.values():
 		var d := DB.item(str(r["output"]))
-		if str(d.get("slot", "")) == "" or str(d.get("type", "")) == "companion":
+		if d.get("slot") == null or str(d.get("slot", "")) == "" or str(d.get("type", "")) == "companion":
 			continue
 		if Crafting.recipe_locked_reason(str(r["id"])) == "":
 			open.append(r)

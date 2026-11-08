@@ -2448,3 +2448,119 @@ func phase_skilltree() -> void:
 	expect(SkillTree.node_state("s_starsteel") == "hidden", "skilltree: the secret node is still hidden (drawn as ???)")
 	await shot("st_tree_secret")
 	await close_panel()
+
+
+# ======================================================================= iteration 010: recognition
+## Weighted dice and the result breakdown, a multi-order card, the Hall of Fame board, an Epic tooltip
+## and the ceremony in the square.
+func phase_recog10() -> void:
+	await click("New Game")
+	await wait(2.5)
+	# --- a fine sword with digital (weighted) dice: the breakdown on the results panel
+	var it := await craft_ui("iron_longsword", 0.05, "auto", {}, "recog10")
+	expect(not it.is_empty() and it.get("craft", {}).has("breakdown"), "recog10: the craft record stores the stat breakdown")
+	if not it.is_empty():
+		var e: Dictionary = it["craft"]["dice"].get("edge", {})
+		expect(str(e.get("how", "")) == "weighted" and str(e.get("text", "")).contains("craftsmanship"), "recog10: the edge die explains its weighting (%s)" % e.get("text", ""))
+	# --- physical dice: the entered numbers stand, the modifier is shown
+	Game.add_item(Items.make("ingot_iron", {"qty": 6}), false)
+	Game.add_item(Items.make("leather_cured", {"qty": 3}), false)
+	var ph := await craft_ui("iron_longsword", 0.05, "physical", {"edge": 9, "temper": 4, "fortune": 40}, "recog10p")
+	if not ph.is_empty():
+		var pe: Dictionary = ph["craft"]["dice"].get("edge", {})
+		expect(int(pe.get("entered", -1)) == 9, "recog10: physical edge roll kept as entered (%s)" % pe.get("text", ""))
+	# reopen a record from the stores
+	if not it.is_empty():
+		Events.open_panel.emit("craft_result", {"item": Game.find_uid(int(it["uid"])), "fresh": false})
+		await wait(0.8)
+		await shot("recog10_record_reopened")
+		await close_panel()
+	# --- a customer with several requests
+	await advance_to(10, 5)
+	Game.state["customers"].clear()
+	var adv := ""
+	for a in Adv.in_town():
+		adv = str(a["id"])
+		break
+	expect(adv != "", "recog10: an adventurer in town")
+	Shop._add_customer(adv, "multi")
+	Shop.mark_arrived(adv)
+	expect(str(Shop.customer(adv).get("want", "")) == "multi", "recog10: a multi-order customer waits")
+	Events.open_panel.emit("shop", {})
+	await wait(0.8)
+	await shot("recog10_multi_order")
+	await click("Decline")
+	await wait(0.3)
+	await click("Accept")
+	await wait(0.4)
+	await shot("recog10_multi_order_partial")
+	await close_panel()
+	# --- an Epic deed: the sword fells a boss in the adventurer's hands
+	if not it.is_empty() and adv != "":
+		var a2 := Adv.get_a(adv)
+		Expeditions.ensure(a2)
+		Adv.give_item(a2, Game.take_uid(int(it["uid"])), 0)
+		a2["status"] = "away"
+		var ex := {"id": "exp_pt", "party": [adv], "leader": adv, "dest": "barrow_fields", "journal": [], "encounters": []}
+		var rec := {"boss": true, "enemies": [{"kind": "undead", "name": "The Barrow King", "key": "e0"}],
+			"actions": [{"kind": "attack", "target_key": "e0", "hp_after": 0, "actor_id": adv, "weapon_uid": int(it["uid"]), "hit": true}]}
+		Expeditions._boss_down(ex, {"name": "The Barrow Hall"}, rec)
+		a2["status"] = "in_town"
+		W()._update_schedules(true)
+		expect(Game.find_uid_anywhere(int(it["uid"])).has("epic"), "recog10: the sword earned Epic distinction")
+		expect(Ceremony.scheduled(), "recog10: a ceremony is scheduled")
+	# an Epic piece in the smith's own stores, for the tooltip and the slot frame
+	if not ph.is_empty():
+		Recognition.grant_epic(Game.find_uid(int(ph["uid"])), "turned the tide at the Highmarsh bridge", adv)
+		Events.open_panel.emit("inventory", {})
+		await wait(0.8)
+		UIRoot.show_tooltip(Items.tooltip(Game.find_uid(int(ph["uid"]))))
+		await wait(0.3)
+		await shot("recog10_epic_tooltip")
+		UIRoot.hide_tooltip()
+		await close_panel()
+	# --- the Hall of Fame board in the smithy
+	expect(await use("hall_of_fame", "smithy"), "recog10: the smithy board is interactable")
+	await wait(0.6)
+	expect(panel() is HallOfFamePanel, "recog10: the Hall of Fame opens")
+	await shot("recog10_hall_of_fame")
+	await close_panel()
+	var bp: Vector2 = W().player.position
+	for f in W().interactables:
+		if f["kind"] == "hall_of_fame":
+			bp = f["pos"]
+	await tp(bp + Vector2(0, 60))
+	var hp := Vector2(10.45, 3.4)
+	var host := Property.room_at_tile(Property.rooms(), hp)
+	note("  board furniture: host room %s, clashes %s, rect %s" % [host.get("id", "-"), str(W()._furniture_clashes("hall_of_fame_board", hp, host)) if not host.is_empty() else "-",
+		str(Property.rect(host)) if not host.is_empty() else "-"])
+	await shot("recog10_board_prop")
+	# --- the next day at noon: the square gathers and the smith walks in
+	Game.advance_minutes(1440 - int(Game.state["minute"]) + 11 * 60 + 40)
+	await wait(0.5)
+	# skip the hour-long walk over from their homes: snap everyone to where the schedule wants them
+	for id in W().npcs:
+		(W().npcs[id] as NPCActor).target_spot = ""
+		(W().npcs[id] as NPCActor).path = PackedVector2Array()
+	W()._update_schedules(true)
+	await wait(0.5)
+	var podium: Vector2 = W().spots.get("square_podium", W().spots.get("square_0", Vector2.ZERO))
+	expect(Ceremony.can_attend(), "recog10: the ceremony is gathered at noon")
+	await tp(podium + Vector2(0, 260))
+	await wait(1.0)
+	expect(panel() is HallOfFamePanel and str(Ceremony.state().get("status", "")) == "held", "recog10: walking into the square holds the ceremony")
+	await shot("recog10_ceremony_scene")
+	await close_panel()
+	# the villagers walk over from wherever they were; give them a moment, then look at the square
+	var mid: Vector2 = (W().spots.get("square_0", podium) + W().spots.get("square_3", podium)) * 0.5
+	await tp(mid + Vector2(0, 40))
+	await wait(9.0)
+	var gathered := 0
+	for id in Ceremony.state().get("crowd", []) + [str(Ceremony.state().get("adv", ""))]:
+		var n: NPCActor = W().npcs.get(id)
+		if n and n.visible and n.position.distance_to(mid) < 900.0:
+			gathered += 1
+		note("  crowd %s: npc %s visible %s spot '%s' target '%s' dist %.0f" % [id, n != null, n.visible if n else false, W().spot_for(id),
+			n.target_spot if n else "", n.position.distance_to(mid) if n else -1.0])
+	expect(gathered >= 3, "recog10: the crowd gathered in the square (%d)" % gathered)
+	await shot("recog10_ceremony_square")

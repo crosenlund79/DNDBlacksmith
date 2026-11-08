@@ -102,11 +102,10 @@ static func spot_for(id: String, spots: Dictionary) -> String:
 	var i := crowd.find(id)
 	if i < 0:
 		return ""
-	var near := ["square_1", "square_2", "square_3", "square_4", "square_5", "well", "notice", "square_0"]
-	var choice: String = near[i % near.size()]
-	if choice == podium:
-		choice = "square_3"
-	return choice if spots.has(choice) else ""
+	var near := ["square_1", "square_2", "square_3", "square_4", "square_5", "well", "notice", "square_0"].filter(func(s): return s != podium and spots.has(s))
+	if near.is_empty():
+		return ""
+	return str(near[i % near.size()])
 
 
 ## Called by the world every frame (throttled): the smith walking into the gathered square holds it.

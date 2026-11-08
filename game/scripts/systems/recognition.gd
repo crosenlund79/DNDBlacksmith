@@ -192,13 +192,17 @@ static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed
 	it["epic"] = {"day": Game.day(), "deed": deed, "adventurer": adv_id, "adventurer_name": who, "kind": kind, "deeds": []}
 	Items.add_history(it, "Earned Epic distinction: %s%s." % [deed, (" (%s)" % who) if who != "" else ""])
 	Shop.rep_change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
-	record("epic", Items.display_name(it), "%s — %s." % [deed.capitalize(), who] if who != "" else deed.capitalize() + ".",
+	record("epic", Items.display_name(it), "%s — %s." % [_cap(deed), who] if who != "" else _cap(deed) + ".",
 		{"uid": int(it.get("uid", -1)), "adv": adv_id, "def": str(it.get("def", ""))}, "epic_%d" % int(it.get("uid", -1)))
 	Chronicle.add("honour", "%s earned Epic distinction: %s." % [Items.display_name(it), deed], {"adv": adv_id, "item": str(it.get("uid", ""))}, true)
 	Events.toast.emit("EPIC — %s %s." % [Items.display_name(it), deed], "legendary")
 	Ceremony.schedule(adv_id, int(it.get("uid", -1)), deed)
 	Events.inventory_changed.emit()
 	return true
+
+
+static func _cap(t: String) -> String:
+	return t.substr(0, 1).to_upper() + t.substr(1)
 
 
 ## One tooltip line for an Epic piece (or "").
