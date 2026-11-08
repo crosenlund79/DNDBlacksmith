@@ -2074,7 +2074,7 @@ func phase_character() -> void:
 	await wait(0.4)
 	await shot("char_fatigue_hud")
 	expect(Vitality.work_factor() < 0.9, "tired hands work slower (%.2f)" % Vitality.work_factor())
-	await use("bed", "player_bed")
+	await use("bed", "cot")
 	expect(panel() is SleepPanel, "bed: sleep / rest prompt")
 	await shot("char_bed_rest")
 	await click("Rest for an hour")
