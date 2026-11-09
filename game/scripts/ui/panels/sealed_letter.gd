@@ -182,7 +182,7 @@ class Envelope extends Control:
 		# the sender (top-left) and the day (top-right), as written on the outside
 		var f := Assets.font("heading_italic")
 		var fb := Assets.font("body_italic")
-		draw_string(f, r.position + Vector2(24, 38), from_text, HORIZONTAL_ALIGNMENT_LEFT, w * 0.55, 24, ink)
+		draw_string(f, r.position + Vector2(24, 38), _fit(f, from_text, w * 0.55, 24), HORIZONTAL_ALIGNMENT_LEFT, w * 0.55, 24, ink)
 		draw_string(fb, r.position + Vector2(w - 24 - 300, 38), day_text, HORIZONTAL_ALIGNMENT_RIGHT, 300, 18, Color("#6e5a40"))
 		# the address in the lower half
 		var lines := to_text.split("\n")
@@ -194,3 +194,15 @@ class Envelope extends Control:
 			draw_texture_rect(Assets.get_tex("ui/wax_seal"), Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)), false)
 		else:
 			draw_circle(c, s * 0.42, Color("#7e2418"))
+
+	## `t` shortened at a word boundary (with an ellipsis) so it fits `width` at `size` — never cut mid-word.
+	static func _fit(font: Font, t: String, width: float, size: int) -> String:
+		if font == null or font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= width:
+			return t
+		var words := t.split(" ")
+		while words.size() > 1:
+			words.remove_at(words.size() - 1)
+			var cand := " ".join(words).rstrip(" ,;:—-") + "…"
+			if font.get_string_size(cand, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= width:
+				return cand
+		return words[0] + "…"
