@@ -3871,3 +3871,11 @@ func phase_consult_rl() -> void:
 func phase_sponsor_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_sponsor.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= Milestone A1: item identity (IDENTITY worker)
+## The screens that read a piece through ItemRegistry: a caravan purchase's story, an adventurer's repair request at the
+## counter (a reference to the piece they wear), a delivered masterpiece from the holdings archive (tests/playtest_identity_a1.gd).
+func phase_identity_a1() -> void:
+	var ph: RefCounted = load("res://tests/playtest_identity_a1.gd").new()
+	await ph.run(self)

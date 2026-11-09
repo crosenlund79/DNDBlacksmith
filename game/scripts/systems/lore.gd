@@ -132,7 +132,8 @@ static func _prune() -> void:
 		return
 	var keep := {}
 	for it in _all_items():
-		for id in Provenance.st(it).get("events", []):
+		var pv: Variant = it.get("prov", {})   # read only: a piece without a record yet has no events to keep
+		for id in (pv.get("events", []) if pv is Dictionary else []):
 			keep[id] = true
 	var i := 0
 	while order.size() > CAP and i < order.size():
@@ -145,26 +146,8 @@ static func _prune() -> void:
 			i += 1
 
 
-## Every equipment instance the world knows about: stores, adventurers, hirelings, offers, pawn and rival stock.
+## Every item instance the world holds (ItemRegistry: stores, worn, packs, offers, customers, pledges, contracts,
+## delivered masterpieces, lost gear at sites, return bags, merchants' stock) and the last-known copies of the
+## smith's pieces out in the world — their events are never pruned.
 static func _all_items() -> Array:
-	var out := []
-	for it in Game.inventory():
-		out.append(it)
-	for a in Adv.all().values():
-		for s in a.get("equipment", {}):
-			out.append(a["equipment"][s])
-		for it2 in a.get("loot", []):
-			out.append(it2)
-	for h in Game.state.get("hirelings", []):
-		for s2 in h.get("equipment", {}):
-			out.append(h["equipment"][s2])
-	for o in Game.state.get("offers", []):
-		out.append(o.get("item", {}))
-	# gear lying where its owner fell, waiting to be found (world sites)
-	for sid in Game.state.get("world_sites", {}):
-		for l in Game.state["world_sites"][sid].get("lost", []):
-			out.append(l.get("item", {}))
-	for c in Game.state.get("returns", []):
-		for it3 in c.get("contents", []):
-			out.append(it3)
-	return out.filter(func(x): return x is Dictionary and not (x as Dictionary).is_empty())
+	return ItemRegistry.all_physical(ItemRegistry.ALL, true)

@@ -289,10 +289,11 @@ static func buy_from_ship(index: int, qty := 1) -> String:
 	var what: String = DB.item(str(e["def"])).get("name", e["def"])
 	Game.add_gold(-cost, "imports", "%s: %d × %s" % [s["name"], qty, what])
 	if e.has("item"):
-		var it: Dictionary = (e["item"] as Dictionary).duplicate(true)
-		it["uid"] = Game.new_uid()
-		Game.add_item(it, false)
+		# the piece itself comes ashore: same uid, same story (never a fresh copy)
+		var it: Dictionary = e["item"]
 		e.erase("item")
+		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s from %s." % [Items.display_name(it), s["name"]])
+		Game.add_item(it, false)
 	else:
 		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(70, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty

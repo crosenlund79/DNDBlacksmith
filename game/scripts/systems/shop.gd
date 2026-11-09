@@ -127,6 +127,7 @@ static func decline_offer(oid: String) -> void:
 		if o["id"] == oid:
 			offers().erase(o)
 			# they sell it on at the market instead
+			ItemRegistry.leave(o["item"], "market_buyer", "a buyer at the market", "sold", "%s sold %s on at the market." % [Talk.npc_name(str(o["from"])), Items.display_name(o["item"])])
 			var a := Adv.get_a(o["from"])
 			if not a.is_empty():
 				a["gold"] = int(a.get("gold", 0)) + int(Items.value(o["item"]) * 0.4)
@@ -136,6 +137,7 @@ static func decline_offer(oid: String) -> void:
 static func expire_offers() -> void:
 	for o in offers().duplicate():
 		if Game.day() - int(o["day"]) >= 3:
+			ItemRegistry.leave(o["item"], "market_buyer", "a buyer at the market", "sold", "%s sold %s on at the market." % [Talk.npc_name(str(o["from"])), Items.display_name(o["item"])])
 			offers().erase(o)
 
 
@@ -171,6 +173,7 @@ static func sell_goods(npc: String, uid: int) -> String:
 		it["qty"] = int(it["qty"]) - 1
 	else:
 		Game.inventory().erase(it)
+		ItemRegistry.leave(it, npc, Talk.npc_name(npc), "sold", "Sold to %s for %d g." % [Talk.npc_name(npc), price])
 	Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], Talk.npc_name(npc)])
 	Social.change(npc, 3.0, 3.0)
 	rep_change(0.5)
@@ -278,7 +281,7 @@ static func request(c: Dictionary) -> Dictionary:
 	var r := {"kind": want, "npc": npc, "name": Talk.npc_name(npc)}
 	match want:
 		"repair":
-			var it: Dictionary = c.get("item", {})
+			var it: Dictionary = ItemRegistry.resolve(c.get("item", {}))   # an adventurer's own piece: read it where it is
 			r["item_def"] = str(it.get("def", ""))
 			r["slot"] = Items.slot(it) if not it.is_empty() else ""
 			r["headline"] = "Repair: %s" % it.get("name", "gear")
@@ -459,8 +462,8 @@ static func _add_customer(npc: String, want: String) -> void:
 		var slot2 := worn_slot(a2)
 		c["want"] = "repair"
 		c["own_slot"] = slot2
-		c["item"] = a2["equipment"][slot2]
-		c["pay"] = 10 + int(Items.value(c["item"]) * 0.06)
+		c["item"] = ItemRegistry.ref(a2["equipment"][slot2])   # the piece stays on them; the request refers to it
+		c["pay"] = 10 + int(Items.value(a2["equipment"][slot2]) * 0.06)
 	elif want == "multi":
 		var a3 := Adv.get_a(npc)
 		c["parts"] = multi_parts_for(a3)
@@ -815,7 +818,7 @@ static func multi_parts_for(a: Dictionary) -> Array:
 	# 3. a simple repair: their own worn piece, or a spare they carry
 	var ws := worn_slot(a)
 	if ws != "":
-		parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": a["equipment"][ws], "pay": 10 + int(Items.value(a["equipment"][ws]) * 0.06), "status": "pending"})
+		parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": ItemRegistry.ref(a["equipment"][ws]), "pay": 10 + int(Items.value(a["equipment"][ws]) * 0.06), "status": "pending"})
 	else:
 		var it := Items.make(["dagger", "helm_iron", "shield_round", "axe_hand"].pick_random(), {"quality": randf_range(55, 75)})
 		if it["stats"].has("durability"):
@@ -863,7 +866,7 @@ static func part_request(c: Dictionary, pt: Dictionary) -> Dictionary:
 	var r := {"npc": npc, "name": Talk.npc_name(npc), "part": str(pt.get("pid", "")), "status": str(pt.get("status", "pending")),
 		"available": bool(av["ok"]), "availability": str(av["state"]), "why": str(av["why"])}
 	if str(pt.get("kind", "")) == "repair":
-		var it: Dictionary = pt.get("item", {})
+		var it: Dictionary = ItemRegistry.resolve(pt.get("item", {}))
 		r["kind"] = "repair"
 		r["item_def"] = str(it.get("def", ""))
 		r["headline"] = "Repair: %s" % it.get("name", "gear")
@@ -931,10 +934,12 @@ static func repair_part(npc: String, pid: String, quality: float) -> void:
 	var pt := _part(c, pid)
 	if pt.is_empty() or str(pt.get("status", "")) != "pending" or str(pt["kind"]) != "repair":
 		return
-	var it: Dictionary = pt.get("item", {})
+	var it: Dictionary = ItemRegistry.resolve(pt.get("item", {}))
 	if pt.has("own_slot"):
 		var a := Adv.get_a(npc)
 		it = a.get("equipment", {}).get(str(pt["own_slot"]), it)
+	if ItemRegistry.is_ref(it):
+		it = it.duplicate(true)   # the piece is gone from the world: the record itself is never changed
 	var st: Dictionary = it.get("stats", {})
 	if st.has("durability_max"):
 		st["durability"] = maxi(int(st["durability"]), int(float(st["durability_max"]) * clampf(0.55 + quality / 250.0, 0.5, 1.0)))

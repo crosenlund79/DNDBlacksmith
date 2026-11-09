@@ -624,7 +624,7 @@ static func _apply(a: Dictionary, rec: Dictionary) -> String:
 				Shop.customers().append(c)
 			c["want"] = "repair"
 			c["own_slot"] = str(rec["slot"])
-			c["item"] = it
+			c["item"] = ItemRegistry.ref(it)   # the piece stays on them; the request refers to it
 			c["pay"] = int(rec["cost"])
 			a["depart_day"] = maxi(int(a.get("depart_day", 0)), Game.day() + 1)
 			Events.customers_changed.emit()

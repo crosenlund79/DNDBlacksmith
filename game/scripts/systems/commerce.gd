@@ -219,10 +219,11 @@ static func buy_caravan(index: int, qty := 1) -> String:
 	var what := _iname(str(e["def"]))
 	Game.add_gold(-cost, "caravan", "Caravan: %d × %s" % [qty, what])
 	if e.has("item"):
-		var it: Dictionary = (e["item"] as Dictionary).duplicate(true)
-		it["uid"] = Game.new_uid()
-		Game.add_item(it, false)
+		# the piece itself changes hands: same uid, same story (never a fresh copy)
+		var it: Dictionary = e["item"]
 		e.erase("item")
+		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s from the Brask caravan." % Items.display_name(it))
+		Game.add_item(it, false)
 	else:
 		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(70, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty
@@ -260,7 +261,8 @@ static func sell_wanted(uid: int, qty := 1) -> String:
 	var w := _wanted_entry(str(it["def"]))
 	qty = clampi(qty, 1, mini(int(it.get("qty", 1)), int(w["max"]) - int(w["taken"])))
 	var nm := str(it.get("name", _iname(str(it["def"]))))
-	_take(uid, qty)
+	var sold := _take(uid, qty)
+	Provenance.transfer(sold, "caravan_master", "sold", "brindlewick", "The smith sold %s to the Brask caravan." % Items.display_name(sold))
 	w["taken"] = int(w["taken"]) + qty
 	Game.add_gold(unit * qty, "caravan", "Sold to the caravan: %d × %s" % [qty, nm])
 	return ""
@@ -363,10 +365,9 @@ static func redeem(pledge_id: String) -> String:
 			return "That costs %d g — you cannot afford it." % cost
 		var nm := Items.display_name(it)
 		Game.add_gold(-cost, "pawn", ("Redeemed %s" if p["status"] == "held" else "Bought back %s off the shelf") % nm)
-		var back: Dictionary = it.duplicate(true)   # the same instance (same uid) leaves the pledge book
-		back["_arrives_how"] = "redeemed"
-		Game.add_item(back, false)
-		pledges().erase(p)
+		pledges().erase(p)   # the same instance (same uid) leaves the pledge book — moved, not copied
+		it["_arrives_how"] = "redeemed"
+		Game.add_item(it, false)
 		_log("%s %s for %d g." % ["Redeemed" if p["status"] == "held" else "Bought back", nm, cost], -cost)
 		return ""
 	return "No such ticket."
@@ -399,9 +400,9 @@ static func buy_house(index: int) -> String:
 	var e: Dictionary = s[index]
 	if not Game.can_afford(int(e["price"])):
 		return "You cannot afford it (%d g)." % int(e["price"])
-	var it: Dictionary = (e["item"] as Dictionary).duplicate(true)
-	it["uid"] = Game.new_uid()
+	var it: Dictionary = e["item"]   # the piece itself (same uid and story), not a copy
 	Game.add_gold(-int(e["price"]), "pawn", "Bought %s at the pawnshop" % Items.display_name(it))
+	Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s off Silas Quell's shelf." % Items.display_name(it))
 	Game.add_item(it, false)
 	_log("Bought %s for %d g." % [Items.display_name(it), int(e["price"])], -int(e["price"]))
 	s.remove_at(index)
@@ -420,6 +421,7 @@ static func _pawn_day() -> void:
 			Events.toast.emit("Your pledge %s has lapsed — it is for sale on Quell's shelf." % nm, "bad")
 		elif p["status"] == "forfeit" and Game.day() > int(p.get("forfeit_day", Game.day())) + keep:
 			_log("%s was sold to a passing buyer." % Items.display_name(p["item"]), 0)
+			ItemRegistry.leave(p["item"], "pawn_buyer", "a passing buyer", "sold", "Silas Quell sold %s to a passing buyer." % Items.display_name(p["item"]))
 			pledges().erase(p)
 
 
@@ -465,10 +467,11 @@ static func buy_rival(index: int, qty := 1) -> String:
 	var what := _iname(str(e["def"]))
 	Game.add_gold(-cost, "materials" if not e.has("item") else "equipment", "The Salt Anvil: %d × %s" % [qty, what])
 	if e.has("item"):
-		var it: Dictionary = (e["item"] as Dictionary).duplicate(true)
-		it["uid"] = Game.new_uid()
-		Game.add_item(it, false)
+		# Maren's piece itself changes hands: its Salt Anvil forging stays in its story (same uid)
+		var it: Dictionary = e["item"]
 		e.erase("item")
+		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s at the Salt Anvil." % Items.display_name(it))
+		Game.add_item(it, false)
 	else:
 		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(75, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty
@@ -507,8 +510,7 @@ static func rival_buy_for(a: Dictionary) -> Dictionary:
 		return {}
 	var s := rival_stock()
 	var e: Dictionary = s[int(o["index"])]
-	var it: Dictionary = (e["item"] as Dictionary).duplicate(true)
-	it["uid"] = Game.new_uid()
+	var it: Dictionary = e["item"]   # the piece itself, with its Salt Anvil story (same uid)
 	e.erase("item")
 	e["qty"] = 0
 	var price := int(o["price"])
@@ -521,8 +523,8 @@ static func rival_buy_for(a: Dictionary) -> Dictionary:
 		a["loot"].append(eq[slot])
 	eq[slot] = it
 	a["equipment"] = eq
+	Provenance.transfer(it, str(a.get("id", "")), "bought", "brindlewick", "Bought by %s at the Salt Anvil." % a.get("name", "an adventurer"))
 	it["owner"] = str(a.get("id", ""))
-	Items.add_history(it, "Bought by %s at the Salt Anvil." % a.get("name", "an adventurer"))
 	var sales: Array = st()["rival"]["sales"]
 	sales.append({"day": Game.day(), "adv": str(a.get("id", "")), "item": str(it["name"]), "price": price})
 	while sales.size() > 20:

@@ -1518,6 +1518,17 @@ static func _judge_gear(e: Dictionary, alive: Array) -> void:
 
 static func _archive(e: Dictionary) -> void:
 	active().erase(e["id"])
+	# the pack's contents have been shared out (worn, offered, delivered); the report keeps references only.
+	# What nobody carried home (a lost party's pack) is lost with them — recorded, never kept as a live copy.
+	var reg := region(str(e.get("dest", "")))
+	var loot: Array = e.get("loot", [])
+	for i in loot.size():
+		var it: Variant = loot[i]
+		if not (it is Dictionary) or ItemRegistry.is_ref(it):
+			continue
+		if ItemRegistry.find(int(it.get("uid", -1))).is_empty():
+			Provenance.lose(it, str(reg.get("name", "")), "lost with %s's party" % _lead_name(e), str(e.get("dest", "")))
+		loot[i] = ItemRegistry.ref(it)
 	done().push_front(e)
 	while done().size() > 25:
 		done().pop_back()

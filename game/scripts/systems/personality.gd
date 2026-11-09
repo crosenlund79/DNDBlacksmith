@@ -551,7 +551,8 @@ static func repair_item(npc: String, part_id := "") -> Dictionary:
 		var own: Dictionary = a.get("equipment", {}).get(str(src["own_slot"]), {})
 		if not own.is_empty():
 			return own
-	return src.get("item", {})
+	var it := ItemRegistry.resolve(src.get("item", {}))   # a reference reads the live piece; a vanished one stays silent
+	return {} if ItemRegistry.is_ref(it) else it
 
 
 ## Convenience for the repair flows: the customer's piece may speak as it goes on the wheel.
