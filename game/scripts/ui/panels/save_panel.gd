@@ -18,6 +18,8 @@ func _ready() -> void:
 			continue
 		var m := Saves.meta(slot)
 		var desc := "— empty —" if m.is_empty() else "Day %d, %s · %d gold · saved %s" % [int(m.get("day", 0)), m.get("time", ""), int(m.get("gold", 0)), m.get("saved_at", "")]
+		if int(m.get("seed", -1)) >= 0:
+			desc += " · world seed %d" % int(m["seed"])   # The Living Realm: the campaign's world seed
 		var row := UIKit.hbox(12)
 		var lab := UIKit.label("%s: %s" % [slot.replace("_", " ").capitalize(), desc], 21)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL

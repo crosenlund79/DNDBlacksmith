@@ -148,6 +148,13 @@ func _build_left(a: Dictionary) -> void:
 		where += " — " + str(Expeditions.region(str(a.get("dest", ""))).get("name", ""))
 	left.add_child(_chip(where, WantedPanel.STATUS_COL.get(sw, UIKit.INK)))
 	left.add_child(UIKit.label(Adv.TRAITS.get(a.get("trait", ""), ""), 18, "body_italic"))
+	# The Living Realm: their company (Companies) — the full roll is on the Relationships page
+	var co := Companies.of(adv_id)
+	if not co.is_empty():
+		var cl := UIKit.label("%s of %s" % ["Leader" if str(co["leader"]) == adv_id else "Member", co["name"]], 19, "body_bold", UIKit.RUBRIC)
+		cl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		cl.custom_minimum_size = Vector2(290, 0)
+		left.add_child(cl)
 	var ex := Expeditions.exp_of(adv_id)
 	if not ex.is_empty() and Expeditions.can_observe():
 		var eid: String = ex["id"]
@@ -203,6 +210,9 @@ func _page_overview(a: Dictionary) -> void:
 	var amb: Array = a.get("ambitions", [])
 	if not amb.is_empty():
 		page.add_child(_icon_line("ui/renown", str(amb[0])))
+	var gl := Living.goals(a)
+	if not gl.is_empty():
+		page.add_child(_icon_line("ui/stat_morale", "Goal: " + Living.goal_text(a, gl[0])))
 
 
 func _page_combat(a: Dictionary) -> void:
@@ -389,6 +399,12 @@ func _page_career(a: Dictionary) -> void:
 		r.add_child(UIKit.label("Content with what they have, for now.", 19, "body_italic"))
 	for t in amb:
 		r.add_child(_icon_line("ui/renown", str(t)))
+	# The Living Realm: personal goals (what drives their choices) and what they have already achieved
+	r.add_child(_heading("Personal goals"))
+	for g in Living.goals(a):
+		r.add_child(_icon_line("ui/stat_morale", Living.goal_text(a, g)))
+	for g in (a.get("goals", []) as Array).filter(func(x): return str(x.get("result", "")) == "achieved"):
+		r.add_child(_icon_line("ui/stat_defence", "Achieved on day %d: %s" % [int(g.get("day", 0)), str(Living.GOAL_WORD.get(str(g["kind"]), g["kind"]))], C_GOOD))
 	row.add_child(r)
 	page.add_child(row)
 	var sv: Dictionary = a.get("saving_for", {})
@@ -421,6 +437,7 @@ func _page_relations(a: Dictionary) -> void:
 		for r in fam:
 			fr.add_child(_person(str(r), Social.relation_word(adv_id, str(r))))
 		page.add_child(fr)
+	_company_section(a)
 	var friends := []
 	var rivals := []
 	var known := []
@@ -455,6 +472,34 @@ func _page_relations(a: Dictionary) -> void:
 			h.add_child(v2)
 			g.add_child(h)
 		page.add_child(g)
+
+
+## The Living Realm: the adventurer's company (name, standing, record, members, former members, shared
+## history) and their bonds with other adventurers.
+func _company_section(a: Dictionary) -> void:
+	var co := Companies.of(adv_id)
+	if not co.is_empty():
+		page.add_child(_heading("Company — %s" % co["name"]))
+		page.add_child(UIKit.label("Founded on day %d · %s · %d trips, %d won, %d lost%s" % [int(co["founded"]), Companies.rep_word(co), int(co["trips"]), int(co["wins"]), int(co["losses"]),
+			(" · %d bad trips in a row" % int(co["streak"])) if int(co["streak"]) >= 2 else ""], 19, "body_italic"))
+		var mr := UIKit.hbox(18)
+		for m in co["members"]:
+			mr.add_child(_person(str(m), "leader" if str(m) == str(co["leader"]) else "member"))
+		page.add_child(mr)
+		var former: Array = (co["former"] as Array).slice(maxi(0, (co["former"] as Array).size() - 3))
+		if not former.is_empty():
+			page.add_child(UIKit.label("Former: " + "; ".join(former.map(func(f): return "%s (%s, day %d)" % [Adv.get_a(str(f["id"])).get("name", f["id"]), f["why"], int(f["day"])])), 18, "body_italic"))
+		var hist := Companies.history(co).slice(0, 3)
+		if not hist.is_empty():
+			page.add_child(UIKit.rich("\n".join(hist.map(func(e): return "[color=#7e2418]Day %d[/color] — %s" % [int(e["day"]), e["text"]])), 18))
+	else:
+		page.add_child(_heading("Company"))
+		var past := Companies.list_all().filter(func(c): return (c["former"] as Array).any(func(f): return str(f["id"]) == adv_id))
+		page.add_child(UIKit.label("Travels without a company%s." % ((" — once of " + str(past[-1]["name"])) if not past.is_empty() else ""), 19, "body_italic"))
+	var bl := Living.bond_lines(a)
+	if not bl.is_empty():
+		var word := {"friend": "Friends with", "sworn": "Sworn friends with", "rival": "Rival of"}
+		page.add_child(UIKit.rich("\n".join(bl.map(func(b): return "• [b]%s %s[/b]%s" % [word.get(b[1], b[1]), Adv.get_a(str(b[0])).get("name", b[0]), (" — " + str(b[2])) if str(b[2]) != "" else ""])), 18))
 
 
 func _page_history(a: Dictionary) -> void:

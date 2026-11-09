@@ -99,6 +99,9 @@ func card(a: Dictionary) -> Control:
 	if a["status"] == "away":
 		where += " · " + str(Expeditions.region(str(a.get("dest", ""))).get("name", ""))
 	v.add_child(UIKit.label(where, 18, "body_bold", WantedPanel.STATUS_COL.get(sw, UIKit.INK)))
+	var co := Companies.name_of(id)   # The Living Realm: their company
+	if co != "":
+		v.add_child(UIKit.label(co, 16, "body_italic", Color("#24409a")))
 	if a["status"] != "dead":
 		var c := Adv.completeness(a)
 		var gm := UIKit.hbox(6)

@@ -260,6 +260,8 @@ static func _add_goal(a: Dictionary, kind: String, r: RandomNumberGenerator = nu
 			g["target"] = 0
 		_:
 			return false
+	if bool(progress(a, g)["ok"]):
+		return false   # nothing to strive for: already true (a sworn friend, a rival already outshone…)
 	(a["goals"] as Array).append(g)
 	return true
 

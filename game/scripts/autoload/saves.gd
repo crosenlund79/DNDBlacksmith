@@ -66,7 +66,7 @@ func save(slot: String) -> bool:
 	var data := Game.to_save()
 	var doc := {
 		"meta": {"version": Game.SAVE_VERSION, "slot": slot, "day": Game.day(), "time": Game.time_string(),
-			"gold": Game.gold(), "saved_unix": Time.get_unix_time_from_system(),
+			"gold": Game.gold(), "saved_unix": Time.get_unix_time_from_system(), "seed": int(Game.state.get("world_seed", -1)),
 			"saved_at": Time.get_datetime_string_from_system(false, true)},
 		"data": data,
 	}

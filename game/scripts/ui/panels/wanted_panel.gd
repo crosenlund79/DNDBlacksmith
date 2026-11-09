@@ -67,7 +67,7 @@ func _build() -> void:
 	UIKit.clear(body)
 	match tab:
 		"wanted":
-			_sheets(_ranked().filter(func(a): return a["status"] != "dead"), true)
+			_sheets(_ranked().filter(func(a): return Living.is_active(a)), true)
 		"inn":
 			_sheets(_ranked().filter(func(a): return a["status"] in ["in_town", "injured"]), false)
 		"active":
@@ -148,11 +148,27 @@ func _legends() -> void:
 	for a in top:
 		hl.append("[b]%s[/b] — %s, %d renown. %s" % [a["name"], Expeditions.renown_title(a), int(a.get("renown", 0)), (a["achievements"][-1]["text"] if not a.get("achievements", []).is_empty() else "")])
 	body.add_child(UIKit.rich("\n".join(hl), 21, true))
+	# The Living Realm: the companies of Brindlewick, and those who left the road
+	var cos := Companies.list_all()
+	if not cos.is_empty():
+		body.add_child(UIKit.label("Companies", 28, "heading", UIKit.GILT))
+		var lines := []
+		for c in Companies.active():
+			lines.append("[b]%s[/b] — led by %s; %s; %d trips (%d won)." % [c["name"], Adv.get_a(str(c["leader"])).get("name", ""),
+				", ".join((c["members"] as Array).map(func(i): return str(Adv.get_a(str(i)).get("name", i)))), int(c["trips"]), int(c["wins"])])
+		for c in cos.filter(func(c): return str(c["status"]) != "active"):
+			lines.append("[color=#c8b898]%s — disbanded on day %d: %s.[/color]" % [c["name"], int(c.get("ended", 0)), c.get("end_why", "")])
+		body.add_child(UIKit.rich("\n".join(lines), 21, true))
+	var retired := _ranked().filter(func(a): return str(a["status"]) in ["retired", "gone"])
+	if not retired.is_empty():
+		body.add_child(UIKit.label("Retired from the road", 28, "heading", UIKit.GILT))
+		body.add_child(UIKit.rich("\n".join(retired.map(func(a): return "[b]%s[/b] — %s on day %d (%s)" % [a["name"], "retired, still in Brindlewick" if a["status"] == "retired" else "left Brindlewick",
+			int(a.get("retired_day", 0)), Living.RETIRE_WORD.get(str(a.get("retire_why", "")), "")])), 21, true))
 	var fallen := _ranked().filter(func(a): return a["status"] == "dead")
 	if not fallen.is_empty():
 		body.add_child(UIKit.label("The fallen", 28, "heading", UIKit.GILT))
 		body.add_child(UIKit.rich("\n".join(fallen.map(func(a): return "[b]%s[/b] — %s" % [a["name"], a.get("last_report", "fell on the road")])), 21, true))
-	var legends := Chronicle.recent(12, ["legend", "chain", "victory", "death", "missing", "rescue", "renown"])
+	var legends := Chronicle.recent(12, ["legend", "chain", "victory", "death", "missing", "rescue", "renown", "company", "retired", "arrival"])
 	if not legends.is_empty():
 		body.add_child(UIKit.label("Told and retold", 28, "heading", UIKit.GILT))
 		body.add_child(UIKit.rich("\n".join(legends.map(func(c): return "[color=#c8b898]Day %d %s[/color] — %s" % [int(c["day"]), c["time"], c["text"]])), 20, true))
@@ -238,6 +254,11 @@ class WantedSheet extends Control:
 		elif a["status"] == "away":
 			where = " — " + Expeditions.region(str(a.get("dest", ""))).get("name", "")
 		draw_string(fb, Vector2(x0, y), sw + where, HORIZONTAL_ALIGNMENT_CENTER, w, 19, sc)
+		# The Living Realm: their company, under the whereabouts
+		var co := Companies.name_of(str(a["id"]))
+		if co != "":
+			y += 22
+			draw_string(fi, Vector2(x0 + 10, y), co, HORIZONTAL_ALIGNMENT_CENTER, w - 20, 17, Color("#24409a"))
 		y += 14
 		var ach: Array = a.get("achievements", [])
 		var note := str(ach[-1]["text"]) if not ach.is_empty() else str(a.get("last_report", ""))

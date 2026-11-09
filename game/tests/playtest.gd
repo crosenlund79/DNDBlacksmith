@@ -3737,3 +3737,10 @@ func phase_guide_ux() -> void:
 	UIRoot.hide_tooltip()
 	await close_panel()
 	StationPanel.query = ""
+
+
+## The Living Realm 3a, adventurers: seeded roster, companies, retirement and newcomers on the roster, the Most
+## Wanted board and the character sheet (tests/playtest_living.gd).
+func phase_living_rl() -> void:
+	var ph: RefCounted = load("res://tests/playtest_living.gd").new()
+	await ph.run(self)
