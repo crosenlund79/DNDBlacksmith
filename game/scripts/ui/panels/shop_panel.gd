@@ -92,29 +92,11 @@ func _customers() -> void:
 		elif cu.get("want", "") == "advice":   # The Living Realm 3b (Consult)
 			actions.add_child(UIKit.button("Hear them out — advise on their gear", func(): Events.open_panel.emit("consult", {"id": npc}), 0))
 		elif not a.is_empty():
-			var married: bool = Social.spouse() == npc
-			var any := false
-			for it in Game.inventory():
-				if not Items.is_equipment(it) or (not it.get("for_sale", false) and not married):
-					continue
-				var why := Adv.purchase_check(a, it, Shop.price_of(it))
-				var fits: bool = Items.slot(it) == str(req.get("slot", "")) and Items.stat(it, str(req.get("stat", ""))) >= int(req.get("min", 0))
-				var b := UIKit.button("%s%s — %s" % ["✓ " if fits and why == "" else "", Items.display_name(it), "free" if married else "%d g" % Shop.price_of(it)], func():
-					var err := Shop.sell_to(npc, int(it["uid"]))
-					Events.toast.emit(err if err != "" else "%s takes %s." % [a["name"], ("the " + str(it["name"])) if not str(it["name"]).contains(",") else str(it["name"])], "bad" if err != "" else "good")
-					_build(), 0)
-				b.disabled = why != ""
-				b.tooltip_text = why if why != "" else ("Matches the request." if fits else "")
-				b.add_theme_color_override("font_color", Items.color(it, false))
-				actions.add_child(b)
-				# The Living Realm: weigh it against what they wear (their sheet's Equipment tab, compare view)
-				var cuid := int(it["uid"])
-				var cmp := UIKit.button("⇄", func(): Events.open_panel.emit("dossier", {"id": npc, "compare": cuid}), 0)
-				cmp.tooltip_text = "Compare with what %s wears now" % a["name"]
-				actions.add_child(cmp)
-				any = true
-			if not any:
+			# A2: a compact grid of the pieces on display with a details view and an explicit "Sell for N g" (OfferPicker)
+			if OfferPicker.candidates(npc, req).is_empty():
 				actions.add_child(UIKit.label("Nothing on display suits them. Put equipment on display from your stores [I].", 20, "body_italic"))
+			else:
+				v.add_child(OfferPicker.new(npc, req, func(): _build.call_deferred()))
 		if waiting and cu.get("want", "") != "dispute":
 			var dis := UIKit.button("Ask them to come back another time", func():
 				Shop.dismiss_customer(npc)

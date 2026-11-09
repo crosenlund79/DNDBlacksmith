@@ -714,11 +714,13 @@ static func price_estimate(a: Dictionary, slot: String) -> int:
 	return maxi(15, int(best * 1.05))
 
 
-## The best piece on the smith's display this adventurer would buy for `slot` ({} if none).
-static func best_stock(a: Dictionary, slot: String) -> Dictionary:
+## The best piece on the smith's display this adventurer would buy for `slot` ({} if none). `pool` (A2): judge these
+## pieces instead of the display by the same rules (a consultation also weighs what waits in the stores).
+static func best_stock(a: Dictionary, slot: String, pool: Variant = null) -> Dictionary:
 	var best := {}
 	var best_v := 0.0
-	for it in Shop.stock():
+	var items: Array = Shop.stock() if pool == null else pool
+	for it in items:
 		if Items.slot(it) != slot:
 			continue
 		if purchase_check(a, it, Shop.price_of(it)) != "":

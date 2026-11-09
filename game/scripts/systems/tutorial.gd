@@ -139,10 +139,54 @@ static func _on_panel(id: String, args: Dictionary) -> void:
 		notify("adventurer_talk")
 
 
+## Panels in which the smith serves a customer himself (the counter, a conversation, a consultation, the orders).
+const COUNTER_PANELS := ["shop", "dialogue", "consult", "orders"]
+## Tests: true/false forces serving_at_counter(); null asks the UI.
+static var serving_override: Variant = null
+
+
+## Income counts as "serving a customer" only when the smith earned it himself at the counter: Borin's horseshoes, an
+## adventurer buying a draught or a piece off the display by themselves, an apprentice's repair or the steward's sales
+## while the smith is away write the same ledger categories but teach the player nothing about selling (A2 observation
+## 1: those background sales used to tick the step off before any customer had sat down).
 static func _on_gold(_g: int) -> void:
 	var l: Array = Game.state.get("ledger", [])
-	if not l.is_empty() and str(l[-1].get("cat", "")) in ["sales", "repairs", "commissions"] and int(l[-1].get("amount", 0)) > 0:
+	if not l.is_empty() and str(l[-1].get("cat", "")) in ["sales", "repairs", "commissions"] and int(l[-1].get("amount", 0)) > 0 \
+			and serving_at_counter():
 		notify("sale")
+
+
+## Is the smith serving someone in person right now (a counter panel open, and not away with the steward in charge)?
+static func serving_at_counter() -> bool:
+	if serving_override != null:
+		return bool(serving_override)
+	if Steward.smith_away():
+		return false
+	var ui := UIRoot.instance
+	return ui != null and is_instance_valid(ui) and is_instance_valid(ui.current) and ui.current_id in COUNTER_PANELS
+
+
+## The selling step's live status line, so the step stays useful until someone can actually be served:
+## {state: "ready"|"coming"|"none"|"closed", text} ({} without a game). "ready" = a customer sits at the counter now.
+static func customer_status() -> Dictionary:
+	if Game.state.is_empty() or not Game.state.has("customers"):
+		return {}
+	var ready := []
+	var coming := []
+	for c in Shop.customers():
+		if bool(c.get("present", true)):
+			ready.append(Talk.npc_name(str(c["npc"])))
+		else:
+			coming.append(Talk.npc_name(str(c["npc"])))
+	if not ready.is_empty():
+		var who: String = str(ready[0]) if ready.size() == 1 else "%s and %d more" % [ready[0], ready.size() - 1]
+		return {"state": "ready", "text": "%s %s waiting by the shop door — talk to them, or open the counter." % [who, "is" if ready.size() == 1 else "are"]}
+	if not coming.is_empty():
+		return {"state": "coming", "text": "%s is on the way to the shop — a bell rings when they sit down." % coming[0]}
+	var h := Game.hour()
+	if h < 9 or h >= 18:
+		return {"state": "closed", "text": "The shop is closed — customers come from 9:00 to 18:00. Forge something to sell meanwhile."}
+	return {"state": "none", "text": "Nobody is waiting yet. Keep working — customers drop by in opening hours, and a bell rings when one sits down."}
 
 
 ## Allocation changes count while the Hirelings ledger is open (the daily wage tick does not).

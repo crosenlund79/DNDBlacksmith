@@ -3933,6 +3933,14 @@ func phase_steward_s1() -> void:
 	await ph.run(self)
 
 
+# ======================================================================= Milestone A2: early-game experience (EXPERIENCE worker)
+## The selling tutorial waits for a real customer, the consultation's offers and footer, the stores with 120 pieces,
+## and the graphical offer at the counter with an explicit sale (tests/playtest_experience_a2.gd). Shots a2x_*.
+func phase_a2_experience() -> void:
+	var ph: RefCounted = load("res://tests/playtest_experience_a2.gd").new()
+	await ph.run(self)
+
+
 ## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
 func find_label_containing(root: Node, needle: String) -> Control:
 	for n in root.find_children("*", "Label", true, false):
