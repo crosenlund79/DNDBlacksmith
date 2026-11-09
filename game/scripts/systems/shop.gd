@@ -13,6 +13,26 @@ static func stock() -> Array:
 	return Game.inventory().filter(func(it): return it.get("for_sale", false))
 
 
+## Puts a piece from the stores on display (on = true) or takes it off — the stores, the shop's stock tab and the
+## steward all use this. "" or why not.
+static func set_for_sale(uid: int, on: bool) -> String:
+	var it := Game.find_uid(uid)
+	if it.is_empty():
+		return "That piece is not in the stores."
+	it["for_sale"] = on
+	Events.inventory_changed.emit()
+	return ""
+
+
+## Sets a displayed piece's asking price (at least 1 g). "" or why not.
+static func set_price(uid: int, price: int) -> String:
+	var it := Game.find_uid(uid)
+	if it.is_empty():
+		return "That piece is not in the stores."
+	it["price"] = maxi(1, price)
+	return ""
+
+
 static func price_of(it: Dictionary) -> int:
 	if it.has("price"):
 		return int(it["price"])
