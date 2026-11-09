@@ -1430,7 +1430,7 @@ static func finish(e: Dictionary) -> void:
 		# the broken blade: back for repairs, and maybe something better
 		var w: Dictionary = a["equipment"].get("weapon", {})
 		if w.get("broken", false):
-			Shop._add_customer(id, "repair_own")
+			Shop._add_customer(id, "repair_own", "weapon")   # A2: the broken weapon itself (not merely the first worn piece)
 			if Shop.open_orders().filter(func(o): return o["npc"] == id).is_empty():
 				Shop.create_order(id, "weapon", "My %s broke at %s. Mend it — or make me something that won't." % [w.get("name", "blade"), reg["name"]])
 			Chronicle.add("chain", "%s came home with a broken %s." % [a["name"], w.get("name", "blade")], {"adv": id, "item": str(w.get("uid", ""))})

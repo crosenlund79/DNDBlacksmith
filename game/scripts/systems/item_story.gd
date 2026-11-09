@@ -653,10 +653,11 @@ static func sharpen(it: Dictionary, quality: float, payer := "") -> Dictionary:
 	var text := "Sharpened at the Ironhand grinding wheel%s (%d%%): a fresh edge, +%d attack for two expeditions." % [(" for " + who) if who != "" else "", int(quality), val]
 	Provenance.workshop(it, "sharpened", text)
 	if payer != "" and not Adv.get_a(payer).is_empty():
-		var fee := 6 + int(Adv.get_a(payer).get("level", 1))
 		var a := Adv.get_a(payer)
-		a["gold"] = maxi(0, int(a.get("gold", 0)) - fee)
-		Game.add_gold(fee, "repairs", "Sharpened %s's %s" % [who, it.get("name", "blade")])
+		# A2: they pay what they have (before, a short purse was clamped at 0 while the smith got the whole fee)
+		var fee := Shop._charge(a, 6 + int(a.get("level", 1)))
+		if fee > 0:
+			Game.add_gold(fee, "repairs", "Sharpened %s's %s" % [who, it.get("name", "blade")], payer)
 		Social.change(payer, 2.0 if quality >= 70 else -1.0, 2.0, "", "", false)
 	Game.grant_player_xp("smithing", 4)
 	Events.inventory_changed.emit()

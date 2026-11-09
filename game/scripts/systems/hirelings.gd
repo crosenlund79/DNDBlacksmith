@@ -209,7 +209,7 @@ static func hire_applicant(index: int) -> String:
 	var a: Dictionary = apps[index]
 	if not Game.can_afford(int(a["fee"])):
 		return "You cannot afford the signing fee."
-	Game.add_gold(-int(a["fee"]), "wages", "Signing fee: " + a["name"])
+	Game.add_gold(-int(a["fee"]), "wages", "Signing fee: " + a["name"], "hirelings")
 	var id := "hire_%d" % Game.new_uid()
 	var h := _new_entry(id, a["name"], a["look"], a["race"], a["personality"], a["levels"], int(a["wage"]))
 	h["traits"] = a.get("traits", random_traits())
@@ -350,7 +350,7 @@ static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
 			return "prepared a %s" % DB.item(kind)["name"]
 	if skill == "travelling":
 		var g := int(round((4 + lvl * 2 + randi_range(0, 4)) * trait_mult(h, "mult", "travelling")))
-		Game.add_gold(g, "trade", "%s traded small goods" % h["name"])
+		Game.add_gold(g, "trade", "%s traded small goods" % h["name"], "market")
 		return "traded small goods for %d g" % g
 	if skill == "relic_hunting" and randf() > (0.25 + lvl * 0.05) * trait_mult(h, "mult", "relic_hunting"):
 		return "sifted the spoil heaps and found nothing"
@@ -365,7 +365,7 @@ static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
 	if skill == "smithing" and Game.count("ore_iron") >= 2:
 		Game.remove_def("ore_iron", 2)
 	elif skill == "smithing":
-		Game.add_gold(3 + lvl, "sales", "%s sold horseshoes and nails" % h["name"])
+		Game.add_gold(3 + lvl, "sales", "%s sold horseshoes and nails" % h["name"], "market")
 		return "sold horseshoes and nails for %d g" % (3 + lvl)
 	var it := Items.make(pick[0], {"qty": int(pick[1])})
 	Game.add_item(it, false)
@@ -398,7 +398,7 @@ static func send(id: String, dest_id: String, opts := {}) -> String:
 	if budget > 0 and d.get("kind", "") == "trade":
 		budget = mini(budget, Game.gold())
 		if budget > 0:
-			Game.add_gold(-budget, "materials", "Trade purse for %s" % h["name"])
+			Game.add_gold(-budget, "materials", "Trade purse for %s" % h["name"], str(h["id"]))
 			h["expedition"]["budget"] = budget
 			h["expedition"]["want"] = opts.get("want", [])
 	Game.journal("%s set out for %s (%d days)." % [h["name"], d["name"], days])
@@ -429,7 +429,7 @@ static func on_day() -> void:
 			wages += int(h["wage"])
 	wages = int(round(wages * float(Expeditions.diff().get("wages", 1.0))))
 	if wages > 0:
-		Game.add_gold(-wages, "wages", "Daily wages")
+		Game.add_gold(-wages, "wages", "Daily wages", "hirelings")
 	Memorial.on_day()
 	Events.hirelings_changed.emit()
 
@@ -515,7 +515,7 @@ static func _resolve(h: Dictionary) -> void:
 		contents.append_array(tr["bought"])
 		var back := int(tr["change"]) + int(tr["sold_gold"])
 		if back > 0:
-			Game.add_gold(back, "trade", "%s's trade run: change and sales" % h["name"])
+			Game.add_gold(back, "trade", "%s's trade run: change and sales" % h["name"], str(h["id"]))
 		for ln in tr["lines"]:
 			log_line(h, ln)
 		log_line(h, "bought %d lots with a %d g purse" % [tr["bought"].size(), int(e["budget"])])

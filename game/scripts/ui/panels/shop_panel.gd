@@ -240,6 +240,7 @@ const LEDGER_CAT := {
 	"inn": ["The inn", "icons/ale_mug"], "materials": ["Materials", "icons/ingot_iron"], "trade": ["Trade", "icons/shipment_miner"],
 	"wages": ["Wages & fees", "ui/tb_hirelings"], "upkeep": ["Upkeep", "ui/tb_property"], "upgrades": ["Upgrades", "icons/star"],
 	"refunds": ["Refunds", "icons/purse_gift"], "family": ["Household", "icons/bread_cheese"],
+	"subsidy": ["Village subsidy", "ui/tb_orders"],   # A2: the village's recorded share of adventurers' commissions
 }
 
 

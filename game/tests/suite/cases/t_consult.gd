@@ -132,6 +132,19 @@ func test_triggers_rate_limited() -> void:
 	check(n >= 1 and n <= 5, "now and then, never a flood (%d in 14 days)" % n)
 
 
+## A2: a veteran's commission asks for steel or better (Shop.order_need), so a commission is advised only when the
+## forge can work steel — the Steelworking node, Smithing 5, the bellows and the stitching table (the grip) set up.
+func _steel_forge() -> bool:
+	SkillTree.unlock_node_force("m_alloys")
+	SkillTree.unlock_node_force("s_steel")
+	train("smithing", 5)
+	Property.dev_grant_all()
+	var plan := Property.plan_copy()
+	Property.auto_place(plan, "bellows")
+	Property.commit(plan)
+	return Crafting.recipe_locked_reason("steel_longsword") == ""
+
+
 func test_recommendations_from_data() -> void:
 	fresh_game()
 	var a := _adv("sigrun")
@@ -162,7 +175,9 @@ func test_recommendations_from_data() -> void:
 	give("coating_flame")
 	recs = Consult.recommendations(a)
 	check(not _rec(recs, "coat").is_empty(), "a flame coating from the stores instead")
-	# nothing in stock or stores: a commission for a fire-touched blade
+	# nothing in stock or stores: a commission for a fire-touched blade — a veteran's commission asks for steel, so (A2)
+	# it is advised only when the forge can work steel
+	check(_steel_forge(), "the forge can work steel")
 	Game.remove_def("coating_flame", 9)
 	recs = Consult.recommendations(a)
 	check(not _rec(recs, "commission").is_empty(), "or a commission for a fire-touched weapon")
@@ -296,7 +311,8 @@ func test_accepted_advice_changes_decisions() -> void:
 	check(int(b["depart_day"]) >= Game.day() + 1, "and holds off a day")
 	Shop.do_repair("tomas", 90.0)
 	check(not bool(b["equipment"]["weapon"].get("broken", false)), "the existing repair flow mends the very piece")
-	# 3. commission for a fire-touched weapon
+	# 3. commission for a fire-touched weapon (a veteran's: steel — A2: advised only when the forge can work steel)
+	check(_steel_forge(), "the forge can work steel")
 	var c := _adv("garrick")
 	_calm(c)
 	c["equipment"]["weapon"].erase("coating")

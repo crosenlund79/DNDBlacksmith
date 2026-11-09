@@ -262,7 +262,7 @@ static func hire(index: int) -> String:
 	var p: Dictionary = apps[index]
 	if not Game.can_afford(int(p["fee"])):
 		return "You cannot afford the signing fee (%d g)." % int(p["fee"])
-	Game.add_gold(-int(p["fee"]), "wages", "Signing fee: apprentice " + str(p["name"]))
+	Game.add_gold(-int(p["fee"]), "wages", "Signing fee: apprentice " + str(p["name"]), "apprentices")
 	var id := "app_%d" % Game.new_uid()
 	var skills := {}
 	for sk: String in _skill_ids():
@@ -968,7 +968,7 @@ static func _pay_wages() -> void:
 	if total <= 0:
 		return
 	if Game.can_afford(total):
-		Game.add_gold(-total, "wages", "Apprentice wages")
+		Game.add_gold(-total, "wages", "Apprentice wages", "apprentices")
 		for a in staff():
 			a["loyalty"] = clampf(float(a["loyalty"]) + float(lo.get("paid", 0.5)), 0.0, 100.0)
 			a["unpaid_days"] = 0

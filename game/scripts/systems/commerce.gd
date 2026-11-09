@@ -213,11 +213,11 @@ static func buy_caravan(index: int, qty := 1) -> String:
 		var ok: Variant = _ironfront_call("grant_card", [str(e["card"]), "caravan"])
 		if ok == null or not bool(ok):
 			return "The card cannot be traded right now."
-		Game.add_gold(-cost, "caravan", "Ironfront card from the caravan")
+		Game.add_gold(-cost, "caravan", "Ironfront card from the caravan", "caravan")
 		e["qty"] = 0
 		return ""
 	var what := _iname(str(e["def"]))
-	Game.add_gold(-cost, "caravan", "Caravan: %d × %s" % [qty, what])
+	Game.add_gold(-cost, "caravan", "Caravan: %d × %s" % [qty, what], "caravan")
 	if e.has("item"):
 		# the piece itself changes hands: same uid, same story (never a fresh copy)
 		var it: Dictionary = e["item"]
@@ -264,7 +264,7 @@ static func sell_wanted(uid: int, qty := 1) -> String:
 	var sold := _take(uid, qty)
 	Provenance.transfer(sold, "caravan_master", "sold", "brindlewick", "The smith sold %s to the Brask caravan." % Items.display_name(sold))
 	w["taken"] = int(w["taken"]) + qty
-	Game.add_gold(unit * qty, "caravan", "Sold to the caravan: %d × %s" % [qty, nm])
+	Game.add_gold(unit * qty, "caravan", "Sold to the caravan: %d × %s" % [qty, nm], "caravan")
 	return ""
 
 
@@ -347,7 +347,7 @@ static func pawn_item(uid: int, qty := 0) -> String:
 		"due": Game.day() + hold, "status": "held"}
 	pledges().append(p)
 	var nm := Items.display_name(taken)
-	Game.add_gold(pay, "pawn", "Pawned %s" % nm)
+	Game.add_gold(pay, "pawn", "Pawned %s" % nm, "pawnbroker")
 	_log("Pawned %s for %d g (ticket %s, redeem by day %d)." % [nm, pay, p["id"], int(p["due"])], pay)
 	if str(taken.get("rarity", "common")) in ["rare", "legendary", "unique", "set"]:
 		Chronicle.add("trade", "The smith pawned %s at Quell's for %d gold." % [nm, pay], {"item": taken["def"]})
@@ -364,7 +364,7 @@ static func redeem(pledge_id: String) -> String:
 		if not Game.can_afford(cost):
 			return "That costs %d g — you cannot afford it." % cost
 		var nm := Items.display_name(it)
-		Game.add_gold(-cost, "pawn", ("Redeemed %s" if p["status"] == "held" else "Bought back %s off the shelf") % nm)
+		Game.add_gold(-cost, "pawn", ("Redeemed %s" if p["status"] == "held" else "Bought back %s off the shelf") % nm, "pawnbroker")
 		pledges().erase(p)   # the same instance (same uid) leaves the pledge book — moved, not copied
 		it["_arrives_how"] = "redeemed"
 		Game.add_item(it, false)
@@ -401,7 +401,7 @@ static func buy_house(index: int) -> String:
 	if not Game.can_afford(int(e["price"])):
 		return "You cannot afford it (%d g)." % int(e["price"])
 	var it: Dictionary = e["item"]   # the piece itself (same uid and story), not a copy
-	Game.add_gold(-int(e["price"]), "pawn", "Bought %s at the pawnshop" % Items.display_name(it))
+	Game.add_gold(-int(e["price"]), "pawn", "Bought %s at the pawnshop" % Items.display_name(it), "pawnbroker")
 	Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s off Silas Quell's shelf." % Items.display_name(it))
 	Game.add_item(it, false)
 	_log("Bought %s for %d g." % [Items.display_name(it), int(e["price"])], -int(e["price"]))
@@ -465,7 +465,7 @@ static func buy_rival(index: int, qty := 1) -> String:
 	if not Game.can_afford(cost):
 		return "You cannot afford it (%d g)." % cost
 	var what := _iname(str(e["def"]))
-	Game.add_gold(-cost, "materials" if not e.has("item") else "equipment", "The Salt Anvil: %d × %s" % [qty, what])
+	Game.add_gold(-cost, "materials" if not e.has("item") else "equipment", "The Salt Anvil: %d × %s" % [qty, what], "rival_smith")
 	if e.has("item"):
 		# Maren's piece itself changes hands: its Salt Anvil forging stays in its story (same uid)
 		var it: Dictionary = e["item"]
@@ -643,7 +643,7 @@ static func buy_creature(index: int) -> String:
 	if not Game.can_afford(price):
 		return "You cannot afford it (%d g)." % price
 	var it := Companions.make(str(e["def"]), float(e["quality"]))
-	Game.add_gold(-price, "creatures", "Hale Farm: %s" % it["name"])
+	Game.add_gold(-price, "creatures", "Hale Farm: %s" % it["name"], "hale_farm")
 	Game.add_item(it, false)
 	e["sold"] = true
 	Chronicle.add("trade", "The smith bought %s from Hale Farm." % it["name"], {"item": e["def"]}, Companions.magical(str(e["def"])))
@@ -670,7 +670,7 @@ static func arrange_creature(index: int, adv_id: String, mode: String, markup :=
 		"gift":
 			if not Game.can_afford(price):
 				return "You cannot afford it (%d g)." % price
-			Game.add_gold(-price, "creatures", "A gift for %s: %s" % [a["name"], it["name"]])
+			Game.add_gold(-price, "creatures", "A gift for %s: %s" % [a["name"], it["name"]], "hale_farm")
 			Companions.give(a, it, "A gift from the smith to %s." % a["name"])
 			Social.change(adv_id, 10.0 + price / 60.0, 6.0, "creature_" + str(it["uid"]), "Brannoc gave me %s." % it["name"])
 		"sell":
@@ -681,10 +681,10 @@ static func arrange_creature(index: int, adv_id: String, mode: String, markup :=
 				ask = 0
 			if int(a.get("gold", 0)) < ask:
 				return "%s cannot afford %d g." % [a["name"], ask]
-			Game.add_gold(-price, "creatures", "Hale Farm: %s for %s" % [it["name"], a["name"]])
+			Game.add_gold(-price, "creatures", "Hale Farm: %s for %s" % [it["name"], a["name"]], "hale_farm")
 			a["gold"] = int(a["gold"]) - ask
 			if ask > 0:
-				Game.add_gold(ask, "sales", "%s bought %s" % [a["name"], it["name"]])
+				Game.add_gold(ask, "sales", "%s bought %s" % [a["name"], it["name"]], adv_id)
 			Companions.give(a, it, "Bought through the smith by %s for %d gold." % [a["name"], ask])
 			var mood := 4.0 if markup <= 1.01 else (1.5 if markup <= 1.16 else -3.0)
 			Social.change(adv_id, mood, 4.0, "creature_" + str(it["uid"]), "The smith found me %s%s." % [it["name"], "" if mood > 0 else " — and charged dearly for it"])
@@ -694,7 +694,7 @@ static func arrange_creature(index: int, adv_id: String, mode: String, markup :=
 			a["gold"] = int(a["gold"]) - price
 			var fee := int(round(price * float(creature_cfg().get("finder_fee", 0.1))))
 			if fee > 0:
-				Game.add_gold(fee, "sales", "Finder's fee from Hale Farm (%s)" % a["name"])
+				Game.add_gold(fee, "sales", "Finder's fee from Hale Farm (%s)" % a["name"], "hale_farm")
 			Companions.give(a, it, "Bought at Hale Farm by %s, introduced by the smith." % a["name"])
 			Social.change(adv_id, 2.5, 4.0, "creature_" + str(it["uid"]), "The smith introduced me to the Hales — and %s." % it["name"])
 		_:
@@ -744,7 +744,7 @@ static func commission_creature(def_id: String, for_adv := "") -> String:
 	var days := randi_range(int(lead[0]), int(lead[1]))
 	var o := {"id": _new_id("cr"), "def": def_id, "for": for_adv, "price": price, "placed": Game.day(), "due": Game.day() + days, "status": "ordered"}
 	commissions().append(o)
-	Game.add_gold(-price, "creatures", "Commissioned from Hale Farm: %s" % _iname(def_id))
+	Game.add_gold(-price, "creatures", "Commissioned from Hale Farm: %s" % _iname(def_id), "hale_farm")
 	Chronicle.add("trade", "The smith commissioned a %s from Hale Farm%s." % [_iname(def_id).to_lower(), (" for " + Talk.npc_name(for_adv)) if for_adv != "" else ""], {"item": def_id})
 	return ""
 

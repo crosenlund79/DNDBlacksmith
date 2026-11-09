@@ -94,7 +94,7 @@ NODES = [
                "iron_shortsword", "iron_hatchet", "iron_buckler"],
       unlock_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel", "project_bench"],
       techniques=[T("t_repairs", "Field repairs", "Dented and notched gear can be ground and re-tempered at the grinding wheel.")], icon="icons/sword_iron"),
-    N("s_blades", "smithing", "Simple Blades & Armour", "Once your first sword has left the anvil: plate for the body and silver for the hand.", 1, 1,
+    N("s_blades", "smithing", "Mail, Plate & Silverwork", "Once your first sword has left the anvil: chainmail and an iron cuirass for the body, a silver band for the hand.", 1, 1,
       skill=("smithing", 4), nodes=["s_basic"], seen=["sword_iron"],
       recipes=["iron_cuirass", "silver_band", "iron_chainmail"]),
     N("s_steel", "smithing", "Steelworking", "Folded, normalised steel: keener edges and lighter plate.", 1, 2,

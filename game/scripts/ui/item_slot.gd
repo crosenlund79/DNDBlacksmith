@@ -100,7 +100,7 @@ func _draw_condition() -> void:
 	var broken: bool = item.get("broken", false)
 	if st.has("durability_max") and float(st["durability_max"]) > 0.0:
 		var f := Items.durability_frac(item)
-		var col := Color("#4c7a34") if f >= 0.5 else (Color("#b8862e") if f >= 0.25 else Color("#a8321e"))
+		var col := Color("#4c7a34") if f >= 0.5 else (Color("#b8862e") if f >= Items.WORN else Color("#a8321e"))   # red = needs mending
 		var h := clampf(size_px * 0.07, 4.0, 7.0)
 		var r := Rect2(4, size_px - h - 3, size_px - 8, h)
 		draw_rect(r, Color(0.13, 0.08, 0.05, 0.55))

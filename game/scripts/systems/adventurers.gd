@@ -162,7 +162,7 @@ static func _buy_supplies(a: Dictionary) -> void:
 			return
 		a["gold"] = int(a["gold"]) - price
 		a["potions"] = int(a.get("potions", 0)) + 1
-		Game.add_gold(price, "sales", "%s bought a healing draught" % a["name"])
+		Game.add_gold(price, "sales", "%s bought a healing draught" % a["name"], str(a["id"]))
 		if int(it.get("qty", 1)) > 1:
 			it["qty"] = int(it["qty"]) - 1
 		else:
@@ -392,7 +392,7 @@ static func _resolve(a: Dictionary) -> void:
 	# spouse shares the spoils
 	if spouse:
 		var share := gold / 2
-		Game.add_gold(share, "family", "%s's share of the spoils" % a["name"])
+		Game.add_gold(share, "family", "%s's share of the spoils" % a["name"], str(a["id"]))
 		if not loot.is_empty():
 			var gift := []
 			for it in loot:
@@ -617,7 +617,7 @@ static func wear_warnings(a: Dictionary) -> Dictionary:
 		var it: Dictionary = a["equipment"][s]
 		if it.get("broken", false):
 			out["broken"] += 1
-		elif Items.durability_frac(it) < 0.35:
+		elif Items.needs_mending(it):   # Items.WORN — the one threshold
 			out["worn"] += 1
 	return out
 
@@ -670,7 +670,7 @@ static func gear_needs(a: Dictionary) -> Array:
 			why = "companion" if s == "companion" else ("missing" if core.has(s) else "extra")
 		elif it.get("broken", false):
 			why = "broken"
-		elif Items.durability_frac(it) < 0.35:
+		elif Items.needs_mending(it):   # Items.WORN — the one threshold
 			why = "worn"
 		elif Items.score(it) < level_target(a, s) * Living.inferior_factor(a) or (s == "weapon" and str(a.get("wants_prop", "")) != "" and Items.stat(it, str(a["wants_prop"])) <= 0):
 			why = "inferior"
@@ -688,15 +688,37 @@ static func commission_cost(a: Dictionary) -> int:
 	return 26 + int(a.get("level", 1)) * 12
 
 
-## Could the smith make something for this slot that this class would use?
+## Could the smith make something for this slot that this class would use — with the skills, skill-tree knowledge
+## and stations the workshop really has today (Milestone A2: before, any recipe in the game counted, so beginners
+## were asked for boots their forge could not make)? Missing materials do not count against it: they can be bought.
 static func can_commission(a: Dictionary, slot: String) -> bool:
 	if slot == "companion":
 		return false
-	for r in DB.recipes.values():
-		var d := DB.item(str(r.get("output", "")))
-		if str(d.get("slot", "")) == slot and affinity(a, {"def": str(r["output"])}) > 0.0:
-			return true
-	return false
+	return Shop.can_make_slot(slot, a, Shop.order_need(a, slot))   # what the commission would ask for (steel for veterans …)
+
+
+## The slot an adventurer brings to the smith for `wanted` (Milestone A2): what they want when the workshop can make
+## it (or has a piece on display); otherwise, now and then (Shop.OPPORTUNITY_CHANCE), still that — a visible
+## opportunity with the next step shown — and usually the most pressing want the workshop CAN make.
+static func request_slot(a: Dictionary, wanted: String) -> String:
+	if wanted == "" or wanted == "companion" or Shop.can_make_slot(wanted, a, Shop.order_need(a, wanted)) or not best_stock(a, wanted).is_empty():
+		return wanted
+	if randf() < Shop.OPPORTUNITY_CHANCE:
+		return wanted
+	for need in gear_needs(a):
+		var s := str(need["slot"])
+		if s != "companion" and Shop.can_make_slot(s, a, Shop.order_need(a, s)):
+			return s
+	var best := ""
+	var best_sc := 1e9
+	for s2 in CLASS_WANTS.get(a.get("cls", ""), ["weapon"]):
+		if not Shop.can_make_slot(str(s2), a, Shop.order_need(a, str(s2))):
+			continue
+		var sc := Items.score(a.get("equipment", {}).get(str(s2), {}))
+		if sc < best_sc:
+			best_sc = sc
+			best = str(s2)
+	return best if best != "" else wanted
 
 
 ## A rough price for a decent piece in this slot (the saving goal).
@@ -882,10 +904,11 @@ static func act_on_plans(a: Dictionary) -> String:
 					evaluate_gear(a)
 					return "bought"
 			"repair":
-				if not Shop.customer(a["id"]).is_empty() or Shop.worn_slot(a) == "":
-					continue   # (nothing the counter would call worn: no errand today)
+				# the piece they PLANNED to have mended is the one they bring (Milestone A2: not merely the first worn one)
+				if not Shop.customer(a["id"]).is_empty() or not Items.needs_mending(a["equipment"].get(str(e["slot"]), {})):
+					continue
 				var before := Shop.customers().size()
-				Shop._add_customer(a["id"], "repair_own")
+				Shop._add_customer(a["id"], "repair_own", str(e["slot"]))
 				if Shop.customers().size() > before:
 					e["plan"] = "requested"
 					_gear_note(a, "Set out for the forge to have the %s repaired." % a["equipment"][e["slot"]].get("name", e["slot"]), false)

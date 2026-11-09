@@ -34,7 +34,7 @@ static func hire_one() -> String:
 	if Apprentices.applicants().is_empty():
 		Apprentices.refresh_applicants()
 	if not Game.can_afford(int(Apprentices.applicants()[0].get("fee", 0))):
-		Game.add_gold(500, "dev", "Developer funds")
+		Game.add_gold(500, "dev", "Developer funds", "dev")
 	var err := Apprentices.hire(0)
 	return err if err != "" else "Hired %s." % str(Apprentices.staff()[-1]["name"])
 

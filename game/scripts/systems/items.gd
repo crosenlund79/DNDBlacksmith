@@ -237,6 +237,22 @@ static func condition(it: Dictionary) -> float:
 	return 1.0 if r >= 0.5 else 0.8 + 0.4 * r
 
 
+## Milestone A2: THE durability threshold. A piece below this fraction of its durability (or broken) needs mending —
+## for the adventurer's own plans, the counter's repair requests, consultations, the character sheets' "badly worn"
+## and the Steward alike. One number, used everywhere.
+const WORN := 0.4
+
+
+## Does this piece need mending (broken, or durability below WORN)? Pieces that never wear: false.
+static func needs_mending(it: Dictionary) -> bool:
+	if it.is_empty():
+		return false
+	if bool(it.get("broken", false)):
+		return true
+	var st: Dictionary = it.get("stats", {})
+	return st.has("durability_max") and float(st["durability_max"]) > 0.0 and durability_frac(it) < WORN
+
+
 ## Durability fraction 0..1 (1.0 for pieces that never wear).
 static func durability_frac(it: Dictionary) -> float:
 	var st: Dictionary = it.get("stats", {})
