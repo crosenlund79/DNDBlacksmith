@@ -480,3 +480,27 @@ func test_fatigue_holds_while_away() -> void:
 	Steward.deactivate()
 	Game.advance_minutes(3 * 60)
 	check(Vitality.fatigue() > 30.0, "back at the forge, waking hours tire him again (%.1f)" % Vitality.fatigue())
+
+
+## S1 (lead): a contract letter that arrives while the smith is away does not reveal its contents in the toast,
+## journal or Chronicle — only its sender; the offer itself is real and waits for him.
+func test_letter_contents_stay_sealed_while_away() -> void:
+	fresh_game()
+	if not check(Steward.activate() == "", "the steward takes over"):
+		return
+	var c := Contracts.make_offer("queens_guard", "test")
+	if not check(not c.is_empty(), "a real offer arrives"):
+		return
+	var title := str(c["title"])
+	var leaked := false
+	for e in Game.state.get("chronicle", []):
+		if str(e.get("text", "")).contains(title):
+			leaked = true
+	for j in Game.state.get("journal", []):
+		if str(j if j is String else j.get("text", "")).contains(title):
+			leaked = true
+	check(not leaked, "the letter's subject is not revealed while sealed")
+	var announced := (Game.state.get("journal", []) as Array).any(func(j): return str(j.get("text", "")).contains("left a sealed letter from"))
+	check(announced, "its arrival is recorded — sender only")
+	check(Contracts.offers().any(func(o): return str(o["id"]) == str(c["id"])), "the offer itself is real and waiting")
+	Steward.deactivate()

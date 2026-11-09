@@ -28,7 +28,7 @@ acts offline, and never catches up after a save is reopened.
 | `Steward` (decision layer) | `scripts/systems/steward.gd` | State, activation, the decision cycle, standing instructions, deferrals, the steward log, the session snapshot and the return report. Pure GDScript; no UI. |
 | Steward actions | inside `steward.gd` (`_act_*`) | Thin adapters that call existing APIs (`Trade.buy_store`, `Apprentices.add_task`/`assign`, `Shop` order & sale functions, `Contracts.decline` …) and record the outcome. |
 | Deferral & correspondence | `steward.gd` (`defer`, `letters`) | Collects matters the steward may not decide, from real events; marks the genuinely significant ones as sealed letters. |
-| UI | `scripts/ui/panels/steward_panel.gd`, `welcome_back_panel.gd`, `sealed_letter.gd` (UI worker) | Activate/exit, standing instructions, live status, While You Were Away, sealed correspondence. |
+| UI | `scripts/ui/steward_ui.gd` (shared helpers, the away gate), `steward_plate.gd` (non-blocking status plate), `panels/steward_panel.gd` (hand-over, standing instructions, matters waiting), `panels/welcome_back_panel.gd` (While You Were Away), `panels/sealed_letter.gd` (sealed correspondence) | Activate/exit (toolbar socket, key N, Workshop Ledger), standing instructions, live status, While You Were Away, sealed letters; look-but-do-not-act while away. |
 | Tests | `tests/suite/cases/t_steward.gd`, soak runner | Same engine, headless, seeded, accelerated. |
 
 The decision layer is written as **evaluate → choose → act through an adapter → record**, with each routine concern a
@@ -256,3 +256,10 @@ could attempt, so that it never starts work a customer will walk away from.
 `from_save`), `autoload/events.gd` (`signal steward_changed`), `systems/shop.gd` (`set_for_sale`, `set_price`),
 `systems/apprentices.gd` (`_supervised` respects `smith_away`), `ui/panels/inventory_panel.gd` and
 `ui/panels/shop_panel.gd` (display toggles/price through the new Shop functions).
+
+## 9. Lead integration notes
+- **Fatigue holds while away** (`vitality.gd` `on_hour`): the smith gains no waking fatigue (and no rest) while the
+  steward runs the forge, so a long session never returns an exhausted smith. Test: `t_steward.fatigue_holds_while_away`.
+- **Sealed letters stay sealed** (`contracts.gd` `_announce`): a contract letter arriving while the smith is away is
+  announced with its sender only (toast, journal, Chronicle); its subject is revealed when the player opens it. Test:
+  `t_steward.letter_contents_stay_sealed_while_away`.
