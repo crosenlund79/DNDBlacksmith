@@ -419,3 +419,33 @@ func test_every_station_reachable_full() -> void:
 	check(save_load("suite_smithy_full"), "save and load")
 	check(Property.has_lift() and Property.floor_owned("loft"), "the full two-floor workshop persists")
 	_unmount(w)
+	# a lived-in two-floor arrangement: tailoring, alchemy and runecraft stations moved up into the Loft
+	var plan := Property.plan_copy()
+	var ups := [["loom", Vector2(112.6, 25.0)], ["cutting_table", Vector2(116.8, 25.0)], ["tailors_bench", Vector2(112.6, 30.2)],
+		["alembic", Vector2(102.6, 20.4)], ["mortar_station", Vector2(106.6, 20.4)], ["reagent_table", Vector2(102.8, 24.8)],
+		["rune_polishing_wheel", Vector2(102.4, 30.6)], ["resonance_pedestal", Vector2(106.4, 30.6)]]
+	for pr in ups:
+		eq(Property.place(plan, str(pr[0]), pr[1]), "", "%s moves upstairs" % pr[0])
+	eq(Property.commit(plan), "", "the two-floor arrangement is accepted")
+	w = _world()
+	nav = PlayerNav.of(w)
+	var acts := w.get_node("ApprenticeActors") as ApprenticeActors
+	bad = []
+	var cramped := []
+	for e2 in w.interactables:
+		if str(e2["kind"]) != "station":
+			continue
+		var sid2 := str(e2["id"])
+		if nav.plan(w.spots["smithy_door_out"], e2["pos"], float(e2["r"]) - 12.0).is_empty():
+			bad.append(sid2)
+		var ws: Dictionary = acts.work_spot(sid2)
+		if not (nav.walkable(ws["pos"]) and nav.clear_at(ws["pos"], 16.0)):
+			cramped.append(sid2)
+	eq(bad, [], "every station on both floors is reachable from the front door (stair or lift)")
+	eq(cramped, [], "every station has a clear working side for an apprentice")
+	var per_floor := {}
+	for sid3 in Property.st()["stations"]:
+		var fl := Property.station_floor(str(sid3))
+		per_floor[fl] = int(per_floor.get(fl, 0)) + 1
+	note("stations per floor: %s; free places %d" % [str(per_floor), Property.free_places()])
+	_unmount(w)
