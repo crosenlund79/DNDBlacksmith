@@ -22,11 +22,8 @@ const STEPS := [
 		"what": "Prototype saves (no version) gain the returns, customers and orders lists."},
 	{"to": 2, "name": "formalise the per-load fix-ups",
 		"what": "Cloaks worn in the amulet slot move to the cloak slot (same instance) and cloak commissions name the cloak slot; saves from before the property system own the whole ground floor and every station (legacy); saves from before the Loft gain its unowned rooms and doorways; saves from before the skill tree learn every node their skills already meet."},
-	# ---- RESERVED for the IDENTITY worker (Milestone A1): the lead wires it.
-	# {"to": 3, "name": "canonical item identity",
-	#	"what": "Records become uid + snapshot; one physical item per uid (ItemRegistry.migrate_records)."},
-	# Add `3: _v2_to_v3(data)` to apply_step() below, implement _v2_to_v3 as a call into the identity worker's
-	# idempotent conversion (e.g. ItemRegistry.migrate_records(data)), and set Game.SAVE_VERSION := 3.
+	{"to": 3, "name": "canonical item identity",
+		"what": "Records that only refer to a piece (finished-expedition loot, repair requests for an adventurer's own piece) become uid + snapshot references; a delivered contract masterpiece moves to the holdings archive (out of the capped history); one uid held by two live holders keeps the most authoritative one. Same instances, same uids (ItemRegistry.migrate_records)."},
 ]
 
 
@@ -76,6 +73,8 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			_v0_to_v1(data)
 		2:
 			_v1_to_v2(data)
+		3:
+			_v2_to_v3(data)
 		_:
 			return false
 	return true
@@ -111,6 +110,17 @@ static func _v1_to_v2(data: Dictionary) -> void:
 		SkillTree.ensure()     # pre-skill-tree saves learn every node their skills already meet
 		if not had_tree:
 			Log.info("  a save from before the skill tree: nodes learned from the smith's skills")
+	)
+
+
+## v2 → v3 (Milestone A1): one canonical physical item per uid. Idempotent (a second pass changes nothing).
+static func _v2_to_v3(data: Dictionary) -> void:
+	if not data.get("player") is Dictionary:
+		return
+	_with_state(data, func() -> void:
+		var n := ItemRegistry.migrate_records(data)
+		if n > 0:
+			Log.info("  item identity: %d record(s) converted" % n)
 	)
 
 

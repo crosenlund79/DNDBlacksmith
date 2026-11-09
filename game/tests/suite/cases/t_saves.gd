@@ -260,9 +260,37 @@ func test_migration_keeps_item_instances() -> void:
 	var data := _golden_data("build-0.13.5")
 	if not check(not data.is_empty(), "the 0.13.5 golden save parses"):
 		return
-	var uids_before := _uids(data)
+	var uids_before := _distinct(_uids(data))
 	SaveMigrations.run(data)
-	eq(_uids(data), uids_before, "the migration neither adds nor removes nor renumbers items")
+	# step 3 turns record copies into uid references: the set of identities is what must survive unchanged
+	eq(_distinct(_uids(data)), uids_before, "the migration neither adds nor removes nor renumbers item identities")
+
+
+func _distinct(a: Array) -> Array:
+	var out := []
+	for u in a:
+		if not out.has(u):
+			out.append(u)
+	out.sort()
+	return out
+
+
+## Milestone A1: every authentic golden save, once migrated, holds each physical piece once (no uid in two live
+## holders, no item dict shared between containers) — and its identities are the same set as before.
+func test_golden_saves_have_canonical_identity_after_migration() -> void:
+	for g in GOLDEN:
+		var data := _golden_data(g)
+		if not check(not data.is_empty(), "%s parses" % g):
+			continue
+		var before := ItemRegistry.scan(data)
+		var ids := _distinct(_uids(data))
+		SaveMigrations.run(data)
+		var after := ItemRegistry.scan(data)
+		note("%s: before — %s; after — %s" % [g, ItemRegistry.scan_text(before), ItemRegistry.scan_text(after)])
+		eq((after["dup"] as Array).size(), 0, "%s: no uid held by two live holders after migration" % g)
+		eq((after["shared"] as Array).size(), 0, "%s: no item dict shared between containers after migration" % g)
+		eq(_distinct(_uids(data)), ids, "%s: the same identities survive" % g)
+		eq(int(data.get("version", 0)), Game.SAVE_VERSION, "%s: now at schema %d" % [g, Game.SAVE_VERSION])
 
 
 func _uids(s: Dictionary) -> Array:
@@ -276,7 +304,7 @@ func _collect_uids(v: Variant, out: Array, depth: int) -> void:
 	if depth > 40:
 		return
 	if v is Dictionary:
-		if _is_item(v) and (v as Dictionary).has("uid"):
+		if (_is_item(v) or bool((v as Dictionary).get("ref", false))) and (v as Dictionary).has("uid"):
 			out.append(int(v["uid"]))
 		for k in v:
 			_collect_uids(v[k], out, depth + 1)
