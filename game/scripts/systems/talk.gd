@@ -39,6 +39,8 @@ static func greeting(npc: String) -> String:
 			match str(cu["want"]):
 				"dispute":
 					t = "\"Your %s failed me out there. I want my money back.\" They hold out the battered piece." % cu.get("item_name", "gear")
+				"advice":
+					t = "\"%s\"" % str(cu.get("question", "A word about my kit, smith?"))
 				"goods":
 					t = "\"Have you a %s? I can spend about %d.\"" % [DB.item(cu.get("looking_for", "potion_healing")).get("name", "draught").to_lower(), int(cu.get("budget", 40))]
 				"browse":
@@ -79,6 +81,10 @@ static func options(npc: String, area: String) -> Array:
 			if cu["want"] == "dispute":
 				out.insert(0, {"id": "refund", "label": "Refund them for the %s (%d g)" % [cu.get("item_name", "gear"), int(cu.get("refund", 20))]})
 				out.insert(1, {"id": "refuse", "label": "Refuse — the work was sound"})
+				continue
+			if cu["want"] == "advice":   # The Living Realm 3b (Consult)
+				out.insert(0, {"id": "consult", "label": "Hear them out — advise on their gear"})
+				out.insert(1, {"id": "send_away", "label": "Ask them to come back another time"})
 				continue
 			var so2 := {"id": "serve_repair" if cu["want"] == "repair" else "serve", "label": "Take the repair job" if cu["want"] == "repair" else "Show them the wares"}
 			if cu["want"] == "repair" and Crafting.station_locked_reason("grinding_wheel") != "":
@@ -129,6 +135,8 @@ static func options(npc: String, area: String) -> Array:
 		out.append(go)
 	out.append_array(Commerce.talk_options(npc))
 	out.append_array(ItemStory.talk_options(npc))   # "Ask about Wolfbane — its travels"
+	if not out.any(func(o): return str(o["id"]) == "consult"):
+		out.append_array(Consult.talk_options(npc))   # "Talk about their gear and plans" (The Living Realm 3b)
 	out.append({"id": "bye", "label": "Farewell"})
 	return out
 
@@ -144,6 +152,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 	var ir := ItemStory.talk_choose(npc, opt)
 	if not ir.is_empty():
 		return ir
+	var kr := Consult.talk_choose(npc, opt)
+	if not kr.is_empty():
+		return kr
 	var e := Social.ensure(npc)
 	var c := DB.character(npc)
 	var a := Adv.get_a(npc)

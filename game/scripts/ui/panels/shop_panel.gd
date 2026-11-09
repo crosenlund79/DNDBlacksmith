@@ -89,6 +89,8 @@ func _customers() -> void:
 				actions.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
 		elif cu.get("want", "") == "dispute":
 			actions.add_child(UIKit.label("Talk to them outside to settle it.", 20, "body_italic"))
+		elif cu.get("want", "") == "advice":   # The Living Realm 3b (Consult)
+			actions.add_child(UIKit.button("Hear them out — advise on their gear", func(): Events.open_panel.emit("consult", {"id": npc}), 0))
 		elif not a.is_empty():
 			var married: bool = Social.spouse() == npc
 			var any := false

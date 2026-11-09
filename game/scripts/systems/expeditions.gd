@@ -369,6 +369,8 @@ static func choose_destination(members: Array) -> Dictionary:
 		# personal goals: coin, glory, discovery, mastery (Living)
 		var gp := Living.goal_appeal(members, rid, rating(rid) * float(diff().get("enemy", 1.0)), strength)
 		s += float(gp["score"])
+		# the smith's advice, when they took it (Consult): stay away from where he warned them off
+		s += Consult.dest_bias(members, rid)
 		if str(ap["why"]) == "" and str(gp["why"]) != "":
 			ap["why"] = gp["why"]
 		# a change of scene: the leader went there last time

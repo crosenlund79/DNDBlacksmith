@@ -295,6 +295,11 @@ static func request(c: Dictionary) -> Dictionary:
 			r["headline"] = "Wants: %s" % DB.item(d).get("name", "a draught")
 			r["budget"] = int(c.get("budget", 40))
 			r["reward_text"] = "pays your price, up to %d g" % int(c.get("budget", 40))
+		"advice":   # The Living Realm 3b (Consult): a question, not a purchase
+			r["headline"] = "Asks your advice — %s" % str(Consult.REASON_WORD.get(str(c.get("reason", "")), "about their kit"))
+			if str(c.get("dest", "")) != "":
+				r["reward_text"] = "bound for %s" % Consult.dest_name(str(c["dest"]))
+			r["note"] = str(c.get("question", ""))
 		"dispute":
 			r["headline"] = "Dispute: their %s failed them" % c.get("item_name", "gear")
 			r["reward_text"] = "wants %d g back" % int(c.get("refund", 20))
@@ -367,6 +372,8 @@ static func request_summary(r: Dictionary) -> String:
 			return "%s (budget %d g)" % [DB.item(str(r.get("item_def", ""))).get("name", "a draught"), int(r.get("budget", 0))]
 		"dispute":
 			return "to settle a dispute: %s" % r.get("reward_text", "")
+		"advice":
+			return "your advice on their gear"
 	if not r.has("slot"):
 		return "to look at your wares"
 	var attrs := "%s ≥ %d" % [r["stat"], int(r.get("min", 0))]
@@ -404,7 +411,7 @@ static func customer_hour(h: int) -> void:
 		if c.get("present", true):
 			if now - int(c.get("seated", c["arrived"])) >= 3:
 				customers().erase(c)
-				Social.change(c["npc"], -3.0, 1.0, "", "", false)
+				Social.change(c["npc"], -3.0 if str(c.get("want", "")) != "advice" else 0.0, 1.0, "", "", false)   # asking advice is no slight to ignore
 				Events.toast.emit("%s gave up waiting outside the shop." % DB.character(c["npc"]).get("name", c["npc"]), "bad")
 		elif now - int(c["arrived"]) >= 3:
 			customers().erase(c)          # never made it here; nobody noticed
