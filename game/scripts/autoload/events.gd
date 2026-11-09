@@ -38,3 +38,4 @@ signal appearance_changed                         # the player changed hair/bear
 
 signal apprentices_changed                       # workshop apprentices: staff, tasks, stations or notices changed
 signal lore_recorded(event: Dictionary)          # a world event was recorded (Lore) — places, items, adventurers
+signal steward_changed                           # Steward Mode: state, log, deferrals or instructions changed

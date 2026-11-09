@@ -226,8 +226,7 @@ func _stock() -> void:
 			continue
 		var s := ItemSlot.new(it, 72.0)
 		s.clicked.connect(func(x):
-			x["for_sale"] = not x.get("for_sale", false)
-			Events.inventory_changed.emit())
+			Shop.set_for_sale(int(x["uid"]), not x.get("for_sale", false)))
 		grid.add_child(s)
 	body.add_child(grid)
 

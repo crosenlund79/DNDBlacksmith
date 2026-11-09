@@ -347,7 +347,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Nothing on screen holds the smith (no window, fade or scene).
 func _free() -> bool:
-	if world == null or player == null or player.frozen or Game.ui_open > 0 or Game.ui_blockers > 0:
+	if world == null or player == null or player.frozen or Game.ui_open > 0 or Game.ui_blockers > 0 or Steward.smith_away():
 		return false
 	if UIRoot.instance and is_instance_valid(UIRoot.instance.current):
 		return false

@@ -280,6 +280,13 @@ static func _join_and(a: Array) -> String:
 
 static func _announce(c: Dictionary) -> void:
 	var pn := patron_name(str(c["patron"]))
+	if Steward.smith_away():
+		# Steward Mode: the letter waits sealed for the smith — only the sender is known, as on any envelope
+		var sealed_line := "A messenger left a sealed letter from %s for the smith." % pn
+		Events.toast.emit(sealed_line, "info")
+		Game.journal(sealed_line)
+		Chronicle.add("contract", sealed_line, {"contract": str(c["id"])})
+		return
 	var line := "A messenger brings a sealed letter from %s: %s." % [pn, c["title"]]
 	Events.toast.emit(line + " Read it at your Project Bench or in the Workshop Ledger (Y).", "legendary" if str(patron(str(c["patron"])).get("kind", "")) == "royal" else "good")
 	Game.journal(line + " " + str(c.get("why", "")))

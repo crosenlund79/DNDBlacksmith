@@ -105,8 +105,7 @@ func _detail() -> void:
 	if DB.item(it["def"]).get("type", "") == "potion" and it["def"] != "ale_mug":
 		var fs: bool = it.get("for_sale", false)
 		detail.add_child(UIKit.button("Take off the shop shelf" if fs else "Put on the shop shelf (adventurers buy before they leave)", func():
-			it["for_sale"] = not fs
-			Events.inventory_changed.emit(), 0))
+			Shop.set_for_sale(int(it["uid"]), not fs), 0))
 	if not Items.is_equipment(it) and DB.item(it["def"]).get("type", "") in ["potion", "material", "relic"] and not Regions.is_unidentified(it):
 		var tr: bool = it.get("trade", false)
 		detail.add_child(UIKit.button("Keep it at home" if tr else "Send with the next trade run", func():
@@ -116,8 +115,7 @@ func _detail() -> void:
 		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])); selected = {}, 0))
 		var sale: bool = it.get("for_sale", false)
 		detail.add_child(UIKit.button("Remove from display" if sale else "Display for sale (%d g)" % Shop.price_of(it), func():
-			it["for_sale"] = not sale
-			Events.inventory_changed.emit(), 0))
+			Shop.set_for_sale(int(it["uid"]), not sale), 0))
 		if sale:
 			var ph := UIKit.hbox()
 			ph.add_child(UIKit.label("Price:", 20))
@@ -125,7 +123,7 @@ func _detail() -> void:
 			sb.min_value = 1
 			sb.max_value = 99999
 			sb.value = Shop.price_of(it)
-			sb.value_changed.connect(func(v): it["price"] = int(v))
+			sb.value_changed.connect(func(v): Shop.set_price(int(it["uid"]), int(v)))
 			ph.add_child(sb)
 			detail.add_child(ph)
 	if it["def"] == "potion_healing":

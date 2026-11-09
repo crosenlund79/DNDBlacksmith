@@ -55,6 +55,7 @@ const DEFAULT_KEYS := {
 	"panel_skill_levels": [KEY_U],
 	"panel_world_map": [KEY_G],          # the world map (iteration 011)
 	"panel_workshop": [KEY_Y],           # the workshop ledger: apprentices and work queue (iteration 012)
+	"panel_steward": [KEY_N],            # Steward Mode: hand over the forge / the steward at work (Milestone S1)
 }
 
 

@@ -15,8 +15,9 @@ Treat this as a permanent project safety requirement, not a one-time instruction
 
 ## 2. Canonical design governance
 
-**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.0; source:
-`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.0.docx`). It is the authoritative baseline for what the game is.
+**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.1; source:
+`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.1.docx`; the v1.0 .docx is kept as the dated historical copy). It is
+the authoritative baseline for what the game is.
 
 1. **Read it first.** Every implementation session must read `docs/EMBER_ASH_CANONICAL_VISION.md` before planning or
    writing code — again after context compaction or a new session.
@@ -34,9 +35,9 @@ Treat this as a permanent project safety requirement, not a one-time instruction
    code, data or documents.
 5. **Revisions need approval.** A change to the canonical design requires the user's explicit approval, a version
    increment and an entry in the document's Change history (what changed, why, impacts, date).
-   An approved revision must update **both** `docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.0.docx` (or its
-   renamed successor for the new version) **and** `docs/EMBER_ASH_CANONICAL_VISION.md`, keeping their version number,
-   content and change history synchronized.
+   An approved revision must update **both** the current canonical .docx (a new versioned file, e.g.
+   `docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.1.docx`, keeping the previous one as history) **and**
+   `docs/EMBER_ASH_CANONICAL_VISION.md`, keeping their version number, content and change history synchronized.
 6. **Precedence.** The canonical design takes precedence over older roadmap and design documents when they disagree —
    including `docs/Ember_and_Ash_Master_Design_2026-11-09.docx`, earlier iteration briefs, `game/docs/` status notes
    and Claude's own audits/reports (`docs/EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md`,

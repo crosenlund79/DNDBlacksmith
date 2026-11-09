@@ -1269,7 +1269,7 @@ static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
 static func _supervised(t: Dictionary, sid: String) -> bool:
 	if bool(t.get("supervised", false)):
 		return true
-	if smith_room == "":
+	if smith_room == "" or Steward.smith_away():   # the smith is away while the steward runs the workshop
 		return false
 	var r := Property.room_at_tile(Property.rooms(), Property.pos_of(sid))
 	return not r.is_empty() and str(r.get("id", "")) == smith_room

@@ -123,6 +123,8 @@ func advance_minutes(m: int) -> void:
 				Events.day_started.emit(state["day"])
 			Sim.on_hour(state["day"], hour())
 			Events.hour_passed.emit(state["day"], hour())
+		if state["minute"] % Steward.TICK_MINUTES == 0 and Steward.is_active():
+			Steward.tick()   # Steward Mode: the routine business, only while the player has handed it over
 	Events.time_changed.emit(state["day"], state["minute"])
 
 
@@ -177,6 +179,8 @@ func gold() -> int:
 func add_gold(amount: int, category: String, note: String) -> void:
 	state["gold"] += amount
 	state["ledger"].append({"day": day(), "amount": amount, "cat": category, "note": note})
+	if Steward.is_active():
+		Steward.note_ledger(amount, category, note)   # the report reconciles every coin of the time away
 	if state["ledger"].size() > 400:
 		state["ledger"].pop_front()
 	Events.gold_changed.emit(state["gold"])
@@ -340,4 +344,5 @@ func to_save() -> Dictionary:
 
 func from_save(data: Dictionary) -> void:
 	state = data
+	Steward.on_loaded()   # a loaded save always starts with Steward Mode OFF — no offline progress, no catch-up
 	Events.game_loaded.emit()

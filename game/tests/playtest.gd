@@ -1913,7 +1913,7 @@ func phase_interface() -> void:
 	expect(await click("New Game"), "iface: new game")
 	await wait(2.5)
 	Settings.set_value("gameplay/dice_mode", "auto")
-	expect(U().toolbar != null and U().toolbar.buttons.size() == 10, "iface: toolbar with %d buttons" % U().toolbar.buttons.size())
+	expect(U().toolbar != null and U().toolbar.buttons.size() == 11, "iface: toolbar with %d buttons" % U().toolbar.buttons.size())
 	expect(Tutorial.enabled() and U().tutorial_card.visible, "iface: the tutorial is shown on a new game")
 	var tb := U().toolbar.get_global_rect()
 	var toast_r := U().toast_box.get_global_rect()
@@ -3922,6 +3922,15 @@ func phase_newer_save() -> void:
 	sp.queue_free()
 	expect(FileAccess.get_file_as_string(p) == bytes, "newer: the file is byte-identical")
 	Saves.delete("quicksave")
+
+
+# ======================================================================= Milestone S1: Steward Mode (UI worker)
+## The hand-over and its confirmation, the standing instructions, the status plate with the smith away, the steward at
+## work, While You Were Away, a sealed letter that leads to the real offer, save/load with the mode off
+## (tests/playtest_steward_s1.gd).
+func phase_steward_s1() -> void:
+	var ph: RefCounted = load("res://tests/playtest_steward_s1.gd").new()
+	await ph.run(self)
 
 
 ## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
