@@ -3760,3 +3760,83 @@ func phase_equip_terrain() -> void:
 	var tag := OS.get_environment("EQRL_TAG")
 	await _equip_terrain(tag if tag != "" else "now")
 
+
+func _eqrl_piece(def: String, q := 88.0, mine := false) -> Dictionary:
+	var it := Items.make(def, {"quality": q})
+	if mine:
+		Provenance.forged(it)
+	return it
+
+
+## The humanoid equipment sheets: an adventurer in full gear (cloak AND amulet, one piece worn down, one broken),
+## the full stat list, a tooltip, the compare view from the counter, a stranger with little gear, the hirelings
+## ledger with its compact sheet and compare; then the soft ground once more.
+func phase_equip_rl() -> void:
+	await click("New Game")
+	await wait(2.5)
+	var a := Adv.get_a("elowen")
+	a["equipment"] = {"weapon": _eqrl_piece("sword_iron", 96.0, true), "shield": _eqrl_piece("shield_round"), "armor": _eqrl_piece("chainmail", 90.0, true),
+		"helmet": _eqrl_piece("helm_iron"), "gloves": _eqrl_piece("gloves_leather"), "boots": _eqrl_piece("boots_leather"), "belt": _eqrl_piece("belt_leather"),
+		"ring": _eqrl_piece("ring_silver"), "amulet": _eqrl_piece("amulet_sapphire", 104.0, true), "cloak": _eqrl_piece("cloak_warded", 108.0, true)}
+	a["equipment"]["boots"]["stats"]["durability"] = 3
+	a["equipment"]["shield"]["broken"] = true
+	a["equipment"]["shield"]["stats"]["durability"] = 0
+	Events.open_panel.emit("dossier", {"id": "elowen", "tab": "Equipment"})
+	await wait(0.8)
+	var sh := panel().find_child("EquipmentSheet", true, false) as EquipmentSheet
+	expect(sh != null, "equip_rl: the adventurer sheet shows the humanoid equipment layout")
+	expect(sh != null and sh.cards.has("cloak") and sh.cards.has("amulet"), "equip_rl: cloak and amulet cards both present")
+	await shot("eqrl_sheet_adventurer_full")
+	UIRoot.show_tooltip(Items.tooltip(a["equipment"]["cloak"]))
+	await wait(0.3)
+	await shot("eqrl_sheet_tooltip_cloak")
+	UIRoot.hide_tooltip()
+	expect(await click("Full stats", panel()), "equip_rl: the full stats toggle")
+	await wait(0.4)
+	for c in panel().find_children("*", "ScrollContainer", true, false):
+		(c as ScrollContainer).scroll_vertical = 560
+	await wait(0.3)
+	await shot("eqrl_sheet_full_stats")
+	await click("Hide full stats", panel())
+	await close_panel()
+	# from the counter: a better staff... a sword on display, weighed against what she wears
+	var cand := _eqrl_piece("sword_steel" if DB.items.has("sword_steel") else "sword_iron", 112.0, true)
+	cand["for_sale"] = true
+	Game.add_item(cand, false)
+	Events.open_panel.emit("dossier", {"id": "elowen", "compare": int(cand["uid"])})
+	await wait(0.8)
+	expect(panel().find_child("CompareView", true, false) != null, "equip_rl: the compare view opens from a store piece")
+	await wait(0.3)   # the sheet scrolls the comparison into view by itself
+	await shot("eqrl_sheet_compare")
+	await close_panel()
+	# a stranger with little gear (empty slots read as dotted rings)
+	Events.open_panel.emit("dossier", {"id": "pip", "tab": "Equipment"})
+	await wait(0.8)
+	await shot("eqrl_sheet_adventurer_sparse")
+	await close_panel()
+	# the hirelings ledger: the compact sheet, a cloak among the gear, and a compare
+	var hs := Hire.list()
+	if not hs.is_empty():
+		var h: Dictionary = hs[0]
+		h["equipment"]["cloak"] = _eqrl_piece("cloak_travel", 80.0, true)
+		h["equipment"]["helmet"] = _eqrl_piece("helm_iron")
+		h["equipment"]["boots"] = _eqrl_piece("boots_leather")
+		h["equipment"]["boots"]["stats"]["durability"] = 5
+		var spare := _eqrl_piece("chainmail", 95.0, true)
+		Game.add_item(spare, false)
+		HirelingsPanel.compare[str(h["id"])] = int(spare["uid"])
+		Events.open_panel.emit("hirelings", {})
+		await wait(0.8)
+		expect(panel().find_child("GearSheet", true, false) != null, "equip_rl: the hireling card shows the compact equipment sheet")
+		expect(panel().find_child("CompareView", true, false) != null, "equip_rl: the hireling compare view")
+		await shot("eqrl_sheet_hireling")
+		var hcv := panel().find_child("CompareView", true, false) as Control
+		for c in panel().find_children("*", "ScrollContainer", true, false):
+			(c as ScrollContainer).ensure_control_visible(hcv)
+		await wait(0.3)
+		await shot("eqrl_sheet_hireling_compare")
+		HirelingsPanel.compare.clear()
+		await close_panel()
+	await advance_to(11, 0)
+	await _v9_view("eqrl_terrain_rl_map", Vector2(48 * 64.0, 32 * 64.0), 0.3)
+

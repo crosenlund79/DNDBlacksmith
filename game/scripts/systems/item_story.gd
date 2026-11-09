@@ -32,7 +32,7 @@ const PLAIN_REUNION_DAYS := 14   # a plain piece is recognised when it has aged 
 const BANE := {"beast": "Wolfbane", "spider": "Webcutter", "humanoid": "Tollbreaker", "spirit": "Shadowsunder",
 	"undead": "Gravebane", "construct": "Stonesplitter", "dragon": "Wyrmbane"}
 const OWNER_FORMS := {"weapon": "%s's Oath", "shield": "%s's Wall", "armor": "%s's Mantle", "helmet": "%s's Crown",
-	"gloves": "%s's Grip", "boots": "%s's Stride", "belt": "%s's Girdle", "ring": "%s's Promise", "amulet": "%s's Keepsake"}
+	"gloves": "%s's Grip", "boots": "%s's Stride", "belt": "%s's Girdle", "ring": "%s's Promise", "amulet": "%s's Keepsake", "cloak": "%s's Mantle"}
 const MASTER_NAMES := ["Ironhand's Pride", "Brindlewick's Pride", "the Hearth-Born"]
 const ORDINALS := ["", " the Second", " the Third", " the Fourth", " the Fifth"]
 

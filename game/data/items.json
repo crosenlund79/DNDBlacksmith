@@ -1895,7 +1895,7 @@
   "id": "cloak_travel",
   "name": "Travel Cloak",
   "type": "cloak",
-  "slot": "amulet",
+  "slot": "cloak",
   "value": 55,
   "stats": {
    "protection": [
@@ -1917,7 +1917,7 @@
   "id": "cloak_warded",
   "name": "Warded Cloak",
   "type": "cloak",
-  "slot": "amulet",
+  "slot": "cloak",
   "value": 260,
   "stats": {
    "protection": [
@@ -1942,7 +1942,7 @@
   "id": "cloak_shadow",
   "name": "Shadow Cloak",
   "type": "cloak",
-  "slot": "amulet",
+  "slot": "cloak",
   "value": 340,
   "stats": {
    "protection": [

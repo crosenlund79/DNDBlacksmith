@@ -253,6 +253,7 @@ static func _hirelings(out: Array) -> void:
 
 static func _careers(out: Array) -> void:
 	_e(out, "careers", "Adventurers", "Adventurers live in the village between expeditions. They buy what is on display, place commissions for gear they need and set out in parties at dawn. Your work decides how they fare.", "ui/tb_adventurers", "adventurer party expedition")
+	_e(out, "careers", "Equipment slots", "Every adventurer and hireling wears gear by body region: head (helmet or hood), neck (amulet), shoulders (cloak), torso (armour), hands (gloves), main hand (weapon), off hand (shield), waist (belt), finger (ring) and feet (boots), with a companion creature at their side. A cloak and an amulet are worn together. Their character sheet shows the figure; hover a piece for the item, click it for its maker and story.", "ui/stat_gear", "equipment slot cloak amulet helmet ring gear sheet")
 	_e(out, "careers", "Renown", "Deeds earn renown. Titles: " + ", ".join(DB.expeditions.get("renown_titles", []).map(func(t): return str(t[1]))) + ". The Most Wanted board ([b]B[/b]) ranks them.", "ui/tb_wanted", "renown title most wanted board")
 	var arch: Dictionary = DB.expeditions.get("archetypes", {})
 	for cls in arch:

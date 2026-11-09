@@ -480,7 +480,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"wanted":
 			open(WantedPanel.new(str(args.get("tab", "wanted"))))
 		"dossier":
-			open(DossierPanel.new(str(args["id"])))
+			open(DossierPanel.new(str(args["id"]), str(args.get("tab", "Overview")), int(args.get("compare", -1))))
 		"observe":
 			open(ObserverPanel.new(str(args["id"])))
 		"workshop":   # iteration 012: the workshop ledger (apprentices, stations, work queue)

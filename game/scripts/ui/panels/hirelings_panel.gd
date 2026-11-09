@@ -1,6 +1,6 @@
 ## HirelingsPanel — the Ledger of Hands: who works for you, what they are doing right now, their
-## skills and traits, how their working time is split (must total 100%), their gear, and where
-## they can be sent — with the odds shown before you decide.
+## skills and traits, how their working time is split (must total 100%), their gear (the humanoid EquipmentSheet,
+## compact, with a compare against a piece from your stores), and where they can be sent — with the odds shown first.
 ## DA: Personaleledelse: aktuel aktivitet, færdigheder og træk, arbejdsfordeling (100%), udstyr,
 ##     ekspeditioner med odds, samt seneste arbejde og ekspeditionshistorik.
 class_name HirelingsPanel
@@ -11,6 +11,7 @@ const OUTCOME := {"success": "returned with a full haul", "failed": "came back w
 
 var body: VBoxContainer
 var sliders := {}
+static var compare := {}   # hireling id -> uid of the store piece being compared with what they wear
 
 
 func _init() -> void:
@@ -121,30 +122,41 @@ func _card(h: Dictionary) -> Control:
 	# ---- right: gear, expeditions, history
 	var right := UIKit.vbox(6)
 	right.custom_minimum_size = Vector2(560, 0)
-	right.add_child(UIKit.label("Gear", 24, "heading"))
-	var gear := UIKit.hbox(6)
-	for slot in ["weapon", "armor", "shield", "helmet", "boots"]:
-		var it: Dictionary = h.get("equipment", {}).get(slot, {})
-		var sl2 := ItemSlot.new(it, 54.0)
-		if it.is_empty():
-			sl2.tooltip_text = slot.capitalize()
-		gear.add_child(sl2)
+	# The Living Realm: the same humanoid equipment layout as the adventurer sheet, in its compact form
+	var gtop := UIKit.hbox(10)
+	gtop.add_child(UIKit.label("Gear", 24, "heading"))
 	var gs := UIKit.label("power %d" % int(Hire.gear_score(h)), 18, "body_italic")
-	gear.add_child(gs)
-	right.add_child(gear)
+	gs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	gtop.add_child(gs)
+	right.add_child(gtop)
+	var sheet := EquipmentSheet.new(h.get("equipment", {}), {"compact": true})
+	sheet.name = "GearSheet"
+	right.add_child(sheet)
 	if st != "away" and st != "dead":
-		var spare := Game.inventory().filter(func(x): return Items.is_equipment(x) and Items.slot(x) in ["weapon", "armor", "shield", "helmet", "boots"])
+		var spare := Game.inventory().filter(func(x): return Items.is_equipment(x) and Items.slot(x) != "")
 		if not spare.is_empty():
 			var gh := UIKit.hbox(6)
 			var ob := OptionButton.new()
-			ob.custom_minimum_size = Vector2(380, 40)
+			ob.custom_minimum_size = Vector2(330, 40)
 			for x in spare:
-				ob.add_item(Items.display_name(x), int(x["uid"]))
+				ob.add_item("%s (%s)" % [Items.display_name(x), Items.SLOT_LABEL.get(Items.slot(x), Items.slot(x)).to_lower()], int(x["uid"]))
+				if int(x["uid"]) == int(compare.get(hid, -1)):
+					ob.select(ob.item_count - 1)
 			gh.add_child(ob)
+			gh.add_child(UIKit.button("Compare", func():
+				compare[hid] = -1 if int(compare.get(hid, -1)) == ob.get_item_id(ob.selected) else ob.get_item_id(ob.selected)
+				_build(), 0))
 			gh.add_child(UIKit.button("Give", func():
+				compare.erase(hid)
 				if Hire.equip(hid, ob.get_item_id(ob.selected)):
-					Events.toast.emit("%s takes the %s." % [h["name"], ob.get_item_text(ob.selected)], "good"), 90))
+					Events.toast.emit("%s takes the %s." % [h["name"], ob.get_item_text(ob.selected)], "good"), 80))
 			right.add_child(gh)
+			var cit := Game.find_uid(int(compare.get(hid, -1)))
+			if not cit.is_empty() and spare.has(cit):
+				var cur: Dictionary = h.get("equipment", {}).get(Items.slot(cit), {})
+				var before := Hire.gear_score(h)
+				var after := before - Items.score(cur) + Items.score(cit)
+				right.add_child(EquipmentSheet.compare_view(cur, cit, "Power %d → %d if %s takes it." % [int(before), int(after), h["name"]], after >= before))
 	right.add_child(UIKit.label("Expeditions", 24, "heading"))
 	if st == "working":
 		for d in DB.destinations.values():

@@ -7,8 +7,8 @@ the nodes that teach them in make_skilltree.py, icons in tools/art/make_icons.py
 
 Tags for other systems: every garment carries "cloth"; robes also "robe", cloaks "cloak", padded armour "padded";
 magical cloth "enchanted". Two-handed weapons carry "two_handed"; heavy armour "heavy" (its weight is expressed as a
-lower speed than lighter pieces — crafted stats never go negative). Cloaks use the existing "amulet" slot (clasped
-at the throat); robes, tunics and gambesons the "armor" slot.
+lower speed than lighter pieces — crafted stats never go negative). Cloaks have their own "cloak" slot (worn over the
+shoulders, so a cloak and an amulet are worn together); robes, tunics and gambesons the "armor" slot.
 """
 from make_data_helpers import it
 
@@ -60,11 +60,11 @@ ITEMS = [
        {"protection": [4, 7], "durability": 85, "magic": 12, "ward": 6, "fire": 3, "frost": 3},
        desc="Warded cloth over moonweave, the sigils embroidered in ghost-thread. It hums like a struck bell when magic passes.",
        tags=["cloth", "robe", "enchanted"]),
-    it("cloak_travel", "Travel Cloak", "cloak", "amulet", 55, {"protection": [1, 2], "durability": 55, "frost": 2},
+    it("cloak_travel", "Travel Cloak", "cloak", "cloak", 55, {"protection": [1, 2], "durability": 55, "frost": 2},
        desc="Oiled canvas over felted wool, clasped at the throat. Rain runs off it; wind does not get through.", tags=["cloth", "cloak"]),
-    it("cloak_warded", "Warded Cloak", "cloak", "amulet", 260, {"protection": [1, 3], "durability": 60, "ward": 5, "magic": 3, "frost": 2},
+    it("cloak_warded", "Warded Cloak", "cloak", "cloak", 260, {"protection": [1, 3], "durability": 60, "ward": 5, "magic": 3, "frost": 2},
        desc="Ethereal-thread cloth embroidered with ward sigils from hem to hood.", tags=["cloth", "cloak", "enchanted"]),
-    it("cloak_shadow", "Shadow Cloak", "cloak", "amulet", 340, {"protection": [2, 3], "durability": 70, "speed": 6, "magic": 4, "ward": 2},
+    it("cloak_shadow", "Shadow Cloak", "cloak", "cloak", 340, {"protection": [2, 3], "durability": 70, "speed": 6, "magic": 4, "ward": 2},
        desc="Spidersilk and moonweave: it drinks lamplight, and the wearer moves like a rumour.", tags=["cloth", "cloak", "enchanted"]),
     it("hood_wool", "Felted Hood", "helmet", "helmet", 18, {"protection": [1, 2], "durability": 35, "frost": 2},
        desc="A thick felt hood and shoulder cape against the northern wind.", tags=["cloth"]),

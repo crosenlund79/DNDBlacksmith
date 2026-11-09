@@ -23,8 +23,8 @@ const AFFIXES := [
 	{"id": "keen", "prefix": "Keen", "stat": "attack", "lo": 2, "hi": 5, "for": ["weapon"]},
 	{"id": "embers", "suffix": "of Embers", "stat": "fire", "lo": 2, "hi": 6, "for": ["weapon"]},
 	{"id": "haste", "suffix": "of Haste", "stat": "speed", "lo": 4, "hi": 10, "for": ["weapon", "gloves", "boots"]},
-	{"id": "warded", "prefix": "Warded", "stat": "protection", "lo": 2, "hi": 5, "for": ["armor", "shield", "helmet", "gloves", "boots", "belt"]},
-	{"id": "bear", "suffix": "of the Bear", "stat": "durability", "lo": 15, "hi": 40, "for": ["weapon", "armor", "shield", "helmet", "boots", "gloves", "belt"]},
+	{"id": "warded", "prefix": "Warded", "stat": "protection", "lo": 2, "hi": 5, "for": ["armor", "shield", "helmet", "gloves", "boots", "belt", "cloak"]},
+	{"id": "bear", "suffix": "of the Bear", "stat": "durability", "lo": 15, "hi": 40, "for": ["weapon", "armor", "shield", "helmet", "boots", "gloves", "belt", "cloak"]},
 	{"id": "fortune", "suffix": "of Fortune", "stat": "luck", "lo": 3, "hi": 9, "for": ["ring", "amulet", "belt", "gloves"]},
 	{"id": "vigor", "suffix": "of Vigor", "stat": "vitality", "lo": 4, "hi": 12, "for": ["armor", "amulet", "ring", "belt", "helmet"]},
 	{"id": "sage", "prefix": "Sage's", "stat": "magic", "lo": 2, "hi": 6, "for": ["ring", "amulet", "weapon", "helmet"]},
@@ -179,10 +179,50 @@ static func add_history(it: Dictionary, text: String) -> void:
 		it["history"].pop_front()
 
 
-## Every equipment slot, in sheet order. `companion` holds a creature (type "companion").
-const SLOTS := ["weapon", "shield", "armor", "helmet", "gloves", "boots", "belt", "ring", "amulet", "companion"]
+## Every equipment slot, in sheet order. `companion` holds a creature (type "companion"). A cloak has its own slot
+## over the shoulders (The Living Realm; before that cloaks shared the amulet's) — see `migrate_cloak_slots`.
+const SLOTS := ["weapon", "shield", "armor", "helmet", "gloves", "boots", "belt", "ring", "amulet", "cloak", "companion"]
 const SLOT_LABEL := {"weapon": "Weapon", "shield": "Shield", "armor": "Body", "helmet": "Head", "gloves": "Hands", "boots": "Feet",
-	"belt": "Belt", "ring": "Ring", "amulet": "Amulet", "companion": "Companion"}
+	"belt": "Belt", "ring": "Ring", "amulet": "Amulet", "cloak": "Cloak", "companion": "Companion"}
+## Where each slot is worn on the body (the humanoid equipment sheet and its wording).
+const SLOT_REGION := {"helmet": "head", "amulet": "neck", "cloak": "shoulders", "armor": "torso", "gloves": "hands",
+	"weapon": "main hand", "shield": "off hand", "belt": "waist", "ring": "finger", "boots": "feet", "companion": "at their side"}
+
+
+## Old saves: cloaks used to be worn in the amulet slot. Every equipment dictionary in the save (adventurers, the
+## fallen, hirelings, the smith, companions…) has a cloak sitting in "amulet" moved to "cloak" — the very same
+## instance, so uid, maker, provenance and story are untouched — and commissions for a cloak name the cloak slot.
+## Idempotent; returns how many pieces moved.
+static func migrate_cloak_slots(state: Dictionary) -> int:
+	var moved := [0]
+	_migrate_cloaks_in(state, moved, 0)
+	for o in state.get("orders", []):
+		if o is Dictionary and o.has("def") and str(o.get("slot", "")) == "amulet" and str(DB.item(str(o["def"])).get("slot", "")) == "cloak":
+			o["slot"] = "cloak"
+	return int(moved[0])
+
+
+static func _migrate_cloaks_in(v: Variant, moved: Array, depth: int) -> void:
+	if depth > 12:
+		return
+	if v is Dictionary:
+		var d: Dictionary = v
+		var eq: Variant = d.get("equipment")
+		if eq is Dictionary:
+			var am: Variant = (eq as Dictionary).get("amulet")
+			if am is Dictionary and not (am as Dictionary).is_empty() and slot(am) == "cloak" \
+					and ((eq as Dictionary).get("cloak", {}) as Dictionary).is_empty():
+				eq["cloak"] = am
+				(eq as Dictionary).erase("amulet")
+				moved[0] = int(moved[0]) + 1
+		for k in d:
+			var c: Variant = d[k]
+			if c is Dictionary or c is Array:
+				_migrate_cloaks_in(c, moved, depth + 1)
+	elif v is Array:
+		for c in v:
+			if c is Dictionary or c is Array:
+				_migrate_cloaks_in(c, moved, depth + 1)
 
 
 ## Condition of a worn piece as an effectiveness factor: 1.0 while durability is at least half,
@@ -265,7 +305,7 @@ static func icon_id(it: Dictionary) -> String:
 static func type_label(it: Dictionary) -> String:
 	var t: String = def(it).get("type", "")
 	return {"weapon": "Weapon", "shield": "Shield", "armor_metal": "Metal Armour", "armor_leather": "Leather Armour",
-		"helmet": "Helmet", "boots": "Boots", "gloves": "Gloves", "belt": "Belt", "ring": "Ring", "amulet": "Amulet",
+		"helmet": "Helmet", "boots": "Boots", "gloves": "Gloves", "belt": "Belt", "ring": "Ring", "amulet": "Amulet", "cloak": "Cloak",
 		"runestone": "Runestone", "companion": "Companion", "material": "Material", "potion": "Alchemy", "relic": "Relic", "container": "Container"}.get(t, t.capitalize())
 
 

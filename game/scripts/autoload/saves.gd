@@ -137,6 +137,10 @@ func migrate(data: Dictionary) -> Dictionary:
 		v = 1
 	if v > Game.SAVE_VERSION:
 		Log.warn("Save is from a newer version (%d); loading best-effort" % v)
+	# The Living Realm: cloaks have their own slot; old saves wore them in the amulet's (idempotent, any version)
+	var cloaks := Items.migrate_cloak_slots(data)
+	if cloaks > 0:
+		Log.info("Moved %d cloak(s) from the amulet slot to the cloak slot" % cloaks)
 	return data
 
 
