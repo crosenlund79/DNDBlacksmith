@@ -15,7 +15,7 @@ class_name Apprentices
 extends RefCounted
 
 const RANKS := ["novice", "apprentice", "journeyman", "master"]
-const KINDS := ["repair", "commission", "craft", "prep", "maintain"]
+const KINDS := ["repair", "commission", "craft", "prep", "maintain", "contract"]   # contract: hours on a major order (Contracts)
 const PREF_DISCIPLINES := ["classic", "classic", "stitching", "alchemy", "runecraft"]
 const FINISHED := ["done", "failed", "cancelled"]
 const LOG_CAP := 80
@@ -551,6 +551,9 @@ static func eligible(app: Dictionary, t: Dictionary) -> String:
 			if rid == "":
 				return "%s cannot make anything that meets this commission yet." % app.get("name", "")
 			return can_make(app, rid)
+		"contract":
+			if Contracts.finished_for_apprentices(str(t.get("target", ""))):
+				return "Every piece of that order is made."
 	return can_make(app, str(t.get("recipe", "")))
 
 
@@ -694,6 +697,18 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 				if str(x["kind"]) == "maintain" and str(x["target"]) == sid:
 					return {"error": "That station is already on the upkeep list."}
 			t["label"] = "Tend the %s" % _station_name(sid)
+		"contract":
+			# The Living Realm: hours of work on a major contract at the Project Bench (or its stations); the
+			# hardest recipe of the order decides who is qualified; each repeat is one hour of the order.
+			var cid := str(t["target"])
+			var c := Contracts.get_c(cid)
+			if c.is_empty() or str(c.get("status", "")) != "active":
+				return {"error": "That contract is not in hand."}
+			for x in open_tasks():
+				if str(x["kind"]) == "contract" and str(x["target"]) == cid and str(x["assignee"]) == str(t["assignee"]) and t["manual"]:
+					return {"error": "%s already works on that order." % get_a(str(t["assignee"])).get("name", "")}
+			t["recipe"] = Contracts.main_recipe(cid)
+			t["label"] = "Contract: %s (%d h)" % [str(c.get("title", "")), int(t["repeat"])]
 	if t["manual"]:
 		var a := get_a(str(t["assignee"]))
 		var why2 := eligible(a, t)
@@ -816,6 +831,11 @@ static func task_ops(t: Dictionary, app := {}) -> Array:
 			return [{"station": str(_c("time", "repair_station", "grinding_wheel")), "op": "Mend the %s" % str(it.get("name", "piece")).to_lower(), "checks": 1, "weight": 1.0}]
 		"maintain":
 			return [{"station": str(t.get("target", "")), "op": "Clean, oil and true the %s" % _station_name(str(t.get("target", ""))), "checks": 1, "weight": 1.0}]
+		"contract":
+			var sid := str(t.get("station", ""))
+			if sid == "":
+				sid = Contracts.work_station(str(t.get("target", "")), str(t.get("worker", "")))
+			return [{"station": sid, "op": "Work an hour on the contract", "checks": 1, "weight": 1.0}]
 	var rid := _recipe_of(t, app)
 	return Crafting.operations(rid) if rid != "" else []
 
@@ -1001,6 +1021,11 @@ static func task_problem(t: Dictionary) -> String:
 			var o := _order(str(t["order_id"]))
 			if not bool(t.get("started", false)) and (o.is_empty() or str(o.get("status", "")) != "open"):
 				return "The commission is no longer open."
+		"contract":
+			if not bool(t.get("started", false)):
+				var cp := Contracts.task_problem(str(t["target"]))
+				if cp != "":
+					return cp
 	if str(t["kind"]) in ["craft", "prep", "commission"] and str(t.get("recipe", "")) != "":
 		var rid := str(t["recipe"])
 		var why := Crafting.recipe_locked_reason(rid)
@@ -1202,7 +1227,7 @@ static func _start_iteration(t: Dictionary, a: Dictionary) -> void:
 	t["wasted"] = {}
 	t["started"] = true
 	t["state"] = "working"
-	t["fetch"] = FETCH_MIN if str(t["kind"]) != "maintain" else 0.0
+	t["fetch"] = FETCH_MIN if not str(t["kind"]) in ["maintain", "contract"] else 0.0   # the order's crate stands at the bench
 	t["walk"] = WALK_MIN
 	log_line(str(a["id"]), "%s started: %s." % [a["name"], _task_title(t)])
 
@@ -1223,6 +1248,8 @@ static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
 		base = float(tm.get("repair_minutes", 50.0))
 	elif kind == "maintain":
 		base = maxf(float(tm.get("maintain_min", 15.0)), (100.0 - station_condition(str(t["target"]))) * float(tm.get("maintain_per_point", 0.7)))
+	elif kind == "contract":
+		base = float(Contracts.cfg("hour_minutes", 60))   # one contract hour, at this hand's pace
 	var rid := _recipe_of(t, a)
 	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
 	var diff := Crafting.difficulty(rid) if rid != "" else 1
@@ -1441,6 +1468,14 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 			s[sid]["condition"] = clampf(maxf(float(s[sid]["condition"]), 60.0 + q * 0.4), 0.0, 100.0)
 			add_xp(a, "smithing", float(xpc.get("maintain", 4)))
 			log_line(str(a["id"]), "%s tended the %s (now %d%%)." % [a["name"], _station_name(sid), int(round(float(s[sid]["condition"])))])
+		"contract":
+			var cid := str(t["target"])
+			var used := Contracts.apprentice_hour(cid, a, q)
+			add_xp(a, Crafting.recipe_skill(rid) if rid != "" else "smithing", float(xpc.get("contract_hour", 5)) * (0.6 + q / 200.0))
+			if used <= 0.0:
+				t["blocker"] = Contracts.task_problem(cid)   # stalled (materials): the task waits, blocked, until they come
+			if Contracts.finished_for_apprentices(cid):
+				t["repeat"] = int(t["done"]) + 1   # the order is complete: this hand stops here
 		_:
 			var r := DB.recipe(rid)
 			var maker := {"id": str(a["id"]), "name": str(a["name"]), "mark": str(a["mark"]["id"]), "level": level(a, Crafting.recipe_skill(rid)),
@@ -1481,10 +1516,11 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 				elif not o.is_empty():
 					t["blocker"] = "The piece did not meet the commission (%s); it went to the stores." % Shop.order_text(o)
 					log_line(str(a["id"]), "%s's %s did not meet %s's commission — it went to the stores." % [a["name"], nm, Talk.npc_name(str(o.get("npc", "")))])
-	a["works"] = int(a["works"]) + 1
-	var cc: Dictionary = a["cat_counts"]
-	if cat != "":
-		cc[cat] = int(cc.get(cat, 0)) + 1
+	if kind != "contract":   # an hour on a major order is not a finished work of their own
+		a["works"] = int(a["works"]) + 1
+		var cc: Dictionary = a["cat_counts"]
+		if cat != "":
+			cc[cat] = int(cc.get(cat, 0)) + 1
 	a["loyalty"] = clampf(float(a["loyalty"]) + float(_c("loyalty", "work_day", 0.2)), 0.0, 100.0)
 	_check_rank(a)
 	_check_specialty(a)

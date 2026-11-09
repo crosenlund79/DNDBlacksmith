@@ -44,6 +44,8 @@ stations = [
  st("loom", "Weaving Loom", "stitching", [14.0, 20.6], [128, 112], "Weaves thread and yarn into linen, wool and silk cloth — and, by moonlight, moonweave and spidersilk.", C(2, 0.55, 30), sfx="spin"),
  st("cutting_table", "Pattern Cutting Table", "stitching", [17.4, 20.6], [128, 80], "Lays out paper patterns and cuts cloth on the bias with long shears.", C(1, 0.6, 32), sfx="stitch"),
  st("tailors_bench", "Tailor's Bench", "stitching", [17.9, 17.2], [112, 80], "Sews, quilts and hems garments: tunics, robes, cloaks and gambesons.", C(2, 0.55, 34), sfx="stitch"),
+ # The Living Realm (milestone 5): the long-term project bench for major contracts (Contracts; no recipes of its own)
+ st("project_bench", "Project Bench", "classic", [10.0, 6.0], [128, 96], "A long bench for major contracts: the order pinned to its board, the patron's crates beside it and the finished pieces stacked up as the hours go in.", C(1, 0.6, 32), sfx="hammer"),
 ]
 W("stations.json", stations)
 

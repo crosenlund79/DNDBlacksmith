@@ -16,14 +16,14 @@ extends Node2D
 const SYNC := 0.35
 const SOUND_NEAR := 620.0
 const STRIKE := ["anvil", "arcane_anvil", "grinding_wheel", "rune_cutting_bench", "rune_engraving_stand", "rune_polishing_wheel",
-	"stitching_table", "cutting_table", "tailors_bench", "fitting_mannequin", "loom", "embroidery_frame", "thread_spinner"]
+	"stitching_table", "cutting_table", "tailors_bench", "fitting_mannequin", "loom", "embroidery_frame", "thread_spinner", "project_bench"]
 const SOUNDS := {"anvil": ["sfx/hammer_1", "sfx/hammer_2", "sfx/hammer_3"], "arcane_anvil": ["sfx/hammer_arcane"], "forge": ["sfx/bellows"],
 	"bellows": ["sfx/bellows"], "grinding_wheel": ["sfx/grind_soft"], "rune_polishing_wheel": ["sfx/grind_soft"], "quench_trough": ["sfx/quench"],
 	"crucible": ["sfx/bubble"], "cauldron": ["sfx/bubble"], "alembic": ["sfx/glass"], "mortar_station": ["sfx/chisel"], "reagent_table": ["sfx/glass"],
 	"rune_cutting_bench": ["sfx/chisel"], "rune_engraving_stand": ["sfx/chisel"], "resonance_pedestal": ["sfx/rune_hum"], "rune_cleansing_basin": ["sfx/water"],
 	"stitching_table": ["sfx/stitch"], "embroidery_frame": ["sfx/stitch"], "tailors_bench": ["sfx/stitch"], "thread_spinner": ["sfx/spin"], "loom": ["sfx/spin"],
 	"leather_vat": ["sfx/water"], "arcane_crucible": ["sfx/arcane"], "spellbinding_array": ["sfx/arcane"], "leyline_conductor": ["sfx/arcane"],
-	"aetheric_stabilizer": ["sfx/arcane"]}
+	"aetheric_stabilizer": ["sfx/arcane"], "project_bench": ["sfx/hammer_1", "sfx/hammer_2"]}
 
 var w: VillageWorld
 var actors := {}          # app id -> NPCActor

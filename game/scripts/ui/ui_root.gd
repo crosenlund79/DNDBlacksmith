@@ -390,7 +390,12 @@ func _route(id: String, args: Dictionary) -> void:
 			prompt_label.text = WorldPrompts.line(args, Settings.key_label("interact"))
 			prompt_sub.text = WorldPrompts.sub(args) if prompt_label.text != "" else ""
 		"station":
-			open(StationPanel.new(args["id"]))
+			if str(args.get("id", "")) == Contracts.BENCH:   # The Living Realm: the Project Bench opens the contract view
+				open(ContractsPanel.new({}))
+			else:
+				open(StationPanel.new(args["id"]))
+		"contracts":
+			open(ContractsPanel.new(args))   # {"id": contract id}
 		"skillcheck":
 			# overlay: the panel that asked for the check stays alive (its callback lives there)
 			var sc := Minigames.create(args)

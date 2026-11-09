@@ -757,5 +757,29 @@
   "sfx": "stitch",
   "fx": [],
   "solid": true
+ },
+ {
+  "id": "project_bench",
+  "name": "Project Bench",
+  "discipline": "classic",
+  "pos": [
+   10.0,
+   6.0
+  ],
+  "size": [
+   128,
+   96
+  ],
+  "purpose": "A long bench for major contracts: the order pinned to its board, the patron's crates beside it and the finished pieces stacked up as the hours go in.",
+  "check": {
+   "count": 1,
+   "speed": 0.6,
+   "zone": 32,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "hammer",
+  "fx": [],
+  "solid": true
  }
 ]

@@ -81,6 +81,7 @@ func _ready() -> void:
 	add_child(ActivityBubbles.new())   # iteration 010 (hirelings): activity bubbles over nearby people
 	add_child(MemorialWorld.new())     # iteration 010 (hirelings): graves, funeral, ghost, flowers, vase
 	add_child(ApprenticeActors.new())  # iteration 012: workshop apprentices at their stations
+	add_child(ContractWorld.new())     # The Living Realm: crates of a major contract beside the Project Bench
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
 	Events.adventurer_departed.connect(_on_departed)
 	Events.hireling_departed.connect(_on_departed)
