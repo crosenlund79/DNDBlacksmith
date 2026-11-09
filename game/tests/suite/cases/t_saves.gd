@@ -324,14 +324,66 @@ func test_fresh_game_round_trip_idempotent() -> void:
 
 
 # ------------------------------------------------------------------ newer versions
-func test_newer_version_loads_best_effort() -> void:
+## A save from a newer build (an unsupported, higher schema) is never loaded, migrated, downgraded or overwritten:
+## the file and its backup stay byte-identical, the running game is untouched and the player is told why.
+func test_newer_version_refused_and_preserved() -> void:
 	var day := Game.day()
+	var gold := Game.gold()
 	check(save_as_version("suite_newer", Game.SAVE_VERSION + 7), "a save from a newer build is written")
-	check(Saves.load_slot("suite_newer"), "a newer save loads (best-effort), it does not crash")
-	check(bool(Saves.last_load.get("migration", {}).get("newer", false)), "it is reported as newer")
-	eq((Saves.last_load.get("migration", {}).get("steps", ["?"]) as Array).size(), 0, "no step is run on it")
-	eq(Game.day(), day, "its state is used")
+	var main_bytes := _bytes(Saves.path("suite_newer"))
+	eq(Saves.newer_schema("suite_newer"), Game.SAVE_VERSION + 7, "it is recognised as a newer schema")
+	Saves.notice = ""
+	check(not Saves.load_slot("suite_newer"), "it is refused, not loaded best-effort")
+	check(Saves.last_error.contains("newer version") and Saves.last_error.contains("not been loaded or changed"), "the reason is explained: " + Saves.last_error)
+	check(Saves.notice == Saves.last_error, "the explanation is kept for the main menu")
+	eq(Game.day(), day, "the running game is untouched (day)")
+	eq(Game.gold(), gold, "the running game is untouched (gold)")
+	eq(_bytes(Saves.path("suite_newer")), main_bytes, "the newer save file is byte-identical")
+	check(Saves.latest_slot() != "suite_newer", "Continue never picks a save this build cannot load")
+	Saves.notice = ""
 	Saves.delete("suite_newer")
+
+
+func test_newer_version_never_overwritten() -> void:
+	check(save_as_version("suite_newer_w", Game.SAVE_VERSION + 1), "a save from a newer build is in the slot")
+	var p := Saves.path("suite_newer_w")
+	var main_bytes := _bytes(p)
+	var bak_bytes := _bytes(_bak("suite_newer_w"))
+	check(not Saves.save("suite_newer_w"), "saving over it is refused")
+	check(Saves.last_error.contains("newer version") and Saves.last_error.contains("left untouched"), "the reason is explained: " + Saves.last_error)
+	eq(_bytes(p), main_bytes, "the newer save is byte-identical")
+	eq(_bytes(_bak("suite_newer_w")), bak_bytes, "its backup was not rotated or replaced")
+	check(not FileAccess.file_exists(p + ".tmp"), "no temp file is left behind")
+	check(Saves.save("suite_other_slot"), "saving to another slot still works")
+	Saves.delete("suite_newer_w")
+	Saves.delete("suite_other_slot")
+
+
+func test_newer_backup_not_used_as_fallback() -> void:
+	# a corrupt main file whose backup came from a newer build: loading must not fall back to it (and later
+	# overwrite it in this older format)
+	check(save_as_version("suite_newer_b", Game.SAVE_VERSION + 2), "a newer save is written")
+	var p := Saves.path("suite_newer_b")
+	DirAccess.copy_absolute(p, _bak("suite_newer_b"))
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	f.store_string("{ corrupt")
+	f.close()
+	var bak_bytes := _bytes(_bak("suite_newer_b"))
+	check(not Saves.load_slot("suite_newer_b"), "the newer backup is not loaded")
+	check(Saves.last_error.contains("newer version"), "and the player is told why")
+	eq(_bytes(_bak("suite_newer_b")), bak_bytes, "the newer backup is byte-identical")
+	check(not Saves.save("suite_newer_b"), "and the slot is not overwritten either")
+	eq(_bytes(_bak("suite_newer_b")), bak_bytes, "the newer backup is still byte-identical")
+	Saves.notice = ""
+	Saves.delete("suite_newer_b")
+
+
+func test_newer_data_never_migrated_directly() -> void:
+	var data := {"version": Game.SAVE_VERSION + 3, "player": {"inventory": []}}
+	var before := JSON.stringify(data)
+	var rep := SaveMigrations.run(data)
+	check(bool(rep["newer"]) and (rep["steps"] as Array).is_empty(), "no step runs on newer data")
+	eq(JSON.stringify(data), before, "the data is not touched (not relabelled or downgraded)")
 
 
 # ------------------------------------------------------------------ write / replace / failure handling

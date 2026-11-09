@@ -3883,3 +3883,53 @@ func phase_sponsor_rl() -> void:
 func phase_identity_a1() -> void:
 	var ph: RefCounted = load("res://tests/playtest_identity_a1.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= Milestone A1: a save from a newer build
+## A save written by a newer version is refused with a plain explanation: in the running game (quick-load keeps
+## the game going) and on the main menu; the Load screen lists it as kept, not loadable; the file is untouched.
+func phase_newer_save() -> void:
+	main.call("new_game")
+	await wait(2.0)
+	expect(Saves.save("quicksave"), "newer: a quicksave exists")
+	var p := Saves.path("quicksave")
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(p))
+	doc["meta"]["version"] = Game.SAVE_VERSION + 1
+	doc["data"]["version"] = Game.SAVE_VERSION + 1
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	f.store_string(JSON.stringify(doc))
+	f.close()
+	var bytes := FileAccess.get_file_as_string(p)
+	var day := Game.day()
+	await press("quick_load")
+	await wait(1.2)
+	expect(W() != null and Game.day() == day, "newer: quick-load is refused and the game keeps running")
+	await shot("newer_save_refused_in_game")
+	main.call("load_slot", "quicksave")   # from the game: still refused, still running
+	await wait(0.6)
+	expect(W() != null, "newer: the running game is never torn down for it")
+	main.call("to_menu")
+	await wait(0.8)
+	main.call("load_slot", "quicksave")   # from the menu: the menu explains
+	await wait(1.0)
+	expect(find_label_containing(get_tree().root, "newer version of Ember & Ash") != null, "newer: the main menu explains the refusal")
+	await shot("newer_save_menu_notice")
+	var sp := SavePanel.new("load")
+	main.get("menu").add_child(sp)
+	await wait(0.8)
+	expect(find_label_containing(sp, "made by a newer version") != null, "newer: the Load screen lists it as kept, not loadable")
+	await shot("newer_save_load_screen")
+	sp.queue_free()
+	expect(FileAccess.get_file_as_string(p) == bytes, "newer: the file is byte-identical")
+	Saves.delete("quicksave")
+
+
+## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
+func find_label_containing(root: Node, needle: String) -> Control:
+	for n in root.find_children("*", "Label", true, false):
+		if (n as Label).visible and (n as Label).text.contains(needle):
+			return n
+	for n in root.find_children("*", "RichTextLabel", true, false):
+		if (n as RichTextLabel).visible and (n as RichTextLabel).get_parsed_text().contains(needle):
+			return n
+	return null

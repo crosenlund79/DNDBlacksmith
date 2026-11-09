@@ -28,6 +28,8 @@ var test_mode := false
 var run_id := ""
 ## Why the last save()/load_slot() failed ("" after a success).
 var last_error := ""
+## A message for the player that outlives the scene change (e.g. a refused load shown on the main menu); cleared when shown.
+var notice := ""
 ## What the last load_slot() did: {"slot", "from_backup": bool, "migration": SaveMigrations report}.
 var last_load := {}
 
@@ -133,15 +135,51 @@ func meta(slot: String) -> Dictionary:
 	return m if m is Dictionary else {}
 
 
+## The schema version a save file declares (its meta or its data, whichever is higher); -1 when unreadable.
+func schema_of_file(p: String) -> int:
+	var doc := _read_doc(p)
+	if doc.is_empty():
+		return -1
+	var m: Variant = doc.get("meta", {})
+	var mv := SaveMigrations.version_of(m) if m is Dictionary else 0
+	return maxi(mv, SaveMigrations.version_of(doc["data"]))
+
+
+## The schema of a save in `slot` written by a NEWER build than this one (its main file or its backup), or 0.
+## Such saves are never loaded, migrated, downgraded or overwritten by this build.
+func newer_schema(slot: String) -> int:
+	var p := path(slot)
+	if p == "":
+		return 0
+	var v := maxi(schema_of_file(p), schema_of_file(_bak(p)))
+	return v if v > Game.SAVE_VERSION else 0
+
+
+## The player-facing explanation for a save from a newer version.
+func newer_text(v: int, slot := "") -> String:
+	return "%sThis save was made by a newer version of Ember & Ash (save format %d); this version can read save format %d and older. It has not been loaded or changed — update the game to continue it." % [
+		("%s: " % slot.replace("_", " ").capitalize()) if slot != "" else "", v, Game.SAVE_VERSION]
+
+
 func latest_slot() -> String:
 	var best := ""
 	var best_t := -1.0
 	for s in SLOTS:
+		if newer_schema(s) > 0:
+			continue   # a newer build's save cannot be continued here
 		var m := meta(s)
 		if m.has("saved_unix") and float(m["saved_unix"]) > best_t:
 			best_t = float(m["saved_unix"])
 			best = s
 	return best
+
+
+## True when any slot holds a save (loadable or not) — the Load screen lists and explains them all.
+func any_save() -> bool:
+	for s in SLOTS:
+		if exists(s) or FileAccess.file_exists(_bak(path(s))):
+			return true
+	return false
 
 
 # ------------------------------------------------------------------ writing
@@ -154,6 +192,10 @@ func save(slot: String) -> bool:
 	var p := path(slot)
 	if p == "":
 		return _fail("the save folder is not allowed here")
+	var nv := newer_schema(slot)
+	if nv > 0:
+		# never overwrite (or rotate away as a backup) a save from a newer build: it would be lost to this older format
+		return _fail("%s holds a save from a newer version of Ember & Ash (save format %d) — it was left untouched; choose another slot" % [slot.replace("_", " ").capitalize(), nv])
 	var mk := DirAccess.make_dir_recursive_absolute(p.get_base_dir())
 	if mk != OK and not DirAccess.dir_exists_absolute(p.get_base_dir()):
 		return _fail("cannot create the save folder %s (error %d)" % [p.get_base_dir(), mk])
@@ -213,6 +255,14 @@ func load_slot(slot: String) -> bool:
 	var p := path(slot)
 	if p == "":
 		last_error = "the save folder is not allowed here"
+		return false
+	var nv := newer_schema(slot)
+	if nv > 0:
+		# refuse — never migrate, downgrade, fall back to an older backup or later overwrite a newer build's save
+		last_error = newer_text(nv, slot)
+		notice = last_error
+		Log.warn("Refused to load %s: save format %d is newer than this build's %d (file left untouched)" % [slot, nv, Game.SAVE_VERSION])
+		Events.toast.emit(last_error, "bad")
 		return false
 	var data := _read(p)
 	if data.is_empty():
@@ -280,8 +330,9 @@ func _restore_ints(v: Variant, key := "") -> Variant:
 	return v
 
 
-## Upgrades older saves through the explicit, ordered schema steps (SaveMigrations); a save from a newer build
-## loads best-effort with a warning. Returns the same dictionary, converted in place.
+## Upgrades older saves through the explicit, ordered schema steps (SaveMigrations). `load_slot` never passes a
+## newer build's save here (it refuses it first); called directly on such data, no step runs and a warning is logged.
+## Returns the same dictionary, converted in place.
 func migrate(data: Dictionary) -> Dictionary:
 	SaveMigrations.run(data)
 	return data
