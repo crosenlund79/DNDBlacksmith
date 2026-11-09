@@ -10,7 +10,8 @@ const SC := 34.0            # pixels per tile on the plan
 
 var tab := "property"
 var plan: Dictionary = {}
-var tool := "stations"      # stations | merge | split | door | undoor
+var floor_id := "ground"    # which floor the plan shows (The Living Realm: the Loft)
+var tool := "stations"      # stations | merge | split | door | undoor | use | craft
 var split_vertical := true
 var selected_unit := ""
 var carrying := ""          # station being moved / placed
@@ -22,8 +23,28 @@ var status: RichTextLabel
 var tabs_row: HBoxContainer
 
 
-func _init() -> void:
+var show_lift := false      # opened from the old hoist: the property tab explains the lift
+
+
+## args (optional): {"floor": "loft"} opens on that floor; {"id": "lift"} (the old hoist) opens on the lift.
+func _init(args := {}) -> void:
 	super._init("Property & Workshop", 1840, 1010)
+	floor_id = str(args.get("floor", "ground"))
+	if str(args.get("id", "")) == "lift":
+		show_lift = true
+		floor_id = "loft" if Property.floor_owned("loft") else "ground"
+	if Property.floor_def(floor_id).is_empty():
+		floor_id = "ground"
+
+
+## Plan coordinates of the floor shown (its rect's corner; the ground floor is at 0, 0).
+func floor_off() -> Vector2:
+	return Property.floor_rect(floor_id).position
+
+
+func set_floor(fid: String) -> void:
+	floor_id = fid   # a carried station stays in hand: it can be set down on the other floor
+	_build()
 
 
 func _ready() -> void:
@@ -60,6 +81,18 @@ func _build() -> void:
 		var b := UIKit.button(t[1], func(): _switch(key), 0)
 		b.disabled = tab == key
 		tabs_row.add_child(b)
+	# The Living Realm: the floor switcher (the plan shows one floor at a time)
+	if Property.floors().size() > 1:
+		var gap := Control.new()
+		gap.custom_minimum_size = Vector2(26, 0)
+		tabs_row.add_child(gap)
+		tabs_row.add_child(UIKit.label("Floor:", 19, "body_italic", UIKit.INK))
+		for f in Property.floors():
+			var fid := str(f["id"])
+			var fb := UIKit.button(str(f.get("name", fid)) + ("" if Property.floor_owned(fid) else " (for sale)"), func(): set_floor(fid), 0)
+			fb.disabled = floor_id == fid
+			fb.name = "Floor_" + fid
+			tabs_row.add_child(fb)
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tabs_row.add_child(sp)
@@ -99,14 +132,51 @@ func _side_property() -> void:
 			b.disabled = not Game.can_afford(price)
 			side.add_child(b)
 		elif stt == "unavailable":
-			side.add_child(UIKit.label("Not next to anything you own yet.", 19, "body_italic"))
+			var req := str(u.get("requires", ""))
+			side.add_child(UIKit.label(("Buy %s first — the way up is through there." % Property.unit(req).get("name", req)) if req != "" else "Not next to anything you own yet.", 19, "body_italic"))
+	if Property.floors().size() > 1 and (show_lift or Property.floor_owned("loft")):
+		side.add_child(UIKit.divider())
+		side.add_child(_lift_box())
 	side.add_child(UIKit.divider())
 	for u2 in Property.units():
 		var s2 := Property.unit_state(str(u2["id"]))
 		var col: String = {"owned": "#26622f", "available": "#7e2418", "unavailable": "#8a7a60"}[s2]
-		var line := UIKit.rich("[color=%s]●[/color] [b]%s[/b] — %s%s" % [col, u2["name"], {"owned": "yours", "available": "for sale", "unavailable": "not adjoining yet"}[s2],
+		var upstairs := str(u2.get("floor", "ground")) != "ground"
+		var line := UIKit.rich("[color=%s]●[/color] [b]%s[/b]%s — %s%s" % [col, u2["name"], (" [i](%s)[/i]" % Property.floor_name(str(u2["floor"]))) if upstairs else "",
+			{"owned": "yours", "available": "for sale", "unavailable": "not adjoining yet" if not u2.has("requires") else "after " + str(Property.unit(str(u2["requires"])).get("name", ""))}[s2],
 			(" · %d g" % Property.unit_price(str(u2["id"]))) if s2 == "available" else ""], 18)
 		side.add_child(line)
+
+
+## The aetheric lift: what it does, what it needs, and the purchase.
+func _lift_box() -> Control:
+	var v := UIKit.vbox(4)
+	v.name = "LiftBox"
+	v.add_child(UIKit.label("The aetheric lift", 24, "heading", UIKit.RUBRIC))
+	if Property.has_lift():
+		v.add_child(UIKit.rich("[i]Ilse's old goods hoist, driven by a ley-stone: one step between the leather room and the weaving loft. Your apprentices use it too.[/i]", 18))
+		return v
+	v.add_child(UIKit.rich("[i]Ilse's old goods hoist runs from the leather room up into the Loft. Set a ley-stone from an Arcane Foundry into it and it carries you — and your apprentices — between the floors in one step.[/i]", 18))
+	var why := Property.lift_reason()
+	if why != "":
+		v.add_child(UIKit.label("🔒 " + why, 18, "body_italic", Color("#8a7a60")))
+	else:
+		var b := UIKit.button("Rig the lift · %d g" % Property.lift_price(), _buy_lift, 300)
+		b.disabled = not Game.can_afford(Property.lift_price())
+		b.name = "BuyLift"
+		v.add_child(b)
+	return v
+
+
+func _buy_lift() -> void:
+	var err := Property.buy_lift()
+	if err != "":
+		Events.toast.emit(err, "bad")
+		return
+	Audio.play("sfx/arcane", -4.0)
+	dirty = true
+	plan = Property.plan_copy()
+	_build()
 
 
 func _buy_unit(uid: String) -> void:
@@ -126,7 +196,7 @@ func _side_layout() -> void:
 	var tools := HFlowContainer.new()
 	tools.add_theme_constant_override("h_separation", 6)
 	tools.add_theme_constant_override("v_separation", 6)
-	for t in [["stations", "Move stations"], ["merge", "Take down a wall"], ["split", "Put up a wall"], ["door", "Cut a doorway"], ["undoor", "Brick up a doorway"], ["use", "Change a room's use"]]:
+	for t in [["stations", "Move stations"], ["merge", "Take down a wall"], ["split", "Put up a wall"], ["door", "Cut a doorway"], ["undoor", "Brick up a doorway"], ["use", "Change a room's use"], ["craft", "Set a room's craft"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tool = key; carrying = ""; _build(), 0)
 		b.disabled = tool == key
@@ -140,6 +210,7 @@ func _side_layout() -> void:
 		"door": "Click a wall between two of your rooms to cut a two-tile doorway there.",
 		"undoor": "Click a doorway between two of your rooms to brick it up.",
 		"use": "Click one of your rooms to switch it between workshop and living space. Stations only stand in workshop rooms; the shopfront serves customers and the stock hall stays a clear passage.",
+		"craft": "Click one of your workshop rooms to choose the craft it is for (its banner): Smithing, Leatherworking & Tailoring, Runecrafting, Alchemy, Arcane Metalworking or any. New stations are set up in a room of their own craft first; mixed rooms are fine.",
 	}
 	side.add_child(UIKit.rich("[i]%s[/i]" % help[tool], 18))
 	if tool == "split":
@@ -165,6 +236,7 @@ func _side_layout() -> void:
 			side.add_child(flow)
 			side.add_child(UIKit.button("Find a spot for everything in storage", _auto_place_all, 380))
 		side.add_child(UIKit.rich("[i]Free station places in your workshop rooms: [b]%d[/b] (one per eight square tiles of floor).[/i]" % Property.free_places(plan), 17))
+		side.add_child(_capacity_box())
 		if not Apprentices.staff().is_empty():
 			side.add_child(UIKit.rich("[i][color=#24409a]●[/color] a station in use (initials of who works there) · [color=#9e3a0c]worn[/color] stations slow apprentices down — queue upkeep in the Workshop ledger [%s].[/i]" % Settings.key_label("panel_workshop"), 16))
 	side.add_child(UIKit.divider())
@@ -175,6 +247,20 @@ func _side_layout() -> void:
 	h2.add_child(apply)
 	h2.add_child(UIKit.button("Discard changes", func(): plan = Property.plan_copy(); carrying = ""; _build(), 240))
 	side.add_child(h2)
+
+
+## Places per craft: stations of the craft you have, and the places in rooms of that craft (crowding at a glance).
+func _capacity_box() -> Control:
+	var lines := []
+	for c in Smithy.capacity_report(plan):
+		if int(c["installed"]) == 0 and int(c["places"]) == 0:
+			continue
+		var tight := int(c["installed"]) > int(c["places"])
+		lines.append("%s: %d station%s set up · %d place%s in its rooms%s" % [c["name"], int(c["installed"]), "" if int(c["installed"]) == 1 else "s",
+			int(c["places"]), "" if int(c["places"]) == 1 else "s", " [color=#9e3a0c](crowded — some stand in other rooms)[/color]" if tight else ""])
+	var r := UIKit.rich("[i]" + "\n".join(lines) + "[/i]", 16)
+	r.name = "CapacityBox"
+	return r
 
 
 ## Sets up every stored station in a sensible free spot (its usual place, else a room of its own craft).
@@ -212,7 +298,10 @@ func _refresh_status() -> void:
 		status.text = "[color=#5e421c]Legend: [color=#26622f]■[/color] yours · [color=#7e2418]■[/color] for sale · [color=#6a6056]■[/color] a neighbour's · doorways in brass · locked doors dark[/color]"
 		return
 	var err := Property.validate(plan)
-	status.text = ("[color=#26622f]✓ Every room, every station, the counter and a bed can be reached from the front door.[/color]" if err == "" else "[color=#9e3a0c]✗ " + err + "[/color]")
+	var ok_text := "✓ Every room, every station, the counter and a bed can be reached from the front door."
+	if Property.floor_owned("loft"):
+		ok_text = "✓ Every room and station on both floors, the counter, a bed, the stair%s can be reached." % (" and the lift" if Property.has_lift() else "")
+	status.text = ("[color=#26622f]%s[/color]" % ok_text if err == "" else "[color=#9e3a0c]✗ " + err + "[/color]")
 
 
 func plan_click(tile: Vector2, button: int) -> void:
@@ -265,6 +354,16 @@ func _layout_click(tile: Vector2) -> void:
 		"use":
 			var r2 := Property.room_at_tile(plan["rooms"], tile)
 			err = "Click one of your rooms." if r2.is_empty() else Property.set_kind(plan, str(r2["id"]), "home" if Property.kind(r2) == "workshop" else "workshop")
+		"craft":
+			var r3 := Property.room_at_tile(plan["rooms"], tile)
+			if r3.is_empty():
+				err = "Click one of your workshop rooms."
+			else:
+				var order: Array = [""] + Property.DISCIPLINES
+				var nxt: String = order[(order.find(Property.planned_discipline(r3)) + 1) % order.size()]
+				err = Property.set_discipline(plan, str(r3["id"]), nxt)
+				if err == "":
+					Events.toast.emit("%s — %s" % [r3.get("name", ""), Smithy.trade_name(nxt) if nxt != "" else "any craft"], "info")
 	if err != "":
 		Events.toast.emit(err, "bad")
 	else:
@@ -352,7 +451,7 @@ class PlanView extends Control:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 
 	func tile_of(local: Vector2) -> Vector2:
-		return (local - O) / PropertyPanel.SC
+		return (local - O) / PropertyPanel.SC + p.floor_off()
 
 	func _gui_input(ev: InputEvent) -> void:
 		if ev is InputEventMouseMotion:
@@ -365,7 +464,10 @@ class PlanView extends Control:
 				accept_event()
 
 	func _px(t: Vector2) -> Vector2:
-		return O + t * PropertyPanel.SC
+		return O + (t - p.floor_off()) * PropertyPanel.SC
+
+	func _on_floor(r: Dictionary) -> bool:
+		return Property.floor_of_room(r) == p.floor_id
 
 	func _draw() -> void:
 		var sc := PropertyPanel.SC
@@ -373,8 +475,10 @@ class PlanView extends Control:
 		var f := Assets.font("heading")
 		var fb := Assets.font("body")
 		draw_rect(Rect2(Vector2.ZERO, size), Color("#e9dcbc"))
-		# rooms
+		# rooms (of the floor shown)
 		for r in plan["rooms"]:
+			if not _on_floor(r):
+				continue
 			var rr := Property.rect(r)
 			var px := Rect2(_px(rr.position), rr.size * sc)
 			var owned := Property.room_owned(r)
@@ -402,10 +506,24 @@ class PlanView extends Control:
 			draw_string(fb, px.position + Vector2(6, 18), name, HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 14, Color("#20140c", 0.85))
 			if owned:
 				var use: String = {"workshop": "workshop", "shop": "shop — customers", "store": "passage", "home": "living space"}.get(Property.kind(r), "")
-				draw_string(fb, px.position + Vector2(6, 34), use, HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 12, Color("#7e2418", 0.8) if use == "workshop" else Color("#5e421c", 0.75))
+				if use == "workshop":
+					# The Living Realm: the room's craft (planned, else from its stations) and its tier
+					var disc := Property.planned_discipline(r)
+					if disc == "":
+						disc = Property.room_discipline(r)
+					use = "workshop · " + (Smithy.trade_name(disc) if disc != "" else "any craft")
+					if disc != "" and Property.room_owned(r) and Game.state.has("property"):
+						use += " · " + Smithy.TIER_NAMES[Smithy.room_tier(r)]
+				draw_string(fb, px.position + Vector2(6, 34), use, HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 12, Color("#7e2418", 0.8) if use.begins_with("workshop") else Color("#5e421c", 0.75))
+			else:
+				var upa := Property.unit(uid)
+				if upa.has("becomes"):
+					draw_string(fb, px.position + Vector2(6, 34), "→ " + str(upa["becomes"]), HORIZONTAL_ALIGNMENT_LEFT, px.size.x - 10, 11, Color("#5e421c", 0.7))
 		# walls between rooms (with doorway gaps)
 		var rs: Array = plan["rooms"]
 		for i in rs.size():
+			if not _on_floor(rs[i]):
+				continue
 			for j in range(i + 1, rs.size()):
 				var e := Property.shared_edge(Property.rect(rs[i]), Property.rect(rs[j]))
 				if e.is_empty():
@@ -424,16 +542,29 @@ class PlanView extends Control:
 					draw_line(_px(ga), _px(gb), Color("#b8923e") if g[2] else Color("#5a3a22"), 6.0 if not g[2] else 3.0)
 					start = float(g[1])
 				_wall(e, start, float(e[3]))
-		# outer wall and the front door
-		var bsz: Array = Property.data().get("rect", [0, 0, 30, 23])
-		draw_rect(Rect2(_px(Vector2.ZERO), Vector2(float(bsz[2]), float(bsz[3])) * sc), Color("#20140c"), false, 6.0)
-		var ent: Array = Property.data().get("entrance", [14.0, 0.6])
-		var ep := _px(Vector2(float(ent[0]), 0))
-		draw_line(ep - Vector2(sc, 0), ep + Vector2(sc, 0), Color("#e9dcbc"), 8.0)
-		draw_string(f, ep + Vector2(-40, -4), "front door", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color("#7e2418"))
-		# stations
+		# outer wall and the front door (the Loft: its eaves, the stair and the hoist)
+		var flr := Property.floor_rect(p.floor_id)
+		draw_rect(Rect2(_px(flr.position), flr.size * sc), Color("#20140c"), false, 6.0)
+		if p.floor_id == "ground":
+			var ent: Array = Property.data().get("entrance", [14.0, 0.6])
+			var ep := _px(Vector2(float(ent[0]), 0))
+			draw_line(ep - Vector2(sc, 0), ep + Vector2(sc, 0), Color("#e9dcbc"), 8.0)
+			draw_string(f, ep + Vector2(-40, -4), "front door", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color("#7e2418"))
+		for rv: Rect2 in Property.reserved_rects():
+			if not flr.encloses(rv):
+				continue
+			var rp := Rect2(_px(rv.position), rv.size * sc)
+			draw_rect(rp, Color("#5e421c", 0.18))
+			draw_rect(rp, Color("#5e421c", 0.6), false, 1.5)
+			var is_stair := rv.size.y > rv.size.x + 0.2
+			var word := "stair" if is_stair else ("lift" if Property.has_lift() else "hoist")
+			draw_string(fb, rp.position + Vector2(2, rp.size.y * 0.5 + 5), word, HORIZONTAL_ALIGNMENT_CENTER, rp.size.x - 4, 12, Color("#5e421c"))
+		# stations (of the floor shown)
 		for sid in plan["stations"]:
 			if sid == p.carrying:
+				continue
+			var spa: Array = plan["stations"][sid]["pos"]
+			if not flr.has_point(Vector2(float(spa[0]), float(spa[1]))):
 				continue
 			_station(sid, plan["stations"][sid], Color.WHITE)
 		# tool previews
@@ -459,7 +590,7 @@ class PlanView extends Control:
 							draw_line(_px(da), _px(db), Color("#26622f"), 8.0)
 				"split":
 					var r := Property.room_at_tile(rs, hover)
-					if not r.is_empty() and Property.editable(r):
+					if not r.is_empty() and Property.editable(r) and _on_floor(r):
 						var rr2 := Property.rect(r)
 						var line: float = round(hover.x if p.split_vertical else hover.y)
 						var a2 := Vector2(line, rr2.position.y) if p.split_vertical else Vector2(rr2.position.x, line)

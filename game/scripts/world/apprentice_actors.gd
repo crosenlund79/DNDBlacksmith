@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 	if Game.state.is_empty() or w == null or w.player == null:
 		return
 	# the smith's room counts for supervision (work in the room he stands in is done "under his eye")
-	Apprentices.smith_room = w.room if w.area == "smithy" else ""
+	Apprentices.smith_room = w.room if (w.area == "smithy" or w.area == "smithy_loft") else ""
 	_t -= delta
 	if _t <= 0.0:
 		_t = SYNC
@@ -422,7 +422,7 @@ func _sounds(delta: float) -> void:
 	_spark_t -= delta
 	if _snd_t > 0.0 and _spark_t > 0.0:
 		return
-	if w.area != "smithy" or Game.ui_blockers > 0:
+	if (w.area != "smithy" and w.area != "smithy_loft") or Game.ui_blockers > 0:
 		return
 	var best := ""
 	var best_d := SOUND_NEAR

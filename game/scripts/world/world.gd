@@ -355,8 +355,9 @@ func _interior_walls(b: Dictionary, r: Rect2) -> void:
 
 
 func _build_building(b: Dictionary, is_area: bool) -> void:
-	if str(b.get("id", "")) == Property.BID and not is_area:
-		b = _smithy_view(b)
+	var smithy_floor := _smithy_floor_of(b, is_area)   # "" for every other building
+	if smithy_floor != "":
+		b = _smithy_view(b, smithy_floor)
 	var r := brect(b)
 	if is_area:
 		# interior areas live outside the village map: frame them with dim roof timbers, not a void
@@ -371,8 +372,8 @@ func _build_building(b: Dictionary, is_area: bool) -> void:
 		_tex_poly(_rect_pts(rr), room.get("floor", "floor_wood"), floor_layer, tint)
 		rooms_info.append({"id": room["id"], "name": room.get("name", room["id"]), "rect": rr})
 	_interior_walls(b, r)
-	if str(b.get("id", "")) == Property.BID and not is_area:
-		_smithy_overlays(r)
+	if smithy_floor != "":
+		_smithy_overlays(r, smithy_floor)
 	var wall_tex := "wall_timber" if b.get("roof", "") == "thatch" else "wall_stone"
 	_draw_walls(_wall_segments(r, b.get("doors", [])), wall_tex)
 	# doors: mat + light outside
@@ -1642,13 +1643,14 @@ func _build_nav() -> void:
 			break
 	# stairs join floors: the arrival spot of each stairway links to the arrival spot on the other side
 	for e in interactables:
-		if e["kind"] != "stairs":
+		if not (e["kind"] in ["stairs", "lift"]):
 			continue
-		var there: String = "stairs_" + str(e["id"])
+		var pre := "lift_" if e["kind"] == "lift" else "stairs_"   # the smithy's aetheric lift has its own spots
+		var there: String = pre + str(e["id"])
 		var here := ""
 		for bid in buildings:
 			if (buildings[bid]["rect"] as Rect2).has_point(e["pos"]):
-				here = "stairs_" + bid
+				here = pre + bid
 		if spot_ids.has(here) and spot_ids.has(there) and not astar.are_points_connected(spot_ids[here], spot_ids[there]):
 			astar.connect_points(spot_ids[here], spot_ids[there])
 
@@ -2184,6 +2186,21 @@ func interact(e: Dictionary) -> void:
 				player.position = spots[arrive]
 				Audio.play("sfx/door", -4.0)
 				camera.reset_smoothing()
+		"lift":
+			# The Living Realm: the smithy's aetheric lift — one step between the floors (arrival spot "lift_<area>")
+			var arrive_l: String = "lift_" + str(e["id"])
+			if spots.has(arrive_l):
+				if PlayerNav.of(self) != null:
+					PlayerNav.of(self).cancel()
+				player.position = spots[arrive_l]
+				Audio.play("sfx/arcane", -6.0)
+				camera.reset_smoothing()
+				var fl := FX.light(Color("#9a6cff"), 260.0, 1.3)
+				fl.position = player.position
+				add_child(fl)
+				var tw := fl.create_tween()
+				tw.tween_property(fl, "energy", 0.0, 0.8)
+				tw.tween_callback(fl.queue_free)
 		"exit":
 			var ex := {}
 			for x in DB.layout["exits"]:
@@ -2194,13 +2211,36 @@ func interact(e: Dictionary) -> void:
 
 
 # ======================================================================= the smith's property
+## Which floor of the smithy a building/area record draws ("" = not the smithy): the building itself is the ground
+## floor; an area with "floor_of": "smithy" is an upper floor (the Loft). Upper floors keep Property's PLAN coordinates
+## (see tools/data/smithy_layout.py): their area lies at the smithy's origin + the floor's offset, so a plan position
+## p is always drawn at bpos("smithy", p) — stations, stairs and the lift need no conversion; rooms, doorways and
+## furniture of an area are shifted back by the offset into the area's own coordinates.
+func _smithy_floor_of(b: Dictionary, is_area: bool) -> String:
+	if not is_area:
+		return "ground" if str(b.get("id", "")) == Property.BID else ""
+	if str(b.get("floor_of", "")) != Property.BID:
+		return ""
+	for f in Property.floors():
+		if str(f.get("area", "")) == str(b["id"]):
+			return str(f["id"])
+	return ""
+
+
+func _rooms_on(fid: String) -> Array:
+	return Property.rooms().filter(func(rm): return Property.floor_of_room(rm) == fid)
+
+
 ## The smithy as the smith owns and arranged it: his rooms and partitions, open and locked doors, the
 ## neighbours' furnishings in rooms he has not bought, workshop clutter where his stations stand.
-func _smithy_view(src: Dictionary) -> Dictionary:
+func _smithy_view(src: Dictionary, fid := "ground") -> Dictionary:
+	var off := Property.floor_rect(fid).position
 	var b := src.duplicate()
 	var rooms := []
-	for rm in Property.rooms():
+	for rm in _rooms_on(fid):
 		var r2: Dictionary = (rm as Dictionary).duplicate(true)
+		var a: Array = r2["rect"]
+		r2["rect"] = [float(a[0]) - off.x, float(a[1]) - off.y, float(a[2]), float(a[3])]
 		if not Property.room_owned(rm):
 			var t: Array = r2.get("tint", [1.0, 1.0, 1.0])
 			r2["tint"] = [float(t[0]) * 0.62, float(t[1]) * 0.58, float(t[2]) * 0.55]
@@ -2208,18 +2248,25 @@ func _smithy_view(src: Dictionary) -> Dictionary:
 	b["rooms"] = rooms
 	var open := []
 	for d in Property.doors():
-		if Property.door_open(Property.st(), d):
-			open.append(d)
+		if not Property.door_open(Property.st(), d):
+			continue
+		var e := Property._door_edge(Property.st(), d)
+		if e.is_empty() or Property.floor_of_point(Property.door_center(Property.st(), d)) != fid:
+			continue
+		var d2: Dictionary = (d as Dictionary).duplicate(true)
+		d2["at"] = float(d["at"]) - (off.y if bool(e[0]) else off.x)
+		open.append(d2)
 	b["room_doors"] = open
-	b["furniture"] = _smithy_furniture(src)
-	var inter := []
-	for it in src.get("interact", []):
-		var ip: Array = it["pos"]
-		var host := Property.room_at_tile(Property.rooms(), Vector2(float(ip[0]), float(ip[1])))
-		if not host.is_empty() and Property.room_owned(host):
-			inter.append(it)
-	b["interact"] = inter
-	b["spots"] = _smithy_spots(src)
+	b["furniture"] = _smithy_furniture(src, fid)
+	if fid == "ground":
+		var inter := []
+		for it in src.get("interact", []):
+			var ip: Array = it["pos"]
+			var host := Property.room_at_tile(Property.rooms(), Vector2(float(ip[0]), float(ip[1])))
+			if not host.is_empty() and Property.room_owned(host):
+				inter.append(it)
+		b["interact"] = inter
+		b["spots"] = _smithy_spots(src)
 	return b
 
 
@@ -2231,7 +2278,8 @@ func _prop_rect_tiles(id: String, p: Vector2, rot_deg := 0.0) -> Rect2:
 	return Rect2(p - sz * 0.5, sz)
 
 
-## Would a piece of furniture at tile `p` clash with a station, block a doorway or straddle a wall?
+## Would a piece of furniture at tile `p` clash with a station, block a doorway, straddle a wall or stand on the
+## stairwell or the hoist shaft? (plan coordinates)
 func _furniture_clashes(id: String, p: Vector2, host: Dictionary, rot_deg := 0.0) -> bool:
 	var fr := _prop_rect_tiles(id, p, rot_deg).grow(-0.08)
 	if not Property.rect(host).grow(0.15).encloses(fr):
@@ -2243,6 +2291,9 @@ func _furniture_clashes(id: String, p: Vector2, host: Dictionary, rot_deg := 0.0
 		var c := Property.door_center(Property.st(), d)
 		if c != Vector2.INF and fr.grow(0.55).has_point(c):
 			return true
+	for rv: Rect2 in Property.reserved_rects():
+		if fr.intersects(rv):
+			return true
 	return false
 
 
@@ -2253,14 +2304,20 @@ const CLUTTER := {
 	"stitching": ["leather_bundle", "hide_rack", "thread_spools", "pattern_board"],
 	"arcane": ["arcane_rack", "arcane_glyph_decal", "candle", "crate"],
 }
+## The Living Realm: what an Established room of each craft adds along a wall (a rack of the trade's tools).
+const TIER_RACK := {"classic": "weapon_rack", "runecraft": "rune_shelf", "alchemy": "bottle_shelf", "stitching": "pattern_board",
+	"arcane": "arcane_rack"}
+var _smithy_furn := {}     # floor id -> furniture shown on it (local coords), for the banners
+var smithy_dressed := {}   # floor id -> the tier dressing placed on it (local coords; tests and screenshots read it)
 
 
-func _smithy_furniture(src: Dictionary) -> Array:
+func _smithy_furniture(src: Dictionary, fid := "ground") -> Array:
+	var off := Property.floor_rect(fid).position
 	var out := []
 	var rooms := Property.rooms()
 	var decorated := {}
 	for f in src.get("furniture", []):
-		var p := Vector2(float(f[1]), float(f[2]))
+		var p := Vector2(float(f[1]), float(f[2])) + off
 		var host := Property.room_at_tile(rooms, p)
 		if host.is_empty():
 			continue
@@ -2282,7 +2339,7 @@ func _smithy_furniture(src: Dictionary) -> Array:
 		if show:
 			out.append(f)
 	# rooms the smith has turned into workshops get the clutter of their trade
-	for rm in rooms:
+	for rm in _rooms_on(fid):
 		if not Property.room_owned(rm) or decorated.has(str(rm["id"])):
 			continue
 		var disc := Property.room_discipline(rm)
@@ -2294,9 +2351,128 @@ func _smithy_furniture(src: Dictionary) -> Array:
 		for i in corners.size():
 			var c: Vector2 = corners[i]
 			var pid: String = items[i % items.size()]
-			if not _furniture_clashes(pid, c, rm):
-				out.append([pid, c.x, c.y, 0])
+			if not _furniture_clashes(pid, c, rm) and not _hits_any(_prop_rect_tiles(pid, c), out, off):
+				out.append([pid, c.x - off.x, c.y - off.y, 0])
+	var dressed := smithy_dressing(fid, out)
+	out.append_array(dressed)
+	_smithy_furn[fid] = out
+	smithy_dressed[fid] = dressed
 	return out
+
+
+## Furniture rects (plan coordinates) of a local-coordinate furniture list.
+func _furn_rects(list: Array, off: Vector2) -> Array:
+	var out := []
+	for f in list:
+		out.append(_prop_rect_tiles(str(f[0]), Vector2(float(f[1]), float(f[2])) + off, float(f[3]) if (f as Array).size() > 3 else 0.0))
+	return out
+
+
+## Like _hits_any, but only solid furniture counts (a name may be painted across a rug or a soot mark).
+func _hits_solid(r: Rect2, list: Array, off: Vector2) -> bool:
+	for f in list:
+		if not bool(DB.props.get(str(f[0]), {}).get("solid", true)):
+			continue
+		var fr := _prop_rect_tiles(str(f[0]), Vector2(float(f[1]), float(f[2])) + off, float(f[3]) if (f as Array).size() > 3 else 0.0)
+		if fr.grow(-0.05).intersects(r):
+			return true
+	return false
+
+
+func _hits_any(r: Rect2, list: Array, off: Vector2) -> bool:
+	for fr: Rect2 in _furn_rects(list, off):
+		if fr.grow(-0.05).intersects(r):
+			return true
+	return false
+
+
+## The Living Realm — rooms that grow with the smith. For every owned workshop room with a craft, by its tier
+## (Smithy.room_tier: skill in the craft, its stations in the room, the workshop's renown): Established adds a
+## runner on the floor and a rack of the trade on a wall; Masterwork a red rug instead, a plaque wall of famous work
+## and two standing lamps. Deterministic candidate order; solid pieces keep 0.7 tiles from every station (its
+## working sides stay free) and 1.4 from every doorway, and nothing lands on the stairwell, the hoist or other
+## furniture — so the dressing never blocks a station, a door or the walk grid. Returns local-coordinate entries.
+func smithy_dressing(fid: String, existing: Array) -> Array:
+	var off := Property.floor_rect(fid).position
+	var out := []
+	for rm in _rooms_on(fid):
+		if not Property.room_owned(rm) or Property.kind(rm) != "workshop":
+			continue
+		var disc := Smithy.trade(rm)
+		var tier := Smithy.room_tier(rm)
+		if disc == "" or tier < 1:
+			continue
+		var want: Array = [[("rug_red" if tier >= 2 else "rug_brown"), "floor"], [str(TIER_RACK.get(disc, "shelf")), "wall"]]
+		if tier >= 2:
+			want.append(["trophy_wall", "wall"])
+			want.append(["standing_lamp", "corner"])
+			want.append(["standing_lamp", "corner"])
+		for wv in want:
+			var pick := _dress_spot(str(wv[0]), str(wv[1]), rm, existing + out, off)
+			if not pick.is_empty():
+				out.append([str(wv[0]), float(pick[0]) - off.x, float(pick[1]) - off.y, float(pick[2])])
+	return out
+
+
+## A free spot for one piece of dressing in room `rm`: [x, y, rot] in plan coordinates, or [].
+func _dress_spot(pid: String, how: String, rm: Dictionary, placed: Array, off: Vector2) -> Array:
+	var rr := Property.rect(rm)
+	var info: Dictionary = DB.props.get(pid, {"size": [64, 64], "solid": true})
+	var sz := Vector2(float(info["size"][0]), float(info["size"][1])) / T
+	var solid := bool(info.get("solid", true))
+	var cands := []
+	var steps_x := []   # offsets from the centre outwards, every half tile, across the whole room
+	var steps_y := []
+	for k in range(0, int(rr.size.x) * 2 + 1):
+		steps_x.append((0.5 * ceil(k / 2.0)) * (1.0 if k % 2 == 0 else -1.0))
+	for k in range(0, int(rr.size.y) * 2 + 1):
+		steps_y.append((0.5 * ceil(k / 2.0)) * (1.0 if k % 2 == 0 else -1.0))
+	match how:
+		"wall":
+			for k: float in steps_x:
+				cands.append([rr.get_center().x + k, rr.position.y + sz.y * 0.5 + 0.06, 0.0])
+			for k2: float in steps_x:
+				cands.append([rr.get_center().x + k2, rr.end.y - sz.y * 0.5 - 0.06, 180.0])
+			for k3: float in steps_y:
+				cands.append([rr.position.x + sz.y * 0.5 + 0.06, rr.get_center().y + k3, 90.0])
+				cands.append([rr.end.x - sz.y * 0.5 - 0.06, rr.get_center().y + k3, 270.0])
+		"corner":
+			for c in [rr.position + Vector2(0.55, 0.55), Vector2(rr.end.x - 0.55, rr.position.y + 0.55), Vector2(rr.position.x + 0.55, rr.end.y - 0.55), rr.end - Vector2(0.55, 0.55),
+					rr.position + Vector2(1.1, 0.55), Vector2(rr.end.x - 1.1, rr.position.y + 0.55), Vector2(rr.position.x + 1.1, rr.end.y - 0.55), rr.end - Vector2(1.1, 0.55)]:
+				cands.append([(c as Vector2).x, (c as Vector2).y, 0.0])
+		_:
+			var grid := []
+			for dy: float in steps_y:
+				for dx: float in steps_x:
+					grid.append([absf(dx) + absf(dy), rr.get_center().x + dx, rr.get_center().y + dy])
+			grid.sort_custom(func(a, b): return float(a[0]) < float(b[0]) or (float(a[0]) == float(b[0]) and (float(a[2]) < float(b[2]) or (float(a[2]) == float(b[2]) and float(a[1]) < float(b[1])))))
+			for g in grid:
+				cands.append([float(g[1]), float(g[2]), 0.0])
+	for c in cands:
+		var p := Vector2(float(c[0]), float(c[1]))
+		var fr := _prop_rect_tiles(pid, p, float(c[2]))
+		if _furniture_clashes(pid, p, rm, float(c[2])) or _hits_any(fr, placed, off):
+			continue
+		if not rr.grow(-0.02).encloses(fr):
+			continue
+		var bad := false
+		for sid in Property.stations_in(rm):
+			if Property.is_installed(str(sid)) and fr.intersects(Property.footprint(str(sid), Property.st()["stations"][sid]).grow(0.7 if solid else 0.2)):
+				bad = true
+		for d in Property.doors():
+			var dc := Property.door_center(Property.st(), d)
+			if dc != Vector2.INF and fr.grow(1.4 if solid else 0.3).has_point(dc):
+				bad = true
+		for kp: Vector2 in Property.keep_clear_points():
+			if fr.grow(0.6).has_point(kp):
+				bad = true
+		if Property.floor_of_room(rm) == "ground":
+			var ent: Array = Property.data().get("entrance", [14.0, 0.6])
+			if fr.grow(1.2).has_point(Vector2(float(ent[0]), float(ent[1]))):
+				bad = true
+		if not bad:
+			return c
+	return []
 
 
 ## Spots inside the smithy must be in rooms he owns; hirelings work next to the station of their craft.
@@ -2313,7 +2489,7 @@ func _smithy_spots(src: Dictionary) -> Dictionary:
 		var p := Vector2(float(a[0]), float(a[1]))
 		if work_disc.has(name):
 			for sid in Property.st()["stations"]:
-				if Property.is_installed(sid) and str(DB.station(sid).get("discipline", "")) == work_disc[name]:
+				if Property.is_installed(sid) and str(DB.station(sid).get("discipline", "")) == work_disc[name] and Property.station_floor(sid) == "ground":
 					var size: Array = DB.station(sid)["size"]
 					var cand := Property.pos_of(sid) + Vector2(0, float(size[1]) / T * 0.5 + 0.7)
 					var h2 := Property.room_at_tile(rooms, cand)
@@ -2327,18 +2503,20 @@ func _smithy_spots(src: Dictionary) -> Dictionary:
 	return out
 
 
-## Locked doors into the neighbours' rooms and a quiet note of whose rooms they are.
-func _smithy_overlays(r: Rect2) -> void:
+## Locked doors into the neighbours' rooms and a quiet note of whose rooms they are; the craft banner and name of
+## every workshop room; the stair and the aetheric lift between the floors.
+func _smithy_overlays(r: Rect2, fid := "ground") -> void:
+	var off := Property.floor_rect(fid).position
 	for d in Property.doors():
 		if Property.door_open(Property.st(), d):
 			continue
 		var c := Property.door_center(Property.st(), d)
-		if c == Vector2.INF:
+		if c == Vector2.INF or Property.floor_of_point(c) != fid:
 			continue
 		var e := Property._door_edge(Property.st(), d)
 		var vertical := bool(e[0])
 		var half := Vector2(WALL * 0.5 + 3.0, float(d["w"]) * T * 0.5 - 6.0) if vertical else Vector2(float(d["w"]) * T * 0.5 - 6.0, WALL * 0.5 + 3.0)
-		var wp := r.position + c * T
+		var wp := r.position + (c - off) * T
 		var pts := _rect_pts(Rect2(wp - half, half * 2.0))
 		var door := Polygon2D.new()
 		door.polygon = pts
@@ -2351,7 +2529,7 @@ func _smithy_overlays(r: Rect2) -> void:
 		lock.color = Color("#b8923e")
 		lock.z_index = 2
 		floor_layer.add_child(lock)
-	for rm in Property.rooms():
+	for rm in _rooms_on(fid):
 		if Property.room_owned(rm):
 			continue
 		var u := Property.unit(str(rm.get("unit", "")))
@@ -2365,16 +2543,196 @@ func _smithy_overlays(r: Rect2) -> void:
 		lab.add_theme_color_override("font_outline_color", Color("#20140c"))
 		lab.add_theme_constant_override("outline_size", 6)
 		lab.size = Vector2(rr.size.x * T, 70)
-		lab.position = r.position + Vector2(rr.position.x * T, rr.get_center().y * T - 35)
+		lab.position = r.position + Vector2((rr.position.x - off.x) * T, (rr.get_center().y - off.y) * T - 35)
 		lab.z_index = 3
 		floor_layer.add_child(lab)
 	# arcane rooms breathe a violet haze
-	for rm2 in Property.rooms():
+	for rm2 in _rooms_on(fid):
 		if Property.room_owned(rm2) and Property.room_discipline(rm2) == "arcane":
 			var ar := Property.rect(rm2)
-			var fog := _dust(r.position + ar.get_center() * T, ar.size * T * 0.45, 26, Color("#b08cff"))
+			var fog := _dust(r.position + (ar.get_center() - off) * T, ar.size * T * 0.45, 26, Color("#b08cff"))
 			fog.modulate = Color(1, 1, 1, 0.8)
 			add_child(fog)
+	for rm3 in _rooms_on(fid):
+		_craft_banner(r, rm3, off, fid)
+	_floor_links(fid)
+
+
+## The Living Realm — discipline areas: a banner of the room's craft on its north wall (gilt-trimmed in a Masterwork
+## room) and the craft's name painted on the floor below it, so every workshop room reads at a glance.
+func _craft_banner(r: Rect2, rm: Dictionary, off: Vector2, fid: String) -> void:
+	if not Property.room_owned(rm) or Property.kind(rm) != "workshop":
+		return
+	var disc := Smithy.trade(rm)
+	if disc == "":
+		return
+	var tier := Smithy.room_tier(rm)
+	var rr := Property.rect(rm)
+	var furn: Array = _smithy_furn.get(fid, [])
+	var text := str(Smithy.SIGN_NAMES.get(disc, Smithy.trade_name(disc).to_upper()))
+	var lab_w := float(text.length()) * 0.19 + 0.25   # tiles: ~12 px a capital at 17 px
+	# the banner hangs on the north wall with its name painted beside it (right, else left) — one low strip along the
+	# wall, clear of doorways, of every station's picture (not just its footprint), the furniture and the stair/hoist;
+	# the first free place from the centre outwards. A room too crowded for the name still gets its banner.
+	var station_pics := []
+	for sid in Property.stations_in(rm):
+		if Property.is_installed(str(sid)):
+			var ssz: Array = DB.station(str(sid)).get("size", [96, 96])
+			var sz2 := Vector2(float(ssz[0]), float(ssz[1])) / T
+			station_pics.append(Rect2(Property.pos_of(str(sid)) - sz2 * 0.5, sz2).grow(0.06))
+	var at := Vector2.INF
+	var side := 0   # +1 name to the right, -1 to the left, 0 no name
+	var steps := [0.0]
+	for k in range(1, int(rr.size.x * 2.0)):
+		steps.append(0.5 * ceil(k / 2.0) * (1.0 if k % 2 == 1 else -1.0))
+	for sd: int in [1, -1, 0]:
+		for k: float in steps:
+			var p := Vector2(rr.get_center().x + k, rr.position.y + 0.55)
+			var block := Rect2(p - Vector2(0.5, 0.55), Vector2(1.0, 1.15))
+			if sd != 0:
+				var lx := p.x + 0.5 if sd > 0 else p.x - 0.5 - lab_w
+				block = block.merge(Rect2(Vector2(lx, rr.position.y + 0.12), Vector2(lab_w, 0.72)))
+			if not rr.grow(-0.04).encloses(block):
+				continue
+			var bad := _hits_any(block, furn, off)
+			for d in Property.doors():
+				var dc := Property.door_center(Property.st(), d)
+				if dc != Vector2.INF and block.grow(0.3).has_point(dc):
+					bad = true
+			for pic: Rect2 in station_pics:
+				if block.intersects(pic):
+					bad = true
+			for rv: Rect2 in Property.reserved_rects():
+				if block.intersects(rv):
+					bad = true
+			if not bad:
+				at = p
+				side = sd
+				break
+		if at != Vector2.INF:
+			break
+	if at == Vector2.INF:
+		at = Vector2(rr.position.x + 0.7, rr.position.y + 0.55)
+	var wp := r.position + (at - off) * T
+	var bn := _sprite("props/banner_" + disc, wp, floor_layer)
+	bn.z_index = 2
+	bn.set_meta("craft_banner", disc)
+	if tier >= 2:
+		var gilt := _sprite("props/banner_gilt", wp, floor_layer)
+		gilt.z_index = 3
+	var stencil := Vector2.INF
+	var st_text := text
+	var st_h := 0.72
+	if side == 0:
+		# a painted stencil is smaller (15 px) and breaks a long name after "&"
+		st_text = text.replace(" & ", " &\n")
+		var longest := 0
+		for ln in st_text.split("\n"):
+			longest = maxi(longest, ln.length())
+		lab_w = float(longest) * 0.165 + 0.2
+		st_h = 0.3 * float(st_text.split("\n").size() + (1 if tier > 0 else 0)) + 0.1
+		# no room beside the banner: paint the name on the floor in the nearest free aisle (non-solid, never in the way)
+		var grid := []
+		var stx := []
+		var sty := []
+		for k2 in range(0, int(rr.size.x) * 2 + 1):
+			stx.append(0.5 * ceil(k2 / 2.0) * (1.0 if k2 % 2 == 0 else -1.0))
+		for k3 in range(0, int(rr.size.y) * 2 + 1):
+			sty.append(0.5 * ceil(k3 / 2.0) * (1.0 if k3 % 2 == 0 else -1.0))
+		for dy: float in sty:
+			for dx: float in stx:
+				grid.append([absf(dx) + absf(dy) * 1.2, rr.get_center().x + dx, rr.get_center().y + dy])
+		grid.sort_custom(func(a, b): return float(a[0]) < float(b[0]) or (float(a[0]) == float(b[0]) and (float(a[2]) < float(b[2]) or (float(a[2]) == float(b[2]) and float(a[1]) < float(b[1])))))
+		for g in grid:
+			var lr := Rect2(Vector2(float(g[1]) - lab_w * 0.5, float(g[2]) - st_h * 0.5), Vector2(lab_w, st_h))
+			if not rr.grow(-0.1).encloses(lr):
+				continue
+			var bad2 := _hits_solid(lr, furn, off)
+			for pic2: Rect2 in station_pics:
+				if lr.intersects(pic2):
+					bad2 = true
+			for rv2: Rect2 in Property.reserved_rects():
+				if lr.intersects(rv2):
+					bad2 = true
+			if not bad2:
+				stencil = Vector2(float(g[1]), float(g[2]))
+				break
+		if stencil == Vector2.INF:
+			return
+	var lab := Label.new()
+	lab.text = text + ("" if tier == 0 else "\n" + Smithy.TIER_NAMES[tier])
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if side > 0 else HORIZONTAL_ALIGNMENT_RIGHT
+	lab.add_theme_font_override("font", Assets.font("heading"))
+	lab.add_theme_font_size_override("font_size", 17)
+	lab.add_theme_constant_override("line_spacing", -7)
+	lab.add_theme_color_override("font_color", Color("#20140c") if tier < 2 else Color("#5a3a08"))
+	lab.add_theme_color_override("font_outline_color", Color(0.95, 0.89, 0.76, 0.95))
+	lab.add_theme_constant_override("outline_size", 6)
+	lab.size = Vector2(lab_w * T, 46)
+	var top_y := r.position.y + (rr.position.y - off.y + 0.12) * T
+	lab.position = Vector2(wp.x + 0.5 * T + 2.0, top_y) if side > 0 else Vector2(wp.x - 0.5 * T - 2.0 - lab.size.x, top_y)
+	if side == 0:
+		lab.text = st_text + ("" if tier == 0 else "\n" + Smithy.TIER_NAMES[tier])
+		lab.add_theme_font_size_override("font_size", 15)
+		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lab.size = Vector2(lab_w * T, st_h * T)
+		lab.position = r.position + (stencil - off) * T - lab.size * 0.5
+		lab.modulate = Color(1, 1, 1, 0.82)   # painted on the boards
+	lab.z_index = 2
+	lab.set_meta("craft_label", disc)
+	floor_layer.add_child(lab)
+
+
+## The stair (stock hall ↔ Loft landing) and the aetheric lift (leather room ↔ weaving loft). Each stair/lift is an
+## interactable whose id is the area it leads to; its arrival spot is "stairs_<area>" / "lift_<area>" (PlayerNav and
+## the nav graph bridge floors through them). Before the lift is rigged the old hoist shows, greyed, and says what
+## it needs (it opens Property & Workshop).
+func _floor_links(fid: String) -> void:
+	for f in Property.floors():
+		var up := str(f["id"])
+		if up == "ground" or not Property.floor_owned(up):
+			continue
+		var area_id := str(f.get("area", ""))
+		var here_ground := fid == "ground"
+		if not here_ground and fid != up:
+			continue
+		var sk := "down_stairs" if here_ground else "stairs"
+		if f.has(sk):
+			var sp := bpos(Property.BID, float(f[sk][0]), float(f[sk][1]))
+			var spr := _sprite("props/stairs_up" if here_ground else "props/stairs_down", sp, floor_layer)
+			spr.z_index = 1
+			_add_interactable(sp, 80.0, "stairs", area_id if here_ground else Property.BID,
+				"Stair — up to %s" % Property.floor_name(up).replace("The ", "the ") if here_ground else "Stair — down to the stock hall")
+			var ak := "arrive_down" if here_ground else "entrance"
+			spots["stairs_" + (Property.BID if here_ground else area_id)] = bpos(Property.BID, float(f[ak][0]), float(f[ak][1]))
+		var lk := "down_lift" if here_ground else "lift"
+		if not f.has(lk):
+			continue
+		var lp := bpos(Property.BID, float(f[lk][0]), float(f[lk][1]))
+		var host := Property.room_at_tile(Property.rooms(), Vector2(float(f[lk][0]), float(f[lk][1])))
+		if host.is_empty() or not Property.room_owned(host):
+			continue
+		var plat := _sprite("props/lift_platform", lp, floor_layer)
+		plat.z_index = 1
+		if Property.has_lift():
+			var gl := FX.light(Color("#9a6cff"), 170.0, 0.55, true)
+			gl.position = lp
+			add_child(gl)
+			_add_interactable(lp, 80.0, "lift", area_id if here_ground else Property.BID,
+				"Aetheric lift — up to %s" % Property.floor_name(up).replace("The ", "the ") if here_ground else "Aetheric lift — down to the leather room")
+			var lak := "lift_arrive_down" if here_ground else "lift_arrive"
+			var other := "lift_arrive" if here_ground else "lift_arrive_down"
+			# arriving here (from the other floor) puts you beside this platform
+			spots["lift_" + (Property.BID if here_ground else area_id)] = bpos(Property.BID, float(f[lak][0]), float(f[lak][1]))
+			if not spots.has("lift_" + (area_id if here_ground else Property.BID)):
+				spots["lift_" + (area_id if here_ground else Property.BID)] = bpos(Property.BID, float(f[other][0]), float(f[other][1]))
+		else:
+			plat.modulate = Color(0.62, 0.56, 0.5, 0.85)
+			var why := Property.lift_reason()
+			_add_interactable(lp, 70.0, "property", "lift", "Ilse's old goods hoist — %s" % (
+				"rig it as an aetheric lift for %d g (Property & Workshop)" % Property.lift_price() if why == "" else why.trim_suffix(".")))
+
+
 
 
 ## The main recipe-selection station of each room carries a small brass recipe plaque, always visible.

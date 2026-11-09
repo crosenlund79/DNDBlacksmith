@@ -2926,6 +2926,13 @@ func phase_workshop12() -> void:
 	var ph: RefCounted = load("res://tests/playtest_workshop12.gd").new()
 	await ph.run(self)
 
+## The Living Realm 2a, the evolving smithy: discipline rooms at their tiers, the Loft, the stair and the aetheric lift,
+## the layout editor's floor switcher, an apprentice upstairs, walk-to-next and craft again (tests/playtest_smithy_rl.gd).
+func phase_smithy_rl() -> void:
+	var ph: RefCounted = load("res://tests/playtest_smithy_rl.gd").new()
+	await ph.run(self)
+
+
 ## Iteration 010, hirelings: HUD portraits, camera glance, bubbles, funeral, grave, ghost, flowers, vase.
 func phase_hire10() -> void:
 	var ph: RefCounted = load("res://tests/playtest_hire10.gd").new()

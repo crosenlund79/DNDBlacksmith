@@ -84,7 +84,15 @@ func _build() -> void:
 			var op := Crafting.op_params()
 			body.add_child(UIKit.button("%s (%d check%s)" % [op["op"], op["count"], "s" if op["count"] > 1 else ""], _work, 520))
 		else:
-			body.add_child(UIKit.label("Next: %s at the %s." % [Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], 22, "body_italic"))
+			# The Living Realm: the next station is marked in the workshop; one click walks there (stairs/lift too)
+			var nsid := Crafting.current_station()
+			var hint := Smithy.floor_hint(nsid)
+			body.add_child(UIKit.label("Next: %s at %s%s." % [Crafting.current_op().get("op", ""), Smithy.station_ref(nsid), (" (" + hint + ")") if hint != "" else ""], 22, "body_italic"))
+			if Property.is_installed(nsid):
+				var go := UIKit.button("Walk to %s" % Smithy.station_ref(nsid), _walk_next, 420)
+				go.name = "WalkNext"
+				go.tooltip_text = "Walks you there and opens it — the ember marker shows where it stands."
+				body.add_child(go)
 		body.add_child(UIKit.button("Abandon work (return materials)", func(): Crafting.cancel(), 340))
 	else:
 		content.add_child(_filter_bar())
@@ -334,6 +342,16 @@ func _work() -> void:
 	Audio.play("sfx/" + str(DB.station(sid).get("sfx", "hammer")).replace("hammer", "hammer_1"), -2.0)
 
 
+## Closes the panel and walks to the station of the next operation (Smithy.walk_to_station).
+func _walk_next() -> void:
+	var nsid := Crafting.current_station()
+	close()
+	if nsid != "":
+		var why := Smithy.walk_to_station(nsid)
+		if why != "":
+			Events.toast.emit(why, "bad")
+
+
 func _on_work_done(qs: Array, sid: String) -> void:
 	Crafting.record_step(sid, qs)
 	if Crafting.job().get("awaiting_dice", false):
@@ -343,8 +361,9 @@ func _on_work_done(qs: Array, sid: String) -> void:
 		for q in qs:
 			avg += float(q)
 		avg /= maxf(1.0, qs.size())
-		Events.toast.emit("%s — %d%%. Next: %s at the %s." % [Crafting.grade(avg), int(round(avg)), Crafting.current_op().get("op", "?"),
-			DB.station(Crafting.current_station()).get("name", "?")], "good" if avg >= 90.0 else "info")
+		var hint := Smithy.floor_hint(Crafting.current_station())
+		Events.toast.emit("%s — %d%%. Next: %s at %s%s." % [Crafting.grade(avg), int(round(avg)), Crafting.current_op().get("op", "?"),
+			Smithy.station_ref(Crafting.current_station()), (" (" + hint + ")") if hint != "" else ""], "good" if avg >= 90.0 else "info")
 
 
 func _practice() -> void:

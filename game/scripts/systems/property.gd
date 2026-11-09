@@ -34,7 +34,10 @@ static func data() -> Dictionary:
 
 static func st() -> Dictionary:
 	ensure()
-	return Game.state["property"]
+	var s: Dictionary = Game.state["property"]
+	if not s.has("floors_v"):
+		_migrate_floors(s)
+	return s
 
 
 ## Old saves (before iteration 009) owned the whole building and every station: keep it that way.
@@ -43,7 +46,8 @@ static func ensure() -> void:
 		return
 	var all_units := []
 	for u in data().get("units", []):
-		all_units.append(u["id"])
+		if str(u.get("floor", "ground")) == "ground":   # the Loft came later: old saves do not own it
+			all_units.append(u["id"])
 	Game.state["property"] = _fresh(all_units, DB.stations.keys())
 	Game.state["property"]["legacy"] = true
 
@@ -62,6 +66,7 @@ static func _fresh(units: Array, stations: Array) -> Dictionary:
 		var rr: Dictionary = (r as Dictionary).duplicate(true)
 		rr["unit"] = unit_of.get(r["id"], "start")
 		rr["kind"] = str(data().get("room_kinds", {}).get(r["id"], "workshop"))
+		rr["disc"] = str(data().get("room_disciplines", {}).get(r["id"], ""))
 		rooms.append(rr)
 	var doors := []
 	for d in data().get("room_doors", []):
@@ -71,7 +76,158 @@ static func _fresh(units: Array, stations: Array) -> Dictionary:
 	for sid in stations:
 		var p: Array = sp.get(sid, DB.station(sid).get("pos", [0, 0]))
 		placed[sid] = {"pos": [float(p[0]), float(p[1])], "flip": false}
-	return {"units": units.duplicate(), "rooms": rooms, "doors": doors, "stations": placed, "stored": [], "next_room": 1}
+	return {"units": units.duplicate(), "rooms": rooms, "doors": doors, "stations": placed, "stored": [], "next_room": 1, "floors_v": 1}
+
+
+## Saves from before the Loft (The Living Realm) gain its rooms and doorways, unowned; their own plan is untouched.
+static func _migrate_floors(s: Dictionary) -> void:
+	var have := {}
+	for r in s.get("rooms", []):
+		have[str(r["id"])] = true
+	var unit_of := {}
+	for u in data().get("units", []):
+		for rid in u["rooms"]:
+			unit_of[rid] = u["id"]
+	var added := {}
+	for r in data().get("rooms", []):
+		var rid := str(r["id"])
+		if have.has(rid) or floor_of_point(rect(r).get_center()) == "ground":
+			continue
+		var rr: Dictionary = (r as Dictionary).duplicate(true)
+		rr["unit"] = unit_of.get(rid, "")
+		rr["kind"] = str(data().get("room_kinds", {}).get(rid, "workshop"))
+		rr["disc"] = str(data().get("room_disciplines", {}).get(rid, ""))
+		(s["rooms"] as Array).append(rr)
+		added[rid] = true
+	for d in data().get("room_doors", []):
+		var pair: Array = d["between"]
+		if added.has(str(pair[0])) or added.has(str(pair[1])):
+			(s["doors"] as Array).append((d as Dictionary).duplicate(true))
+	s["floors_v"] = 1
+
+
+# ------------------------------------------------------------------ floors (The Living Realm: the Loft)
+## Every floor of the building in PLAN coordinates (see tools/data/smithy_layout.py): the ground floor is the
+## building rect, the Loft lies at an offset so that rooms, stations and footprints never overlap between floors.
+static func floors() -> Array:
+	var f: Array = data().get("floors", [])
+	if f.is_empty():
+		var r: Array = data().get("rect", [0, 0, 30, 23])
+		return [{"id": "ground", "name": "Ground floor", "rect": [0, 0, r[2], r[3]], "entrance": data().get("entrance", [14.0, 0.6])}]
+	return f
+
+
+static func floor_def(fid: String) -> Dictionary:
+	for f in floors():
+		if str(f["id"]) == fid:
+			return f
+	return {}
+
+
+static func floor_rect(fid: String) -> Rect2:
+	var a: Array = floor_def(fid).get("rect", [0, 0, 30, 23])
+	return Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3]))
+
+
+## The floor whose plan rect holds `p` ("ground" if none does).
+static func floor_of_point(p: Vector2) -> String:
+	for f in floors():
+		var a: Array = f["rect"]
+		if Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3])).has_point(p):
+			return str(f["id"])
+	return "ground"
+
+
+static func floor_of_room(r: Dictionary) -> String:
+	return floor_of_point(rect(r).get_center())
+
+
+## The floor a station stands on.
+static func station_floor(station_id: String) -> String:
+	return floor_of_point(pos_of(station_id))
+
+
+## Does he own any part of this floor (the ground floor always)?
+static func floor_owned(fid: String) -> bool:
+	if fid == "ground":
+		return true
+	for u in units():
+		if str(u.get("floor", "ground")) == fid and owns(str(u["id"])):
+			return true
+	return false
+
+
+## The world area that draws a floor ("smithy" for the ground floor).
+static func floor_area(fid: String) -> String:
+	return str(floor_def(fid).get("area", BID))
+
+
+static func floor_name(fid: String) -> String:
+	return str(floor_def(fid).get("name", "Ground floor"))
+
+
+## Floor kept clear of stations: the stairwell and the hoist shaft (plan coordinates).
+static func reserved_rects() -> Array:
+	var out := []
+	for a in data().get("reserved", []):
+		out.append(Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3])))
+	return out
+
+
+## Points that must stay free: where the stair and the lift set you down on each floor.
+static func keep_clear_points() -> Array:
+	var out := []
+	for f in floors():
+		for k in ["arrive_down", "lift_arrive", "lift_arrive_down"]:
+			if f.has(k):
+				out.append(Vector2(float(f[k][0]), float(f[k][1])))
+		if str(f["id"]) != "ground" and f.has("entrance"):
+			out.append(Vector2(float(f["entrance"][0]), float(f["entrance"][1])))
+	return out
+
+
+# ------------------------------------------------------------------ the aetheric lift
+## Ilse's old goods hoist (leather room ↔ weaving loft), re-rigged with a ley-stone from the Arcane Foundry.
+static func lift_cfg() -> Dictionary:
+	return data().get("lift", {"price": 300, "requires_unit": "loft", "requires_upgrade": "arcane_foundry"})
+
+
+static func has_lift() -> bool:
+	if Game.state.is_empty() or not Game.state.has("property"):
+		return false
+	return bool(st().get("lift", false)) and owns(str(lift_cfg().get("requires_unit", "loft")))
+
+
+## Why the lift cannot be rigged yet ("" = it can be bought now).
+static func lift_reason() -> String:
+	if bool(st().get("lift", false)):
+		return "The lift is already running."
+	var c := lift_cfg()
+	var u := str(c.get("requires_unit", "loft"))
+	if not owns(u):
+		return "Buy %s first — the old hoist runs up into it." % unit(u).get("name", u)
+	var up := str(c.get("requires_upgrade", ""))
+	if up != "" and not Game.has_upgrade(up):
+		return "It needs a ley-stone from an Arcane Foundry — buy the Old Dye-Works first."
+	return ""
+
+
+static func lift_price() -> int:
+	return int(lift_cfg().get("price", 300))
+
+
+static func buy_lift() -> String:
+	var why := lift_reason()
+	if why != "":
+		return why
+	if not Game.can_afford(lift_price()):
+		return "You need %d gold." % lift_price()
+	Game.add_gold(-lift_price(), "property", "Rigged the aetheric lift")
+	st()["lift"] = true
+	Chronicle.add("property", "Brannoc set a ley-stone into Ilse's old goods hoist: the Ironhand forge has an aetheric lift.", {"unit": "loft"}, true)
+	Game.journal("Rigged the old hoist as an aetheric lift for %d gold." % lift_price())
+	Events.toast.emit("The aetheric lift hums into life — one step between the floors.", "good")
+	return ""
 
 
 # ------------------------------------------------------------------ units (purchasable sections)
@@ -102,6 +258,9 @@ static func unit_state(uid: String) -> String:
 
 
 static func adjacent(uid: String) -> bool:
+	var req := str(unit(uid).get("requires", ""))
+	if req != "":
+		return owns(req)   # reached by a stair from a room he must own first (the Loft from Ilse's room)
 	var mine := []
 	var theirs := []
 	for r in rooms():
@@ -127,6 +286,9 @@ static func buy_unit(uid: String) -> String:
 	if owns(uid):
 		return "You already own it."
 	if not adjacent(uid):
+		var req := str(u.get("requires", ""))
+		if req != "":
+			return "First buy %s — the way up is through there." % unit(req).get("name", req)
 		return "You can only buy rooms next to what you already own."
 	var price := unit_price(uid)
 	if not Game.can_afford(price):
@@ -138,7 +300,10 @@ static func buy_unit(uid: String) -> String:
 		(Game.state["upgrades"] as Array).append("arcane_foundry")
 	Chronicle.add("property", "Brannoc bought %s from %s — it will become %s." % [u["name"], u.get("occupant", "its owner"), u.get("becomes", "part of the workshop")], {"unit": uid}, true)
 	Game.journal("Bought %s for %d gold." % [u["name"], price])
-	Events.toast.emit("%s is yours. Rearrange it under Property & Workshop." % u["name"], "good")
+	if str(u.get("floor", "ground")) != "ground":
+		Events.toast.emit("%s is yours — take the stair in the stock hall. Arrange it under Property & Workshop › %s." % [u["name"], floor_name(str(u["floor"]))], "good")
+	else:
+		Events.toast.emit("%s is yours. Rearrange it under Property & Workshop." % u["name"], "good")
 	Tutorial.complete("progress")
 	return ""
 
@@ -148,7 +313,7 @@ static func stage() -> String:
 	var n := (st()["units"] as Array).size()
 	var arcane := owns("cellar")
 	if arcane and n >= 6:
-		return "Master's workshop"
+		return "Master's workshop" if not floor_owned("loft") else "Master's two-storey workshop"
 	if n >= 4:
 		return "Established workshop"
 	if n >= 2:
@@ -278,12 +443,17 @@ static func auto_place(plan: Dictionary, station_id: String) -> String:
 		var rr := rect(r)
 		if rr.has_point(cands[0]):
 			score += 4
+		if disc != "" and planned_discipline(r) == disc:
+			score += 3   # a room meant for this craft (its sign) keeps the discipline together
+		elif planned_discipline(r) != "" and count_in(plan, r) == 0:
+			score -= 1   # rather not start another trade's empty room
 		for other in plan["stations"]:
 			var e: Dictionary = plan["stations"][other]
 			if rr.has_point(Vector2(float(e["pos"][0]), float(e["pos"][1]))) and str(DB.station(other).get("discipline", "")) == disc:
 				score += 2
-		rooms_by.append([score, r])
-	rooms_by.sort_custom(func(a, b): return int(a[0]) > int(b[0]))
+		rooms_by.append([score, r, rooms_by.size()])
+	# stable: equal scores keep the plan's room order (sort_custom is not stable)
+	rooms_by.sort_custom(func(a, b): return int(a[0]) > int(b[0]) or (int(a[0]) == int(b[0]) and int(a[2]) < int(b[2])))
 	for pair in rooms_by:
 		var rr2 := rect(pair[1])
 		var y := rr2.position.y + 1.2
@@ -406,6 +576,29 @@ static func split(plan: Dictionary, rid: String, vertical: bool, at: int) -> Str
 	var span := rr.size.y if vertical else rr.size.x
 	var dat := int(span_lo + floor((span - DOOR_W) * 0.5))
 	(plan["doors"] as Array).append({"between": [rid, nid], "at": dat, "w": DOOR_W})
+	return ""
+
+
+## The craft a room is meant for (its sign; "" = any): set in the layout editor, by default from the building's data.
+static func planned_discipline(r: Dictionary) -> String:
+	if r.has("disc"):
+		return str(r["disc"])
+	return str(data().get("room_disciplines", {}).get(str(r.get("id", "")), ""))
+
+
+const DISCIPLINES := ["classic", "stitching", "runecraft", "alchemy", "arcane"]
+
+
+## Set the craft an owned workshop room is meant for (plan-aware; "" = any craft).
+static func set_discipline(plan: Dictionary, rid: String, disc: String) -> String:
+	var r := room_by_id(plan["rooms"], rid)
+	if r.is_empty() or not room_owned(r):
+		return "Only your own rooms can be given a craft."
+	if kind(r) != "workshop":
+		return "Only workshop rooms are given a craft."
+	if disc != "" and not DISCIPLINES.has(disc):
+		return "No such craft."
+	r["disc"] = disc
 	return ""
 
 
@@ -573,6 +766,12 @@ static func spot_problem(plan: Dictionary, station_id: String, entry: Dictionary
 	var ent: Array = data().get("entrance", [14.0, 0.6])
 	if fp.grow(1.0).has_point(Vector2(float(ent[0]), float(ent[1]))):
 		return "Keep the front door clear."
+	for rv: Rect2 in reserved_rects():
+		if fp.grow(0.1).intersects(rv):
+			return "Keep the stairwell and the hoist clear."
+	for kp: Vector2 in keep_clear_points():
+		if fp.grow(0.8).has_point(kp):
+			return "Keep the landing by the stair and the lift clear."
 	return ""
 
 
@@ -585,26 +784,48 @@ static func door_center(plan: Dictionary, d: Dictionary) -> Vector2:
 
 
 # ------------------------------------------------------------------ validation (reachability)
-## "" when everything owned is reachable from the front door: every room, every installed station, the shop
-## counter and a bed. Uses a half-tile walk grid with walls, doorways and station footprints.
+## "" when everything owned is reachable: on the ground floor from the front door (every room, every installed
+## station, the shop counter and a bed, and the stair and the lift once there is an upper floor); on each owned upper
+## floor from the head of its stair (every room, every station, the lift). Uses a half-tile walk grid per floor with
+## walls, doorways and station footprints.
 static func validate(plan: Dictionary) -> String:
-	var b_rect: Array = data().get("rect", [0, 0, 30, 23])
-	var w := int(float(b_rect[2]) / CELL)
-	var h := int(float(b_rect[3]) / CELL)
+	for f in floors():
+		var why := _validate_floor(plan, f)
+		if why != "":
+			return why
+	return ""
+
+
+static func _validate_floor(plan: Dictionary, fl: Dictionary) -> String:
+	var fid := str(fl["id"])
+	var ground := fid == "ground"
+	if not ground and not floor_owned(fid):
+		return ""
+	var fa: Array = fl["rect"]
+	var o := Vector2(float(fa[0]), float(fa[1]))
+	var fr := Rect2(o, Vector2(float(fa[2]), float(fa[3])))
+	var w := int(fr.size.x / CELL)
+	var h := int(fr.size.y / CELL)
 	var room_idx := PackedInt32Array()
 	room_idx.resize(w * h)
 	var rooms_arr: Array = plan["rooms"]
+	var here := []   # indices of the rooms on this floor
+	for ri in rooms_arr.size():
+		if fr.intersects(rect(rooms_arr[ri])):
+			here.append(ri)
 	var blocked := PackedByteArray()
 	blocked.resize(w * h)
 	var fps := []
 	for sid in plan["stations"]:
-		fps.append(footprint(sid, plan["stations"][sid]))
+		var fp0 := footprint(sid, plan["stations"][sid])
+		if fr.intersects(fp0):
+			fps.append(fp0)
 	for j in h:
 		for i in w:
-			var c := Vector2((i + 0.5) * CELL, (j + 0.5) * CELL)
+			var c := o + Vector2((i + 0.5) * CELL, (j + 0.5) * CELL)
 			var k := j * w + i
 			room_idx[k] = -1
-			for ri in rooms_arr.size():
+			for ri: int in here:
 				if rect(rooms_arr[ri]).has_point(c):
 					room_idx[k] = ri if room_owned(rooms_arr[ri]) else -2
 					break
@@ -619,78 +840,100 @@ static func validate(plan: Dictionary) -> String:
 		var e := _door_edge(plan, d)
 		if e.is_empty():
 			continue
-		crossings[str(d["between"][0]) + "|" + str(d["between"][1])] = crossings.get(str(d["between"][0]) + "|" + str(d["between"][1]), []) + [[e, float(d["at"]), float(d["at"]) + float(d["w"])]]
-	var ent: Array = data().get("entrance", [14.0, 0.6])
-	var si := int(float(ent[0]) / CELL)
-	var sj := int(float(ent[1]) / CELL)
+		var key := str(d["between"][0]) + "|" + str(d["between"][1])
+		crossings[key] = crossings.get(key, []) + [[e, float(d["at"]), float(d["at"]) + float(d["w"])]]
+	var ent: Array = fl.get("entrance", data().get("entrance", [14.0, 0.6]))
+	var si := clampi(int((float(ent[0]) - o.x) / CELL), 0, w - 1)
+	var sj := clampi(int((float(ent[1]) - o.y) / CELL), 0, h - 1)
 	var seen := PackedByteArray()
 	seen.resize(w * h)
-	var queue := [Vector2i(si, sj)]
-	seen[sj * w + si] = 1
 	var reached_rooms := {}
-	while not queue.is_empty():
-		var cur: Vector2i = queue.pop_back()
-		var ck := cur.y * w + cur.x
-		reached_rooms[room_idx[ck]] = true
-		for dv in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var nx: Vector2i = cur + dv
-			if nx.x < 0 or nx.y < 0 or nx.x >= w or nx.y >= h:
-				continue
-			var nk := nx.y * w + nx.x
-			if seen[nk] == 1 or blocked[nk] == 1 or room_idx[nk] < 0:
-				continue
-			if room_idx[nk] != room_idx[ck]:
-				# crossing a wall: only through an open doorway
-				var ra: Dictionary = rooms_arr[room_idx[ck]]
-				var rb: Dictionary = rooms_arr[room_idx[nk]]
-				var along := (float(cur.y) + 0.5) * CELL if dv.y == 0 else (float(cur.x) + 0.5) * CELL
-				var ok := false
-				for key in [str(ra["id"]) + "|" + str(rb["id"]), str(rb["id"]) + "|" + str(ra["id"])]:
-					for cr in crossings.get(key, []):
-						if along > float(cr[1]) and along < float(cr[2]):
-							ok = true
-				if not ok:
+	if room_idx[sj * w + si] >= 0:
+		var queue := [Vector2i(si, sj)]
+		seen[sj * w + si] = 1
+		while not queue.is_empty():
+			var cur: Vector2i = queue.pop_back()
+			var ck := cur.y * w + cur.x
+			reached_rooms[room_idx[ck]] = true
+			for dv in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx: Vector2i = cur + dv
+				if nx.x < 0 or nx.y < 0 or nx.x >= w or nx.y >= h:
 					continue
-			seen[nk] = 1
-			queue.append(nx)
-	# every owned room reached
-	for ri in rooms_arr.size():
-		if room_owned(rooms_arr[ri]) and not reached_rooms.has(ri):
-			return "%s cannot be reached from the front door." % rooms_arr[ri]["name"]
+				var nk := nx.y * w + nx.x
+				if seen[nk] == 1 or blocked[nk] == 1 or room_idx[nk] < 0:
+					continue
+				if room_idx[nk] != room_idx[ck]:
+					# crossing a wall: only through an open doorway
+					var ra: Dictionary = rooms_arr[room_idx[ck]]
+					var rb: Dictionary = rooms_arr[room_idx[nk]]
+					var along := o.y + (float(cur.y) + 0.5) * CELL if dv.y == 0 else o.x + (float(cur.x) + 0.5) * CELL
+					var ok := false
+					for key2 in [str(ra["id"]) + "|" + str(rb["id"]), str(rb["id"]) + "|" + str(ra["id"])]:
+						for cr in crossings.get(key2, []):
+							if along > float(cr[1]) and along < float(cr[2]):
+								ok = true
+					if not ok:
+						continue
+				seen[nk] = 1
+				queue.append(nx)
+	# every owned room on this floor reached
+	for ri2: int in here:
+		if room_owned(rooms_arr[ri2]) and not reached_rooms.has(ri2):
+			return "%s cannot be reached from %s." % [rooms_arr[ri2]["name"], "the front door" if ground else "the stair"]
 	# every station can be walked up to
 	for sid in plan["stations"]:
 		var e2: Dictionary = plan["stations"][sid]
 		var p: Array = e2["pos"]
+		var sp := Vector2(float(p[0]), float(p[1]))
+		if not fr.has_point(sp):
+			continue
 		var size: Array = DB.station(sid).get("size", [96, 96])
 		var reach := (maxf(float(size[0]), float(size[1])) * 0.5 + 34.0) / 64.0
-		if not _reachable_near(Vector2(float(p[0]), float(p[1])), reach, seen, w, h):
+		if not _reachable_near(sp, reach, seen, w, h, o):
 			return "You could not get to the %s." % DB.station(sid).get("name", sid)
+	# the ways between the floors
+	for f2 in floors():
+		if str(f2["id"]) == "ground" or not floor_owned(str(f2["id"])):
+			continue
+		var pairs := [["down_stairs" if ground else "stairs", "the stair"]]
+		if has_lift():
+			pairs.append(["down_lift" if ground else "lift", "the lift"])
+		for pr in pairs:
+			if not ground and str(f2["id"]) != fid:
+				continue
+			if not f2.has(pr[0]):
+				continue
+			var at := Vector2(float(f2[pr[0]][0]), float(f2[pr[0]][1]))
+			if fr.has_point(at) and not _reachable_near(at, 1.4, seen, w, h, o):
+				return "You could no longer reach %s." % pr[1]
+	if not ground:
+		return ""
 	for need in [["counter", data().get("interact", [])]]:
 		for it in need[1]:
 			if it["kind"] == "counter":
 				var ip: Array = it["pos"]
-				if not _reachable_near(Vector2(float(ip[0]), float(ip[1])), 2.2, seen, w, h):
+				if not _reachable_near(Vector2(float(ip[0]), float(ip[1])), 2.2, seen, w, h, o):
 					return "The shop counter would be cut off."
 	var bed_ok := false
 	for it2 in data().get("interact", []):
 		if it2["kind"] == "bed":
 			var bp: Array = it2["pos"]
 			var host := room_at_tile(rooms_arr, Vector2(float(bp[0]), float(bp[1])))
-			if not host.is_empty() and room_owned(host) and _reachable_near(Vector2(float(bp[0]), float(bp[1])), 1.9, seen, w, h):
+			if not host.is_empty() and room_owned(host) and _reachable_near(Vector2(float(bp[0]), float(bp[1])), 1.9, seen, w, h, o):
 				bed_ok = true
 	if not bed_ok:
 		return "You could no longer reach a bed."
 	return ""
 
 
-static func _reachable_near(c: Vector2, radius: float, seen: PackedByteArray, w: int, h: int) -> bool:
-	var i0 := maxi(0, int((c.x - radius) / CELL))
-	var i1 := mini(w - 1, int((c.x + radius) / CELL))
-	var j0 := maxi(0, int((c.y - radius) / CELL))
-	var j1 := mini(h - 1, int((c.y + radius) / CELL))
+static func _reachable_near(c: Vector2, radius: float, seen: PackedByteArray, w: int, h: int, o := Vector2.ZERO) -> bool:
+	var i0 := maxi(0, int((c.x - o.x - radius) / CELL))
+	var i1 := mini(w - 1, int((c.x - o.x + radius) / CELL))
+	var j0 := maxi(0, int((c.y - o.y - radius) / CELL))
+	var j1 := mini(h - 1, int((c.y - o.y + radius) / CELL))
 	for j in range(j0, j1 + 1):
 		for i in range(i0, i1 + 1):
-			if seen[j * w + i] == 1 and Vector2((i + 0.5) * CELL, (j + 0.5) * CELL).distance_to(c) <= radius:
+			if seen[j * w + i] == 1 and (o + Vector2((i + 0.5) * CELL, (j + 0.5) * CELL)).distance_to(c) <= radius:
 				return true
 	return false
 

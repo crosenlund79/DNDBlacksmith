@@ -294,5 +294,8 @@ for r in layout["roads"]:
 import village_layout  # noqa: E402  (iteration 009 village: new buildings, venues, pond, harbour, dressing)
 village_layout.apply(layout, by_id, room, door, F, home)
 
+import smithy_layout  # noqa: E402  (The Living Realm: discipline areas, the Loft, the stair and the aetheric lift)
+smithy_layout.apply(layout, by_id["smithy"], room, door, FT, F)
+
 json.dump(layout, open(os.path.join(D, "layout.json"), "w"), indent=1)
 print("layout ok")
