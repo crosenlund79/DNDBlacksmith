@@ -44,7 +44,10 @@ func _attach_nav() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if frozen or Game.ui_blockers > 0 or Game.ui_open > 0:
+	# Steward Mode: while the steward runs the forge the smith is away — his miniature fades out and stays put
+	var away := Steward.smith_away()
+	sprite.modulate.a = move_toward(sprite.modulate.a, 0.0 if away else 1.0, delta * 2.0)
+	if frozen or away or Game.ui_blockers > 0 or Game.ui_open > 0:
 		velocity = Vector2.ZERO
 		_anim(Vector2.ZERO)
 		if nav and nav.traveling():

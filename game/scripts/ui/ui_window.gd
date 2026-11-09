@@ -9,6 +9,9 @@ signal closed
 var content: VBoxContainer
 var title_label: Label
 var blocks_time := true
+## Steward Mode: while the steward runs the forge (the smith is away) a window opened then does not stop the clock —
+## the world is never frozen for the absent smith. Menus that must pause (the pause menu, saves, settings) clear this.
+var away_runs_time := true
 var _blocked := false
 var _counted := false
 
@@ -40,7 +43,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	Game.ui_open += 1
 	_counted = true
-	if blocks_time:
+	if blocks_time and not (away_runs_time and Steward.smith_away()):
 		Game.block_time(true)
 		_blocked = true
 	Audio.play("sfx/page_turn", -6.0)

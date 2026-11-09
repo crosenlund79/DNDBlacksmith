@@ -2139,6 +2139,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func interact(e: Dictionary) -> void:
+	# Steward Mode: the smith is away — he cannot use, talk or trade until he takes the workshop back
+	if Steward.smith_away():
+		Audio.play("sfx/error", -8.0)
+		Events.toast.emit(StewardUI.away_block("station"), "info")
+		return
 	# a shop counter respects its keeper's hours (Venues): closed counters say when they open instead
 	var vid := Venues.venue_for_entity(str(e.get("kind", "")), str(e.get("id", "")))
 	if vid != "" and not Venues.is_open(vid):
