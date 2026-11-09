@@ -3870,6 +3870,7 @@ func phase_equip_rl() -> void:
 # ======================================================================= The Living Realm: consultations (CONSULT worker)
 func phase_consult_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_consult.gd").new()
+	await ph.run(self)   # A2: the call was missing, so this phase silently tested nothing
 
 # ======================================================================= The Living Realm: sponsored expeditions (SPONSOR worker)
 func phase_sponsor_rl() -> void:
