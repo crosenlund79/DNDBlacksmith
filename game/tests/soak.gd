@@ -51,4 +51,5 @@ func _ready() -> void:
 	print("\n".join(lines))
 	var alive := Adv.all().size() - deaths
 	print("SOAK %s — %d adventurers alive of %d" % ["OK" if alive >= 3 else "FAIL", alive, Adv.all().size()])
+	Saves.end_test_run()
 	get_tree().quit(0 if alive >= 3 else 1)
