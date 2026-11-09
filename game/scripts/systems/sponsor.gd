@@ -836,7 +836,7 @@ static func _conclude(sp: Dictionary, e: Dictionary, outcome: String, deliver: A
 	var what := ""
 	match outcome:
 		"success":
-			what = "brought home %s" % (", ".join(deliver.map(func(x): return Items.display_name(x))) if not deliver.is_empty() else _discovery_word(sp))
+			what = "brought it home" if str(obj["kind"]) == "lost" else "brought home %s" % (", ".join(deliver.map(func(x): return Items.display_name(x))) if not deliver.is_empty() else _discovery_word(sp))
 		"partial":
 			what = "brought home only part of it%s" % ((" — " + ", ".join(deliver.map(func(x): return Items.display_name(x)))) if not deliver.is_empty() else (" — " + str(sp.get("note", "they reached the place, but no more"))))
 		"failure":

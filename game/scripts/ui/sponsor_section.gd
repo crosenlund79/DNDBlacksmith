@@ -159,9 +159,9 @@ func _form() -> void:
 	# ---- 4: terms
 	var r4 := UIKit.hbox(10)
 	r4.add_child(_cap("Terms"))
-	var fee := _spin(r4, "Fee up front", "fee", 0, 2000, 5)
-	var bonus := _spin(r4, "on success", "bonus", 0, 2000, 5)
-	var share := _spin(r4, "% share", "share", 0, 90, 5)
+	var fee := _spin(r4, "Fee up front (g)", "fee", 0, 2000, 5)
+	var bonus := _spin(r4, "On success (g)", "bonus", 0, 2000, 5)
+	var share := _spin(r4, "Their share (%)", "share", 0, 90, 5)
 	var gl := UIKit.label("You have %d g" % Game.gold(), 17, "body_italic")
 	gl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	r4.add_child(gl)
@@ -236,8 +236,8 @@ func _spin(row: HBoxContainer, label: String, key: String, lo: int, hi: int, ste
 	sb.custom_minimum_size = Vector2(110, 40)
 	sb.name = "Spin_" + key
 	sb.value_changed.connect(func(v): terms[key] = int(v))
-	row.add_child(sb)
 	var l := UIKit.label(label, 17)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(l)
+	row.add_child(sb)
 	return sb
