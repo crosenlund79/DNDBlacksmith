@@ -16,7 +16,7 @@ const MATERIAL_ICON := {"iron": "icons/ingot_iron", "steel": "icons/ingot_steel"
 	"starsteel": "icons/sword_starsteel", "adamantine": "icons/ingot_adamantine", "leather": "icons/leather_cured",
 	"silver": "icons/ore_silver", "gems": "icons/gem_garnet", "cloth": "icons/cloth_linen"}
 const KIND_WORD := {"equipment": "Customer", "repair": "Repair job", "goods": "Shopping", "dispute": "Complaint", "commission": "Commission",
-	"multi": "Several requests"}
+	"multi": "Several requests", "advice": "Seeks advice"}
 
 
 static func build(r: Dictionary, width := 0.0) -> PanelContainer:
@@ -110,6 +110,8 @@ static func _main_icon(r: Dictionary) -> String:
 		return SLOT_ICON[str(r["slot"])]
 	if r.get("kind", "") == "dispute":
 		return "ui/need_dispute"
+	if r.get("kind", "") == "advice":
+		return "ui/ic_talk"
 	return "icons/gold"
 
 

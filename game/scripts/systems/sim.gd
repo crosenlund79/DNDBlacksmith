@@ -12,6 +12,7 @@ static func on_hour(_day: int, h: int) -> void:
 	Hire.work_hour(h)
 	Vitality.on_hour()
 	Shop.customer_hour(h)
+	Consult.on_hour(h)   # The Living Realm 3b: adventurers come for equipment advice; past advice is judged
 	Expeditions.on_hour(h)
 	Trade.on_hour(h)
 	Commerce.on_hour(h)

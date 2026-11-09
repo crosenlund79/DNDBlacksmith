@@ -44,6 +44,8 @@ static func all() -> Dictionary:
 				out[npc] = "Waiting outside the shop with a repair"
 			"goods":
 				out[npc] = "Waiting outside the shop to buy a draught"
+			"advice":
+				out[npc] = "Waiting outside the shop to ask your advice on their gear"
 			_:
 				out[npc] = "Waiting outside the shop to browse your wares"
 	# commissions you could hand over right now

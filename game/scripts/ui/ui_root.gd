@@ -479,6 +479,8 @@ func _route(id: String, args: Dictionary) -> void:
 			open(QuickTravelMenu.new(args))
 		"wanted":
 			open(WantedPanel.new(str(args.get("tab", "wanted"))))
+		"consult":   # The Living Realm 3b: an adventurer's equipment consultation (Consult)
+			open(ConsultPanel.new(str(args.get("id", ""))))
 		"dossier":
 			open(DossierPanel.new(str(args["id"]), str(args.get("tab", "Overview")), int(args.get("compare", -1))))
 		"observe":

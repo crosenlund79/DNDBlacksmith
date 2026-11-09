@@ -3846,3 +3846,9 @@ func phase_equip_rl() -> void:
 	await advance_to(11, 0)
 	await _v9_view("eqrl_terrain_rl_map", Vector2(48 * 64.0, 32 * 64.0), 0.3)
 
+
+
+# ======================================================================= The Living Realm: consultations (CONSULT worker)
+func phase_consult_rl() -> void:
+	var ph: RefCounted = load("res://tests/playtest_consult.gd").new()
+	await ph.run(self)
