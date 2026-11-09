@@ -222,6 +222,9 @@ func _build_stream() -> void:
 		return
 	var pts := _smooth(st["points"])
 	var wpx := float(st["width"]) * T
+	# damp banks feathering into the grass on either side (VillageGround.soft_strip), under the ink edge
+	VillageGround.soft_strip(ground_layer, pts, wpx * 0.5 + 6.0, wpx * 0.5 + 76.0, Color(0.46, 0.36, 0.22, 0.42))
+	VillageGround.soft_strip(ground_layer, pts, wpx * 0.5, wpx * 0.5 + 24.0, Color(0.3, 0.23, 0.14, 0.5), false)
 	var bank := Line2D.new()
 	bank.points = pts
 	bank.width = wpx + 10
@@ -993,12 +996,9 @@ func _ellipse_poly(c: Vector2, rad: Vector2, n := 36, wob := 0.05, seed := 3) ->
 
 func _water_body(poly: PackedVector2Array) -> void:
 	# muddy bank, ink shoreline, water, and a pale sheen toward the middle
-	var bank := Line2D.new()
-	bank.points = poly
-	bank.closed = true
-	bank.width = 30.0
-	bank.default_color = Color(0.42, 0.32, 0.2, 0.55)
-	ground_layer.add_child(bank)
+	# damp earth that feathers out into the grass, then a wetter, darker lip right at the water
+	VillageGround.soft_ring(ground_layer, poly, 4.0, 70.0, Color(0.46, 0.36, 0.22, 0.42))
+	VillageGround.soft_ring(ground_layer, poly, 4.0, 22.0, Color(0.3, 0.23, 0.14, 0.5), false)
 	_tex_poly(poly, "water", ground_layer)
 	_outline(poly, 4.0, ground_layer)
 	var c := Vector2.ZERO
@@ -1192,22 +1192,13 @@ func _build_ground_detail() -> void:
 	for i in 46:
 		var c := Vector2(rng.randf_range(-2, float(size[0]) + 2), rng.randf_range(-2, float(size[1]) + 2)) * T
 		var rad := Vector2(rng.randf_range(2.0, 5.5), rng.randf_range(1.6, 4.0)) * T
-		var p := Polygon2D.new()
-		p.polygon = _ellipse_poly(c, rad, 18, 0.16, i)
-		p.texture = grass
-		p.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		p.color = Color(0.78, 0.86, 0.6, 0.42) if i % 3 != 0 else Color(0.6, 0.62, 0.46, 0.34)
-		ground_layer.add_child(p)
-		ground_layer.move_child(p, 1)   # right above the base grass, under roads and water
+		# feathered into the grass (VillageGround.soft_patch), not hard-edged polygons
+		VillageGround.soft_patch(ground_layer, _ellipse_poly(c, rad, 18, 0.16, i),
+			Color(0.78, 0.86, 0.6, 0.42) if i % 3 != 0 else Color(0.6, 0.62, 0.46, 0.34), 0.55, grass)
 	# grime along the foot of every wall (the trodden doorsteps are part of the road mask, VillageGround)
 	for b in DB.layout.get("buildings", []):
 		var r := brect(b)
-		var grime := Line2D.new()
-		grime.points = _rect_pts(r.grow(10))
-		grime.closed = true
-		grime.width = 26.0
-		grime.default_color = Color(0.2, 0.13, 0.07, 0.22)
-		ground_layer.add_child(grime)
+		VillageGround.soft_ring(ground_layer, _rect_pts(r.grow(4)), 6.0, 30.0, Color(0.2, 0.13, 0.07, 0.26), false)
 	# a glow and embers over the forge chimney: the smithy reads from the street, day and night
 	var sm := DB.building("smithy")
 	var chims: Array = sm.get("chimneys", [])

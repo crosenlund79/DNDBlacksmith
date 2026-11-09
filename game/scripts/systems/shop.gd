@@ -236,6 +236,8 @@ static func stat_for_slot(slot: String) -> String:
 static func preferred_materials(level: int, slot: String) -> Array:
 	if slot in ["boots", "gloves", "belt"]:
 		return ["leather"]
+	if slot == "cloak":
+		return ["cloth"]
 	if slot in ["ring", "amulet"]:
 		return ["silver", "gems"]
 	return ["steel", "mithril"] if level >= 5 else ["iron", "steel"]

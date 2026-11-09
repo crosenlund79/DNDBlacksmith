@@ -105,6 +105,11 @@ func _customers() -> void:
 				b.tooltip_text = why if why != "" else ("Matches the request." if fits else "")
 				b.add_theme_color_override("font_color", Items.color(it, false))
 				actions.add_child(b)
+				# The Living Realm: weigh it against what they wear (their sheet's Equipment tab, compare view)
+				var cuid := int(it["uid"])
+				var cmp := UIKit.button("⇄", func(): Events.open_panel.emit("dossier", {"id": npc, "compare": cuid}), 0)
+				cmp.tooltip_text = "Compare with what %s wears now" % a["name"]
+				actions.add_child(cmp)
 				any = true
 			if not any:
 				actions.add_child(UIKit.label("Nothing on display suits them. Put equipment on display from your stores [I].", 20, "body_italic"))

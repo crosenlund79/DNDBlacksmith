@@ -9,12 +9,12 @@ extends RefCounted
 
 const SLOT_ICON := {"weapon": "icons/sword_iron", "armor": "icons/cuirass_iron", "shield": "icons/shield_round",
 	"helmet": "icons/helm_iron", "boots": "icons/boots_leather", "gloves": "icons/gloves_leather", "belt": "icons/belt_leather",
-	"ring": "icons/ring_silver", "amulet": "icons/amulet_silver"}
+	"ring": "icons/ring_silver", "amulet": "icons/amulet_silver", "cloak": "icons/cloak_travel"}
 const STAT_ICON := {"attack": "ui/need_attack", "protection": "ui/need_protection", "magic": "ui/need_magic",
 	"fire": "icons/coating_flame", "frost": "icons/coating_frost", "ward": "icons/runestone_ward"}
 const MATERIAL_ICON := {"iron": "icons/ingot_iron", "steel": "icons/ingot_steel", "mithril": "icons/ingot_mithril",
 	"starsteel": "icons/sword_starsteel", "adamantine": "icons/ingot_adamantine", "leather": "icons/leather_cured",
-	"silver": "icons/ore_silver", "gems": "icons/gem_garnet"}
+	"silver": "icons/ore_silver", "gems": "icons/gem_garnet", "cloth": "icons/cloth_linen"}
 const KIND_WORD := {"equipment": "Customer", "repair": "Repair job", "goods": "Shopping", "dispute": "Complaint", "commission": "Commission",
 	"multi": "Several requests"}
 

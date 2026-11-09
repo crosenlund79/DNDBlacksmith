@@ -1,8 +1,9 @@
 ## DossierPanel — the illustrated character sheet of one adventurer (route `dossier` {id}).
 ## EN: A fixed left column (portrait, class, level, renown, whereabouts) and seven pages:
 ##     Overview (condition, at a glance, plans), Combat (attributes, skills, to-hit, defence, damage and
-##     damage types), Equipment (a paper doll with every slot — the actual item instances with rarity,
-##     key stats and durability; hover for the full item and its history), Expedition (now and last),
+##     damage types), Equipment (the humanoid EquipmentSheet: every slot at its body region — the actual item
+##     instances with rarity, key stats and durability; hover for the item, click for its history, ⇄ compares
+##     with a piece from your stores), Expedition (now and last),
 ##     Career (level, renown, ambitions, shopping list and savings), Relationships and History.
 ##     On Master difficulty numbers you have not earned are approximate (`_know()`): strangers show
 ##     ranges and gear by kind until familiarity (talk, drinks, equipping them) or rumours reveal more.
@@ -15,11 +16,6 @@ const CLASS_ICON := {"Fighter": "ui/cls_fighter", "Ranger": "ui/cls_ranger", "Wi
 	"Paladin": "ui/cls_paladin", "Cleric": "ui/cls_cleric", "Barbarian": "ui/cls_barbarian", "Bard": "ui/cls_bard"}
 const ATTR := [["str", "Strength", "ui/attr_str"], ["dex", "Dexterity", "ui/attr_dex"], ["int", "Intellect", "ui/attr_int"],
 	["wis", "Wisdom", "ui/attr_wis"], ["con", "Constitution", "ui/attr_con"]]
-## Paper doll: [slot, column (0 left / 1 right), row, anchor on the 360×560 figure].
-const DOLL := [["helmet", 0, 0, Vector2(180, 78)], ["armor", 0, 1, Vector2(180, 210)], ["gloves", 0, 2, Vector2(80, 318)],
-	["belt", 0, 3, Vector2(180, 300)], ["boots", 0, 4, Vector2(150, 462)],
-	["weapon", 1, 0, Vector2(282, 322)], ["shield", 1, 1, Vector2(262, 236)], ["ring", 1, 2, Vector2(286, 330)],
-	["amulet", 1, 3, Vector2(180, 140)], ["companion", 1, 4, Vector2(262, 494)]]
 const C_HP := Color("#a8321e")
 const C_FAT := Color("#b8862e")
 const C_MOR := Color("#3c6e8a")
@@ -28,14 +24,22 @@ const C_GOOD := Color("#4c7a34")
 
 var adv_id := ""
 var tab := "Overview"
+var compare_slot := ""     # Equipment tab: the slot being compared with a piece from the stores
+var compare_uid := -1      # …and which piece (-1 = the best candidate)
 var page: VBoxContainer
 var tab_row: HBoxContainer
 var left: VBoxContainer
 
 
-func _init(id: String, start_tab := "Overview") -> void:
+func _init(id: String, start_tab := "Overview", compare := -1) -> void:
 	adv_id = id
 	tab = start_tab
+	if compare > 0:   # opened from the counter to weigh a piece from the stores against what they wear
+		var cit := Game.find_uid(compare)
+		if not cit.is_empty() and Items.is_equipment(cit):
+			tab = "Equipment"
+			compare_slot = Items.slot(cit)
+			compare_uid = compare
 	blocks_time = false
 	super._init("", 1600, 940, false)
 	if Assets.has_tex("ui/dossier"):
@@ -277,12 +281,96 @@ func _page_combat(a: Dictionary) -> void:
 
 
 func _page_equipment(a: Dictionary) -> void:
-	var doll := PaperDoll.new(self, a)
-	page.add_child(doll)
-	page.add_child(UIKit.label("Hover a piece for the full item; click it for its maker, history and owners.  ⚒ = made at your forge.", 18, "body_italic"))
+	var cands := store_candidates(a)
+	var wanted := []
+	for e in a.get("shopping", []):
+		wanted.append(str(e["slot"]))
+	var k := _know()
+	var sheet := EquipmentSheet.new(a.get("equipment", {}), {"known": func(it): return k >= 15.0 or Provenance.is_mine(it),
+		"wanted": wanted, "candidates": cands, "on_compare": _on_compare, "extra_slots": Adv.all_slots()})
+	sheet.name = "EquipmentSheet"
+	page.add_child(sheet)
+	page.add_child(UIKit.label("Hover a piece for the full item; click it for its maker, history and owners; ⇄ weighs it against a piece from your stores.  ⚒ = made at your forge.", 17, "body_italic"))
+	if compare_slot != "":
+		_compare_section(a, cands.get(compare_slot, []))
 	_equipment_histories(a)
 	page.add_child(_heading("Wants & plans"))
 	_shopping_list(a, 12)
+
+
+## Pieces in your stores worth weighing against what they wear, per slot: equipment they could use (class
+## affinity), the best first. The counter's offer and the shop display are the flows this serves.
+static func store_candidates(a: Dictionary) -> Dictionary:
+	var out := {}
+	for it in Game.inventory():
+		if not Items.is_equipment(it):
+			continue
+		var s := Items.slot(it)
+		if s == "" or Adv.affinity(a, it) <= 0.0:
+			continue
+		if not out.has(s):
+			out[s] = []
+		(out[s] as Array).append(it)
+	for s in out:
+		(out[s] as Array).sort_custom(func(x, y): return Items.score(x) > Items.score(y))
+	return out
+
+
+func _on_compare(slot: String) -> void:
+	compare_slot = "" if compare_slot == slot else slot
+	compare_uid = -1
+	_build()
+
+
+## The compare view under the figure: what they wear in that slot against a piece from your stores, with a picker
+## for the other candidates and the verdict — would they buy it at your price (or wear it as your spouse), or why not.
+func _compare_section(a: Dictionary, cands: Array) -> void:
+	if cands.is_empty():
+		compare_slot = ""
+		return
+	var pick: Dictionary = cands[0]
+	for c in cands:
+		if int(c.get("uid", -1)) == compare_uid:
+			pick = c
+	page.add_child(_heading("Compare — %s" % Adv._slot_name(compare_slot).to_lower()))
+	if cands.size() > 1:
+		var ob := OptionButton.new()
+		ob.name = "ComparePick"
+		ob.custom_minimum_size = Vector2(420, 36)
+		for c in cands:
+			ob.add_item("%s (%s)" % [Items.display_name(c), EquipmentSheet.key_stats(c, 3)], int(c["uid"]))
+			if int(c["uid"]) == int(pick["uid"]):
+				ob.select(ob.item_count - 1)
+		ob.item_selected.connect(func(i: int):
+			compare_uid = ob.get_item_id(i)
+			_build())
+		page.add_child(ob)
+	var price := Shop.price_of(pick)
+	var why := Adv.purchase_check(a, pick, price)
+	var verdict := ""
+	if why == "":
+		verdict = ("%s would take it — %s." % [a["name"], "as a gift between spouses" if Social.spouse() == a["id"] else "%d g at your price" % price])
+		if not pick.get("for_sale", false) and Social.spouse() != a["id"]:
+			verdict += " Put it on display [I] to sell it."
+	else:
+		verdict = "%s %s (your price %d g)." % [a["name"], why, price]
+	var cv := EquipmentSheet.compare_view(a.get("equipment", {}).get(compare_slot, {}), pick, verdict, why == "")
+	page.add_child(cv)
+	_scroll_to(cv)
+	var row := UIKit.hbox(8)
+	var pu := int(pick["uid"])
+	row.add_child(UIKit.button("Inspect the piece", func(): Events.open_panel.emit("item", {"uid": pu}), 0))
+	row.add_child(UIKit.button("Close the comparison", func(): _on_compare(compare_slot), 0))
+	page.add_child(row)
+
+
+## Brings a control on the page into view once the layout has settled (the compare view sits below the figure).
+func _scroll_to(c: Control) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var sc := page.get_parent() as ScrollContainer
+	if sc != null and is_instance_valid(c):
+		sc.ensure_control_visible(c)
 
 
 ## What their gear has been through (ItemStory): one line per piece with a story, the richest first.
@@ -656,149 +744,3 @@ func _person(id: String, sub: String) -> VBoxContainer:
 			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
 				Events.open_panel.emit("dossier", {"id": id}))
 	return v
-
-
-# ======================================================================= the paper doll
-## The equipment page: the figure in the middle, every slot as a card on either side with a leader
-## line to where it is worn. Cards show the real item (rarity border), its key stats and durability.
-class PaperDoll extends Control:
-	const CARD := Vector2(360, 104)
-	const DOLL_POS := Vector2(400, 0)
-	const DOLL_SIZE := Vector2(330, 513)
-	var sheet: DossierPanel
-	var a: Dictionary
-	var anchors := []   # [card point, doll point]
-
-	func _init(s: DossierPanel, adv: Dictionary) -> void:
-		sheet = s
-		a = adv
-		var slots: Array = DossierPanel.DOLL.duplicate(true)
-		var rows := [5, 5]
-		for extra in Adv.all_slots():
-			var known := false
-			for d in slots:
-				if d[0] == extra:
-					known = true
-			if not known:
-				var col := 0 if rows[0] <= rows[1] else 1
-				slots.append([extra, col, rows[col], Vector2(180, 260)])
-				rows[col] += 1
-		custom_minimum_size = Vector2(1140, maxf(DOLL_SIZE.y + 20, maxi(rows[0], rows[1]) * (CARD.y + 8)))
-		var tr := TextureRect.new()
-		tr.texture = Assets.get_tex("ui/paperdoll")
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.position = DOLL_POS
-		tr.size = DOLL_SIZE
-		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(tr)
-		for d in slots:
-			var x := 0.0 if int(d[1]) == 0 else DOLL_POS.x + DOLL_SIZE.x + 40.0
-			var pos := Vector2(x, int(d[2]) * (CARD.y + 8))
-			var card := _card(str(d[0]))
-			card.position = pos
-			add_child(card)
-			var anc: Vector2 = d[3]
-			var dp: Vector2 = DOLL_POS + anc * (DOLL_SIZE.x / 360.0)
-			var cp := pos + Vector2(CARD.x if int(d[1]) == 0 else 0.0, CARD.y * 0.5)
-			anchors.append([cp, dp, not a["equipment"].get(d[0], {}).is_empty()])
-
-	func _draw() -> void:
-		for an in anchors:
-			var c := Color(0.13, 0.08, 0.05, 0.55) if an[2] else Color(0.13, 0.08, 0.05, 0.18)
-			draw_line(an[0], an[1], c, 2.0, true)
-			draw_circle(an[1], 5.0, Color("#7e2418") if an[2] else Color(0.13, 0.08, 0.05, 0.25))
-
-	func _card(slot: String) -> Control:
-		var it: Dictionary = a["equipment"].get(slot, {})
-		var k := sheet._know()
-		var mine := str(it.get("crafted_by", "")).begins_with("Brannoc")
-		var p := PanelContainer.new()
-		p.custom_minimum_size = CARD
-		p.size = CARD
-		var border: Color = Items.COL_BORDER.get(it.get("rarity", "common"), Color("#6e6250")) if not it.is_empty() else Color(0.13, 0.08, 0.05, 0.3)
-		if it.get("broken", false):
-			border = Color("#7e2418")
-		p.add_theme_stylebox_override("panel", sheet._box(Color(0.94, 0.89, 0.78, 0.55) if not it.is_empty() else Color(0.13, 0.08, 0.05, 0.05), border, 2, 6))
-		var h := UIKit.hbox(10)
-		var known := k >= 15.0 or mine or it.is_empty()
-		var slot_ui := ItemSlot.new(it if known else {}, 84.0)
-		if known and not it.is_empty() and Provenance.applies(it):
-			var iu := int(it.get("uid", -1))
-			slot_ui.clicked.connect(func(_x): Events.open_panel.emit("item", {"uid": iu}))
-		h.add_child(slot_ui)
-		if it.is_empty():
-			var ghost := TextureRect.new()
-			ghost.texture = Assets.get_tex(_ghost(slot))
-			ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			ghost.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			ghost.modulate = Color(1, 1, 1, 0.22)
-			ghost.size = Vector2(64, 64)
-			ghost.position = Vector2(10, 10)
-			ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			slot_ui.add_child(ghost)
-		var v := UIKit.vbox(2)
-		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_child(UIKit.label(Adv._slot_name(slot).to_upper(), 14, "body_bold", Color("#8a7a60")))
-		if it.is_empty():
-			var wanted := false
-			for e in a.get("shopping", []):
-				if e["slot"] == slot:
-					wanted = true
-			v.add_child(UIKit.label("— empty —" + ("  (wanted)" if wanted else ""), 18, "body_italic", Color("#8a7a60")))
-		elif not known:
-			v.add_child(UIKit.label("a %s" % Items.type_label(it).to_lower(), 19, "body_italic"))
-		else:
-			var nm := Items.display_name(it)
-			if nm.length() > 26:
-				nm = nm.left(25) + "…"
-			v.add_child(UIKit.label(nm + (" ⚒" if mine else ""), 19, "body_bold", Items.color(it, false)))
-			v.add_child(UIKit.label(_key_stats(it), 16))
-			var st: Dictionary = it.get("stats", {})
-			if st.has("durability_max"):
-				var dh := UIKit.hbox(6)
-				var f := Items.durability_frac(it)
-				var col := Color("#4c7a34") if f >= 0.5 else (Color("#b8862e") if f >= 0.25 else Color("#a8321e"))
-				var b := DossierPanel._bar(float(st["durability"]), float(st["durability_max"]), col, 130, 10)
-				b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-				dh.add_child(b)
-				if it.get("broken", false):
-					dh.add_child(UIKit.label("BROKEN", 17, "body_bold", Color("#7e2418")))
-				else:
-					dh.add_child(UIKit.label("%d/%d" % [int(st["durability"]), int(st["durability_max"])], 15, "body", col.darkened(0.2)))
-				v.add_child(dh)
-		h.add_child(v)
-		p.add_child(h)
-		if it.get("broken", false):
-			_overlay(slot_ui, "ui/warn_broken", Vector2(46, 2), 36.0, 1.0)
-		elif not it.is_empty() and not Assets.has_tex(Items.icon_id(it)) and slot == "companion":
-			_overlay(slot_ui, "ui/slot_companion", Vector2(12, 12), 60.0, 0.9)
-		return p
-
-	func _overlay(host: Control, tex: String, pos: Vector2, sz: float, alpha: float) -> void:
-		var t := TextureRect.new()
-		t.texture = Assets.get_tex(tex)
-		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		t.position = pos
-		t.size = Vector2(sz, sz)
-		t.modulate = Color(1, 1, 1, alpha)
-		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		host.add_child(t)
-
-	func _ghost(slot: String) -> String:
-		var ex: String = {"weapon": "icons/sword_iron", "shield": "icons/shield_round", "armor": "icons/jerkin_leather", "helmet": "icons/helm_iron",
-			"gloves": "icons/gloves_leather", "boots": "icons/boots_leather", "belt": "icons/belt_leather", "ring": "icons/ring_silver",
-			"amulet": "icons/amulet_silver", "companion": "ui/slot_companion"}.get(slot, "ui/stat_gear")
-		return ex
-
-	func _key_stats(it: Dictionary) -> String:
-		var bits := []
-		for k in [["attack", "Atk"], ["protection", "Prot"], ["magic", "Mag"], ["fire", "Fire"], ["frost", "Frost"], ["ward", "Ward"],
-				["scouting", "Scout"], ["heal", "Heal"], ["carry", "Carry"], ["speed", "Spd"], ["vitality", "Vit"]]:
-			var v := Items.stat(it, k[0])
-			if v != 0:
-				bits.append("%s %d" % [k[1], v])
-			if bits.size() >= 4:
-				break
-		return " · ".join(bits) if not bits.is_empty() else Items.type_label(it)

@@ -502,7 +502,7 @@ static func give_item(a: Dictionary, it: Dictionary, price: int) -> void:
 
 ## How much each slot matters in a judgement of strength (also scales the level target).
 const SLOT_WEIGHT := {"weapon": 1.0, "armor": 1.0, "shield": 0.6, "helmet": 0.4, "gloves": 0.3, "boots": 0.3, "belt": 0.2,
-	"ring": 0.45, "amulet": 0.55, "companion": 0.5}
+	"ring": 0.45, "amulet": 0.55, "cloak": 0.3, "companion": 0.5}
 ## Slots a class leaves empty on purpose (bows and spells want both hands free).
 const CLASS_SKIP := {"Wizard": ["shield"], "Ranger": ["shield"], "Rogue": ["shield"], "Barbarian": ["shield"], "Bard": ["shield"]}
 const WHY_ORDER := {"broken": 0, "missing": 1, "worn": 2, "inferior": 3, "extra": 4, "companion": 5}
@@ -581,6 +581,8 @@ static func affinity(a: Dictionary, it: Dictionary) -> float:
 			f = 1.3 if cls in ["Fighter", "Paladin"] else 0.9
 		"ring", "amulet":
 			f = 1.3 if caster or cls == "Paladin" else 1.0
+		"cloak":   # travellers and those who keep to the shadows favour a good cloak; plate-wearers barely notice one
+			f = float({"Ranger": 1.4, "Rogue": 1.4, "Wizard": 1.2, "Bard": 1.2, "Cleric": 1.0, "Barbarian": 0.8, "Fighter": 0.8, "Paladin": 0.9}.get(cls, 1.0))
 	if f > 0.0 and caster and Items.stat(it, "magic") > 0:
 		f += 0.2
 	return f

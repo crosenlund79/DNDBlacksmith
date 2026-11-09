@@ -10,6 +10,7 @@ var selected := false
 var hidden_item := false   # used by the loot reveal ("?")
 var size_px := 72.0
 var inspectable := true    # right-click opens the item's story (ItemPanel); off inside the panel itself
+var show_condition := false   # a durability strip along the bottom edge (equipment sheets), red cross when broken
 
 
 func _init(it := {}, px := 72.0) -> void:
@@ -89,6 +90,25 @@ func _draw() -> void:
 		draw_texture_rect(Assets.get_tex(ItemStory.mark_icon(item), Vector2i(32, 32)), Rect2(3, size_px - ms2 - 3, ms2, ms2), false, Color(1, 1, 1, 0.92))
 	if item.get("for_sale", false):
 		draw_texture_rect(Assets.get_tex("icons/gold", Vector2i(32, 32)), Rect2(2, 2, 20, 20), false)
+	if show_condition and Items.is_equipment(item):
+		_draw_condition()
+
+
+## Durability along the bottom edge: green while sound, amber when worn, red when badly worn; a broken piece is crossed.
+func _draw_condition() -> void:
+	var st: Dictionary = item.get("stats", {})
+	var broken: bool = item.get("broken", false)
+	if st.has("durability_max") and float(st["durability_max"]) > 0.0:
+		var f := Items.durability_frac(item)
+		var col := Color("#4c7a34") if f >= 0.5 else (Color("#b8862e") if f >= 0.25 else Color("#a8321e"))
+		var h := clampf(size_px * 0.07, 4.0, 7.0)
+		var r := Rect2(4, size_px - h - 3, size_px - 8, h)
+		draw_rect(r, Color(0.13, 0.08, 0.05, 0.55))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * (0.0 if broken else f), r.size.y)), col)
+	if broken:
+		var c := Color("#7e2418")
+		draw_line(Vector2(6, 6), Vector2(size_px - 6, size_px - 6), c, 3.0, true)
+		draw_line(Vector2(size_px - 6, 6), Vector2(6, size_px - 6), Color(c, 0.6), 2.0, true)
 
 
 func refresh() -> void:

@@ -13,12 +13,12 @@ extends UIWindow
 
 const GROUPS := [
 	["Weapons", ["sword", "axe", "mace", "bow", "dagger", "weapon"]],
-	["Armour", ["body", "helmet", "shield", "gloves", "boots", "belt"]],
+	["Armour", ["body", "helmet", "shield", "gloves", "boots", "belt", "cloak"]],
 	["Jewellery", ["ring", "amulet"]],
 ]
 const TYPE_NAME := {"sword": "Sword", "axe": "Axe", "mace": "Mace", "bow": "Bow", "dagger": "Dagger", "weapon": "Other weapon",
 	"body": "Body armour", "helmet": "Helm & hood", "shield": "Shield", "gloves": "Gloves", "boots": "Boots", "belt": "Belt",
-	"ring": "Ring", "amulet": "Amulet"}
+	"ring": "Ring", "amulet": "Amulet", "cloak": "Cloak"}
 
 static var type_key := ""
 static var recipe_id := ""

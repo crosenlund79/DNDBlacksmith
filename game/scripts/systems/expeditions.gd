@@ -1065,15 +1065,16 @@ static func _wear(a: Dictionary, rec: Dictionary) -> void:
 	var hits: int = acts.filter(func(x): return x.get("target", "") == a["name"] and x.get("kind", "") == "enemy" and x.get("hit", false)).size()
 	var blocks: int = acts.filter(func(x): return x.get("target", "") == a["name"] and x.get("kind", "") == "enemy" and not x.get("hit", false)).size()
 	var wear := {"weapon": swings * 2, "armor": hits * 3, "shield": blocks * 2 + hits, "helmet": hits, "gloves": int((swings + 1) / 2.0),
-		"boots": 1, "belt": 1 if hits > 0 else 0}
+		"boots": 1, "belt": 1 if hits > 0 else 0, "cloak": 1 if hits > 0 else 0}
 	for slot in wear:
 		wear_item(a, slot, int(wear[slot]), rec)
 
 
-## Boots and belts wear on the road.
+## Boots, belts and cloaks wear on the road.
 static func trip_wear(a: Dictionary) -> void:
 	wear_item(a, "boots", randi_range(3, 6))
 	wear_item(a, "belt", randi_range(1, 3))
+	wear_item(a, "cloak", 2)   # weather and brambles (fixed, so the road's random rolls are unchanged)
 
 
 ## Takes `n` durability from the piece in `slot`; it breaks at zero (recorded in the fight and its history).
