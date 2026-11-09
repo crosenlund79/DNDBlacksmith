@@ -422,6 +422,7 @@ static func depart_parties() -> void:
 		if ok:
 			start(p)
 		else:
+			Sponsor.on_abort(p)   # a sponsored party that cannot leave: the fee comes back
 			for id in p["members"]:
 				var a := Adv.get_a(id)
 				if a.get("activity", "") in ["recruiting", "preparing"]:
@@ -439,10 +440,12 @@ static func start(p: Dictionary) -> Dictionary:
 	var tr: Array = reg.get("travel_h", [2, 3])
 	var travel := randi_range(int(tr[0]) * 60, int(tr[1]) * 60)
 	var e := {"id": eid, "party": p["members"].duplicate(), "leader": p["leader"], "dest": rid, "goal": p.get("goal", "explore"),
-		"start": Game.now(), "phase": "travel_out", "at": "village", "route": plan_route(rid, p["members"]), "step": 0,
+		"start": Game.now(), "phase": "travel_out", "at": "village", "step": 0,
+		"route": Sponsor.route_for(p, rid) if str(p.get("sponsor", "")) != "" else plan_route(rid, p["members"]),
 		"leg": {"from": "village", "to": "gate", "t0": Game.now(), "t1": Game.now() + travel},
 		"next_at": Game.now() + travel, "journal": [], "encounters": [], "loot": [], "gold": 0, "explored": [],
-		"outcome": "", "difficulty": diff_id(), "snap": {}, "company": str(p.get("company", "")), "lore_mark": int(Lore.st()["next"])}
+		"outcome": "", "difficulty": diff_id(), "snap": {}, "company": str(p.get("company", "")), "lore_mark": int(Lore.st()["next"]),
+		"sponsor": str(p.get("sponsor", ""))}
 	for id in e["party"]:
 		var a := Adv.get_a(id)
 		a["status"] = "away"
@@ -453,6 +456,8 @@ static func start(p: Dictionary) -> Dictionary:
 		a["expeditions"] = int(a.get("expeditions", 0)) + 1
 		e["snap"][id] = snapshot(a)
 	active()[eid] = e
+	if str(e["sponsor"]) != "":
+		Sponsor.on_depart(e)   # the smith's commission: the escrowed fee changes hands now
 	var names: Array = e["party"].map(func(i): return Adv.get_a(i)["name"])
 	_j(e, "%s departed through the %s gate for %s." % [_and(names), exit, reg.get("name", rid)], "depart")
 	Chronicle.add("departure", "%s set out for %s." % [_and(names), reg.get("name", rid)], {"party": e["party"], "exp": eid, "dest": rid}, true)
@@ -524,6 +529,8 @@ static func step(e: Dictionary) -> void:
 			var dur := resolve_node(e, node_of(e["dest"], nid))
 			if not _standing(e).is_empty():
 				WorldSites.on_node(e, node_of(e["dest"], nid))   # gear lost here by an earlier party
+				if str(e.get("sponsor", "")) != "":
+					dur += Sponsor.on_node(e, node_of(e["dest"], nid))   # the smith's objective is searched for here
 			e["phase"] = "acting"
 			e["next_at"] = Game.now() + dur
 		"acting":
@@ -1283,6 +1290,7 @@ static func _wipe(e: Dictionary) -> void:
 	WorldSites.on_wipe(e)   # one Lore event for the loss; the already-fallen leave their gear at the site
 	Chronicle.add("missing", "%s did not return from %s." % [_and(names), region(e["dest"])["name"]], {"party": e["party"], "exp": e["id"], "dest": e["dest"]}, true)
 	Events.toast.emit("%s have not come back from %s." % [_and(names), region(e["dest"])["name"]], "bad")
+	Sponsor.on_wipe(e)
 	_archive(e)
 
 
@@ -1386,6 +1394,8 @@ static func finish(e: Dictionary) -> void:
 		for oid in alive:
 			if oid != id:
 				relate(id, oid, 2.0)
+	# a sponsored objective is taken out of the pack first and delivered to the smith (Sponsor)
+	Sponsor.on_finish(e, alive)
 	# the loot: gear goes to whoever it suits; materials and relics are offered to the smith
 	_share_loot(e, alive)
 	var outcome: String = e["outcome"] if e["outcome"] != "" else "returned"

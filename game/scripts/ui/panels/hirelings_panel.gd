@@ -38,6 +38,9 @@ func _build() -> void:
 	wb.tooltip_text = "Apprentices are a separate staff: they work at your stations on the work queue. %d of %d places taken." % [Apprentices.staff().size(), Apprentices.max_staff()] if Apprentices.unlocked() else Apprentices.unlock_reason()
 	top.add_child(wb)
 	body.add_child(top)
+	# The Living Realm: commission adventurers (Sponsor) beside sending hirelings
+	body.add_child(SponsorSection.new())
+	body.add_child(UIKit.divider())
 	for h in Hire.list():
 		body.add_child(_card(h))
 		body.add_child(UIKit.divider())

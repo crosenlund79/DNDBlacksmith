@@ -111,6 +111,12 @@ func _side() -> void:
 			"" if e.get("goal", "") != "search" else " · searching for the missing", mini(int(e["step"]) + 1, (e["route"] as Array).size()), (e["route"] as Array).size(), int(prog * 100)], 20, true))
 	else:
 		side.add_child(UIKit.rich("[b]%s[/b]\n%s" % [str(e.get("outcome", "")).capitalize(), e.get("summary", "")], 20, true))
+	var sp := Sponsor.get_s(str(e.get("sponsor", "")))
+	if not sp.is_empty():
+		# The Living Realm: the smith's commission — objective, terms and how it stands
+		var res: String = str(sp["result"].get("text", "")) if str(sp["status"]) == "done" else ("objective reached" if bool(sp.get("reached", false)) else "heading for %s" % Expeditions.node_of(str(e["dest"]), str(sp["objective"]["node"])).get("name", "the place"))
+		side.add_child(UIKit.rich("[color=#dab470][b]Sponsored by you:[/b] %s · %s[/color]
+[color=#c8b898]%s[/color]" % [Sponsor.objective_text(sp["objective"]), Sponsor.terms_text(sp["terms"]), res], 18, true))
 	side.add_child(UIKit.divider())
 	for id in e["party"]:
 		var a := Adv.get_a(id)
