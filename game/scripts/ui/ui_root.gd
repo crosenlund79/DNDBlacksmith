@@ -294,7 +294,7 @@ func toast(text: String, kind := "info") -> void:
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var col: String = {"good": "#9ad890", "bad": "#ff9a80", "legendary": "#ffa050", "info": "#efe4cc"}.get(kind, "#efe4cc")
 	var r := UIKit.rich("[color=%s]%s[/color]" % [col, text], 20, true)
-	r.custom_minimum_size = Vector2(456, 0)
+	r.custom_minimum_size = Vector2(436, 0)   # fits the toast column (496 px) with the panel margins
 	p.add_child(r)
 	toast_box.add_child(p)
 	# remove_child first: queue_free() alone keeps the node counted until the frame ends,
