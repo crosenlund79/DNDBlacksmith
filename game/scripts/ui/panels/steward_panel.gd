@@ -55,7 +55,7 @@ func build() -> void:
 	UIKit.clear(tabs_row)
 	UIKit.clear(body)
 	var nd := Steward.deferred().size()
-	for t in [["forge", "The steward at work" if Steward.is_active() else "Hand over the forge"], ["orders", "Standing instructions"],
+	for t in [["forge", "The steward at work" if Steward.is_active() else "Hand-over"], ["orders", "Standing instructions"],
 			["matters", "Matters waiting (%d)" % nd]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tab = key; build(), 0)
@@ -103,8 +103,8 @@ func _handover() -> void:
 	var cv := UIKit.vbox(6)
 	cv.add_child(UIKit.label("BEFORE YOU GO", 17, "heading", Color("#e8cc84")))
 	var ct := UIKit.rich("[b]The steward will run the forge while the game runs; nothing happens while the game is closed.[/b]\n"
-		+ "Time keeps flowing at the speed you choose (%s pauses, %s / %s change the speed). Loading a save always finds you back at the forge, with the mode off. "
-		% [Settings.key_label("time_pause"), Settings.key_label("time_faster"), Settings.key_label("time_slower")]
+		+ "Time keeps flowing at the speed you choose (%s pauses, + / − change the speed). Loading a save always finds you back at the forge, with the mode off. "
+		% Settings.key_label("time_pause")
 		+ "While away you can look around, but not act in the world. Take the workshop back from the steward's plate or with %s." % StewardUI.key(), 19, true)
 	ct.custom_minimum_size = Vector2(740, 0)
 	cv.add_child(ct)
@@ -276,6 +276,7 @@ func _check(parent: Control, text: String, on: bool, cb: Callable, tip := "") ->
 	c.text = text
 	c.button_pressed = on
 	c.tooltip_text = tip
+	c.flat = true
 	c.add_theme_font_size_override("font_size", 18)
 	c.add_theme_color_override("font_color", UIKit.INK)
 	c.add_theme_color_override("font_pressed_color", UIKit.INK)
@@ -324,9 +325,12 @@ func _orders() -> void:
 	c1.add_child(pc.get_meta("card"))
 	# duties
 	var du := _card("Allowed activities", "ic_work")
+	var dg := GridContainer.new()
+	dg.columns = 2
 	for d in Steward.DUTIES:
 		var dk := str(d)
-		_check(du, str(Steward.DUTY_NAME.get(dk, dk)), bool(o["duties"].get(dk, false)), func(on): _apply({"duties": {dk: on}}))
+		_check(dg, str(Steward.DUTY_NAME.get(dk, dk)), bool(o["duties"].get(dk, false)), func(on): _apply({"duties": {dk: on}}))
+	du.add_child(dg)
 	du.add_child(UIKit.label("Never: hiring or dismissing, crafting, major contracts, imports — those stay with you.", 16, "body_italic", Color("#6e5a40")))
 	c1.add_child(du.get_meta("card"))
 	# ordinary orders
@@ -337,7 +341,7 @@ func _orders() -> void:
 	_num(oc, "Days to spare before a deadline", int(orr["deadline_margin"]), 0, 5, 1, func(v): _apply({"order_rules": {"deadline_margin": v}}))
 	_check(oc, "Politely decline parts the workshop cannot make", bool(orr["decline_unsuitable"]), func(on): _apply({"order_rules": {"decline_unsuitable": on}}))
 	oc.add_child(UIKit.label("Fame-inspired and family commissions and major contract letters are always left for you.", 16, "body_italic", Color("#6e5a40")))
-	c1.add_child(oc.get_meta("card"))
+	c2.add_child(oc.get_meta("card"))
 	# selling
 	var sr: Dictionary = o["sell_rules"]
 	var sc := _card("Selling", "story_sale")
@@ -350,7 +354,7 @@ func _orders() -> void:
 	# protected pieces
 	c2.add_child(_protected_card(o).get_meta("card"))
 	# reserved supplies
-	c2.add_child(_reserved_card(o).get_meta("card"))
+	c1.add_child(_reserved_card(o).get_meta("card"))
 
 
 func _protected_card(o: Dictionary) -> VBoxContainer:

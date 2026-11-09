@@ -29,8 +29,10 @@ const LOG_ICON := {"buy": "⚖", "sell": "⚖", "list": "▣", "accept": "✎", 
 	"repair": "⚒", "restock": "⚒", "prep": "⚒", "contract_hours": "⚒", "assign": "☞", "cancel": "✗", "provisions": "▤",
 	"stall": "‼", "defer": "✉", "activate": "➜", "deactivate": "⌂", "stood_down": "⌂", "order_left": "·", "repair_left": "·",
 	"reserve_ok": "·"}
-const COMPLETED_NAME := {"repair": "customer repairs", "commission": "commissions", "craft": "pieces for the display",
-	"prep": "material preparations", "maintain": "station upkeep", "contract": "contract work blocks", "restock": "pieces for the display"}
+const COMPLETED_NAME := {"repair": ["customer repair", "customer repairs"], "commission": ["commission", "commissions"],
+	"craft": ["piece for the display", "pieces for the display"], "prep": ["material preparation", "material preparations"],
+	"maintain": ["station upkeep", "station upkeeps"], "contract": ["block of contract work", "blocks of contract work"],
+	"restock": ["piece for the display", "pieces for the display"]}
 
 
 # ======================================================================= words
@@ -53,6 +55,12 @@ static func piece_name(it: Dictionary) -> String:
 ## The standing instructions without creating steward state (an old save only gains it when the steward is used).
 static func orders() -> Dictionary:
 	return Steward.orders() if not Game.state.is_empty() and Game.state.has("steward") else Steward.default_orders()
+
+
+## "1 commission", "3 commissions" (a finished-task kind from the report).
+static func completed_text(kind: String, n: int) -> String:
+	var w: Array = COMPLETED_NAME.get(kind, [kind, kind])
+	return "%d %s" % [n, str(w[0] if n == 1 else w[1])]
 
 
 static func kind_name(k: String) -> String:
@@ -122,6 +130,21 @@ static func summary_bbcode(o: Dictionary) -> String:
 	lines.append("• [b]Never touched:[/b] Epic, named, legendary and historically significant pieces%s%s." % [
 		(", %d piece%s you protected" % [prot, "" if prot == 1 else "s"]) if prot > 0 else "", ("; kept in stock: " + ", ".join(rl)) if not rl.is_empty() else ""])
 	return "\n".join(lines)
+
+
+## Text cut at a word boundary with an ellipsis (the plate keeps every line short).
+static func clip(t: String, n: int) -> String:
+	if t.length() <= n:
+		return t
+	var cut := t.left(n)
+	var sp := cut.rfind(" ")
+	return (cut.left(sp) if sp > int(n / 2.0) else cut).rstrip(" ,;:—-") + "…"
+
+
+static func shortened(e: Dictionary, n: int) -> Dictionary:
+	var c := e.duplicate()
+	c["text"] = clip(str(e.get("text", "")), n)
+	return c
 
 
 ## One steward log line for the plate and the panel.

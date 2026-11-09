@@ -330,7 +330,7 @@ func test_pending_report_after_load() -> void:
 	check(not pl.plate.visible, "the plate does not claim the steward runs")
 	StewardUI.after_world_start()
 	check(ui.current is WelcomeBackPanel, "the closed session's report is shown once")
-	check(_text_in(ui.current, "stood down when the game was closed"), "it says the steward stood down when the game was closed")
+	check(_text_in(ui.current, "it stood down there"), "it says the steward stood down where the save was made")
 	ui.close_current()
 	StewardUI.after_world_start()
 	check(not is_instance_valid(ui.current), "… and only once")

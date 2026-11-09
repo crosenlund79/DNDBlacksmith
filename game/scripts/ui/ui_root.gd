@@ -392,7 +392,7 @@ func _route(id: String, args: Dictionary) -> void:
 	var away := StewardUI.away_block(id)
 	if away != "":
 		Audio.play("sfx/error", -8.0)
-		toast(away, "info")
+		Events.toast.emit(away, "info")
 		return
 	match id:
 		"prompt":

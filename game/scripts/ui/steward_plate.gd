@@ -24,9 +24,16 @@ func _ready() -> void:
 	theme = Assets.theme
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_constant_override("separation", 6)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	position = Vector2(-20 - W, 282)
-	size = Vector2(W, 10)
+	# right edge, under the minimap and its caption (offsets, so it holds whatever size the HUD has when added)
+	anchor_left = 1.0
+	anchor_right = 1.0
+	anchor_top = 0.0
+	anchor_bottom = 0.0
+	offset_left = -20.0 - W
+	offset_right = -20.0
+	offset_top = 282.0
+	offset_bottom = 292.0
+	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	plate = PanelContainer.new()
 	plate.name = "Plate"
 	var sb := StyleBoxFlat.new()
@@ -58,7 +65,7 @@ func _ready() -> void:
 	head = UIKit.label("THE STEWARD RUNS THE FORGE", 17, "heading", Color("#e8cc84"))
 	strip.add_child(head)
 	v.add_child(strip)
-	body = UIKit.rich("", 17)
+	body = UIKit.rich("", 16)
 	body.name = "StewardStatus"
 	body.custom_minimum_size = Vector2(W - 30, 0)
 	v.add_child(body)
@@ -129,7 +136,7 @@ func refresh() -> void:
 	var acts: Array = []
 	for i in range(lg.size() - 1, -1, -1):
 		var e: Dictionary = lg[i]
-		if str(e.get("kind", "")) in ["stall", "activate"]:
+		if str(e.get("kind", "")) in ["stall", "activate", "defer"]:
 			continue
 		acts.append(e)
 		if acts.size() >= 3:
@@ -137,11 +144,11 @@ func refresh() -> void:
 	if acts.is_empty():
 		lines.append("[i][color=#6e5a40]Looking over the workshop…[/color][/i]")
 	for e2 in acts:
-		lines.append(StewardUI.log_line(e2).left(150))
+		lines.append(StewardUI.log_line(StewardUI.shortened(e2, 84)))
 	var stalls: Array = s.get("stalls", [])
 	if not stalls.is_empty():
 		var st0: Dictionary = stalls[0]
-		lines.append("[color=#9e3a0c]‼ Held up: %s%s[/color]" % [str(st0.get("text", "")).left(110), (" (+%d more)" % (stalls.size() - 1)) if stalls.size() > 1 else ""])
+		lines.append("[color=#9e3a0c]‼ Held up: %s%s[/color]" % [StewardUI.clip(str(st0.get("text", "")), 84), (" (+%d more)" % (stalls.size() - 1)) if stalls.size() > 1 else ""])
 	var nd := int(s.get("deferred", 0))
 	var nl := int(s.get("letters", 0))
 	if nd > 0:

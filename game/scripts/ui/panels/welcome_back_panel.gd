@@ -43,7 +43,7 @@ func build() -> void:
 	var how := str(r.get("ended", ""))
 	var head := UIKit.rich("[font_size=28][b]%s away[/b][/font_size]   [color=#6e5a40]day %d, %s → day %d, %s%s[/color]" % [str(r.get("elapsed_text", "")),
 		int(fr.get("day", 0)), str(fr.get("time", "")), int(to.get("day", 0)), str(to.get("time", "")),
-		"  · the steward stood down when the game was closed; nothing happened while it was closed" if how == "closed" else ""], 19)
+		"  · this save was made while the steward ran: it stood down there — nothing happens while the game is closed, nothing is caught up" if how == "closed" else ""], 19)
 	head.name = "Elapsed"
 	head.custom_minimum_size = Vector2(1480, 0)
 	content.add_child(head)
@@ -201,7 +201,7 @@ func _production(r: Dictionary) -> Variant:
 	var v := _section("production", "Production", "ic_work", "Workshop Ledger", "workshop")
 	var parts := PackedStringArray()
 	for k in comp:
-		parts.append("%d %s" % [int(comp[k]), str(StewardUI.COMPLETED_NAME.get(str(k), str(k)))])
+		parts.append(StewardUI.completed_text(str(k), int(comp[k])))
 	if not parts.is_empty():
 		_text(v, "Your apprentices finished " + ", ".join(parts) + ".", 17)
 	var made: Array = p.get("made", [])
@@ -399,7 +399,7 @@ func _conduct(r: Dictionary) -> Variant:
 	var parts := PackedStringArray()
 	for k in keys:
 		parts.append("%s %d" % [str(k).replace("_", " "), int(bk[k])])
-	_text(v, "[b]%d decisions[/b]%s" % [int(dc.get("total", 0)), (": " + ", ".join(parts)) if not parts.is_empty() else ""], 16)
+	_text(v, "[b]%d decision%s[/b]%s" % [int(dc.get("total", 0)), "" if int(dc.get("total", 0)) == 1 else "s", (": " + ", ".join(parts)) if not parts.is_empty() else ""], 16)
 	if not stalls.is_empty():
 		var sl: Array = []
 		for s in stalls:
