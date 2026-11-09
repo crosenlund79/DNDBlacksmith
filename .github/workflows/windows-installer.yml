@@ -1,6 +1,7 @@
 # Ember & Ash — Windows installer.
 # Exports the Godot project for Windows (and Linux, for a packaged self-check), builds an NSIS installer,
 # installs and launches it on a real Windows runner (--smoke-test), and publishes it as a release asset.
+# The automated tests (compile check, suite, unit tests) must pass first; only the default branch publishes.
 # Runs on demand (workflow_dispatch) and whenever the release version, the installer or the export presets change.
 name: Windows installer
 
@@ -21,8 +22,42 @@ env:
   GODOT_RELEASE: "4.3-stable"
 
 jobs:
+  # The test gate (Milestone A1): compile check, regression & progression suite and unit tests, headless.
+  # Nothing is exported, packaged or published unless every test passes.
+  tests:
+    name: Automated tests (compile, suite, unit)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot
+        run: |
+          set -e
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Import assets
+        run: godot --headless --path game --import || true
+
+      - name: Run the full test suite
+        run: GODOT=godot ./game/run_tests.sh full
+
+      - name: Keep the test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.run_number }}
+          path: |
+            ~/.local/share/godot/app_userdata/Ember & Ash/logs/
+          if-no-files-found: ignore
+          retention-days: 30
+
   build:
     name: Export & package
+    needs: tests
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.ver.outputs.version }}
@@ -111,6 +146,8 @@ jobs:
   release:
     name: Publish release
     needs: [build, verify-windows]
+    # Only the default branch publishes; pushes to other branches build and verify but never release.
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/download-artifact@v4

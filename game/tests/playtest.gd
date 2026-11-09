@@ -14,6 +14,9 @@ const FULL_WORKSHOP_PHASES := ["full", "stations", "interiors", "nav", "minigame
 
 
 func _ready() -> void:
+	# saves (pause menu, autosave, phases) go to the play-tests' own folder user://test_saves/playtest/ — never the
+	# player's user://saves/; it persists between processes because "reload" phases continue a save made earlier
+	Saves.use_test_dir("playtest")
 	DirAccess.make_dir_recursive_absolute("user://playtest")
 	main = load("res://scenes/main.tscn").instantiate()
 	get_tree().root.add_child.call_deferred(main)
@@ -28,6 +31,7 @@ func _ready() -> void:
 	note("DONE phase %s — %d failures" % [phase, fails])
 	var f := FileAccess.open("user://playtest/report_%s.txt" % phase, FileAccess.WRITE)
 	f.store_string("\n".join(log_lines))
+	Saves.end_test_run()
 	get_tree().quit(1 if fails > 0 else 0)
 
 

@@ -1,0 +1,122 @@
+## SaveMigrations — explicit, ordered save-schema steps (Milestone A1 "Protect the Foundation").
+## EN: A save file records the schema version of its data (`data.version`). On load, `run()` applies exactly the
+##     steps from that version up to `Game.SAVE_VERSION`, one at a time and in order, records the new version in
+##     the data after each step and logs every step. Each step is a static function that converts the data
+##     dictionary in place and is safe on data that already has the target shape (running it twice changes
+##     nothing). A save from a NEWER version than this build is never down-converted: it loads best-effort with
+##     a warning.
+##     Rules for future steps:
+##       - one step per schema change, appended at the end of STEPS; bump Game.SAVE_VERSION to the new `to`;
+##       - conversions of EXISTING data belong here; lazily created NEW keys may stay in their system's getter;
+##       - never delete history (Lore, provenance, records) — convert it;
+##       - add a golden-save test (tests/suite/cases/t_saves.gd) that proves the step on authentic old saves.
+## DA: Eksplicitte, ordnede trin for gemte spil: v(n) → v(n+1). Hvert trin konverterer data og kan køres igen
+##     uden at ændre noget. Et gemt spil fra en nyere version indlæses så godt som muligt med en advarsel.
+class_name SaveMigrations
+extends RefCounted
+
+## The ordered step list: entry i converts version i → i + 1 (`to` = i + 1). Keep `Game.SAVE_VERSION` equal to
+## the last `to` (t_saves checks it).
+const STEPS := [
+	{"to": 1, "name": "early containers",
+		"what": "Prototype saves (no version) gain the returns, customers and orders lists."},
+	{"to": 2, "name": "formalise the per-load fix-ups",
+		"what": "Cloaks worn in the amulet slot move to the cloak slot (same instance) and cloak commissions name the cloak slot; saves from before the property system own the whole ground floor and every station (legacy); saves from before the Loft gain its unowned rooms and doorways; saves from before the skill tree learn every node their skills already meet."},
+	# ---- RESERVED for the IDENTITY worker (Milestone A1): the lead wires it.
+	# {"to": 3, "name": "canonical item identity",
+	#	"what": "Records become uid + snapshot; one physical item per uid (ItemRegistry.migrate_records)."},
+	# Add `3: _v2_to_v3(data)` to apply_step() below, implement _v2_to_v3 as a call into the identity worker's
+	# idempotent conversion (e.g. ItemRegistry.migrate_records(data)), and set Game.SAVE_VERSION := 3.
+]
+
+
+## The schema version this code writes (the last step's target).
+static func latest() -> int:
+	return STEPS.size()
+
+
+## The schema version a data dictionary declares (0 = a prototype save without one).
+static func version_of(data: Dictionary) -> int:
+	var v: Variant = data.get("version", 0)
+	if v is int or v is float:
+		return int(v)
+	if v is String and (v as String).is_valid_int():
+		return int(v)
+	return 0
+
+
+## Upgrades `data` in place from its version to `target` (default: Game.SAVE_VERSION), step by step.
+## Returns a report: {"from", "to", "steps": [names applied], "newer": bool (the save is from a newer build)}.
+static func run(data: Dictionary, target := -1) -> Dictionary:
+	if target < 0:
+		target = Game.SAVE_VERSION
+	var v := version_of(data)
+	var report := {"from": v, "to": v, "steps": [], "newer": false}
+	if v > target:
+		report["newer"] = true
+		Log.warn("Save is from a newer version (schema %d, this build reads %d) — loading best-effort" % [v, target])
+		return report
+	while v < target:
+		var to := v + 1
+		if not apply_step(to, data):
+			Log.error("Save migration v%d → v%d is missing — the save stays at v%d" % [v, to, v])
+			break
+		data["version"] = to
+		(report["steps"] as Array).append(str(STEPS[to - 1]["name"]))
+		Log.info("Save migrated v%d → v%d (%s)" % [v, to, str(STEPS[to - 1]["name"])])
+		v = to
+	report["to"] = v
+	return report
+
+
+## Applies the single step that produces version `to`. Returns false if no such step exists.
+static func apply_step(to: int, data: Dictionary) -> bool:
+	match to:
+		1:
+			_v0_to_v1(data)
+		2:
+			_v1_to_v2(data)
+		_:
+			return false
+	return true
+
+
+# ======================================================================= the steps
+## v0 → v1: early prototypes lacked these containers.
+static func _v0_to_v1(data: Dictionary) -> void:
+	for key in ["returns", "customers", "orders"]:
+		if not data.has(key):
+			data[key] = []
+
+
+## v1 → v2: the conversions that 0.14.6 and earlier ran on every load or lazily on first touch, made explicit.
+## Every part is idempotent and keeps item instances (uid, maker, provenance, story) untouched.
+static func _v1_to_v2(data: Dictionary) -> void:
+	# The Living Realm: cloaks have their own slot; older saves wore them in the amulet's
+	var cloaks := Items.migrate_cloak_slots(data)
+	if cloaks > 0:
+		Log.info("  moved %d cloak(s) from the amulet slot to the cloak slot" % cloaks)
+	# Property and skill-tree conversions read the save through Game.state: bind it for the duration
+	if not data.get("player") is Dictionary:
+		return
+	_with_state(data, func() -> void:
+		var had_property := data.has("property")
+		var had_floors := had_property and (data["property"] as Dictionary).has("floors_v")
+		Property.st()          # legacy (pre-property) ownership, then the Loft's rooms for pre-Loft saves
+		if not had_property:
+			Log.info("  a save from before the property system: the whole ground floor and every station are owned")
+		elif not had_floors:
+			Log.info("  the Loft's rooms and doorways were added (unowned)")
+		var had_tree := data.has("skilltree")
+		SkillTree.ensure()     # pre-skill-tree saves learn every node their skills already meet
+		if not had_tree:
+			Log.info("  a save from before the skill tree: nodes learned from the smith's skills")
+	)
+
+
+## Runs `fn` with Game.state pointing at `data` (systems read the save through Game.state), then restores it.
+static func _with_state(data: Dictionary, fn: Callable) -> void:
+	var prev: Dictionary = Game.state
+	Game.state = data
+	fn.call()
+	Game.state = prev

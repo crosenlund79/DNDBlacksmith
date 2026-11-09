@@ -104,3 +104,22 @@ func save_load(slot := "suite_roundtrip") -> bool:
 	var ok := Saves.load_slot(slot)
 	Saves.delete(slot)
 	return ok
+
+
+## Writes the current game as a save from an OLDER schema version (the file declares `version`), so loading it
+## runs the migration steps from that version — for tests that build an old-shaped state by hand.
+func save_as_version(slot: String, version: int) -> bool:
+	if not Saves.save(slot):
+		return false
+	var p := Saves.path(slot)
+	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(p))
+	if not doc is Dictionary:
+		return false
+	doc["data"]["version"] = version
+	doc["meta"]["version"] = version
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	if f == null:
+		return false
+	f.store_string(JSON.stringify(doc))
+	f.close()
+	return true

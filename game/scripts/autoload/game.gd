@@ -7,7 +7,8 @@
 ##     blot. Uret går, mens verdenen er aktiv, og ingen blokerende brugerflade er åben.
 extends Node
 
-const SAVE_VERSION := 1
+## The save-schema version this build writes; SaveMigrations.STEPS converts every older version up to it.
+const SAVE_VERSION := 2
 const MINUTES_PER_SECOND := 1.6   # one in-game day ≈ 15 real minutes
 const DAY_START_HOUR := 6
 

@@ -20,6 +20,8 @@ func check(cond: bool, name: String) -> void:
 
 
 func _ready() -> void:
+	# saves go to this run's private folder (real saves are never touched); removed at the end
+	Saves.use_test_dir()
 	# deterministic: the same random sequence every run (several checks depend on simulated chance)
 	seed(20261108)
 	Game.new_game()
@@ -63,6 +65,7 @@ func _ready() -> void:
 	var f := FileAccess.open("user://logs/test_report.txt", FileAccess.WRITE)
 	if f:
 		f.store_string(txt)
+	Saves.end_test_run()
 	get_tree().quit(0 if failed == 0 else 1)
 
 
