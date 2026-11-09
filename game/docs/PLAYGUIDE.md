@@ -280,6 +280,21 @@ Counters close at night — the prompt tells you when they open.
 inspection (*Improve it…*) — refine, rework, upgrade or reforge it. You see before and after, play the station's
 precision check, and the piece keeps its name, maker and story; the work is written into its history.
 
+## The Living Realm: a growing forge in a living world
+
+**Your forge grows.** Each workshop room now shows its craft and gets finer as your skill, stations and renown grow.
+When the leather room is full, buy **Ilse's Loft** next door: a second floor (stairs from the stock hall; later an
+aetheric lift). After each step of a recipe, *Walk to …* takes you to the next station; *Craft again* repeats a recipe.
+
+**Adventurers have lives.** Every campaign has its own world seed and roster. Adventurers chase their own goals, make
+friends and rivals, form named companies, retire and are replaced. Look at their sheet (J, then a card): gear around a
+figure, company, goals and bonds.
+
+**Advice, sponsorship, contracts.** Adventurers sometimes come to the counter for advice — choose what to recommend; they
+may refuse. In the Hirelings ledger (H) you can **sponsor** a company to fetch a material, a relic or lost gear from a
+known site. Once your work is known, patrons write with **major contracts**: buy the **Project Bench** (Property ›
+Equipment) and work in blocks of hours; apprentices can help.
+
 ## Quick evaluation with Developer Tools (F10)
 
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.

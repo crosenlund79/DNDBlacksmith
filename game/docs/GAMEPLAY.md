@@ -544,3 +544,21 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Developer catalogue (F10)** | Search every item, spawn with quantity, rarity and craftsmanship, add money; developer items are marked and never earn achievements, names, Epic or progression | `dev_tools.gd`, `dev_catalogue_panel.gd` |
 
 **Screenshots:** `docs/screenshots/iteration_ux/`.
+
+## The Living Realm — milestones 2–5
+
+| System | What it does | Code / data |
+|---|---|---|
+| **Evolving smithy** | Workshop rooms read as their craft (banner, painted name; *Set a room's craft* in the layout editor) and grow from modest → established → masterwork with real skill, stations and renown. Auto-placement keeps a craft's stations together | `smithy.gd`, `property.gd`, `smithy_layout.py` |
+| **The Loft** | A second floor bought like any room next door (Ilse's Loft, then the West Garret): weaving & tailoring loft, drying loft, rune scriptorium; stair from the stock hall and an aetheric lift (needs the Loft and the Arcane Foundry). Stations, crafting, apprentices and the editor all work upstairs; the building's outside is unchanged | `property.gd` floors, `world.gd` |
+| **Less walking** | After each operation: *Walk to the next station* (upstairs too); a finished piece offers *Craft again* | `smithy.gd`, `player_nav.gd` |
+| **Equipment sheets** | Adventurers' and hirelings' gear around a humanoid figure by body region, condition at a glance, full stats on request, compare with pieces from your stores | `equipment_sheet.gd` |
+| **Cloak slot** | Cloaks have their own slot (worn with an amulet); old saves move cloaks out of the amulet slot as the same item | `items.gd` (`migrate_cloak_slots`) |
+| **Soft terrain** | Feathered meadows, damp banks, tilled beds, trampled paddocks | `village_ground.gd`, `soft_ground.gdshader` |
+| **Living adventurers** | A world seed per campaign (same seed → same roster); story characters keep their roles, reserve adventurers vary and arrive later; personal goals steer risk, destinations and shopping; friendships and rivalries form; retirement and newcomers | `living.gd`, `extra_living.py` |
+| **Companies** | Named persistent parties with leader, members, reputation and shared history; they recruit, lose members, change leader, split or disband for real reasons | `companies.gd` |
+| **Consultations** | Adventurers ask for advice at the counter (after defeats, with worn gear, before a dangerous trip); recommendations from their real gear and the destination's threats; persuasion from your craft skill, relationship, reputation and track record; accepted advice changes what they buy, order, repair or where they go | `consult.gd`, `consult_panel.gd` |
+| **Sponsored expeditions** | From the Hirelings ledger (H): choose a site and objective (a material, relic, lost gear, salvage, a discovery), a company or adventurer and terms; they accept, refuse or counter; the expedition runs in the ordinary simulation and delivers what it really found | `sponsor.gd`, `sponsor_section.gd` |
+| **Major contracts** | Patrons from a wool merchant to the Crown, opened by real accomplishments (a royal letter needs a great lord's order delivered well, an Epic piece or plaques and a renowned forge); work at the Project Bench in blocks of 1–4 hours, apprentices add contract hours; patron crates, rare materials, an optional masterpiece; outcomes from excellent to late — never a game over | `contracts.gd`, `contracts_panel.gd`, `data/contracts.json` |
+
+**Screenshots:** `docs/screenshots/living_realm/`.
