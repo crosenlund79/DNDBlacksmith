@@ -1,8 +1,9 @@
 <!--
-  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.0.docx (Design Baseline 1.0, 9 November 2026).
-  The .docx is the approved source; this file reproduces its text faithfully for use in the repository.
-  Only formatting was adapted for Markdown (boxed callouts → blockquotes). Revisions follow section 16.1 and the
-  Change history at the end of this file, and require explicit user approval and a version increment.
+  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.1.docx (Design Baseline 1.1, 9 November 2026).
+  The .docx is the approved source; this file reproduces its text faithfully for use in the repository (generated from
+  the .docx, so both share one revision history — see "Revision history" at the end). Only formatting was adapted for
+  Markdown (boxed callouts → blockquotes). The v1.0 .docx is kept as the dated historical copy. Revisions require
+  explicit user approval, a version increment and matching updates to both files (CLAUDE.md §2.5).
 -->
 
 *THE WORLD REMEMBERS*
@@ -15,7 +16,7 @@
 >
 > A blacksmith may create a sword, see it travel through generations, repair it when it returns, and discover that its history helped shape the fate of a realm. The smith need not become its hero.
 
-**DESIGN BASELINE 1.0**
+**DESIGN BASELINE 1.1**
 
 9 November 2026 · Authoritative creative direction
 
@@ -25,13 +26,13 @@
 
 This document is the **single canonical map for the intended game**. It supersedes earlier creative-roadmap wording where our later decisions are more specific; it does **not** erase the original roadmap or pretend future features have shipped.
 
-| **Field**             | **Rule**                                                                                                |
-|-----------------------|---------------------------------------------------------------------------------------------------------|
-| Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.        |
-| Status                | Design baseline locked as v1.0. New gameplay scope requires explicit approval and a recorded revision.  |
-| Current code baseline | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026).              |
-| Technical evidence    | Claude status audit and Extra High architecture report are evidence, not the game’s creative authority. |
-| What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                   |
+| **Field**             | **Rule**                                                                                                                                                |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.                                                        |
+| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
+| Current code baseline | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026).                                                              |
+| Technical evidence    | Claude status audit and Extra High architecture report are evidence, not the game’s creative authority.                                                 |
+| What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                                                                   |
 
 ## Decision language
 
@@ -166,6 +167,28 @@ Workshop specialists perform suitable work at actual stations. The alchemist pro
 - Some help requests arise naturally from real, difficult work. Optional requests can be declined; employees continue, potentially without a bonus. Only expressly flagged exceptional work may require cooperation.
 
 The actual mechanic for stage persistence, assignment, movement, work-blocks and assistance is **technical implementation**, not new creative scope. It must preserve the physical, believable workshop.
+
+## 4.5 Steward Mode
+
+Steward Mode lets the player explicitly hand the running workshop to a steward and take it back later. It is a **genuine autonomous workshop manager**, not passive time advancement, and it acts only through the same actions and world state as ordinary play.
+
+- **Explicit and online only.** The player activates and exits Steward Mode. It progresses only while the game is running and the mode is active, including when minimized where the operating system permits. There is no offline progression or catch-up, including after a save is reopened.
+
+- **Routine business, really done.** The steward evaluates the workshop and independently accepts suitable ordinary orders, assigns available employees, plans production, replenishes materials, manages stock and handles ordinary sales, and it responds to unavailable workers, shortages and production bottlenecks.
+
+- **Nothing is conjured.** It uses real inventory, money, contracts, production time, people, skills and world simulation; it never creates goods, money, work or accomplishments. Employees progress by the normal rules; the absent smith gains no crafting experience. It never automates work that needs a specialist, station or capability the workshop does not have.
+
+- **The player sets the boundaries.** Persistent, understandable standing instructions cover spending limits and permitted purchases, allowed activities, protected items and reserved supplies, and the rules for ordinary orders and selling.
+
+- **The steward defers; it does not decide.** Unique, Epic and historically significant equipment, dangerous reworking, extraordinary commissions, political commitments, inheritance, major relationships and other consequential personal decisions are left for the smith. The world is never frozen for them: significant visitors may leave requests or correspondence, and existing timers continue.
+
+- **Competent, not superior.** The steward manages well but never outperforms the active player’s craftsmanship or judgment.
+
+- **While You Were Away.** On return the player sees the actual elapsed game time, financial changes, completed and pending production and orders, purchases, sales, stock and employee activity, significant world developments, and outstanding decisions and correspondence. Every claim is backed by recorded events and real state changes, without duplicates or invented narrative.
+
+- **Sealed correspondence.** Genuinely significant deferred matters that come from an actual world event or visitor may arrive as a sealed letter whose contents stay unknown until the player opens it. Opening it leads to the actual pending matter and preserves the player’s agency. Letters are special, not guaranteed on every return.
+
+- **One engine for play and testing.** The same steward decision engine drives the playable mode and seeded, accelerated, headless soak tests (test environment only).
 
 # 5 Designs, molds and craft knowledge
 
@@ -353,6 +376,8 @@ The **original Phase 0–10 creative roadmap remains canonical**. The architectu
 | I — Civilizations and stories   | Scale only what H demonstrates; add conditional authored storylines and neutral dealings.                                                                                                 |
 | J — Chronicle and campaign      | Consolidate Lore truth, summarization, long-term history and replayability.                                                                                                               |
 
+**Steward Mode (S1)** is the approved next development priority, following Gate A1 “Protect the Foundation” (versioned save migrations, golden saves, equipment identity and the CI test gate, integrated at commit 5b8af75) and preceding the Specialist Workshop (Gates B–C). Its decision layer must stay compatible with the future multi-specialist workshop. This records priority; it is not a claim that the feature is implemented.
+
 **Reliquary / ancestral restoration** is an approved **creative target**, but its engineering placement within E, I and J must be determined from prerequisites (persistent identity, damage state, ownership/lineage evidence, story triggers). Do not claim it is implemented or create a separate “heir game.”
 
 ## 12.3 Acceptance gates
@@ -409,26 +434,27 @@ An extraordinary, clearly warned reworking fails. Damage and restoration matter,
 
 The following records the eighteen architectural decisions explicitly settled after the Extra High audit. These are **creative commitments**; implementation and tuning remain conditional on stability, review and tests.
 
-| **Decision**             | **Locked direction**                                                                                                      |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| D1 Employee systems      | Keep distinct workshop and field staff entities with a shared worker-profile foundation.                                  |
-| D2 Smith competence      | Basic other-craft knowledge is allowed; advanced mastery belongs to specialists.                                          |
-| D3 Progression           | Deep smithing tree + workshop Designs/knowledge + personal specialist progression.                                        |
-| D4 Recognition           | Original maker, workshop and specialist contributors can all receive appropriate, separate credit.                        |
-| D5 Orders                | Ordinary bulk units plus honest delivery/lot records; prestigious orders may contain multiple named persistent artifacts. |
-| D6 Stations              | Multiple of a type may exist, tightly constrained by believable artisan-space limits.                                     |
-| D7 Herbalism             | Herbalism sits within the Alchemist profession; Druid is a possible background, not a required class.                     |
-| D8 Help requests         | Real-work-driven, nonintrusive, normally optional; exceptional flagged commissions may require help.                      |
-| D9 Lore retention        | Keep significant history and item provenance permanently; summarize routine activity safely.                              |
-| D10 Reputation geography | Audience- and place-dependent, gradual information spread through real-world channels.                                    |
-| D11 Craft tools          | Specialized craftable molds/patterns where relevant; reusable without durability loss.                                    |
-| D12 Maritime contacts    | Named persistent sailors/captains with relationships and simplified real voyages.                                         |
-| D13 Unique               | Exactly one authentic defined Unique artifact per campaign; Epic is earned history.                                       |
-| D14 Economy              | Payments have real payers; subsidies are explicit and recorded.                                                           |
-| D15 Canonical roadmap    | This Master Design / original phase numbering govern; no forced political allegiance.                                     |
-| D16 Replayability        | Reproducible beginnings, emergent and potentially different histories; deterministic test mode as needed.                 |
-| D17 Historic upgrades    | Arcanists may enchant and specialists may refine old existing artifacts while identity remains.                           |
-| D18 Earned renown        | Reputation cannot be bought directly; acclaim follows actual deeds and credible spread.                                   |
+| **Decision**             | **Locked direction**                                                                                                                                                       |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| D1 Employee systems      | Keep distinct workshop and field staff entities with a shared worker-profile foundation.                                                                                   |
+| D2 Smith competence      | Basic other-craft knowledge is allowed; advanced mastery belongs to specialists.                                                                                           |
+| D3 Progression           | Deep smithing tree + workshop Designs/knowledge + personal specialist progression.                                                                                         |
+| D4 Recognition           | Original maker, workshop and specialist contributors can all receive appropriate, separate credit.                                                                         |
+| D5 Orders                | Ordinary bulk units plus honest delivery/lot records; prestigious orders may contain multiple named persistent artifacts.                                                  |
+| D6 Stations              | Multiple of a type may exist, tightly constrained by believable artisan-space limits.                                                                                      |
+| D7 Herbalism             | Herbalism sits within the Alchemist profession; Druid is a possible background, not a required class.                                                                      |
+| D8 Help requests         | Real-work-driven, nonintrusive, normally optional; exceptional flagged commissions may require help.                                                                       |
+| D9 Lore retention        | Keep significant history and item provenance permanently; summarize routine activity safely.                                                                               |
+| D10 Reputation geography | Audience- and place-dependent, gradual information spread through real-world channels.                                                                                     |
+| D11 Craft tools          | Specialized craftable molds/patterns where relevant; reusable without durability loss.                                                                                     |
+| D12 Maritime contacts    | Named persistent sailors/captains with relationships and simplified real voyages.                                                                                          |
+| D13 Unique               | Exactly one authentic defined Unique artifact per campaign; Epic is earned history.                                                                                        |
+| D14 Economy              | Payments have real payers; subsidies are explicit and recorded.                                                                                                            |
+| D15 Canonical roadmap    | This Master Design / original phase numbering govern; no forced political allegiance.                                                                                      |
+| D16 Replayability        | Reproducible beginnings, emergent and potentially different histories; deterministic test mode as needed.                                                                  |
+| D17 Historic upgrades    | Arcanists may enchant and specialists may refine old existing artifacts while identity remains.                                                                            |
+| D18 Earned renown        | Reputation cannot be bought directly; acclaim follows actual deeds and credible spread.                                                                                    |
+| D19 Steward Mode         | Explicit, online-only autonomous workshop management within standing instructions; real actions only; consequential matters deferred; truthful While You Were Away report. |
 
 ## 14.1 Later design additions now included
 
@@ -439,6 +465,8 @@ The following records the eighteen architectural decisions explicitly settled af
 - **Heir restoration:** real descendants can unlock exceptional restoration possibilities and negotiate, consent, refuse, or commission restoration while retaining the right to take the weapon home.
 
 - **Ancestral binding:** some truly Unique items may depend on heir cooperation for full restoration; non-heir attempts can be difficult, expensive, incomplete or riskier. Not universal across all Unique items.
+
+- **Steward Mode (D19):** an explicit, online-only autonomous workshop manager acting within the player’s standing instructions; it defers consequential matters, reports truthfully on return and may deliver sealed correspondence from real events. Approved 9 November 2026 as the next development priority (v1.1).
 
 # 15 Open details, not invitations to change direction
 
@@ -458,7 +486,7 @@ Other mechanics that would meaningfully widen scope—full naval travel, family-
 
 ## 16.1 Authority and revision control
 
-- **Treat this v1.0 document as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
+- **Treat this v1.1 document as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
 
 - Any new scope or reversal requires an explicit decision. Add a short change record: what changed, why, impacts and date.
 
@@ -486,10 +514,9 @@ Design sources: **Ember & Ash Master Roadmap Handover** (20261109_Roadmap.txt); 
 
 Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md**, both dated 9 November 2026, assessing build 0.14.6 / commit 154d08a. Technical reports verify the baseline, not future completion.
 
----
+# Revision history
 
-## Change history
-
-| Version | Date | Change | Approved by |
-|---|---|---|---|
-| 1.0 | 9 November 2026 | Design Baseline 1.0 adopted as the canonical game design. Markdown edition created from `Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.0.docx`; no content changes. | User |
+| Version               | Change                                                                                                                                                                 |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.0 — 9 November 2026 | Design Baseline 1.0 adopted as the canonical game design.                                                                                                              |
+| 1.1 — 9 November 2026 | Added §4.5 Steward Mode, its priority in §12 and decision D19 (§14, §14.1); version labels updated. All v1.0 decisions are unchanged. Approved explicitly by the user. |
