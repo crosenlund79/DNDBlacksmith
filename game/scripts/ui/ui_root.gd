@@ -177,8 +177,8 @@ func _build_hud() -> void:
 	# toasts
 	toast_box = UIKit.vbox(6)
 	toast_box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	toast_box.position = Vector2(-536, -420)      # clear of the toolbar (it ends near x 1355 at 1920)
-	toast_box.size = Vector2(516, 400)
+	toast_box.position = Vector2(-516, -420)      # clear of the toolbar (it ends near x 1394 at 1920 with the Steward socket)
+	toast_box.size = Vector2(496, 400)
 	toast_box.alignment = BoxContainer.ALIGNMENT_END
 	toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(toast_box)

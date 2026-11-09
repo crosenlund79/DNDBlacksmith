@@ -1913,7 +1913,7 @@ func phase_interface() -> void:
 	expect(await click("New Game"), "iface: new game")
 	await wait(2.5)
 	Settings.set_value("gameplay/dice_mode", "auto")
-	expect(U().toolbar != null and U().toolbar.buttons.size() == 10, "iface: toolbar with %d buttons" % U().toolbar.buttons.size())
+	expect(U().toolbar != null and U().toolbar.buttons.size() == 11, "iface: toolbar with %d buttons" % U().toolbar.buttons.size())
 	expect(Tutorial.enabled() and U().tutorial_card.visible, "iface: the tutorial is shown on a new game")
 	var tb := U().toolbar.get_global_rect()
 	var toast_r := U().toast_box.get_global_rect()
