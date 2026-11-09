@@ -35,6 +35,7 @@ static func on_day(day: int) -> void:
 	Commerce.on_day()
 	ItemStory.on_day()   # earned names, fame commissions, the circulating pool
 	Apprentices.on_day()   # apprentice wages, loyalty, upkeep, independence, weekly applicants
+	Contracts.on_day()   # The Living Realm: patrons' letters, deadlines of major contracts
 	if day % 7 == 1:
 		Hire.refresh_applicants()
 	_social_events()

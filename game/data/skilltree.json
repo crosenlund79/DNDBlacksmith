@@ -106,7 +106,8 @@
      "anvil",
      "crucible",
      "quench_trough",
-     "grinding_wheel"
+     "grinding_wheel",
+     "project_bench"
     ],
     "techniques": [
      {
@@ -1884,6 +1885,7 @@
   "crucible": "s_basic",
   "quench_trough": "s_basic",
   "grinding_wheel": "s_basic",
+  "project_bench": "s_basic",
   "bellows": "m_alloys",
   "arcane_crucible": "ar_crucible",
   "leyline_conductor": "ar_crucible",

@@ -11,7 +11,7 @@
 class_name WorkshopPanel
 extends UIWindow
 
-const GROUPS := [["repair", "Customer repairs", "ui/act_hammer"], ["commission", "Commissions", "ui/tb_orders"],
+const GROUPS := [["contract", "Major contracts", "contracts/crate_goods"], ["repair", "Customer repairs", "ui/act_hammer"], ["commission", "Commissions", "ui/tb_orders"],
 	["production", "Production", "ui/tb_designer"], ["maintain", "Upkeep", "ui/tb_property"]]
 const STATE_COL := {"working": "#24409a", "queued": "#20140c", "blocked": "#9e3a0c", "done": "#26622f", "failed": "#7e2418", "cancelled": "#8a7a60"}
 
@@ -250,6 +250,27 @@ func _build_top() -> void:
 	pv.add_child(UIKit.rich(txt, 16, true))
 	plate.add_child(pv)
 	right_top.add_child(plate)
+	_contracts_line()
+
+
+## The Living Realm: major contracts in hand and letters waiting (the contract view opens at the Project Bench).
+func _contracts_line() -> void:
+	if Contracts.active().is_empty() and Contracts.offers().is_empty():
+		return
+	var row := UIKit.hbox(10)
+	var parts := PackedStringArray()
+	for c in Contracts.active():
+		parts.append("[b]%s[/b] %d/%d pieces, day %d" % [str(c["title"]), int(c["units_done"]), int(c["units_total"]), int(c["deadline"])])
+	if not Contracts.offers().is_empty():
+		parts.append("[color=#7e2418]%d letter%s waiting[/color]" % [Contracts.offers().size(), "" if Contracts.offers().size() == 1 else "s"])
+	var r := UIKit.rich("Major contracts: " + " · ".join(parts), 16)
+	r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(r)
+	var b := InkIcons.button("contracts/crate_goods", "Contract view", func(): close(); Events.open_panel.emit.call_deferred("contracts", {}), 0)
+	b.name = "ContractViewButton"
+	b.add_theme_font_size_override("font_size", 16)
+	row.add_child(b)
+	right_top.add_child(row)
 
 
 # ======================================================================= right: the queue
@@ -261,6 +282,8 @@ func _group_of(t: Dictionary) -> String:
 			return "commission"
 		"maintain":
 			return "maintain"
+		"contract":
+			return "contract"
 	return "production"
 
 
@@ -349,7 +372,7 @@ func _task_row(t: Dictionary) -> Control:
 	var est_by := str(Apprentices.get_a(str(e.get("app", ""))).get("name", ""))
 	var parts := PackedStringArray()
 	if int(t.get("repeat", 1)) > 1:
-		parts.append("%d/%d made" % [int(t.get("done", 0)), int(t.get("repeat", 1))])
+		parts.append(("%d/%d h worked" if str(t.get("kind", "")) == "contract" else "%d/%d made") % [int(t.get("done", 0)), int(t.get("repeat", 1))])
 	if who != "":
 		parts.append("[b]%s[/b] at work" % who)
 	elif est_by != "":
@@ -414,7 +437,7 @@ func _build_adder() -> void:
 	adder.add_child(UIKit.divider())
 	var row := UIKit.hbox(6)
 	row.add_child(UIKit.label("Add work:", 20, "heading"))
-	for k in [["repair", "Repair"], ["commission", "Commission"], ["craft", "Craft"], ["prep", "Prepare materials"], ["maintain", "Upkeep"]]:
+	for k in [["repair", "Repair"], ["commission", "Commission"], ["craft", "Craft"], ["prep", "Prepare materials"], ["maintain", "Upkeep"], ["contract", "Contract hours"]]:
 		var key: String = k[0]
 		var b := UIKit.button(k[1], func(): add_kind = key; UIKit.clear(adder); _build_adder(), 0)
 		b.disabled = add_kind == key
@@ -433,6 +456,27 @@ func _build_adder() -> void:
 			_add_recipe(add_kind)
 		"maintain":
 			_add_maintain()
+		"contract":
+			_add_contract()
+
+
+## The Living Realm: hours on a major contract (the hardest recipe of the order decides who is qualified).
+func _add_contract() -> void:
+	if Contracts.active().is_empty():
+		adder.add_child(_line("No major contract in hand. Patrons' letters arrive by messenger; read them at the Project Bench.", 17, "body_italic"))
+		return
+	var f := _flow()
+	for c in Contracts.active():
+		var cid := str(c["id"])
+		for h in Contracts.cfg("apprentice_hours", [4, 8, 16]):
+			var hrs := int(h)
+			var b := UIKit.button("%s — %d h" % [str(c["title"]).left(40), hrs], func(): _add_err(Apprentices.add_task("contract", {"target": cid, "repeat": hrs, "priority": 3})), 0)
+			b.add_theme_font_size_override("font_size", 16)
+			b.disabled = Contracts.ready(cid)
+			b.tooltip_text = "Every piece is made — deliver it at the bench." if Contracts.ready(cid) else "Hours of work at the Project Bench or the order's stations, from the patron's crate first."
+			f.add_child(b)
+	adder.add_child(_line("Major contracts in hand — queue hours of work (the best qualified hand takes them):", 16, "body_italic"))
+	adder.add_child(f)
 
 
 ## A wrapped line for the right column (a wrapping label needs a width before the first layout).

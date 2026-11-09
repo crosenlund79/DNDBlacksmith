@@ -92,7 +92,7 @@ NODES = [
     N("s_basic", "smithing", "Basic Ironworking & Repairs", "The apprentice's craft: heat, hammer, quench and grind honest iron.", 1, 0,
       recipes=["smelt_iron", "iron_longsword", "hand_axe", "flanged_mace", "round_shield", "iron_helm",
                "iron_shortsword", "iron_hatchet", "iron_buckler"],
-      unlock_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel"],
+      unlock_stations=["forge", "anvil", "crucible", "quench_trough", "grinding_wheel", "project_bench"],
       techniques=[T("t_repairs", "Field repairs", "Dented and notched gear can be ground and re-tempered at the grinding wheel.")], icon="icons/sword_iron"),
     N("s_blades", "smithing", "Simple Blades & Armour", "Once your first sword has left the anvil: plate for the body and silver for the hand.", 1, 1,
       skill=("smithing", 4), nodes=["s_basic"], seen=["sword_iron"],

@@ -86,6 +86,8 @@ static func _shop_counter() -> Dictionary:
 
 # ------------------------------------------------------------------ stations
 static func _station(sid: String) -> Dictionary:
+	if sid == Contracts.BENCH:
+		return Contracts.prompt()   # The Living Realm: the Project Bench (major contracts)
 	var st := DB.station(sid)
 	var p := _p(str(st.get("name", sid)))
 	# iteration 012: an apprentice at this station says so (the smith still takes it; they step aside)
