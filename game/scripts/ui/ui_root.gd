@@ -29,6 +29,7 @@ var minimap: VillageMapView
 var minimap_caption: Label
 var toolbar: HudToolbar
 var tutorial_card: TutorialCard
+var steward_plate: StewardPlate
 var _last_player_pos := Vector2.INF
 var _poll := 0.0
 
@@ -54,6 +55,7 @@ func _ready() -> void:
 	add_child(SpiritVoice.new())   # awakened pieces speak (ItemSpirit); wires the Lore hook
 	Reference.note_seen()
 	_refresh_hud()
+	StewardUI.after_world_start.call_deferred()   # Steward Mode: a session closed by loading reports once
 
 
 static func show_tooltip(bbcode: String) -> void:
@@ -141,6 +143,8 @@ func _build_hud() -> void:
 	tutorial_card.position = Vector2(20, 250)
 	hud.add_child(tutorial_card)
 	hud.add_child(HirelingHud.new())   # bottom-left: the hands at a glance (iteration 010)
+	steward_plate = StewardPlate.new()   # Steward Mode: the live status plate / sealed-letter chip (right, under the minimap)
+	hud.add_child(steward_plate)
 	# prompt
 	prompt_label = UIKit.label("", 26, "heading", Color("#efe4cc"))
 	prompt_label.add_theme_color_override("font_outline_color", Color("#20140c"))
@@ -384,9 +388,19 @@ func _on_open_panel(id: String, args: Dictionary) -> void:
 
 
 func _route(id: String, args: Dictionary) -> void:
+	# Steward Mode: while the smith is away, only panels that look (and menus) open; acting in the world waits
+	var away := StewardUI.away_block(id)
+	if away != "":
+		Audio.play("sfx/error", -8.0)
+		Events.toast.emit(away, "info")
+		return
 	match id:
 		"prompt":
 			# {text} (a plain label) or a WorldPrompts dictionary {title, actions, status, off, note}
+			if Steward.smith_away():
+				prompt_label.text = ""
+				prompt_sub.text = ""
+				return
 			prompt_label.text = WorldPrompts.line(args, Settings.key_label("interact"))
 			prompt_sub.text = WorldPrompts.sub(args) if prompt_label.text != "" else ""
 		"station":
@@ -433,11 +447,11 @@ func _route(id: String, args: Dictionary) -> void:
 		"sleep":
 			open(SleepPanel.new())
 		"pause":
-			open(PausePanel.new())
+			open(_stops_time(PausePanel.new()))
 		"saves":
-			open(SavePanel.new(args.get("mode", "save")))
+			open(_stops_time(SavePanel.new(args.get("mode", "save"))))
 		"settings":
-			open(SettingsPanel.new())
+			open(_stops_time(SettingsPanel.new()))
 		"difficulty":
 			open(DifficultyPanel.new())
 		"skilltree":
@@ -501,6 +515,19 @@ func _route(id: String, args: Dictionary) -> void:
 		"apprentice":   # iteration 012: a word with a workshop apprentice
 			if not Apprentices.get_a(str(args.get("id", ""))).is_empty():
 				open(ApprenticeTalkPanel.new(str(args["id"])))
+		"steward":   # Steward Mode (S1): hand-over, the steward at work, standing instructions, matters waiting
+			open(StewardPanel.new(args))
+		"welcome_back":   # Steward Mode: While You Were Away {report}
+			open(WelcomeBackPanel.new(args.get("report", Steward.last_report()), bool(args.get("old", false))))
+		"sealed_letter":   # Steward Mode: a sealed letter {id} (the first unopened one when no id)
+			if args.has("id") or not Steward.letters().is_empty():
+				open(SealedLetterPanel.new(args))
+
+
+## Menus that pause even while the steward runs the forge (UIWindow.away_runs_time).
+func _stops_time(w: UIWindow) -> UIWindow:
+	w.away_runs_time = false
+	return w
 
 
 ## Opens a window over the current panel without closing it (ItemPanel, FamiliarCard). hide_under: the panel below
@@ -518,7 +545,8 @@ func _overlay(p: Control, hide_under: bool) -> void:
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
 const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
 	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
-	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map", "panel_workshop": "workshop"}
+	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map", "panel_workshop": "workshop",
+	"panel_steward": "steward"}
 
 
 static func panel_for_action(action: String) -> String:

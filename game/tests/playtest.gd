@@ -3924,6 +3924,15 @@ func phase_newer_save() -> void:
 	Saves.delete("quicksave")
 
 
+# ======================================================================= Milestone S1: Steward Mode (UI worker)
+## The hand-over and its confirmation, the standing instructions, the status plate with the smith away, the steward at
+## work, While You Were Away, a sealed letter that leads to the real offer, save/load with the mode off
+## (tests/playtest_steward_s1.gd).
+func phase_steward_s1() -> void:
+	var ph: RefCounted = load("res://tests/playtest_steward_s1.gd").new()
+	await ph.run(self)
+
+
 ## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
 func find_label_containing(root: Node, needle: String) -> Control:
 	for n in root.find_children("*", "Label", true, false):

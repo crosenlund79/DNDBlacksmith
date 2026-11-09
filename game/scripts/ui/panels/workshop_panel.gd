@@ -71,6 +71,18 @@ func build() -> void:
 	_build_top()
 	_build_queue()
 	_build_adder()
+	if Steward.smith_away():
+		_lock_away()
+
+
+## Steward Mode: while the smith is away the ledger is for looking; the steward plans the work.
+func _lock_away() -> void:
+	for box in [left, right_top, queue, adder]:
+		for n in (box as Node).find_children("*", "BaseButton", true, false):
+			if n.name == "StewardButton":
+				continue
+			(n as BaseButton).disabled = true
+			(n as BaseButton).tooltip_text = StewardUI.away_note()
 
 
 # ======================================================================= left: apprentices & stations
@@ -220,6 +232,16 @@ func _build_top() -> void:
 	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	info.autowrap_mode = TextServer.AUTOWRAP_OFF
 	row.add_child(info)
+	# Steward Mode (S1): hand the running forge over from here, or see the steward at work
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(sp)
+	var stw := InkIcons.button("act_road", "The steward at work…" if Steward.is_active() else "Hand over to the steward…", func():
+		close()
+		Events.open_panel.emit.call_deferred("steward", {}), 0)
+	stw.name = "StewardButton"
+	stw.add_theme_font_size_override("font_size", 17)
+	row.add_child(stw)
 	right_top.add_child(row)
 	# the Bottlenecks plate (dark: the 20 % gothic accent)
 	var plate := PanelContainer.new()

@@ -18,6 +18,7 @@ const BUTTONS := [
 	["ledger", "Ledger", "ui/tb_ledger", "panel_ledger", "shop", {"tab": "ledger"}, "", {}, "Accounts, status of the business, journal and upgrades."],
 	["designer", "Crafting", "ui/tb_designer", "", "designer", {}, "", {}, "Design a piece and plan its work."],
 	["property", "Workshop", "ui/tb_property", "", "property", {}, "workshop", {}, "Your rooms, stations and furnishings. Right-click (or Y) for the workshop ledger: apprentices and their work."],
+	["steward", "Steward", "ui/act_road", "panel_steward", "steward", {}, "", {}, "Hand the running forge to your steward while you are away — or see how it fares and take it back."],
 	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "world_map", {}, "The village of Brindlewick, its people and its roads. Right-click (or G) for the world map."],
 	["help", "Help", "ui/tb_help", "panel_help", "help", {}, "", {}, "Controls, rules and the reference guide. Restart the tutorial here."],
 ]
@@ -124,6 +125,12 @@ func _refresh() -> void:
 		attention["orders"] = "%d commission%s ready to deliver." % [ready, "" if ready == 1 else "s"]
 	elif attention.get("orders", "").contains("ready"):
 		attention.erase("orders")
+	# Steward Mode: unopened sealed letters (the HUD chip says the same)
+	var nl := Steward.letters().size()
+	if nl > 0:
+		attention["steward"] = "%d sealed letter%s wait%s for you." % [nl, "" if nl == 1 else "s", "s" if nl == 1 else ""]
+	else:
+		attention.erase("steward")
 	for id in buttons:
 		(buttons[id] as ToolbarButton).attention = str(attention.get(id, ""))
 

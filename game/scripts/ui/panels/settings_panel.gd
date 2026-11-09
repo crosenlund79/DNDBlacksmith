@@ -75,4 +75,4 @@ func _ready() -> void:
 	ob2.item_selected.connect(func(i): Settings.set_value("gameplay/time_scale", [0.5, 1.0, 2.0][i]))
 	ts.add_child(ob2)
 	content.add_child(ts)
-	content.add_child(UIKit.label("Controls: WASD/arrows move (or click), Shift run, E/Space interact, I inventory, H hirelings, Y workshop ledger, K skill tree, U skill levels, T quick travel, J adventurers, O orders, L ledger, F5/F9 quick save/load, F3 diagnostics.", 18, "body_italic"))
+	content.add_child(UIKit.label("Controls: WASD/arrows move (or click), Shift run, E/Space interact, I inventory, H hirelings, Y workshop ledger, N steward, K skill tree, U skill levels, T quick travel, J adventurers, O orders, L ledger, F5/F9 quick save/load, F3 diagnostics.", 18, "body_italic"))
