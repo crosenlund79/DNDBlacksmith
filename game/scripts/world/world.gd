@@ -1776,7 +1776,7 @@ func spot_for(id: String) -> String:
 		return ""
 	var a := Adv.get_a(id)
 	if not a.is_empty():
-		if a["status"] in ["away", "dead", "missing"]:
+		if a["status"] in ["away", "dead", "missing", "gone"]:   # "gone": retired and left Brindlewick (Living)
 			return ""
 		# a party forming at dawn sits together at its own table until it leaves at eight
 		var pt := Expeditions.party_of(id)

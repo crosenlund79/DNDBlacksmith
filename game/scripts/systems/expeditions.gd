@@ -118,6 +118,7 @@ static func ensure(a: Dictionary) -> Dictionary:
 		a["deaths_cheated"] = 0
 	if not a.has("risk"):
 		a["risk"] = {"brave": 0.7, "reckless": 0.85, "cautious": 0.3, "greedy": 0.6, "steady": 0.5, "devout": 0.55}.get(a.get("trait", "steady"), 0.5)
+	Living.ensure(a)   # goals, bonds, trauma (The Living Realm; older saves gain them lazily)
 	return a
 
 
@@ -129,11 +130,11 @@ static func hp_max(a: Dictionary) -> int:
 
 static func attr(a: Dictionary, k: String) -> int:
 	var base := int(arch(a)["attr"].get(k, 0))
-	return base + (int(a["level"]) / 3 if base >= 3 else 0)
+	return base + (int(a["level"]) / 3 if base >= 3 else 0) + int(a.get("attr_mod", {}).get(k, 0))
 
 
 static func has_skill(a: Dictionary, s: String) -> bool:
-	return (arch(a).get("skills", []) as Array).has(s)
+	return (arch(a).get("skills", []) as Array).has(s) or (a.get("knacks", []) as Array).has(s)
 
 
 static func role(a: Dictionary) -> String:
@@ -218,6 +219,8 @@ static func init_world() -> void:
 		if not x.is_empty() and not y.is_empty() and relation(x, str(r[1])) == 0.0:
 			x["relations"][r[1]] = float(r[2])
 			y["relations"][r[0]] = float(r[2])
+	# the seeded friendships of the wider roster, the first bonds and companies (Living)
+	Living.after_world_init()
 	# legacy expeditions from the old model come straight home
 	for a in Adv.all().values():
 		if a["status"] == "away" and not a.has("exp"):
@@ -259,12 +262,16 @@ static func form_parties() -> void:
 		if a["status"] == "in_town" and Game.day() >= int(a.get("depart_day", 0)) and float(a["hp"]) >= float(a["hp_max"]) * 0.7 \
 				and float(a["fatigue"]) < 40.0 and party_of(a["id"]).is_empty():
 			avail.append(a)
-	avail.sort_custom(func(x, y): return float(x["risk"]) + float(x.get("renown", 0)) * 0.002 > float(y["risk"]) + float(y.get("renown", 0)) * 0.002)
+	# nerve: temper and personal goals (a wealth-seeker takes the dangerous, well-paid work)
+	avail.sort_custom(func(x, y): return Living.eff_risk(x) + float(x.get("renown", 0)) * 0.002 > Living.eff_risk(y) + float(y.get("renown", 0)) * 0.002)
 	var made := 0
-	while not avail.is_empty() and made < 3:
+	# companies set out together first (Companies: persistent named parties)
+	var groups: Array = Companies.plan_parties(avail)
+	while not avail.is_empty() and made + groups.size() < 4:
 		var leader: Dictionary = avail.pop_front()
 		var members := [leader]
-		var size := 1 + (1 if float(leader["risk"]) >= 0.35 else 0) + (1 if randf() < 0.6 else 0) + (1 if float(leader["risk"]) >= 0.65 and randf() < 0.5 else 0)
+		var lr := Living.eff_risk(leader)
+		var size := 1 + (1 if lr >= 0.35 else 0) + (1 if randf() < 0.6 else 0) + (1 if lr >= 0.65 and randf() < 0.5 else 0)
 		while members.size() < size and not avail.is_empty():
 			var best_i := -1
 			var best_v := -5.0
@@ -276,19 +283,25 @@ static func form_parties() -> void:
 			if best_i < 0:
 				break
 			members.append(avail.pop_at(best_i))
+		groups.append({"company": "", "leader": leader, "members": members})
+	for g in groups:
+		var members: Array = g["members"]
+		var leader: Dictionary = g["leader"]
 		var ids: Array = members.map(func(m): return m["id"])
 		var plan := choose_destination(members)
 		if plan.is_empty():
 			continue
 		var pid := "party_%d" % Game.new_uid()
 		st()["parties"][pid] = {"id": pid, "members": ids, "leader": leader["id"], "dest": plan["dest"], "goal": plan["goal"],
-			"formed": Game.now(), "table": made + 1}
+			"formed": Game.now(), "table": made + 1, "company": str(g["company"])}
 		for m in members:
 			m["activity"] = "recruiting"
 		var names := ids.map(func(i): return Adv.get_a(i)["name"])
 		var why: String = str(plan.get("why", ""))
 		st()["parties"][pid]["why"] = why
-		Chronicle.add("party", "%s gathered %s at the Wyvern, bound for %s%s." % [leader["name"], ("a party: " + ", ".join(names.slice(1))) if ids.size() > 1 else "no one — going alone", region(plan["dest"])["name"],
+		var co := Companies.get_c(str(g["company"]))
+		var who := ("%s of %s" % [leader["name"], co["name"]]) if not co.is_empty() else str(leader["name"])
+		Chronicle.add("party", "%s gathered %s at the Wyvern, bound for %s%s." % [who, ("a party: " + ", ".join(names.slice(1))) if ids.size() > 1 else "no one — going alone", region(plan["dest"])["name"],
 			" to search for the missing" if plan["goal"] == "search" else ((" — " + why) if why != "" else "")], {"adv": leader["id"], "party": ids, "dest": plan["dest"]})
 		made += 1
 	Events.expeditions_changed.emit()
@@ -311,6 +324,8 @@ static func invite_score(members: Array, c: Dictionary) -> float:
 		s -= 4.0
 	for m in members:
 		s += relation(m, c["id"]) * 0.25
+		if Living.bond(m, str(c["id"])) == "rival":
+			s -= 15.0   # rivals do not share a road willingly
 	return s + randf() * 3.0
 
 
@@ -320,7 +335,7 @@ static func choose_destination(members: Array) -> Dictionary:
 	var risk := 0.0
 	for m in members:
 		pow += power(m)
-		risk += float(m["risk"])
+		risk += Living.eff_risk(m)
 	risk /= members.size()
 	# what the party can take on: the average member's strength, a little more for each companion
 	var strength := pow / members.size() * (0.8 + 0.4 * (members.size() - 1))
@@ -351,6 +366,11 @@ static func choose_destination(members: Array) -> Dictionary:
 		# resources, an uncleared master for the strong, the leader's plan)
 		var ap := WorldSites.appeal(members, rid, strength, risk)
 		s += float(ap["score"])
+		# personal goals: coin, glory, discovery, mastery (Living)
+		var gp := Living.goal_appeal(members, rid, rating(rid) * float(diff().get("enemy", 1.0)), strength)
+		s += float(gp["score"])
+		if str(ap["why"]) == "" and str(gp["why"]) != "":
+			ap["why"] = gp["why"]
 		# a change of scene: the leader went there last time
 		var hist: Array = members[0].get("history", [])
 		if not hist.is_empty() and str(hist[-1].get("dest", "")) == rid:
@@ -422,7 +442,7 @@ static func start(p: Dictionary) -> Dictionary:
 		"start": Game.now(), "phase": "travel_out", "at": "village", "route": plan_route(rid, p["members"]), "step": 0,
 		"leg": {"from": "village", "to": "gate", "t0": Game.now(), "t1": Game.now() + travel},
 		"next_at": Game.now() + travel, "journal": [], "encounters": [], "loot": [], "gold": 0, "explored": [],
-		"outcome": "", "difficulty": diff_id(), "snap": {}}
+		"outcome": "", "difficulty": diff_id(), "snap": {}, "company": str(p.get("company", "")), "lore_mark": int(Lore.st()["next"])}
 	for id in e["party"]:
 		var a := Adv.get_a(id)
 		a["status"] = "away"
@@ -1383,6 +1403,9 @@ static func finish(e: Dictionary) -> void:
 		if won > 0:
 			a["victories"] = int(a.get("victories", 0)) + 1
 	Chronicle.add("return", summary, {"party": e["party"], "exp": e["id"], "dest": e["dest"]}, true)
+	# friendships, rivalries and grief from the trip; the company's record and shared history (Living, Companies)
+	Living.on_expedition(e, alive, won, outcome)
+	Companies.on_expedition(e, alive, won, outcome)
 	_judge_gear(e, alive)
 	Regions.add_scouting(e["dest"], 0.6)
 	for id in alive:
@@ -1571,6 +1594,8 @@ static func _pt(rid: String, nid: String) -> Vector2:
 
 static func status_word(a: Dictionary) -> String:
 	ensure(a)
+	if Living.status_word(a) != "":
+		return Living.status_word(a)
 	match str(a.get("status", "")):
 		"dead":
 			return "Fallen"

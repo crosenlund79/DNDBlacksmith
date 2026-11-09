@@ -13,6 +13,8 @@ extends RefCounted
 static func init_all() -> void:
 	for id in DB.characters:
 		var k: String = DB.characters[id].get("kind", "")
+		if k == "adventurer" and bool(DB.characters[id].get("reserve", false)) and not Adv.all().has(id):
+			continue   # reserve adventurers not yet in Brindlewick (Living: they arrive later)
 		if k in ["adventurer", "villager", "hireling", "companion"]:
 			ensure(id)
 	# a little history so the village feels lived-in

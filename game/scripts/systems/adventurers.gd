@@ -79,25 +79,10 @@ static func get_a(id: String) -> Dictionary:
 	return all().get(id, {})
 
 
+## New game: the seeded starting roster (Living.generate_roster — the world seed decides who is here and their
+## circumstances; the established adventurers keep their story roles: Mira leaves on day 3 for the Barrow Fields).
 static func init_population() -> void:
-	for id in DB.characters:
-		var c: Dictionary = DB.characters[id]
-		if c.get("kind") != "adventurer":
-			continue
-		var eq := {}
-		for slot in START_GEAR.get(c["cls"], {}):
-			var g: Array = START_GEAR[c["cls"]][slot]
-			eq[slot] = Items.make(g[0], {"quality": float(g[1])})
-		all()[id] = {"id": id, "name": c["name"], "cls": c["cls"], "level": int(c.get("level", 1)), "xp": 0,
-			"gold": int(c.get("gold", 50)), "equipment": eq, "loot": [], "status": "in_town", "dest": "",
-			"days_left": 0, "depart_day": Game.day() + randi_range(1, 3), "injured_days": 0,
-			"expeditions": 0, "victories": 0, "last_report": "", "exit": "", "needs": ""}
-	# Mira leaves on day 3 for the Barrow Fields — the grocer's story hangs on it
-	if all().has("mira"):
-		all()["mira"]["depart_day"] = 3
-		all()["mira"]["planned_dest"] = "barrow_fields"
-	if all().has("sigrun"):
-		all()["sigrun"]["depart_day"] = 2
+	Living.generate_roster()
 
 
 static func gear_score(a: Dictionary) -> float:
@@ -222,6 +207,7 @@ static func on_day() -> void:
 					a["status"] = "in_town"
 					a["activity"] = "recovering"
 					a["depart_day"] = Game.day() + randi_range(1, 2)
+	Living.on_day()   # goals, retirement, newcomers, companies (The Living Realm)
 	Events.adventurers_changed.emit()
 
 
@@ -477,7 +463,7 @@ static func purchase_check(a: Dictionary, it: Dictionary, price: int) -> String:
 		return "has no use for that"
 	if not married and int(a["gold"]) < price:
 		return "can't afford it"
-	var fair := Items.value(it) * (1.15 + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
+	var fair := Items.value(it) * (1.15 + Living.price_tolerance(a) + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
 	if not married and price > fair:
 		return "thinks it's overpriced"
 	return ""
@@ -684,7 +670,7 @@ static func gear_needs(a: Dictionary) -> Array:
 			why = "broken"
 		elif Items.durability_frac(it) < 0.35:
 			why = "worn"
-		elif Items.score(it) < level_target(a, s) * 0.6 or (s == "weapon" and str(a.get("wants_prop", "")) != "" and Items.stat(it, str(a["wants_prop"])) <= 0):
+		elif Items.score(it) < level_target(a, s) * Living.inferior_factor(a) or (s == "weapon" and str(a.get("wants_prop", "")) != "" and Items.stat(it, str(a["wants_prop"])) <= 0):
 			why = "inferior"
 		if why != "":
 			out.append({"slot": s, "why": why})
@@ -894,8 +880,8 @@ static func act_on_plans(a: Dictionary) -> String:
 					evaluate_gear(a)
 					return "bought"
 			"repair":
-				if not Shop.customer(a["id"]).is_empty():
-					continue
+				if not Shop.customer(a["id"]).is_empty() or Shop.worn_slot(a) == "":
+					continue   # (nothing the counter would call worn: no errand today)
 				var before := Shop.customers().size()
 				Shop._add_customer(a["id"], "repair_own")
 				if Shop.customers().size() > before:
