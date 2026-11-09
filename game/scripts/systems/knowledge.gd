@@ -116,7 +116,7 @@ static func buy(id: String) -> String:
 	var price := _price(o)
 	if not Game.can_afford(price):
 		return "You need %d g." % price
-	Game.add_gold(-price, "training", "Knowledge: " + str(o["title"]))
+	Game.add_gold(-price, "training", "Knowledge: " + str(o["title"]), "skill_teacher")
 	st()["bought"][id] = Game.day()
 	for d in o.get("grants_heard", []):
 		Game.set_flag("heard_" + str(d))

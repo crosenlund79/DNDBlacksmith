@@ -74,9 +74,11 @@ static func take_delivery() -> String:
 		Social.remember("aldric", "gave_runestone", "Gave the smith a runestone", 5.0)
 		lines.append("\"A traveller paid me with this odd stone. Mira says you'd know what to do with it. Take it — for looking after my girl.\"")
 	elif band in ["friendly", "devoted"] and randf() < 0.5:
-		Game.state["returns"].append(Loot.make_container("purse_gift", Loot.roll_table("gift", 10.0), "Aldric Pell", "Tucked under the cheese: a little something extra."))
-		lines.append("He winks at a small purse tucked under the cheese.")
-		Events.inventory_changed.emit()   # world redraws the waiting bags
+		var purse := gift_from("aldric", 10.0)
+		if not purse.is_empty():
+			Game.state["returns"].append(Loot.make_container("purse_gift", purse, "Aldric Pell", "Tucked under the cheese: a little something extra."))
+			lines.append("He winks at a small purse tucked under the cheese.")
+			Events.inventory_changed.emit()   # world redraws the waiting bags
 	elif Social.has_memory("aldric", "kin_gear_failed_mira") or Social.has_memory("aldric", "blame_mira"):
 		lines.append("He doesn't meet your eye. \"Mira came home with a broken bow-arm. Your gear, I hear.\"")
 	Social.change("aldric", 1.0, 3.0)
@@ -117,7 +119,21 @@ static func _maybe_order() -> void:
 		return
 	var a: Dictionary = town.pick_random()
 	if a["needs"] != "" and not Shop.open_orders().any(func(o): return o["npc"] == a["id"]):
-		Shop.create_order(a["id"], a["needs"])
+		Shop.create_order(a["id"], Adv.request_slot(a, str(a["needs"])))   # A2: weighted toward what the forge can make
+
+
+## A thank-you gift from `npc` (the "gift" loot table), worth at most their gift budget (Payments.gift_budget: half of
+## what they paid the forge in the last 30 days, less earlier gifts). [] when nothing fits — no gift then.
+## Milestone A2: before, every gift was an unbounded roll (118 g on average, up to 1,600 g) whatever the giver had
+## spent — three in a few days could be worth several times the purchase that warmed them to the smith.
+static func gift_from(npc: String, bias := 5.0) -> Array:
+	var cap := Payments.gift_budget(npc)
+	if cap <= 0:
+		return []
+	var g := Payments.gift_within(Loot.roll_table("gift", bias), cap)
+	if not g.is_empty():
+		Payments.note_gift(npc, Payments.value_of(g))
+	return g
 
 
 static func _social_events() -> void:
@@ -129,8 +145,11 @@ static func _social_events() -> void:
 			var c := DB.character(npc)
 			if c.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
+			var gift := gift_from(str(npc))
+			if gift.is_empty():
+				continue   # nothing within what their dealings with the forge warrant
 			e["last_gift"] = Game.day()
-			Game.state["returns"].append(Loot.make_container("purse_gift", Loot.roll_table("gift", 5.0), c["name"],
+			Game.state["returns"].append(Loot.make_container("purse_gift", gift, c["name"],
 				"%s left this at your door with a note: \"For your kindness.\"" % c["name"]))
 			Events.toast.emit("%s left a gift at your door." % c["name"], "good")
 			Social.remember(npc, "gave_gift_" + str(Game.day()), "Left the smith a gift", 2.0)

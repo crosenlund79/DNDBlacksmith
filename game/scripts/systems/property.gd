@@ -222,7 +222,7 @@ static func buy_lift() -> String:
 		return why
 	if not Game.can_afford(lift_price()):
 		return "You need %d gold." % lift_price()
-	Game.add_gold(-lift_price(), "property", "Rigged the aetheric lift")
+	Game.add_gold(-lift_price(), "property", "Rigged the aetheric lift", "lift_rigger")
 	st()["lift"] = true
 	Chronicle.add("property", "Brannoc set a ley-stone into Ilse's old goods hoist: the Ironhand forge has an aetheric lift.", {"unit": "loft"}, true)
 	Game.journal("Rigged the old hoist as an aetheric lift for %d gold." % lift_price())
@@ -293,7 +293,7 @@ static func buy_unit(uid: String) -> String:
 	var price := unit_price(uid)
 	if not Game.can_afford(price):
 		return "You need %d gold." % price
-	Game.add_gold(-price, "property", "Bought " + str(u["name"]))
+	Game.add_gold(-price, "property", "Bought " + str(u["name"]), "property_seller")
 	(st()["units"] as Array).append(uid)
 	if uid == "cellar" and not Game.has_upgrade("arcane_foundry"):
 		# the vault's thick stone walls are what an arcane foundry needs
@@ -709,7 +709,7 @@ static func buy_station(station_id: String) -> String:
 	var price := station_price(station_id)
 	if not Game.can_afford(price):
 		return "You need %d gold." % price
-	Game.add_gold(-price, "equipment", "Bought " + str(DB.station(station_id).get("name", station_id)))
+	Game.add_gold(-price, "equipment", "Bought " + str(DB.station(station_id).get("name", station_id)), "village_trades")
 	(st()["stored"] as Array).append(station_id)
 	Chronicle.add("property", "Brannoc bought a %s for the workshop." % DB.station(station_id).get("name", station_id), {"station": station_id})
 	Events.toast.emit("%s delivered — place it in the workshop." % DB.station(station_id).get("name", station_id), "good")

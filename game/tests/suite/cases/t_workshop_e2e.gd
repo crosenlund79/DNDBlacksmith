@@ -64,7 +64,7 @@ func test_apprentice_career() -> void:
 	ids.sort()
 	for id in ids:
 		var c := Adv.get_a(str(id))
-		if c["status"] == "in_town" and not Shop.refuses(str(id)):
+		if str(c["status"]) in ["in_town", "injured"] and not Shop.refuses(str(id)):   # an injured adventurer is in the village too (A2: the seeded path changed)
 			adv = c
 			break
 	if not check(not adv.is_empty(), "a customer in town"):

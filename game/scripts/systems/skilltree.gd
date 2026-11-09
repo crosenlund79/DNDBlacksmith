@@ -209,7 +209,7 @@ static func unlock(id: String) -> String:
 	var n := node(id)
 	var r: Dictionary = n["requires"]
 	if int(r.get("gold", 0)) > 0:
-		Game.add_gold(-int(r["gold"]), "training", "Tuition: " + str(n["name"]))
+		Game.add_gold(-int(r["gold"]), "training", "Tuition: " + str(n["name"]), "skill_teacher")
 	var items: Dictionary = r.get("items", {})
 	for d in items:
 		Game.remove_def(str(d), int(items[d]))

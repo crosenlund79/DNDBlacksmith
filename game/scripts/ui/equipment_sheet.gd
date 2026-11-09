@@ -145,19 +145,19 @@ func _known(it: Dictionary) -> bool:
 	return it.is_empty() or not known_fn.is_valid() or bool(known_fn.call(it))
 
 
-## Condition colour of a worn piece: sound, worn (under half), badly worn (under a quarter), broken.
+## Condition colour of a worn piece: sound, worn (under half), badly worn (under Items.WORN: needs mending), broken.
 static func condition_color(it: Dictionary) -> Color:
 	if it.get("broken", false):
 		return C_BROKEN
 	var f := Items.durability_frac(it)
-	return C_GOOD if f >= 0.5 else (C_WORN if f >= 0.25 else C_BAD)
+	return C_GOOD if f >= 0.5 else (C_WORN if f >= Items.WORN else C_BAD)
 
 
 static func condition_word(it: Dictionary) -> String:
 	if it.get("broken", false):
 		return "broken"
 	var f := Items.durability_frac(it)
-	return "sound" if f >= 0.5 else ("worn" if f >= 0.25 else "badly worn")
+	return "sound" if f >= 0.5 else ("worn" if f >= Items.WORN else "badly worn")   # badly worn = needs mending (Items.WORN)
 
 
 ## "8 pieces worn · 1 badly worn · 1 broken · 2 empty" — the at-a-glance line above the figure.

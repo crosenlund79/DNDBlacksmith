@@ -161,7 +161,7 @@ static func read_recipe(uid: int) -> String:
 	Game.inventory().erase(it)
 	Events.inventory_changed.emit()
 	if unknown.is_empty():
-		Game.add_gold(60, "sales", "Sold a duplicate recipe to a collector")
+		Game.add_gold(60, "sales", "Sold a duplicate recipe to a collector", "collector")
 		return "You already know everything in these notes. A collector pays 60 g for them."
 	var r: Dictionary = unknown.pick_random()
 	Game.set_flag(str(r["requires_flag"]))

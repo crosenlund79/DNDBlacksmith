@@ -89,5 +89,5 @@ static func spawn(def_id: String, qty := 1, rarity := "", quality := -1.0) -> Ar
 static func add_money(amount: int) -> void:
 	if amount == 0:
 		return
-	Game.add_gold(amount, "dev", MAKER_NAME)
+	Game.add_gold(amount, "dev", MAKER_NAME, "dev")
 	Events.toast.emit("Developer tools: %+d gold (now %d g)." % [amount, Game.gold()], "info")

@@ -3886,6 +3886,13 @@ func phase_identity_a1() -> void:
 	await ph.run(self)
 
 
+## Milestone A2 (economy): request cards that explain what the workshop cannot make, repairs paid by the customer,
+## the commission's payer and subsidy in the ledger, the renamed skill-tree node (tests/playtest_econ_a2.gd).
+func phase_a2econ() -> void:
+	var ph: RefCounted = load("res://tests/playtest_econ_a2.gd").new()
+	await ph.run(self)
+
+
 # ======================================================================= Milestone A1: a save from a newer build
 ## A save written by a newer version is refused with a plain explanation: in the running game (quick-load keeps
 ## the game going) and on the main menu; the Load screen lists it as kept, not loadable; the file is untouched.

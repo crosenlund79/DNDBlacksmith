@@ -176,9 +176,15 @@ func gold() -> int:
 	return state.get("gold", 0)
 
 
-func add_gold(amount: int, category: String, note: String) -> void:
+## `party` names the other side of the payment (Milestone A2, canon D14): who paid the smith for an income line, who
+## received the smith's coin for an expense — an NPC id ("garrick") or a recorded outside party ("village",
+## "caravan", "pawnbroker", "patron:<id>" … see Payments.party_name). Ledger lines written before A2 have none.
+func add_gold(amount: int, category: String, note: String, party := "") -> void:
 	state["gold"] += amount
-	state["ledger"].append({"day": day(), "amount": amount, "cat": category, "note": note})
+	var line := {"day": day(), "amount": amount, "cat": category, "note": note}
+	if party != "":
+		line["party"] = party
+	state["ledger"].append(line)
 	if Steward.is_active():
 		Steward.note_ledger(amount, category, note)   # the report reconciles every coin of the time away
 	if state["ledger"].size() > 400:

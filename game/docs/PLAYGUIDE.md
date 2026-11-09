@@ -197,7 +197,7 @@ minimap marks people who want a word with you; History buttons show the story of
 ### A 20-minute test route
 1. New Game → Journeyman. Look around the smithing hall; open the Workshop plan (deeds on the back-room shelf).
 2. Forge an iron longsword (forge → anvil → quench trough → grinding wheel). The first check shows its how-to card.
-3. Open the Skill Tree: learn Simple Blades, Common Ores, Ordinary Alloys (F10 → +1000 gold if needed).
+3. Open the Skill Tree: learn Mail, Plate & Silverwork, Common Ores, Ordinary Alloys (F10 → +1000 gold if needed).
 4. Workshop → Equipment: buy the bellows; Workshop layout: place it in the smithing hall; Apply.
 5. Property: buy Hesketh's Cobblery; layout: put up a wall, cut a doorway, Apply — walk into the new room.
 6. Visit the herbalist and the harbour (F10 → "Ship docks now"); place a special import.

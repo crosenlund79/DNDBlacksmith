@@ -143,7 +143,34 @@ static func _def_tier(it: Dictionary) -> int:
 		return 3
 	if id.contains("steel") or id.contains("emberwarden") or id in ["ring_garnet", "amulet_sapphire", "hood_embroidered", "gloves_warded"]:
 		return 2
-	return 1
+	# A2: pieces whose id does not name their metal (sword_cutlass, sword_bastard, plate_half …) take the metal of the
+	# recipe that made THIS piece (its craft record), else of the recipes that make its kind — only when they all agree
+	# (sword_short is made from iron or steel: without a craft record it stays at the old reading, iron)
+	var rid := str(it.get("craft", {}).get("recipe", "")) if it.get("craft") is Dictionary else ""
+	if rid != "":
+		return int(_RECIPE_METAL_TIER.get(str(DB.recipe(rid).get("material", "")), 1))
+	return int(_RECIPE_METAL_TIER.get(str(_recipe_metal().get(id, "")), 1))
+
+
+const _RECIPE_METAL_TIER := {"steel": 2, "mithril": 3, "adamantine": 4}
+static var _metal_by_def: Dictionary = {}
+
+
+## {item def: the single metal of every recipe that makes it} (defs made from different metals are left out), built once.
+static func _recipe_metal() -> Dictionary:
+	if _metal_by_def.is_empty():
+		var seen := {}
+		for r in DB.recipes.values():
+			var o := str(r.get("output", ""))
+			if not seen.has(o):
+				seen[o] = {}
+			seen[o][str(r.get("material", ""))] = true
+		for o in seen:
+			var ms: Array = (seen[o] as Dictionary).keys()
+			if ms.size() == 1 and _RECIPE_METAL_TIER.has(str(ms[0])):
+				_metal_by_def[o] = str(ms[0])
+		_metal_by_def["_built"] = ""
+	return _metal_by_def
 
 
 const TIER_WORD := {1: "any material", 2: "steel or better", 3: "mithril or starsteel", 4: "adamantine"}
@@ -235,6 +262,22 @@ static func condition(it: Dictionary) -> float:
 		return 1.0
 	var r := clampf(float(st.get("durability", 0)) / float(st["durability_max"]), 0.0, 1.0)
 	return 1.0 if r >= 0.5 else 0.8 + 0.4 * r
+
+
+## Milestone A2: THE durability threshold. A piece below this fraction of its durability (or broken) needs mending —
+## for the adventurer's own plans, the counter's repair requests, consultations, the character sheets' "badly worn"
+## and the Steward alike. One number, used everywhere.
+const WORN := 0.4
+
+
+## Does this piece need mending (broken, or durability below WORN)? Pieces that never wear: false.
+static func needs_mending(it: Dictionary) -> bool:
+	if it.is_empty():
+		return false
+	if bool(it.get("broken", false)):
+		return true
+	var st: Dictionary = it.get("stats", {})
+	return st.has("durability_max") and float(st["durability_max"]) > 0.0 and durability_frac(it) < WORN
 
 
 ## Durability fraction 0..1 (1.0 for pieces that never wear).

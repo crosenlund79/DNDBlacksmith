@@ -223,7 +223,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		"drink":
 			if not Game.can_afford(4):
 				return {"text": "Your purse is too light."}
-			Game.add_gold(-4, "inn", "Drinks with " + c["name"])
+			Game.add_gold(-4, "inn", "Drinks with " + c["name"], "inn")
 			if Social.aff(npc) < 20.0:
 				Social.change(npc, 2.0, 3.0)
 				return {"text": DB.dialogue["romance"]["drink_no"]}
@@ -239,7 +239,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		"meal":
 			if not Game.can_afford(3):
 				return {"text": "Your purse is too light."}
-			Game.add_gold(-3, "inn", "A hot meal at the Wyvern")
+			Game.add_gold(-3, "inn", "A hot meal at the Wyvern", "inn")
 			Vitality.refresh(12.0)
 			Social.change("hilde", 1.0, 2.0)
 			return {"text": "Hilde sets down mutton stew, black bread and a heel of cheese. \"Eat. You look like a horseshoe somebody forgot in the rain.\"\n[i]You feel a little steadier.[/i]", "fade": "A slow meal by the fire…", "minutes": 30}
@@ -275,7 +275,7 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		"ale":
 			if not Game.can_afford(6):
 				return {"text": "Your purse is too light."}
-			Game.add_gold(-6, "inn", "A round at the Wyvern")
+			Game.add_gold(-6, "inn", "A round at the Wyvern", "inn")
 			Vitality.refresh(4.0)
 			for ad in Adv.in_town():
 				Social.change(ad["id"], 2.0, 3.0)
@@ -287,13 +287,13 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 				return {"text": DB.dialogue["lantern"]["closed"]}
 			if not Game.can_afford(25):
 				return {"text": "Your purse is too light."}
-			Game.add_gold(-25, "inn", "An evening at the Velvet Lantern")
+			Game.add_gold(-25, "inn", "An evening at the Velvet Lantern", "lantern")
 			Social.change(npc, 3.0, 8.0)
 			return {"text": DB.dialogue["lantern"]["evening"] + "\n\n" + _rumour(), "fade": "The night passes discreetly.", "minutes": 180}
 		"rumour":
 			if not Game.can_afford(5):
 				return {"text": "Your purse is too light."}
-			Game.add_gold(-5, "inn", "Rumours at the Velvet Lantern")
+			Game.add_gold(-5, "inn", "Rumours at the Velvet Lantern", "lantern")
 			return {"text": _rumour()}
 		"gift":
 			if Game.count("potion_healing") < 1:
