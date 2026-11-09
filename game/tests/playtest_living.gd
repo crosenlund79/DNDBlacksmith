@@ -82,7 +82,7 @@ func run(p: Node) -> void:
 		pt.close_panel()
 		await pt.wait(0.3)
 	# the save slot shows the world seed (a private save folder: the user data folder is shared)
-	Saves.dir = "user://living_rl_saves/"
+	Saves.dir = Saves.dir + "living_rl/"
 	DirAccess.make_dir_recursive_absolute(Saves.dir)
 	pt.expect(Saves.save("slot_3"), "living: saved to slot 3")
 	Events.open_panel.emit("saves", {"mode": "load"})

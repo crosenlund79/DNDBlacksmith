@@ -834,7 +834,12 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	if outcome == "excellent" or (tier >= 3 and outcome == "good"):
 		Recognition.record("commission", str(c["title"]), text, {"contract": str(c["id"]), "uid": int(c["masterpiece"].get("uid", -1)) if not c["masterpiece"].is_empty() else -1},
 			"contract_" + str(c["id"]))
-	# the masterpiece instance now belongs to the patron: it stays in this record (one copy, same uid, its story)
+	# the masterpiece instance now belongs to the patron: it is kept whole in the holdings archive (never capped, same
+	# uid, its story); this record keeps a reference to it
+	var mpi: Variant = c["masterpiece"].get("item", {}) if not c["masterpiece"].is_empty() else {}
+	if outcome != "failed" and mpi is Dictionary and not (mpi as Dictionary).is_empty() and not ItemRegistry.is_ref(mpi):
+		ItemRegistry.archive(mpi, "patron_" + pid, str(patron(pid).get("name", pid)), "contract", {"contract": str(c["id"])})
+		c["masterpiece"]["item"] = ItemRegistry.ref(mpi)
 	history().append(c)
 	while history().size() > 30:
 		history().pop_front()

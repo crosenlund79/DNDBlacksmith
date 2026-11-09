@@ -16,7 +16,12 @@ recreated.
 
 Exit code 0 means green. Reports go to `user://logs/suite_report.txt` and `user://logs/test_report.txt`.
 
-**Real saves are never touched.** The suite redirects saves to `user://test_saves/` (`Saves.use_test_dir()`).
+**Real saves are never touched.** Any scene under `res://tests/` (suite, unit tests, play-tests, soak) runs in test
+mode: saves go to the run's own folder `user://test_saves/run_<unix>_<pid>/` (`Saves.use_test_dir()`, removed by
+`Saves.end_test_run()`; run folders older than a day are swept), so parallel runs never share files. Rendered
+play-tests use the persistent `user://test_saves/playtest/` instead (`Saves.use_test_dir("playtest")`), because their
+"reload" phases continue, in a new process, a save made by an earlier phase. In test mode
+`Saves.path()` refuses the real `user://saves/` folder.
 Each test starts from a fresh, seeded new game (`seed(9001)`), and the crafting fixture uses fixed check scores and
 dice, so runs are deterministic.
 
@@ -25,10 +30,11 @@ dice, so runs are deterministic.
 | Path | What |
 |---|---|
 | `tests/suite/suite.tscn` → `suite_runner.gd` | Discovers `tests/suite/cases/*.gd`, runs every `test_*`, prints PASS / FAIL / SKIPPED with diagnostics |
-| `tests/suite/suite_case.gd` (`SuiteCase`) | Base class: `check`, `eq`, `note`, `skip`; fixtures `fresh_game`, `craft`, `craft_blocker`, `give`, `train`, `days`, `save_load`, `has_system`, `sys` |
+| `tests/suite/suite_case.gd` (`SuiteCase`) | Base class: `check`, `eq`, `note`, `skip`; fixtures `fresh_game`, `craft`, `craft_blocker`, `give`, `train`, `days`, `save_load`, `save_as_version` (write the game as an older-schema save), `has_system`, `sys` |
 | `tests/suite/cases/` | The cases (below). A case lists its fast tests in `const SMOKE := [...]` |
 | `tests/test_runner.tscn` | The long-standing unit and regression tests (383 checks) |
 | `tests/compile_all.tscn` | Every script compiles with the autoloads present |
+| `tests/fixtures/saves/` | Golden saves written by past releases' own code (0.11.2, 0.12.4, 0.13.5, 0.14.6) — provenance in its README; never edit them |
 | `tests/playtest.tscn -- <phase>` | Rendered play-tests with synthetic input and screenshots |
 
 ## Cases
@@ -70,7 +76,9 @@ dice, so runs are deterministic.
 | `t_sponsor` | The Living Realm 4, sponsored expeditions (`Sponsor`): objectives come from real site data (loot tables of the site's places, lost equipment by uid, relics, salvage, discovery beyond the site), every objective node is reachable; acceptance depends on danger against strength, pay, goals (a coin-seeker asks more), the smith's friendship and name, gear (a broken blade must be mended first); refusal with a reason, counter-offers (higher fee/share, or a safer site with the same material), two counter rounds then a last word; gold moves once (escrow until the 08:00 departure, full refund on cancel or a failed departure, nothing on refusal); the party runs as an ordinary Expeditions party heading for the objective's node over real game time and the outcome follows what happened (success, partial, failure when picked bare, a wipe is a loss), bonus by outcome, the party's share; delivered items arrive once on the returns shelf (recovered lost gear keeps uid, maker and history, last hand-over "recovered"); a discovery reveals the site through the existing hook; one `sponsored` Lore event per sponsorship; companies; save/load mid-expedition; old saves. Rendered: `playtest.tscn -- sponsor_rl` |
 
 | `t_contracts` | The Living Realm 5, major contracts (`Contracts`, apprentice task kind `contract`): letters come only from real accomplishments (a new smith gets none; reputation and gold alone never bring the great lords or the Crown; the royal letter needs orders delivered well up to a great lord, fame and a renowned forge) and each says why; accepting pays the advance and brings the patron's crate exactly once; blocks of hours at the Project Bench pass time, tire the smith and make pieces whose pace and craftsmanship follow his skill and freshness; the crate is used before the stores, one unit's materials per piece begun, rare materials from mid-order taken once (the Guide names a route); apprentices put hours in through the queue (novices refused, hours credited, not counted as their own works); on time / late / poor deliveries pay and move reputation and favour, a long-overdue order is withdrawn (crate back, never a game over); the masterpiece slot takes only the smith's own piece meeting its minimums and passes that same instance to the patron; the bench prompt and crates; save/load mid-production and an old save. Rendered: `playtest.tscn -- contracts_rl` |
+| `t_saves` | Save reliability (Milestone A1): the ordered migration steps (`SaveMigrations`, one per schema version, documented, idempotent); every golden save loads without errors, migrates to `Game.SAVE_VERSION`, passes a whole-state integrity check (required keys, well-formed inventories and equipment, every item has a uid) and keeps playing; load → save → load leaves the whole state identical (golden saves and a freshly played game); a newer-version save loads best-effort; the .bak rotation; a corrupt or truncated main file falls back to the .bak; a corrupt save without a backup and a missing slot fail cleanly; an unwritable path returns false and keeps the previous file and backup; an interrupted write (stale temp file) is harmless; test mode refuses the real save folder; stale run folders are swept |
 | `t_integrity` | Broken references (recipes, stations, loot, ships, tree), tree shape (unique ids, prerequisites exist, no cycles, every recipe and station learned from exactly one node, every station purchasable, every required knowledge findable), every required material has a source, every room can eventually be bought and the whole building is reachable, commissions never ask for more than a craftable piece can give |
+| `t_identity` | Milestone A1, item identity (`ItemRegistry`): the integrity probe (`ItemRegistry.scan`: no uid in two physical holders, no item dict shared between containers, no live copy inside a record) finds each fault; caravan, pawnshop, Salt Anvil (smith and adventurer) and harbour purchases move the very piece (same uid, story continues); an adventurer's repair request refers to the piece they wear and follows it through save/load; an expedition report keeps references and a lost party's pack is recorded lost; a pledge never circulates as a copy, redemption and the forfeit sale are recorded; a stranger's old blade leaves the pool (moved) and returns to it; expired/declined offers and counter sales record the hand-over; a sponsored recovery is delivered once; a delivered masterpiece survives forty later contracts in the holdings archive; the old-save conversion `ItemRegistry.migrate_records` (idempotent, byte-identical second pass, readable text kept); lookups through the registry; history survives destruction; **the 365-day probe** (seeded light management, scanned at days 120 and 365 before and after a real save/load; not SMOKE, about 20 s). Rendered: `playtest.tscn -- identity_a1` |
 
 ## Packaged-build check
 
@@ -78,6 +86,10 @@ dice, so runs are deterministic.
 world, and writes `SMOKE OK|FAIL …` (data counts, missing sprites, UI, logged errors) to stdout and
 `user://smoke_test.txt`, exiting 0 on success. The installer workflow runs it on the exported Linux build and on the
 installed Windows build before publishing a release.
+
+The installer workflow first runs a **test gate** job (Ubuntu, Godot 4.3 headless: import, then
+`./run_tests.sh full` — compile check, suite and unit tests); export, packaging and publishing only run when it is
+green. Releases are published only from the repository's default branch.
 
 ## Bugs the suite has already caught (kept as regressions)
 

@@ -1,0 +1,290 @@
+## Golden-save driver (throwaway; lives in the scratchpad, copied into an EXTRACTED old release, never committed).
+## Starts a new game with that release's own code and plays ~30 days through its real systems, then saves through
+## that release's own Saves.save and prints a summary. Version-specific systems (apprentices, contracts) are called
+## dynamically so the same driver compiles on every release.
+extends Node
+
+const DAYS := 30
+const SEED := 20261109
+var log_lines: Array[String] = []
+var stats := {"crafted": 0, "smelted": 0, "sold": 0, "repairs": 0, "orders_fulfilled": 0, "disputes": 0,
+	"apprentice_hired": "", "apprentice_tasks": 0, "contract": "", "contract_hours": 0, "units_bought": [], "hireling_trips": 0}
+
+
+func say(t: String) -> void:
+	log_lines.append(t)
+	print("[GOLDEN] ", t)
+
+
+func has_sys(file: String) -> bool:
+	return ResourceLoader.exists("res://scripts/systems/%s.gd" % file)
+
+
+func sys_has(file: String, method: String) -> bool:
+	if not has_sys(file):
+		return false
+	var sc: Script = load("res://scripts/systems/%s.gd" % file)
+	for m in sc.get_script_method_list():
+		if str(m["name"]) == method:
+			return true
+	return false
+
+
+func S(file: String, method: String, args := []) -> Variant:
+	var sc: Script = load("res://scripts/systems/%s.gd" % file)
+	return sc.callv(method, args)
+
+
+func _ready() -> void:
+	seed(SEED)
+	# a private folder (the user data folder is also isolated by XDG_DATA_HOME in run_old.sh)
+	Saves.dir = "user://golden_saves/"
+	DirAccess.make_dir_recursive_absolute(Saves.dir)
+	Game.new_game("journeyman")
+	say("release %s — new game, day %d, gold %d" % [FileAccess.get_file_as_string("res://RELEASE_VERSION").strip_edges(), Game.day(), Game.gold()])
+	for d in DAYS:
+		_day(d + 1)
+	if Crafting.active():
+		Crafting.cancel()
+	var ok := Saves.save("slot_1")
+	say("saved slot_1: %s → %s" % [str(ok), ProjectSettings.globalize_path(Saves.path("slot_1"))])
+	say("summary: day %d, gold %d, %s" % [Game.day(), Game.gold(), JSON.stringify(stats)])
+	say("state keys: %s" % ", ".join(Game.state.keys().map(func(k): return str(k))))
+	var f := FileAccess.open("user://golden_saves/driver_report.txt", FileAccess.WRITE)
+	f.store_string("\n".join(log_lines))
+	f.close()
+	get_tree().quit(0 if ok else 1)
+
+
+func _day(n: int) -> void:
+	for h in 24:
+		Game.advance_minutes(60)
+		var hour := Game.hour()
+		if hour == 8:
+			_morning(n)
+		if hour >= 9 and hour < 18:
+			_serve()
+		if hour == 19:
+			_evening(n)
+		if hour == 22 and sys_has("vitality", "sleep"):
+			S("vitality", "sleep", [480])   # a night's sleep; the hourly loop advances the clock
+
+
+# ------------------------------------------------------------------ the forge
+func _morning(n: int) -> void:
+	# the stores: smelt ore into ingots when the stock runs low
+	var g := 0
+	while Game.count("ingot_iron") < 6 and Game.count("ore_iron") >= 2 and Game.count("coal") >= 1 and g < 3:
+		if _craft("smelt_iron").is_empty():
+			break
+		stats["smelted"] += 1
+		g += 1
+	# commissions first
+	for o in Shop.open_orders().duplicate():
+		_try_order(o)
+	# then a piece or two for the display
+	for i in 2:
+		var rid := _stock_recipe()
+		if rid == "":
+			break
+		var it := _craft(rid)
+		if not it.is_empty() and Items.is_equipment(it):
+			it["for_sale"] = true
+	# a hireling goes mining on Mondays (as the soak test does)
+	if n % 7 == 2:
+		for h in Hire.list():
+			if str(h.get("status", "")) == "working" and Hire.send(str(h["id"]), "ironroot_mine") == "":
+				stats["hireling_trips"] += 1
+	if has_sys("apprentices"):
+		_apprentices(n)
+	if has_sys("contracts"):
+		_contracts(n)
+
+
+func _evening(_n: int) -> void:
+	# open the bags hirelings brought back (what the workshop's return chest does)
+	for b in (Game.state.get("returns", []) as Array).duplicate():
+		for it in b.get("contents", []):
+			Game.add_item(it, false)
+	(Game.state.get("returns", []) as Array).clear()
+
+
+## Drives a crafting job through its stations with realistic check scores, then rolls the digital dice.
+func _craft(rid: String) -> Dictionary:
+	if Crafting.active() or not Crafting.start(rid):
+		return {}
+	var guard := 0
+	while Crafting.current_station() != "" and guard < 30:
+		var st := Crafting.current_station()
+		var qs := []
+		for i in int(Crafting.op_params().get("count", 1)):
+			qs.append(randf_range(72.0, 96.0))
+		Crafting.record_step(st, qs)
+		guard += 1
+	var rolled := Crafting.roll_dice(Crafting.dice_spec(), Crafting.final_quality())
+	var full := {}
+	for k in rolled:
+		full[k] = {"total": int(rolled[k]["total"]), "faces": rolled[k]["faces"], "rolls": rolled[k]["rolls"], "kept": int(rolled[k]["kept"])}
+	var it := Crafting.finish(full, "digital")
+	if not it.is_empty():
+		stats["crafted"] += 1
+	return it
+
+
+func _craftable(rid: String) -> bool:
+	return Crafting.recipe_locked_reason(rid) == "" and Crafting.missing_inputs(rid).is_empty()
+
+
+func _stock_recipe() -> String:
+	var best := []
+	for r in DB.recipes.values():
+		var rid := str(r["id"])
+		if not Items.is_equipment({"def": str(r.get("output", ""))}):
+			continue
+		if not _craftable(rid):
+			continue
+		var cost := 0
+		for k in r.get("inputs", {}):
+			cost += int(r["inputs"][k])
+		best.append([cost, rid])
+	if best.is_empty():
+		return ""
+	best.sort_custom(func(a, b): return int(a[0]) < int(b[0]) or (int(a[0]) == int(b[0]) and str(a[1]) < str(b[1])))
+	var pick: Array = best[randi() % mini(3, best.size())]
+	return str(pick[1])
+
+
+func _try_order(o: Dictionary) -> void:
+	for it in Game.inventory():
+		if Items.is_equipment(it) and Shop.item_meets(o, it):
+			if Shop.fulfil(str(o["id"]), int(it["uid"])) == "":
+				stats["orders_fulfilled"] += 1
+				say("day %d: commission %s fulfilled with %s" % [Game.day(), str(o["id"]), str(it["name"])])
+			return
+	for r in DB.recipes.values():
+		var rid := str(r["id"])
+		var out := str(r.get("output", ""))
+		if not Items.is_equipment({"def": out}) or not _craftable(rid):
+			continue
+		if o.has("def") and str(o["def"]) != out:
+			continue
+		if not o.has("def") and str(DB.item(out).get("slot", "")) != str(o.get("slot", "")):
+			continue
+		var it := _craft(rid)
+		if it.is_empty():
+			continue
+		if Shop.item_meets(o, it) and Shop.fulfil(str(o["id"]), int(it["uid"])) == "":
+			stats["orders_fulfilled"] += 1
+			say("day %d: commission %s crafted and fulfilled (%s)" % [Game.day(), str(o["id"]), str(it["name"])])
+		else:
+			it["for_sale"] = true
+		return
+
+
+# ------------------------------------------------------------------ the counter
+func _serve() -> void:
+	for c in Shop.customers().duplicate():
+		if not c.get("present", false):
+			Shop.mark_arrived(str(c["npc"]), false)   # the figure reaches its seat (the world does this)
+	for c in Shop.waiting().duplicate():
+		var npc := str(c["npc"])
+		match str(c.get("want", "")):
+			"repair":
+				Shop.do_repair(npc, randf_range(70.0, 95.0))
+				stats["repairs"] += 1
+			"dispute":
+				Shop.settle_dispute(npc, true)
+				stats["disputes"] += 1
+			"browse":
+				var a := Adv.get_a(npc)
+				var sold := false
+				for it in Shop.stock():
+					if not a.is_empty() and Adv.purchase_check(a, it, Shop.price_of(it)) == "":
+						var nm := str(it["name"])
+						if Shop.sell_to(npc, int(it["uid"])) == "":
+							stats["sold"] += 1
+							say("day %d: sold %s to %s" % [Game.day(), nm, str(a["name"])])
+							sold = true
+							break
+				if not sold:
+					Shop.dismiss_customer(npc)
+			_:
+				Shop.dismiss_customer(npc)
+
+
+# ------------------------------------------------------------------ apprentices (0.13+)
+func _apprentices(n: int) -> void:
+	if not bool(S("apprentices", "unlocked")):
+		# the first room next door also lets the smith teach; buy it once the purse allows
+		if n >= 10:
+			for u in ["cobbler", "laundry"]:
+				if not Property.owns(u) and Game.gold() >= Property.unit_price(u) + 150:
+					if Property.buy_unit(u) == "":
+						stats["units_bought"].append(u)
+						say("day %d: bought the %s unit" % [Game.day(), u])
+					break
+		return
+	var staff: Array = S("apprentices", "staff")
+	if staff.is_empty():
+		var apps: Array = S("apprentices", "applicants")
+		if apps.is_empty():
+			S("apprentices", "refresh_applicants")
+			apps = S("apprentices", "applicants")
+		if not apps.is_empty() and str(S("apprentices", "hire", [0])) == "":
+			staff = S("apprentices", "staff")
+			stats["apprentice_hired"] = str(staff[-1].get("name", "?"))
+			say("day %d: apprentice %s hired" % [Game.day(), stats["apprentice_hired"]])
+	if staff.is_empty():
+		return
+	var open: Array = S("apprentices", "open_tasks")
+	if open.size() < 2:
+		for o in Shop.open_orders():
+			var t: Dictionary = S("apprentices", "add_task", ["commission", {"order_id": str(o["id"])}])
+			if not t.has("error"):
+				stats["apprentice_tasks"] += 1
+				say("day %d: commission %s queued for the apprentices" % [Game.day(), str(o["id"])])
+				break
+		if Game.count("ore_iron") >= 4:
+			var t2: Dictionary = S("apprentices", "add_task", ["prep", {"recipe": "smelt_iron", "repeat": 2}])
+			if not t2.has("error"):
+				stats["apprentice_tasks"] += 1
+
+
+# ------------------------------------------------------------------ contracts (0.14+)
+func _contracts(n: int) -> void:
+	var active: Array = S("contracts", "active")
+	if active.is_empty() and str(stats["contract"]) == "":
+		var offers: Array = S("contracts", "offers")
+		var o: Dictionary = offers[0] if not offers.is_empty() else {}
+		if o.is_empty() and n >= 8:
+			o = S("contracts", "make_offer", ["drovers_kit", "golden-save driver: a letter from the drovers"])
+		if not o.is_empty() and not o.has("error") and str(S("contracts", "accept", [str(o["id"])])) == "":
+			stats["contract"] = str(o["id"])
+			say("day %d: contract %s accepted" % [Game.day(), str(o["id"])])
+		return
+	if active.is_empty():
+		return
+	var c: Dictionary = active[0]
+	var bench_ok: bool = S("contracts", "bench_installed")
+	if not bench_ok and Game.gold() >= 200:
+		if Property.buy_station("project_bench") == "":
+			var plan: Dictionary = S("property", "plan_copy")
+			if str(S("property", "auto_place", [plan, "project_bench"])) == "" and str(S("property", "commit", [plan])) == "":
+				say("day %d: the Project Bench is installed" % Game.day())
+	var cands: Array = S("contracts", "masterpiece_candidates", [str(c["id"])])
+	if not cands.is_empty() and (c.get("masterpiece", {}) is Dictionary) and not (c["masterpiece"] as Dictionary).has("item"):
+		say("day %d: masterpiece laid in: %s" % [Game.day(), str(S("contracts", "lay_in_masterpiece", [str(c["id"]), int(cands[0]["uid"])]))])
+	if bool(S("contracts", "ready", [str(c["id"])])):
+		var res: Dictionary = S("contracts", "deliver", [str(c["id"])])
+		stats["contract_delivered"] = str(res.get("error", "ok"))
+		say("day %d: contract %s delivered: %s" % [Game.day(), str(c["id"]), JSON.stringify(res).left(300)])
+		return
+	var why := str(S("contracts", "can_work", [str(c["id"])]))
+	if why == "":
+		var r: Dictionary = S("contracts", "work", [str(c["id"]), 2])
+		if str(r.get("error", "")) == "":
+			stats["contract_hours"] += 2
+		else:
+			say("day %d: contract work stopped: %s" % [Game.day(), str(r["error"])])
+	elif n % 5 == 0:
+		say("day %d: contract cannot be worked: %s" % [Game.day(), why])

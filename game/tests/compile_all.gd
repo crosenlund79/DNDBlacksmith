@@ -15,6 +15,7 @@ func _ready() -> void:
 	for p in failed:
 		print("COMPILE FAIL  ", p)
 	print("compile_all: %d scripts, %d failed" % [count, failed.size()])
+	Saves.end_test_run()
 	get_tree().quit(1 if not failed.is_empty() else 0)
 
 

@@ -109,6 +109,7 @@ static func run_trade(budget: int, travelling: int, want: Array) -> Dictionary:
 		var p := int(round(Items.value(it) * (0.85 + 0.05 * travelling)))
 		sold += p
 		lines.append("sold %s for %d g" % [Items.display_name(it), p])
+		ItemRegistry.leave(it, "road_trader", "a trader on the road", "sold", "%s was sold on a trade run." % Items.display_name(it))
 		Game.inventory().erase(it)
 	return {"bought": bought, "change": spend, "sold_gold": sold, "lines": lines}
 

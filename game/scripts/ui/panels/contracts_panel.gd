@@ -251,8 +251,9 @@ func _build_closed(c: Dictionary) -> void:
 	var mp: Dictionary = c.get("masterpiece", {})
 	if not mp.is_empty() and not (mp.get("item", {}) as Dictionary).is_empty() and o != "failed":
 		var h := UIKit.hbox(10)
-		h.add_child(ItemSlot.new(mp["item"], 56.0))
-		h.add_child(UIKit.label("%s now belongs to %s." % [Items.display_name(mp["item"]), str(Contracts.patron(str(c["patron"])).get("name", ""))], 17, "body_italic"))
+		var mpi := ItemRegistry.resolve(mp["item"])   # the record refers to the piece kept in the holdings archive
+		h.add_child(ItemSlot.new(mpi, 56.0))
+		h.add_child(UIKit.label("%s now belongs to %s." % [Items.display_name(mpi), str(Contracts.patron(str(c["patron"])).get("name", ""))], 17, "body_italic"))
 		right.add_child(h)
 	if good:
 		right.add_child(_wrap("Word of the order travels: patrons weigh delivered orders when they decide whom to write to next.", 16, "body_italic", ApprenticeUI.MUTED, 1060))

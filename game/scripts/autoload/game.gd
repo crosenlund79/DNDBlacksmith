@@ -7,7 +7,8 @@
 ##     blot. Uret går, mens verdenen er aktiv, og ingen blokerende brugerflade er åben.
 extends Node
 
-const SAVE_VERSION := 1
+## The save-schema version this build writes; SaveMigrations.STEPS converts every older version up to it.
+const SAVE_VERSION := 3
 const MINUTES_PER_SECOND := 1.6   # one in-game day ≈ 15 real minutes
 const DAY_START_HOUR := 6
 
@@ -266,22 +267,11 @@ func find_uid(uid: int) -> Dictionary:
 	return {}
 
 
-## Finds an item instance wherever it is: the smith's stores, an adventurer's or a hireling's gear.
+## Finds an item instance in the smith's stores or worn by an adventurer or a hireling. The lookup goes through
+## ItemRegistry (the one map of where items are); this scope is kept as it was because gameplay reads it
+## (Hall of Fame entries, awakenings). ItemRegistry.find(uid) searches every physical holder.
 func find_uid_anywhere(uid: int) -> Dictionary:
-	if uid < 0:
-		return {}
-	var it := find_uid(uid)
-	if not it.is_empty():
-		return it
-	for a in state.get("adventurers", {}).values():
-		for s in a.get("equipment", {}):
-			if int(a["equipment"][s].get("uid", -1)) == uid:
-				return a["equipment"][s]
-	for h in state.get("hirelings", []):
-		for s in h.get("equipment", {}):
-			if int(h["equipment"][s].get("uid", -1)) == uid:
-				return h["equipment"][s]
-	return {}
+	return ItemRegistry.find(uid, ItemRegistry.WORN)
 
 
 func take_uid(uid: int) -> Dictionary:

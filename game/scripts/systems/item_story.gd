@@ -84,13 +84,7 @@ static func mark_icon(it: Dictionary) -> String:
 static func find(uid: int) -> Dictionary:
 	if uid <= 0:
 		return {}
-	var it := History.find_item(uid)
-	if not it.is_empty():
-		return it
-	for c2 in Shop.customers():
-		if int(c2.get("item", {}).get("uid", -1)) == uid:
-			return c2["item"]
-	return {}
+	return ItemRegistry.find(uid, ItemRegistry.STORY)
 
 
 ## A place id as people name it.
@@ -568,10 +562,10 @@ static func at_counter(npc: String) -> bool:
 	var c := Shop.customer(npc)
 	if c.is_empty() or not c.get("present", true):
 		return false
-	var it: Dictionary = c.get("item", {})
+	var it: Dictionary = ItemRegistry.resolve(c.get("item", {}))
 	if c.has("own_slot"):
 		it = Adv.get_a(npc).get("equipment", {}).get(str(c["own_slot"]), it)
-	if it.is_empty():
+	if it.is_empty() or ItemRegistry.is_ref(it):
 		return false
 	return present(it, "stranger" if bool(c.get("old_blade", false)) else "repair", npc)
 
@@ -718,30 +712,18 @@ static func remember_pool() -> void:
 			pool.erase(keys.pop_front())
 
 
+## Every piece physically somewhere the world simulates (ItemRegistry: stores, worn, packs, offers, customers,
+## pledges, contracts, the holdings archive, lost gear at sites, return bags, merchants' stock…).
 static func _known_items() -> Array:
-	var out := []
-	for it in Game.inventory():
-		out.append(it)
-	for a in Adv.all().values():
-		for s in a.get("equipment", {}):
-			out.append(a["equipment"][s])
-		for l in a.get("loot", []):
-			out.append(l)
-	for h in Game.state.get("hirelings", []):
-		for s2 in h.get("equipment", {}):
-			out.append(h["equipment"][s2])
-	for o in Shop.offers():
-		out.append(o.get("item", {}))
-	return out.filter(func(x): return x is Dictionary and not (x as Dictionary).is_empty())
+	return ItemRegistry.all_physical()
 
 
-## Pieces of the smith's in the pool that are nowhere in the known world now (buried, lost, sold on).
+## Pieces of the smith's in the pool that are nowhere in the known world now (buried, lost, sold on). A piece
+## that physically exists anywhere (a pledge, a contract, the smith's own belt) is never offered as a copy.
 static func circulating() -> Array:
 	var present := {}
 	for it in _known_items():
 		present[str(it.get("uid", ""))] = true
-	for c in Shop.customers():
-		present[str(c.get("item", {}).get("uid", ""))] = true
 	var out := []
 	for k in st()["pool"]:
 		if not present.has(k):
@@ -775,7 +757,7 @@ static func stranger_visit(npc := "") -> Dictionary:
 				break
 	if npc == "":
 		return {}
-	var it: Dictionary = src.duplicate(true)
+	var it: Dictionary = src   # the piece itself leaves the pool (moved, never copied: same uid, one instance)
 	st()["pool"].erase(str(it["uid"]))
 	var via: String = PEDLARS[int(it.get("uid", 0)) % PEDLARS.size()]
 	Provenance.transfer(it, npc, "bought", "", "%s bought %s from %s." % [Talk.npc_name(npc), Items.display_name(it), via])

@@ -369,8 +369,11 @@ func test_masterpiece_slot() -> void:
 	_finish(c)
 	var r := Contracts.deliver(cid)
 	check(bool(r["masterpiece"]), "delivered with the masterpiece")
-	var it: Dictionary = Contracts.get_c(cid)["masterpiece"]["item"]
-	eq(int(it.get("uid", -1)), uid, "the same instance went to the patron")
+	# A1: the closed order keeps a reference; the piece itself is kept whole in the holdings archive (ItemRegistry)
+	var rec: Dictionary = Contracts.get_c(cid)["masterpiece"]["item"]
+	check(ItemRegistry.is_ref(rec) and int(rec.get("uid", -1)) == uid, "the order's record refers to the masterpiece by uid")
+	var it: Dictionary = ItemRegistry.resolve(rec)
+	check(is_same(it, fine) and str(ItemRegistry.where(uid).get("holder", "")) == "holdings", "the same instance went to the patron (kept in the holdings archive)")
 	eq(str(Provenance.owner_id(it)), "patron_highmarsh_watch", "its owner is now the Watch")
 	eq(str(Provenance.maker(it).get("id", "")), "smith", "its maker is still the smith")
 	check(Game.find_uid(uid).is_empty(), "and it is not back in the stores")

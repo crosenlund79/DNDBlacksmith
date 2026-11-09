@@ -131,7 +131,8 @@ func test_old_save_cloak_migrates() -> void:
 		hs[0]["equipment"]["amulet"] = hck
 	Shop.orders().append({"id": "ord_eqrl_old", "npc": str(a["id"]), "slot": "amulet", "def": "cloak_warded", "stat": "protection", "min": 1,
 		"tier": 1, "reward": 50, "deadline": Game.day() + 3, "status": "open", "note": "", "placed": Game.day()})
-	check(Saves.save("suite_eqrl_old"), "the old-shaped save is written")
+	# a save written by 0.14.6 or earlier declares schema 1: loading runs the v1 → v2 step (the cloak walk)
+	check(save_as_version("suite_eqrl_old", 1), "the old-shaped save is written (schema 1)")
 	check(Saves.load_slot("suite_eqrl_old"), "the old save loads")
 	Saves.delete("suite_eqrl_old")
 	var a2 := Adv.get_a(str(a["id"]))

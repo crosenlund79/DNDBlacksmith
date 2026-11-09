@@ -195,14 +195,5 @@ static func _dedupe(arr: Array) -> Array:
 
 ## An item instance anywhere in the world (stores, the smith's own gear, adventurers, hirelings, offers).
 static func find_item(uid: int) -> Dictionary:
-	var it := Game.find_uid_anywhere(uid)
-	if not it.is_empty():
-		return it
-	var eq: Dictionary = Game.state.get("player", {}).get("equipment", {})
-	for s in eq:
-		if int(eq[s].get("uid", -1)) == uid:
-			return eq[s]
-	for o in Game.state.get("offers", []):
-		if int(o.get("item", {}).get("uid", -1)) == uid:
-			return o["item"]
-	return {}
+	# stores, adventurers' and hirelings' gear, the smith's own gear, offers at the counter (ItemRegistry)
+	return ItemRegistry.find(uid, ItemRegistry.HISTORY)

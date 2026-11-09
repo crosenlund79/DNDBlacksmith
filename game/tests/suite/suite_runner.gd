@@ -1,7 +1,7 @@
 ## The permanent regression & progression suite.
 ##   godot --headless --path game res://tests/suite/suite.tscn -- [smoke|full|<case>...]
 ## EN: Discovers tests/suite/cases/*.gd (SuiteCase subclasses), runs every test_* method from a fresh seeded game,
-##     with saves redirected to user://test_saves/ (real saves are never touched). Prints PASS / FAIL / SKIPPED with
+##     with saves redirected to this run's own folder user://test_saves/run_<unix>_<pid>/ (real saves are never touched). Prints PASS / FAIL / SKIPPED with
 ##     diagnostics and writes user://logs/suite_report.txt. Exit code 0 = no failures.
 ## DA: Den permanente testsuite: smoke (hurtig) eller full; rigtige gemte spil røres aldrig.
 extends Node
@@ -60,7 +60,7 @@ func _ready() -> void:
 	var f := FileAccess.open("user://logs/suite_report.txt", FileAccess.WRITE)
 	if f:
 		f.store_string("\n".join(lines))
-	Saves.dir = Saves.DIR
+	Saves.end_test_run()
 	get_tree().quit(1 if n_fail > 0 else 0)
 
 

@@ -50,7 +50,7 @@ func _ready() -> void:
 	var entries := [
 		["I.", "Continue", func(): main.call("continue_game"), has_save],
 		["II.", "New Game", func(): _sub(DifficultyPanel.new(func(d): main.call("new_game", d), true)), true],
-		["III.", "Load Game", func(): _sub(SavePanel.new("load")), has_save],
+		["III.", "Load Game", func(): _sub(SavePanel.new("load")), Saves.any_save()],
 		["IV.", "Settings", func(): _sub(SettingsPanel.new()), true],
 		["V.", "Credits", _credits, true],
 		["VI.", "Quit", func(): get_tree().quit(), true],
@@ -61,6 +61,14 @@ func _ready() -> void:
 		b.add_theme_font_size_override("font_size", 34)
 		b.disabled = not e[3]
 		col.add_child(b)
+	if Saves.notice != "":
+		# e.g. a save from a newer version was refused: say so plainly where the player now is
+		var note := UIKit.label(Saves.notice, 21, "body_italic", Color("#7e2418"))
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		note.custom_minimum_size = Vector2(600, 0)
+		col.add_child(UIKit.divider())
+		col.add_child(note)
+		Saves.notice = ""
 	var ver := UIKit.label("v0.1 · first playable build", 20, "body_italic", Color("#c8b898"))
 	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	ver.position = Vector2(-420, -48)

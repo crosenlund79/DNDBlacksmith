@@ -81,6 +81,15 @@ func continue_game() -> void:
 
 
 func load_slot(slot: String) -> void:
+	# a save from a newer build is refused BEFORE anything is torn down: a running game keeps going untouched,
+	# the menu shows why (Saves.load_slot explains, keeps the file and sets Saves.notice)
+	if Saves.newer_schema(slot) > 0:
+		Saves.load_slot(slot)
+		if world == null:
+			to_menu()
+		else:
+			Saves.notice = ""   # already shown in the running game as a toast
+		return
 	_clear()
 	if Saves.load_slot(slot):
 		_start_world()
