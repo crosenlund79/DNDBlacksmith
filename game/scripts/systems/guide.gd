@@ -11,7 +11,7 @@
 ##
 ## Public API (static):
 ##   sources(def) -> Array[{kind, id, name, where, how, price, chance, when, state, why, link {route, args}, rank}]
-##       kind: craft|vendor|ship|import|caravan|trade_run|hireling_work|expedition|site|delivery|apprentice
+##       kind: craft|vendor|ship|import|caravan|trade_run|hireling_work|expedition|sponsor|site|delivery|apprentice
 ##       state: ready (can be done right now) | obtainable (possible, later or elsewhere) | locked (public obstacle)
 ##   status(def, qty := 1) -> "have"|"obtainable"|"locked"|"unavailable"
 ##   recipe_status(rid) -> {state "ready"|"missing"|"locked"|"hidden", obstacles [{kind, id, text, link, ...}], missing {def: n}}
@@ -31,7 +31,7 @@ const VENUES := {
 	"rival_smith": {"name": "The Salt Anvil", "keeper": "rival_smith", "open": 7, "close": 18},
 	"caravan": {"name": "The Brask Caravan", "keeper": "caravan_master", "open": 7, "close": 22},
 }
-const KIND_ORDER := ["vendor", "craft", "ship", "caravan", "rival", "import", "trade_run", "hireling_work", "apprentice", "expedition", "delivery", "site"]
+const KIND_ORDER := ["vendor", "craft", "ship", "caravan", "rival", "import", "trade_run", "hireling_work", "apprentice", "expedition", "sponsor", "delivery", "site"]
 const STATE_BASE := {"ready": 0, "obtainable": 10, "locked": 20, "unavailable": 30}
 const STATE_ICON := {"ready": "ui/guide_ready", "have": "ui/guide_ready", "obtainable": "ui/guide_obtainable", "missing": "ui/guide_obtainable",
 	"locked": "ui/guide_locked", "unavailable": "ui/guide_unavailable", "hidden": "ui/guide_unavailable"}
@@ -162,6 +162,7 @@ static func sources(def: String) -> Array:
 	_src_trade_run(def, out)
 	_src_hireling_work(def, out)
 	_src_expedition(def, out)
+	_src_sponsor(def, out)
 	_src_site(def, out)
 	_src_delivery(def, out)
 	for s in out:
@@ -441,6 +442,18 @@ static func _src_expedition(def: String, out: Array) -> void:
 			"Send a hireling to %s (%d–%d days)" % [str(d.get("name", d["id"])), int(days[0]), int(days[1])],
 			"obtainable" if _has_hireling() else "locked", "" if _has_hireling() else "Hire someone first (Hirelings, H)",
 			"in about %d%% of the haul" % maxi(1, int(round(share * 100.0))), {"route": "hirelings", "args": {}}, -1, share)
+
+
+## The Living Realm: a company (or a lone adventurer) can be sponsored to fetch it from a known site (Sponsor).
+static func _src_sponsor(def: String, out: Array) -> void:
+	var rids := Sponsor.source_sites(def)
+	if rids.is_empty():
+		return
+	var names: Array = rids.map(func(r): return WorldSites.name_of(str(r)))
+	var free := Sponsor.anyone_in_town()
+	_src(out, "sponsor", str(rids[0]), "Sponsored expedition", ", ".join(names.slice(0, 3)),
+		"Sponsor a company to %s (Hirelings, H — Sponsor adventurers)" % str(names[0]),
+		"obtainable" if free else "locked", "" if free else "Nobody is in town to sponsor right now", "when they come home", {"route": "hirelings", "args": {}})
 
 
 static func _src_site(def: String, out: Array) -> void:
