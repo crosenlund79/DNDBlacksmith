@@ -372,7 +372,7 @@ func _task_row(t: Dictionary) -> Control:
 	var est_by := str(Apprentices.get_a(str(e.get("app", ""))).get("name", ""))
 	var parts := PackedStringArray()
 	if int(t.get("repeat", 1)) > 1:
-		parts.append("%d/%d made" % [int(t.get("done", 0)), int(t.get("repeat", 1))])
+		parts.append(("%d/%d h worked" if str(t.get("kind", "")) == "contract" else "%d/%d made") % [int(t.get("done", 0)), int(t.get("repeat", 1))])
 	if who != "":
 		parts.append("[b]%s[/b] at work" % who)
 	elif est_by != "":

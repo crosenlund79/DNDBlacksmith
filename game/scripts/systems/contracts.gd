@@ -151,6 +151,11 @@ static func standing() -> Dictionary:
 	return out
 
 
+static func _rep_phrase() -> String:
+	var w := Shop.reputation_word()
+	return str({"a modest name": "modest regard", "well respected": "good regard", "renowned": "high renown", "poorly thought of": "low regard"}.get(w, "regard"))
+
+
 ## "" when patrons of this tier would write, otherwise what is still missing (shown in the contract view).
 static func tier_open(tier: int) -> String:
 	var s := standing()
@@ -168,9 +173,9 @@ static func _tier_check(tier: int, s: Dictionary) -> Dictionary:
 			# a working smith with a decent name: pieces forged and a village that does not speak ill of him
 			if int(s["crafted"]) >= 8 and rep > -8.0:
 				reasons.append("%d pieces have left your anvil" % int(s["crafted"]))
-				reasons.append("the village thinks you %s" % Shop.reputation_word())
+				reasons.append("the village holds you in %s" % _rep_phrase())
 			elif rep >= 10.0:
-				reasons.append("the village thinks you %s" % Shop.reputation_word())
+				reasons.append("the village holds you in %s" % _rep_phrase())
 			else:
 				miss.append("forge more pieces (%d of 8) with a decent name in the village" % int(s["crafted"]))
 		2:
@@ -910,5 +915,5 @@ static func prompt() -> Dictionary:
 		else:
 			p["off"].append(why)
 	p["actions"].append("Inspect")
-	p["status"] = "%d/%d pieces · day %d of %d" % [int(c["units_done"]), int(c["units_total"]), Game.day(), int(c["deadline"])]
+	p["status"] = "%d/%d pieces · due day %d" % [int(c["units_done"]), int(c["units_total"]), int(c["deadline"])]
 	return p

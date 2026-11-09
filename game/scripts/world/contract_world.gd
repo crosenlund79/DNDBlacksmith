@@ -53,15 +53,42 @@ func sync() -> void:
 	nodes.clear()
 	if not Contracts.bench_installed():
 		return
-	var tp := Property.pos_of(Contracts.BENCH)
-	var pos := w.bpos("smithy", tp.x, tp.y)
-	var side := -1.0 if Property.flipped(Contracts.BENCH) else 1.0
+	var spots := free_spots(2)
 	if bool(s["patron"]):
-		_crate("contracts/crate_patron", pos + Vector2(-side * 92.0, 22.0), 0)
+		_crate("contracts/crate_patron", w.bpos("smithy", spots[1].x, spots[1].y), 0)
 	for i in int(s["goods"]):
 		# two on the floor, then stacked on top of them
-		var base := pos + Vector2(side * (88.0 + float(i % 2) * 18.0), 26.0 - float(i % 2) * 6.0)
-		_crate("contracts/crate_goods", base, int(i / 2))
+		var at := w.bpos("smithy", spots[0].x, spots[0].y) + Vector2(float(i % 2) * 20.0 - 10.0, -float(i % 2) * 5.0)
+		_crate("contracts/crate_goods", at, int(i / 2))
+
+
+## Clear floor beside the bench (tile coordinates) for the crates: beside it, else in front of it — never on another
+## station's footprint and always inside the bench's own room. n spots, the best first.
+static func free_spots(n: int) -> Array:
+	var tp := Property.pos_of(Contracts.BENCH)
+	var side := -1.0 if Property.flipped(Contracts.BENCH) else 1.0
+	var room := Property.room_at_tile(Property.rooms(), tp)
+	var cands := [Vector2(side * 1.5, 0.35), Vector2(-side * 1.5, 0.35), Vector2(side * 0.75, 1.05), Vector2(-side * 0.75, 1.05),
+		Vector2(side * 1.4, 1.0), Vector2(-side * 1.4, 1.0), Vector2(0.0, 1.15)]
+	var out := []
+	for o: Vector2 in cands:
+		var p := tp + o
+		if room.is_empty() or not Property.rect(room).grow(-0.35).has_point(p):
+			continue
+		var clash := false
+		for sid in Property.st()["stations"]:
+			if str(sid) == Contracts.BENCH or not Property.is_installed(str(sid)):
+				continue
+			if Property.footprint(str(sid), Property.st()["stations"][sid]).grow(0.45).has_point(p):
+				clash = true
+				break
+		if not clash:
+			out.append(p)
+		if out.size() >= n:
+			break
+	while out.size() < n:
+		out.append(tp + Vector2(0.0, 1.0 + 0.4 * out.size()))
+	return out
 
 
 func _crate(tex: String, at: Vector2, level: int) -> void:
@@ -69,8 +96,8 @@ func _crate(tex: String, at: Vector2, level: int) -> void:
 	n.position = at + Vector2(0, 20)
 	var sp := Sprite2D.new()
 	sp.texture = Assets.get_tex(tex)
-	sp.scale = Vector2(0.72, 0.72)
-	sp.offset = Vector2(0, -20 / 0.72 - level * 26.0)
+	sp.scale = Vector2(0.85, 0.85)
+	sp.offset = Vector2(0, -20.0 / 0.85 - level * 26.0)
 	n.add_child(sp)
 	w.ysort.add_child(n)
 	nodes.append(n)

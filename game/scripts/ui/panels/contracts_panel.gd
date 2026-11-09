@@ -53,7 +53,7 @@ func _queue_build() -> void:
 func build() -> void:
 	UIKit.clear(left)
 	UIKit.clear(right)
-	if sel == "" or Contracts.get_c(sel).is_empty() or str(Contracts.get_c(sel).get("status", "")) in Contracts.FINISHED:
+	if sel == "" or Contracts.get_c(sel).is_empty() or str(Contracts.get_c(sel).get("status", "")) in ["declined", "expired"]:
 		sel = str(Contracts.active()[0]["id"]) if not Contracts.active().is_empty() else (str(Contracts.offers()[0]["id"]) if not Contracts.offers().is_empty() else "")
 	_build_left()
 	var c := Contracts.get_c(sel)
@@ -61,6 +61,8 @@ func build() -> void:
 		_build_empty()
 	elif str(c["status"]) == "offered":
 		_build_offer(c)
+	elif str(c["status"]) in Contracts.FINISHED:
+		_build_closed(c)
 	else:
 		_build_contract(c)
 
@@ -140,7 +142,7 @@ func _standing() -> Control:
 			var r: Array = s["reasons"].get(str(t), [])
 			v.add_child(UIKit.rich("[color=#26622f]✓[/color] [b]%s[/b] — [i]%s[/i]" % [names[t], ", ".join(PackedStringArray(r.map(func(x): return str(x))))], 15))
 		else:
-			v.add_child(UIKit.rich("[color=#8a7a60]○ %s — needs %s[/color]" % [names[t], str(s["missing"].get(str(t), ""))], 15))
+			v.add_child(UIKit.rich("[color=#8a7a60]○ %s — next: %s[/color]" % [names[t], str(s["missing"].get(str(t), ""))], 15))
 			break   # progressive: the next tier only
 	return v
 
@@ -230,6 +232,32 @@ func _plate(caption: String, text: String) -> Control:
 	return plate
 
 
+# ======================================================================= right: a finished order
+func _build_closed(c: Dictionary) -> void:
+	var o := str(c.get("outcome", ""))
+	var good := o in ["excellent", "good"]
+	var hh := UIKit.hbox(14)
+	hh.add_child(UIKit.icon("contracts/crate_goods", 96))
+	var hv := UIKit.vbox(2)
+	hv.add_child(UIKit.label(str(c["title"]), 26, "heading"))
+	hv.add_child(UIKit.label("%s — %s" % [Contracts.OUTCOME_WORD.get(o, o), Contracts.patron_name(str(c["patron"]))], 20, "body_bold", Color("#26622f") if good else UIKit.RUBRIC))
+	hh.add_child(hv)
+	right.add_child(hh)
+	var lg: Array = c.get("log", [])
+	if not lg.is_empty():
+		right.add_child(_plate("THE ORDER IS CLOSED", str(lg[-1]["text"])))
+	right.add_child(UIKit.rich("Paid on delivery: [b]%d g[/b] (advance %d g)  ·  Reputation %+d  ·  Craftsmanship %d%%  ·  Hours: %s" % [int(c.get("paid", 0)), int(c["advance"]),
+		int(round(float(c.get("rep_change", 0.0)))), int(round(Contracts.quality(c))), " · ".join(PackedStringArray(Contracts.contributors(c).map(func(x): return "%s %.1f h" % [x["name"], float(x["hours"])])))], 17))
+	var mp: Dictionary = c.get("masterpiece", {})
+	if not mp.is_empty() and not (mp.get("item", {}) as Dictionary).is_empty() and o != "failed":
+		var h := UIKit.hbox(10)
+		h.add_child(ItemSlot.new(mp["item"], 56.0))
+		h.add_child(UIKit.label("%s now belongs to %s." % [Items.display_name(mp["item"]), str(Contracts.patron(str(c["patron"])).get("name", ""))], 17, "body_italic"))
+		right.add_child(h)
+	if good:
+		right.add_child(_wrap("Word of the order travels: patrons weigh delivered orders when they decide whom to write to next.", 16, "body_italic", ApprenticeUI.MUTED, 1060))
+
+
 # ======================================================================= right: a contract in hand
 func _build_contract(c: Dictionary) -> void:
 	var cid := str(c["id"])
@@ -269,6 +297,7 @@ func _build_contract(c: Dictionary) -> void:
 		build(), 0)
 	ab.tooltip_text = "The patron is displeased: reputation and favour suffer; the advance is kept, the crate goes back."
 	ab.add_theme_font_size_override("font_size", 15)
+	ab.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(ab)
 
 
@@ -346,7 +375,7 @@ func _progress(c: Dictionary) -> Control:
 	g.add_theme_constant_override("h_separation", 18)
 	for l in c["lines"]:
 		var lh := UIKit.hbox(6)
-		lh.add_child(UIKit.icon(str(DB.item(str(l["def"])).get("icon", "")), 40))
+		lh.add_child(UIKit.icon(Items.icon_id({"def": str(l["def"])}), 40))
 		lh.add_child(UIKit.label("%d / %d %s" % [Contracts.line_done(c, l), int(l["n"]), Guide.iname(str(l["def"]))], 17, "body_bold"))
 		lh.add_child(UIKit.label("(%.2f h each)" % float(l["hpu"]), 15, "body_italic", ApprenticeUI.MUTED))
 		g.add_child(lh)
@@ -356,10 +385,12 @@ func _progress(c: Dictionary) -> Control:
 	var qok := q >= float(c["min_q"]) or float(c["q_hours"]) <= 0.0
 	var left_days := int(c["deadline"]) - Game.day()
 	var o := Contracts.outcome_now(c)
-	v.add_child(UIKit.rich("Craftsmanship so far: [b][color=%s]%s[/color][/b] (at least %d%%)  ·  Deadline: [b]day %d[/b] — %s  ·  Paid %d g, %d g on delivery if it went now (%s)  ·  Reputation at stake ±%d" % [
+	var pay_txt := "advance %d g paid, %d g more on delivery" % [int(c["advance"]), int(c["pay"]) - int(c["advance"])]
+	if float(c["q_hours"]) > 0.0:
+		pay_txt += " (as it stands: %s, %d g)" % [str(Contracts.OUTCOME_WORD.get(o["outcome"], "")).to_lower(), int(o["pay"])]
+	v.add_child(UIKit.rich("Craftsmanship so far: [b][color=%s]%s[/color][/b] (at least %d%%)  ·  Deadline: [b]day %d[/b] — %s\nPayment: %s  ·  Reputation at stake ±%d" % [
 		"#26622f" if qok else "#9e3a0c", ("%d%%" % int(round(q))) if float(c["q_hours"]) > 0.0 else "—", int(c["min_q"]), int(c["deadline"]),
-		("[color=#9e3a0c]%d days late[/color]" % -left_days) if left_days < 0 else ("%d days left" % left_days), int(c["advance"]), int(o["pay"]),
-		str(Contracts.OUTCOME_WORD.get(o["outcome"], "")).to_lower(), int(c["rep"])], 16))
+		("[color=#9e3a0c]%d days late[/color]" % -left_days) if left_days < 0 else ("%d days left" % left_days), pay_txt, int(c["rep"])], 16))
 	return v
 
 
@@ -456,6 +487,8 @@ func _workers(c: Dictionary) -> Control:
 	for a in Apprentices.staff():
 		var aid := str(a["id"])
 		var e := Apprentices.eligible(a, tmp)
+		if e == "" and Contracts.tasks_for(cid).any(func(x): return str(x.get("assignee", "")) == aid):
+			e = "%s already has hours on this order." % str(a["name"])
 		var hrs: int = int((Contracts.cfg("apprentice_hours", [8]) as Array)[1]) if (Contracts.cfg("apprentice_hours", [8]) as Array).size() > 1 else 8
 		var b := UIKit.button("%s (%d h)" % [str(a["name"]).split(" ")[0], hrs], func():
 			var r := Apprentices.add_task("contract", {"target": cid, "repeat": hrs, "assignee": aid, "priority": 3})

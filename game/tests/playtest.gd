@@ -2933,6 +2933,13 @@ func phase_smithy_rl() -> void:
 	await ph.run(self)
 
 
+## The Living Realm 5, major contracts: the Project Bench, a patron's letter, accepting, an apprentice's hours, a block of
+## work, the bench mid-production, the contract view and the Workshop Ledger, the delivery (tests/playtest_contracts_rl.gd).
+func phase_contracts_rl() -> void:
+	var ph: RefCounted = load("res://tests/playtest_contracts_rl.gd").new()
+	await ph.run(self)
+
+
 ## Iteration 010, hirelings: HUD portraits, camera glance, bubbles, funeral, grave, ghost, flowers, vase.
 func phase_hire10() -> void:
 	var ph: RefCounted = load("res://tests/playtest_hire10.gd").new()

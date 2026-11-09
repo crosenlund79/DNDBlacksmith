@@ -708,7 +708,10 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 				if str(x["kind"]) == "contract" and str(x["target"]) == cid and str(x["assignee"]) == str(t["assignee"]) and t["manual"]:
 					return {"error": "%s already works on that order." % get_a(str(t["assignee"])).get("name", "")}
 			t["recipe"] = Contracts.main_recipe(cid)
-			t["label"] = "Contract: %s (%d h)" % [str(c.get("title", "")), int(t["repeat"])]
+			var short := str(c.get("title", ""))
+			if short.length() > 30:
+				short = short.left(29).strip_edges() + "…"   # short: long labels wrap and vanish in the ledger rows
+			t["label"] = "Contract: %s (%d h)" % [short, int(t["repeat"])]
 	if t["manual"]:
 		var a := get_a(str(t["assignee"]))
 		var why2 := eligible(a, t)
