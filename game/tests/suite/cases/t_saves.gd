@@ -431,6 +431,14 @@ func test_test_mode_refuses_real_saves() -> void:
 	eq(Saves.path("autosave"), "", "also when spelled differently")
 	Saves.dir = old_dir
 	eq(_listing(Saves.DIR), real_before, "the real save folder is untouched")
+	# the play-tests' persistent folder (reload phases continue a save across processes)
+	var rid := Saves.run_id
+	Saves.use_test_dir("suite_named_probe")
+	eq(Saves.dir, Saves.TEST_ROOT + "suite_named_probe/", "a named test folder is used as asked")
+	eq(Saves.run_id, rid, "within the same run")
+	check(Saves.save("probe") and Saves.load_slot("probe"), "it saves and loads")
+	Saves._remove_tree(Saves.TEST_ROOT + "suite_named_probe")
+	Saves.dir = old_dir
 
 
 func test_stale_run_folders_are_swept() -> void:

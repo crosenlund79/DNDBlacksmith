@@ -8,7 +8,8 @@
 ##     JSON turns integers into floats, so integral floats are converted back on load.
 ##     Tests: any scene under res://tests/ runs in TEST MODE — saves go to a private folder per run
 ##     (user://test_saves/run_<unix>_<pid>/, removed by end_test_run(); run folders older than a day are swept) and
-##     path() refuses the real save folder, so automated runs can never touch a player's saves.
+##     path() refuses the real save folder, so automated runs can never touch a player's saves. Rendered play-tests
+##     use the persistent user://test_saves/playtest/ (their reload phases continue a save across processes).
 ## DA: Pladser: slot_1..slot_3, autosave, quicksave. Der skrives til en midlertidig fil, som læses tilbage og
 ##     kontrolleres; den forrige fil gemmes som .bak, og først derefter omdøbes den nye fil. Alle filoperationer
 ##     tjekkes; ved fejl bevares den forrige fil. En ødelagt fil indlæses fra .bak. Ældre gemte spil opgraderes
@@ -53,21 +54,23 @@ static func launched_from_tests() -> bool:
 ## Test mode: every save/load goes to this run's own folder user://test_saves/run_<unix>_<pid>/ (created fresh),
 ## so parallel runs never share files and real saves are never touched. Idempotent within a run. Also sweeps
 ## run folders older than a day and loose files left by the old shared layout.
-func use_test_dir() -> void:
+## `named` instead uses the persistent test folder user://test_saves/<named>/ (kept between processes) — for the
+## rendered play-tests, whose phases save in one process and continue from that save in the next.
+func use_test_dir(named := "") -> void:
 	test_mode = true
 	if run_id == "":
 		run_id = "run_%d_%d" % [int(Time.get_unix_time_from_system()), OS.get_process_id()]
 		_sweep_stale_runs()
-	dir = TEST_ROOT + run_id + "/"
+	dir = TEST_ROOT + (named if named != "" else run_id) + "/"
 	DirAccess.make_dir_recursive_absolute(dir)
 
 
-## End of a test run: removes the run's folder (the process is about to quit; test mode stays on).
+## End of a test run: removes the run's own folder (the process is about to quit; test mode stays on). A named
+## persistent folder is kept.
 func end_test_run() -> void:
 	if run_id == "":
 		return
 	_remove_tree(TEST_ROOT + run_id)
-	dir = TEST_ROOT + run_id + "/"
 
 
 func _sweep_stale_runs() -> void:

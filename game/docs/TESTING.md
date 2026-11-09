@@ -18,8 +18,10 @@ Exit code 0 means green. Reports go to `user://logs/suite_report.txt` and `user:
 
 **Real saves are never touched.** Any scene under `res://tests/` (suite, unit tests, play-tests, soak) runs in test
 mode: saves go to the run's own folder `user://test_saves/run_<unix>_<pid>/` (`Saves.use_test_dir()`, removed by
-`Saves.end_test_run()`; run folders older than a day are swept), so parallel runs never share files, and
-`Saves.path()` refuses the real `user://saves/` folder while in test mode.
+`Saves.end_test_run()`; run folders older than a day are swept), so parallel runs never share files. Rendered
+play-tests use the persistent `user://test_saves/playtest/` instead (`Saves.use_test_dir("playtest")`), because their
+"reload" phases continue, in a new process, a save made by an earlier phase. In test mode
+`Saves.path()` refuses the real `user://saves/` folder.
 Each test starts from a fresh, seeded new game (`seed(9001)`), and the crafting fixture uses fixed check scores and
 dice, so runs are deterministic.
 
