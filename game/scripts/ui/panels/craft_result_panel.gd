@@ -42,6 +42,19 @@ func _ready() -> void:
 				Events.inventory_changed.emit()
 			close(), 320))
 	btns.add_child(UIKit.button("Keep it" if fresh else "Close", close, 160))
+	# The Living Realm: the same recipe again, when the materials allow — it walks you to its first station
+	var rid := str(cr.get("recipe", ""))
+	if fresh and rid != "" and not DB.recipe(rid).is_empty():
+		var why := Smithy.craft_again_reason(rid)
+		var again := UIKit.button("Craft again", func():
+			close()
+			var err := Smithy.craft_again(rid)
+			if err != "":
+				Events.toast.emit(err, "bad"), 220)
+		again.name = "CraftAgain"
+		again.disabled = why != ""
+		again.tooltip_text = ("Start another %s and walk to its first station." % DB.recipe(rid).get("name", rid)) if why == "" else why
+		btns.add_child(again)
 	content.add_child(btns)
 	if fresh:
 		ItemSpirit.speak(item, "maker")   # a piece that woke at the forge greets its maker

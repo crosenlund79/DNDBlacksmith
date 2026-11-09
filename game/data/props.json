@@ -783,6 +783,62 @@
   "solid": true,
   "desc": "small glazed earthenware vase on a doily; empty or holding wildflowers"
  },
+ "banner_classic": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "craft banner on the north wall: crossed hammer over an anvil (Smithing)"
+ },
+ "banner_stitching": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "craft banner: needle, thread and shears (Leatherworking & Tailoring)"
+ },
+ "banner_runecraft": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "craft banner: a carved rune stone (Runecrafting)"
+ },
+ "banner_alchemy": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "craft banner: a round flask with a sprig (Alchemy)"
+ },
+ "banner_arcane": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "craft banner: a violet sigil star (Arcane Metalworking)"
+ },
+ "banner_gilt": {
+  "size": [
+   64,
+   80
+  ],
+  "solid": false,
+  "desc": "gilt trim and tassels over a craft banner — a Masterwork room"
+ },
+ "lift_platform": {
+  "size": [
+   96,
+   96
+  ],
+  "solid": false,
+  "desc": "the aetheric lift: Ilse's old hoist platform, a brass ring and a ley-stone"
+ },
  "ship_spice": {
   "size": [
    512,

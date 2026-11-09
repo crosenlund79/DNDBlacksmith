@@ -440,7 +440,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"designer":
 			open(DesignerPanel.new())
 		"property":
-			open(PropertyPanel.new())
+			open(PropertyPanel.new(args))   # {"floor": "loft"} / {"id": "lift"} (the old hoist)
 		"harbour":
 			open(HarbourPanel.new())
 		"herbalist", "store":   # a village counter (Fennimore's Simples, Pell's Provisions): args {"id": store id}

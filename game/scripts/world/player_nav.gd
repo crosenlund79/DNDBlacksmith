@@ -258,12 +258,14 @@ func plan(from: Vector2, to: Vector2, reach := 0.0) -> Dictionary:
 	# another floor: go by the stairs
 	var best := {}
 	for e in world.interactables:
-		if e["kind"] != "stairs" or not world.spots.has("stairs_" + str(e["id"])):
+		# stairs, and the smithy's aetheric lift (its own arrival spot "lift_<area>")
+		var link := ("lift_" if e["kind"] == "lift" else "stairs_") + str(e["id"])
+		if not (e["kind"] in ["stairs", "lift"]) or not world.spots.has(link):
 			continue
 		var s := nearest_cell(e["pos"], float(e["r"]) - 10.0, ca)
 		if not _ok(s):
 			continue
-		var arrive: Vector2 = world.spots["stairs_" + str(e["id"])]
+		var arrive: Vector2 = world.spots[link]
 		var a2 := nearest_cell(arrive, 96.0)
 		if not _ok(a2):
 			continue
@@ -428,6 +430,16 @@ func _go(to: Vector2, reach: float, g: Dictionary, mark_at: Vector2) -> bool:
 	_repaths = 0
 	_mark(mark_at, true)
 	return true
+
+
+## Walk up to an interactable (a station, by the stairs or the lift if it is on another floor) and use it there.
+## Used by "Walk to the <station>" and "Craft again" (Smithy). True when on the way (or already used).
+func walk_to_entity(e: Dictionary) -> bool:
+	cancel()
+	if _in_reach(e):
+		_use(e)
+		return true
+	return _go(e["pos"], float(e["r"]) - 12.0, {"kind": "entity", "e": e}, e["pos"])
 
 
 func cancel() -> void:

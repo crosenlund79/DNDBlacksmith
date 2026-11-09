@@ -142,6 +142,30 @@
    72,
    88
   ],
+  "props/template_banner_alchemy.png": [
+   64,
+   80
+  ],
+  "props/template_banner_arcane.png": [
+   64,
+   80
+  ],
+  "props/template_banner_classic.png": [
+   64,
+   80
+  ],
+  "props/template_banner_gilt.png": [
+   64,
+   80
+  ],
+  "props/template_banner_runecraft.png": [
+   64,
+   80
+  ],
+  "props/template_banner_stitching.png": [
+   64,
+   80
+  ],
   "props/template_bar_counter.png": [
    320,
    64
@@ -477,6 +501,10 @@
   "props/template_leather_bundle.png": [
    80,
    56
+  ],
+  "props/template_lift_platform.png": [
+   96,
+   96
   ],
   "props/template_lily_pads.png": [
    96,

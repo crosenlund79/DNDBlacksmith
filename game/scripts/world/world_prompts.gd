@@ -105,7 +105,9 @@ static func _station(sid: String) -> Dictionary:
 			p["actions"] = [str(Crafting.current_op().get("op", "Work")).capitalize() + " (next step)"]
 		else:
 			p["actions"] = ["Current work"]
-			p["off"] = ["Next step: %s at the %s" % [str(Crafting.current_op().get("op", "")).to_lower(), str(DB.station(Crafting.current_station()).get("name", ""))]]
+			var fh := Smithy.floor_hint(Crafting.current_station())   # The Living Realm: "upstairs in the Loft"
+			p["off"] = ["Next step: %s at %s%s" % [str(Crafting.current_op().get("op", "")).to_lower(), Smithy.station_ref(Crafting.current_station()),
+				(" (" + fh + ")") if fh != "" else ""]]
 		return p
 	var ready := _ready_count(sid)
 	var acts: Array = []
