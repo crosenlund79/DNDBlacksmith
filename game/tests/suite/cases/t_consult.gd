@@ -141,7 +141,7 @@ func test_recommendations_from_data() -> void:
 	a["gold"] = 3000
 	var armor: Dictionary = a["equipment"]["armor"]
 	armor["stats"]["durability"] = int(int(armor["stats"]["durability_max"]) * 0.2)
-	Game.state["inventory"] = Game.inventory().filter(func(it): return not str(it["def"]).begins_with("coating"))
+	Game.state["player"]["inventory"] = Game.inventory().filter(func(it): return not str(it["def"]).begins_with("coating"))   # no coatings in the stores (the stores live under player.inventory)
 	# a fire blade on display
 	var blade := Items.make("sword_emberwarden", {"quality": 95.0})
 	blade["for_sale"] = true
@@ -303,7 +303,7 @@ func test_accepted_advice_changes_decisions() -> void:
 	c["next_dest"] = "barrow_fields"
 	c["gold"] = 3000
 	_persuadable("garrick")
-	Game.state["inventory"] = Game.inventory().filter(func(it): return not str(it["def"]).begins_with("coating"))
+	Game.state["player"]["inventory"] = Game.inventory().filter(func(it): return not str(it["def"]).begins_with("coating"))   # no coatings in the stores (the stores live under player.inventory)
 	var rc := _rec(Consult.session("garrick")["recs"], "commission")
 	check(not rc.is_empty(), "a commission is advised")
 	if not rc.is_empty():
