@@ -83,6 +83,8 @@ static func on_hour() -> void:
 		return
 	if Game.now() <= int(_p().get("resting_until", -1)):
 		return
+	if Steward.smith_away():
+		return   # Steward Mode: the smith is away from the forge — his fatigue holds where it was (no rest bonus, no penalty)
 	add_fatigue(WAKING_PER_HOUR)
 
 

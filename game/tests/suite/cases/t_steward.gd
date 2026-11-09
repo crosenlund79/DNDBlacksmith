@@ -467,3 +467,16 @@ func test_soak_365_days() -> void:
 		return
 	check(int(r["production"]["made_count"]) > 20, "a year of production (%d pieces)" % int(r["production"]["made_count"]))
 	check(int(r["sales"]["count"]) + int(r["orders"]["counts"]["delivered"]) > 0, "a year of sales or deliveries")
+
+
+## S1 (lead): while the smith is away his fatigue neither rises nor falls; after return it moves normally again.
+func test_fatigue_holds_while_away() -> void:
+	fresh_game()
+	Vitality.set_fatigue(30.0)
+	if not check(Steward.activate() == "", "the steward takes over"):
+		return
+	Game.advance_minutes(48 * 60)
+	eq(snappedf(Vitality.fatigue(), 0.01), 30.0, "two days away: fatigue unchanged")
+	Steward.deactivate()
+	Game.advance_minutes(3 * 60)
+	check(Vitality.fatigue() > 30.0, "back at the forge, waking hours tire him again (%.1f)" % Vitality.fatigue())
