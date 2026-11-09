@@ -3737,3 +3737,26 @@ func phase_guide_ux() -> void:
 	UIRoot.hide_tooltip()
 	await close_panel()
 	StationPanel.query = ""
+
+
+# ======================================================================= The Living Realm: equipment (EQUIPMENT worker)
+## Ground transitions up close: grass ↔ road, road ↔ square, banks of the stream, pond and harbour, the field edge,
+## meadow patches and doorsteps. Run once before and once after a terrain change (the shot names carry `tag`).
+func _equip_terrain(tag: String) -> void:
+	var T := 64.0
+	var views := [["map", Vector2(48 * T, 32 * T), 0.3], ["junction", Vector2(20.5 * T, 30.0 * T), 1.0],
+		["square_rim", Vector2(51.5 * T, 30.5 * T), 1.0], ["stream", Vector2(89.0 * T, 20.0 * T), 1.0],
+		["pond", Vector2(36.0 * T, 7.4 * T), 0.9], ["harbour", Vector2(78.0 * T, 55.0 * T), 0.9],
+		["fields", Vector2(9.0 * T, 50.5 * T), 0.8], ["meadow", Vector2(63.0 * T, 46.0 * T), 0.7], ["paddock", Vector2(4.6 * T, 36.4 * T), 0.9],
+		["doorstep", W().spots.get("smithy_door_out", Vector2(30 * T, 30 * T)) + Vector2(0, 40), 1.2]]
+	for v in views:
+		await _v9_view("eqrl_terrain_%s_%s" % [tag, v[0]], v[1], v[2])
+
+
+func phase_equip_terrain() -> void:
+	await click("New Game")
+	await wait(2.5)
+	await advance_to(11, 0)
+	var tag := OS.get_environment("EQRL_TAG")
+	await _equip_terrain(tag if tag != "" else "now")
+
