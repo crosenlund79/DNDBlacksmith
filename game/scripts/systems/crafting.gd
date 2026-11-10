@@ -685,7 +685,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		Steward.begin_marked(marked)
 		for skill in r.get("xp", {}):
 			var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
-			if expert:
+			# an expert smith may still be a novice miner: damp only a skill he is also expert in (Mining XP hotfix)
+			if expert and Game.player_level(str(skill)) - difficulty(rid) >= int(sk.get("xp_expert_gap", 5)):
 				amt *= float(sk.get("xp_expert_mult", 0.4))
 			xp[skill] = int(round(amt))
 			Game.grant_player_xp(skill, xp[skill])
