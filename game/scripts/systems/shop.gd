@@ -948,10 +948,11 @@ static func fulfil(order_id: String, uid: int) -> String:
 			Game.add_gold(subsidy, "subsidy", "Village subsidy: %s's commission" % a["name"], Payments.VILLAGE)
 		o["status"] = "done"
 		Social.change(o["npc"], 10.0 + margin, 8.0, "order_" + o["id"], "Brannoc delivered my %s, and it was %s." % [it["name"], "superb" if margin >= 4 else "as promised"])
-		# exceptional work is sometimes rewarded with something rare — A2: worth at most Payments.GIFT_SHARE of the
-		# commission it thanks you for (before, the package came from the open loot tables: 935 g on average)
+		# exceptional work is sometimes rewarded with something rare — A2: worth at most Payments.GIFT_SHARE of what the
+		# giver paid for it (S2, D14: of their OWN share, not the village's subsidy — a customer who paid nothing gives
+		# nothing; before A2 the package came from the open loot tables: 935 g on average)
 		if margin >= 5 or it.get("rarity") in ["legendary", "rare"]:
-			var pkg := Payments.gift_within(Loot.roll_table("reward", 10.0), int(float(reward) * Payments.GIFT_SHARE))
+			var pkg := Payments.gift_within(Loot.roll_table("reward", 10.0), int(float(paid) * Payments.GIFT_SHARE))
 			if not pkg.is_empty():
 				Payments.note_gift(str(o["npc"]), Payments.value_of(pkg))
 				Game.state["returns"].append(Loot.make_container("package_reward", pkg, a["name"],
