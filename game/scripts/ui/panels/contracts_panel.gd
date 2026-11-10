@@ -180,13 +180,7 @@ func _terms(c: Dictionary) -> Control:
 
 func _build_offer(c: Dictionary) -> void:
 	var p := Contracts.patron(str(c["patron"]))
-	var hh := UIKit.hbox(14)
-	hh.add_child(UIKit.icon("contracts/letter", 96))
-	var hv := UIKit.vbox(2)
-	hv.add_child(UIKit.label(str(c["title"]), 28, "heading"))
-	hv.add_child(UIKit.label("A sealed letter from %s" % Contracts.patron_name(str(c["patron"])), 19, "body_italic", UIKit.RUBRIC))
-	hh.add_child(hv)
-	right.add_child(hh)
+	right.add_child(_header("contracts/letter", str(c["title"]), 28, "A sealed letter from %s" % Contracts.patron_name(str(c["patron"])), 19, UIKit.RUBRIC))
 	right.add_child(_wrap(str(c["text"]), 18, "body", UIKit.INK, 1060))
 	if str(c.get("why", "")) != "":
 		right.add_child(_plate("WHY THIS LETTER CAME", str(c["why"]) + ("  «%s»" % str(p.get("voice", "")) if str(p.get("voice", "")) != "" else "")))
@@ -232,22 +226,40 @@ func _plate(caption: String, text: String) -> Control:
 	return plate
 
 
+## The icon-and-title header of the right column. BUG-001 (S2): UIKit.label wraps text longer than 48 characters, so a
+## long title ("Forty blades and twenty round shields for the Highmarsh Watch") in a box with no width of its own
+## collapsed the whole column to one letter per line — the header now takes the column's width, wrapping by words.
+func _header(icon: String, title: String, tsize: int, sub: String, ssize: int, scol: Color, sfont := "body_italic") -> Control:
+	var hh := UIKit.hbox(14)
+	hh.name = "Header"
+	hh.add_child(UIKit.icon(icon, 96))
+	var hv := UIKit.vbox(2)
+	hv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var t := UIKit.label(title, tsize, "heading")
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.custom_minimum_size = Vector2(900, 0)
+	hv.add_child(t)
+	var sl := UIKit.label(sub, ssize, sfont, scol)
+	sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sl.custom_minimum_size = Vector2(900, 0)
+	hv.add_child(sl)
+	hh.add_child(hv)
+	return hh
+
+
 # ======================================================================= right: a finished order
 func _build_closed(c: Dictionary) -> void:
 	var o := str(c.get("outcome", ""))
 	var good := o in ["excellent", "good"]
-	var hh := UIKit.hbox(14)
-	hh.add_child(UIKit.icon("contracts/crate_goods", 96))
-	var hv := UIKit.vbox(2)
-	hv.add_child(UIKit.label(str(c["title"]), 26, "heading"))
-	hv.add_child(UIKit.label("%s — %s" % [Contracts.OUTCOME_WORD.get(o, o), Contracts.patron_name(str(c["patron"]))], 20, "body_bold", Color("#26622f") if good else UIKit.RUBRIC))
-	hh.add_child(hv)
-	right.add_child(hh)
+	right.add_child(_header("contracts/crate_goods", str(c["title"]), 26, "%s — %s" % [Contracts.OUTCOME_WORD.get(o, o), Contracts.patron_name(str(c["patron"]))],
+		20, Color("#26622f") if good else UIKit.RUBRIC, "body_bold"))
 	var lg: Array = c.get("log", [])
 	if not lg.is_empty():
 		right.add_child(_plate("THE ORDER IS CLOSED", str(lg[-1]["text"])))
-	right.add_child(UIKit.rich("Paid on delivery: [b]%d g[/b] (advance %d g)  ·  Reputation %+d  ·  Craftsmanship %d%%  ·  Hours: %s" % [int(c.get("paid", 0)), int(c["advance"]),
-		int(round(float(c.get("rep_change", 0.0)))), int(round(Contracts.quality(c))), " · ".join(PackedStringArray(Contracts.contributors(c).map(func(x): return "%s %.1f h" % [x["name"], float(x["hours"])])))], 17))
+	var paid := UIKit.rich("Paid on delivery: [b]%d g[/b] (advance %d g)  ·  Reputation %+d  ·  Craftsmanship %d%%  ·  Hours: %s" % [int(c.get("paid", 0)), int(c["advance"]),
+		int(round(float(c.get("rep_change", 0.0)))), int(round(Contracts.quality(c))), " · ".join(PackedStringArray(Contracts.contributors(c).map(func(x): return "%s %.1f h" % [x["name"], float(x["hours"])])))], 17)
+	paid.custom_minimum_size = Vector2(1060, 0)   # S2 (BUG-001): the line keeps the column's width even without the plate
+	right.add_child(paid)
 	var mp: Dictionary = c.get("masterpiece", {})
 	if not mp.is_empty() and not (mp.get("item", {}) as Dictionary).is_empty() and o != "failed":
 		var h := UIKit.hbox(10)
