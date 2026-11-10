@@ -53,3 +53,16 @@ func test_reward_package_capped_by_the_givers_own_payment() -> void:
 			check(Payments.value_of(b.get("contents", [])) <= int(float(paid) * Payments.GIFT_SHARE),
 				"a package (%d g) is within half of what Garrick paid (%d g)" % [Payments.value_of(b.get("contents", [])), paid])
 	note("%d reward packages from a paying customer, each within half of his own share" % seen)
+
+
+##   Integration (STEWARD × EARLY): the steward's autopilot walking the smith never completes the player's own
+##   tutorial step "move"; the player's own walking still does.
+func test_autopilot_walking_is_not_the_players_tutorial_step() -> void:
+	fresh_game()
+	if not check(Steward.activate() == "", "the steward takes over (%s)" % Steward.can_activate()):
+		return
+	Tutorial.on_moved(600.0)
+	check(not Tutorial.is_done("move"), "600 px of autopilot walking does not complete the tutorial's 'move' step")
+	Steward.deactivate()
+	Tutorial.on_moved(600.0)
+	check(Tutorial.is_done("move"), "the player's own walking does")

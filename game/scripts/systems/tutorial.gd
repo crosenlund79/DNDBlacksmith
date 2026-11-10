@@ -120,7 +120,8 @@ static func notify(ev: String) -> void:
 
 ## Called by the HUD a few times a second with the distance the player walked since the last call.
 static func on_moved(dist: float) -> void:
-	if is_done("move") or Game.state.is_empty():
+	# S2: while the steward walks the smith (autopilot) the player is not moving him — that is not the player's step
+	if is_done("move") or Game.state.is_empty() or Steward.smith_away():
 		return
 	_moved += dist
 	if _moved >= 260.0:
