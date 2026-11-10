@@ -434,9 +434,12 @@ static func recommendations(a: Dictionary) -> Array:
 	# 8. if the kit is sound, say so; if it is not and nothing else fits, counsel caution
 	if out.size() < 3:
 		if g.is_empty() and worn_pieces(a).is_empty():
+			# S2 (PROP-020): a gear-seeker offered a piece they would buy is not told first to keep their coin — before, this
+			# (0.5) sorted above the purchase offer (0.45, or a tie at 0.5)
+			var seeker_offer := Living.has_goal(a, "gear") and _has(out, "kind", "buy")
 			out.append({"id": "keep", "kind": "keep", "cost": 0, "title": "Your kit will serve at %s — keep your coin" % dn,
 				"why": "Nothing pressing: %s is %s." % [dn, danger_text(a, rid) if rid != "" else "not decided"], "details": ["Nothing changes — but they will remember whether you were right."],
-				"relevance": 0.5})
+				"relevance": 0.4 if seeker_offer else 0.5})
 		else:
 			out.append({"id": "keep", "kind": "keep", "cost": 0, "title": "Go as you are — but turn back at the first bad fight",
 				"why": "Their kit has gaps at %s; caution can make up for some of it." % dn, "details": ["Nothing is bought or changed — only their nerve.", "They will remember whether you were right."],

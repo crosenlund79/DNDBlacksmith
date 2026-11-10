@@ -411,6 +411,8 @@ func _route(id: String, args: Dictionary) -> void:
 		"contracts":
 			open(ContractsPanel.new(args))   # {"id": contract id}
 		"skillcheck":
+			if DevTools.run_check(args):   # S2: the developer bypass (only while cheats are on) — the check is not played
+				return
 			# overlay: the panel that asked for the check stays alive (its callback lives there)
 			var sc := Minigames.create(args)
 			var under := current

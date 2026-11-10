@@ -464,7 +464,9 @@ static func purchase_check(a: Dictionary, it: Dictionary, price: int) -> String:
 		return "has no use for that"
 	if not married and int(a["gold"]) < price:
 		return "can't afford it"
-	var fair := Items.value(it) * (1.15 + Living.price_tolerance(a) + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
+	# S2: the buyers' difficulty factor counts in what they think fair, as it does in the asking price (Shop.list_price) —
+	# before, a neutral buyer on Apprentice called the default price with Display Cases (value × 1.1 × 1.15) overpriced
+	var fair := Items.value(it) * Shop.buyer_factor() * (1.15 + Living.price_tolerance(a) + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
 	if not married and price > fair:
 		return "thinks it's overpriced"
 	return ""
@@ -722,9 +724,17 @@ static func request_slot(a: Dictionary, wanted: String) -> String:
 	return best if best != "" else wanted
 
 
-## A rough price for a decent piece in this slot (the saving goal).
-static func price_estimate(a: Dictionary, slot: String) -> int:
+## The craftsmanship an adventurer has in mind for "a decent piece" when they set a saving goal.
+const ESTIMATE_QUALITY := 80.0
+
+
+## A rough price for a decent piece in this slot (the saving goal): the dearest piece they could reasonably aim for at
+## their level, priced as the smith's display prices it (Shop.list_price: rarity, craftsmanship, Display Cases and the
+## buyers' difficulty factor). S2: before, the item's bare value × 1.05 was used, so a goal ignored the difficulty, the
+## display and any rarity. `rarity` / `quality`: the piece they have in mind (by default a plain common one at 80 %).
+static func price_estimate(a: Dictionary, slot: String, rarity := "common", quality := ESTIMATE_QUALITY) -> int:
 	var best := 0
+	var best_id := ""
 	var lv := int(a.get("level", 1))
 	for id in DB.items:
 		var d: Dictionary = DB.items[id]
@@ -734,7 +744,10 @@ static func price_estimate(a: Dictionary, slot: String) -> int:
 		# the dearest piece they could reasonably aim for at their level
 		if v <= 60 + lv * 45 and v > best:
 			best = v
-	return maxi(15, int(best * 1.05))
+			best_id = str(id)
+	if best_id == "":
+		return 15
+	return maxi(15, Shop.list_price({"def": best_id, "rarity": rarity, "quality": quality}))
 
 
 ## The best piece on the smith's display this adventurer would buy for `slot` ({} if none). `pool` (A2): judge these

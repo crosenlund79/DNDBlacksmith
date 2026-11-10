@@ -63,6 +63,8 @@ func _ready() -> void:
 	_fill()
 	_detail()
 	search_edit.call_deferred("grab_focus")
+	if not DevTools.enabled():   # S2: spawning and money only while cheats are on (switched on in the F10 tools)
+		_say("[b]Cheats are OFF[/b] — browse freely; switch them on in the Developer Tools to spawn or add money")
 
 
 func _fill() -> void:
@@ -157,6 +159,7 @@ func _detail() -> void:
 		var made := DevTools.spawn(chosen, int(qty.value), r, float(ql.value) if DevTools.has_quality(chosen) else -1.0)
 		_say("%s ×%d spawned%s" % [str(d.get("name", chosen)), int(qty.value), (" (%s)" % Items.RARITY_LABEL.get(r, r)) if r != "" else ""] if not made.is_empty() else "Could not spawn it"), 320)
 	spawn.name = "SpawnButton"
+	spawn.disabled = not DevTools.enabled()
 	detail.add_child(spawn)
 	var desc := str(d.get("desc", ""))
 	if desc != "":
@@ -168,18 +171,23 @@ func _money_row() -> Control:
 	h.add_child(UIKit.label("Money", 24, "heading", UIKit.GILT))
 	for amt in DevTools.MONEY_PRESETS:
 		var a: int = amt
-		h.add_child(UIKit.button("+%d g" % a, func(): DevTools.add_money(a); _say("%+d gold" % a), 0))
+		var mb := UIKit.button("+%d g" % a, func(): DevTools.add_money(a); _say("%+d gold" % a), 0)
+		mb.disabled = not DevTools.enabled()
+		h.add_child(mb)
 	var le := LineEdit.new()
 	le.name = "MoneyAmount"
 	le.placeholder_text = "custom (e.g. 2500 or -200)"
 	le.custom_minimum_size = Vector2(260, 44)
+	le.editable = DevTools.enabled()
 	h.add_child(le)
-	h.add_child(UIKit.button("Add", func():
+	var add := UIKit.button("Add", func():
 		if not le.text.strip_edges().is_valid_int():
 			_say("Type a whole number of gold first")
 			return
 		DevTools.add_money(int(le.text))
-		_say("%+d gold" % int(le.text)), 0))
+		_say("%+d gold" % int(le.text)), 0)
+	add.disabled = not DevTools.enabled()
+	h.add_child(add)
 	h.add_child(UIKit.button("Back to Developer Tools", func():
 		close()
 		Events.open_panel.emit.call_deferred("dev_panel", {}), 0))

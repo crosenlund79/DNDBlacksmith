@@ -2,9 +2,10 @@
 ## EN: The Brask caravan rolls into the caravan camp every 6–10 days and stays two: curiosities, exotic materials,
 ##     fine equipment, sometimes an Ironfront special, and a "goods wanted" list it pays a premium for.
 ##     Silas Quell pays 40 % of value for a pledge and holds it ten days; redeeming costs 65 %; after that it goes
-##     on his shelf. Maren Tallowgate sells sea-bronze and ripple-steel work the smith cannot make yet (and
-##     adventurers sometimes buy from her). Bram and Ellery Hale sell ordinary and magical companion creatures to
-##     the smith, or to an adventurer through the smith (gift, resale or a straight introduction).
+##     on his shelf. Maren Tallowgate sells sea-bronze and ripple-steel work the smith cannot make yet, and (S2) some
+##     plain everyday pieces within a beginner's purse (adventurers sometimes buy from her). Bram and Ellery Hale sell
+##     ordinary and magical companion creatures to the smith, or to an adventurer through the smith (gift, resale or a
+##     straight introduction).
 ##     Data: data/commerce.json (tools/data/make_commerce.py); items/characters: tools/data/extra_commerce.py.
 ## DA: Karavanen, pantelåneren, den rivaliserende smed og Hale-familiens dyr.
 ##
@@ -21,6 +22,7 @@
 ##   -- rival smith --
 ##   rival_stock() -> Array                  buy_rival(index) -> String
 ##   rival_offer_for(a) -> Dictionary {index, item, price} (no change)    rival_buy_for(a) -> Dictionary (buys, equips)
+##   rival_adv_price(entry) -> int (what an adventurer pays her; the entry's `price` is the smith's)
 ##   rivalry_band() -> "low"|"mid"|"high"    hall_of_fame_count() -> int
 ##   -- creatures --
 ##   creature_stock() -> Array               creature_price(def) -> int    buy_creature(index) -> String
@@ -440,17 +442,44 @@ static func rival_stock() -> Array:
 			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
 			var it := Items.make(str(e[0]), {"quality": randf_range(82, 104), "rarity": "magic" if randf() < 0.2 else "common", "crafted_by": "Maren Tallowgate"})
-			Provenance.set_maker(it, "rival_smith", "Maren Tallowgate", "salt_anvil", "the Salt Anvil, Brindlewick")
-			Provenance.transfer(it, "rival_smith", "forged", "brindlewick", "Maren Tallowgate forged %s at the Salt Anvil." % Items.display_name(it))
-			out.append({"def": str(e[0]), "qty": 1, "item": it, "price": maxi(1, int(round(Items.value(it) * float(e[1]) * pf)))})
+			out.append(_rival_piece(it, float(e[1]), pf))
 		for e in rival_cfg().get("materials", []):
 			if randf() > float(e[3]) or DB.item(str(e[0])).is_empty():
 				continue
 			out.append({"def": str(e[0]), "qty": randi_range(int(e[2][0]), int(e[2][1])),
 				"price": maxi(1, int(round(float(DB.item(str(e[0])).get("value", 5)) * float(e[1]) * pf)))})
+		# S2 (PROP-015): her plain everyday work — always common, ordinary craftsmanship, a small markup — within a
+		# starting adventurer's purse. Real pieces with her mark, sold like the rest (same uid, same story).
+		for e in rival_cfg().get("plain", []):
+			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
+				continue
+			var q: Array = e[3] if e.size() > 3 and e[3] is Array else [62, 78]
+			var pit := Items.make(str(e[0]), {"quality": randf_range(float(q[0]), float(q[1])), "rarity": "common", "crafted_by": "Maren Tallowgate"})
+			var pe := _rival_piece(pit, float(e[1]), pf)
+			pe["plain"] = true
+			out.append(pe)
 		r["stock"] = out
 		r["day"] = Game.day()
 	return r["stock"]
+
+
+## One finished piece on Maren's bench: her maker's mark and forging in its story; `price` is what the smith pays her
+## (the smith-buying factor `pf`), `base` her asking price before any difficulty factor (Commerce.rival_adv_price).
+static func _rival_piece(it: Dictionary, mult: float, pf: float) -> Dictionary:
+	Provenance.set_maker(it, "rival_smith", "Maren Tallowgate", "salt_anvil", "the Salt Anvil, Brindlewick")
+	Provenance.transfer(it, "rival_smith", "forged", "brindlewick", "Maren Tallowgate forged %s at the Salt Anvil." % Items.display_name(it))
+	var base := float(Items.value(it)) * mult
+	return {"def": str(it["def"]), "qty": 1, "item": it, "price": maxi(1, int(round(base * pf))), "base": base}
+
+
+## What an adventurer pays Maren for a stock entry (S2): her asking price with the buyers' difficulty factor
+## (Shop.buyer_factor) — the factor they meet at the smith's display too. The smith's own price (`price`) keeps the
+## smith-buying factor (price_factor). Before, adventurers paid the smith's price, so on Apprentice Maren undercut the
+## smith by a quarter (×0.87 against the display's ×1.15) and on Master she was the dearer one (×1.11 against ×0.9).
+## Stock rolled before S2 has no `base`: it is recovered from the smith's price.
+static func rival_adv_price(e: Dictionary) -> int:
+	var base := float(e.get("base", float(e.get("price", 1)) / price_factor()))
+	return maxi(1, int(round(base * Shop.buyer_factor())))
 
 
 static func buy_rival(index: int, qty := 1) -> String:
@@ -480,6 +509,8 @@ static func buy_rival(index: int, qty := 1) -> String:
 
 
 ## What the adventurer would buy at the Salt Anvil today ({} = nothing). Does not change anything.
+## S2: priced as an adventurer pays there (rival_adv_price), and only pieces their class would use (Adv.affinity: a
+## Ranger no longer buys a buckler, a Wizard no shield).
 static func rival_offer_for(a: Dictionary) -> Dictionary:
 	if a.is_empty():
 		return {}
@@ -489,16 +520,19 @@ static func rival_offer_for(a: Dictionary) -> Dictionary:
 	var s := rival_stock()
 	for i in s.size():
 		var e: Dictionary = s[i]
-		if not e.has("item") or int(e["qty"]) <= 0 or int(e["price"]) > gold:
+		if not e.has("item") or int(e["qty"]) <= 0:
+			continue
+		var price := rival_adv_price(e)
+		if price > gold:
 			continue
 		var it: Dictionary = e["item"]
 		var slot := Items.slot(it)
-		if slot == "":
+		if slot == "" or Adv.affinity(a, it) <= 0.0:
 			continue
 		var gain := Items.score(it) - Items.score(a.get("equipment", {}).get(slot, {}))
 		if gain > best_gain:
 			best_gain = gain
-			best = {"index": i, "item": it, "price": int(e["price"]), "slot": slot}
+			best = {"index": i, "item": it, "price": price, "slot": slot}
 	return best
 
 

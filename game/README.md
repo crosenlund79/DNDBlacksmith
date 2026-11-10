@@ -64,7 +64,7 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 | Right-click an item | Inspect it: maker's mark, owners, its story |
 | F1 | Help & searchable reference |
 | F3 | Diagnostics overlay |
-| F10 | Developer tools: a searchable item catalogue (spawn with quantity, rarity, craftsmanship; developer items never earn achievements), money, time, skills, property, stations, skill tree, progression presets, trade, Ironfront, workshop |
+| F10 | Developer tools, locked until cheats are switched on for the session ("CHEATS ON" banner, never saved; skill-check bypass, test scenarios): a searchable item catalogue (spawn with quantity, rarity, craftsmanship; developer items never earn achievements), money, time, skills, property, stations, skill tree, progression presets, trade, Ironfront, workshop |
 
 ## The first-day loop
 

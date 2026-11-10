@@ -36,11 +36,23 @@ static func set_price(uid: int, price: int) -> String:
 static func price_of(it: Dictionary) -> int:
 	if it.has("price"):
 		return int(it["price"])
+	return list_price(it)
+
+
+## What buyers pay at this difficulty: Apprentice buyers pay a little more, Master buyers haggle harder. S2: the one
+## difficulty factor on what adventurers pay — at the smith's display, in their idea of a fair price (Adv.purchase_check),
+## in their saving goals (Adv.price_estimate) and at the Salt Anvil (Commerce.rival_adv_price).
+static func buyer_factor() -> float:
+	return float(Expeditions.diff().get("prices", 1.0))
+
+
+## A piece's default asking price on the display (when the smith has set none): its value (rarity, craftsmanship, Epic),
+## Display Cases and the buyers' difficulty factor. Works on a bare {def, rarity, quality} too (a saving goal).
+static func list_price(it: Dictionary) -> int:
 	var p := Items.value(it)
 	if Game.has_upgrade("display_cases"):
 		p = int(p * 1.1)
-	# difficulty: Apprentice buyers pay a little more, Master buyers haggle harder
-	p = int(round(p * float(Expeditions.diff().get("prices", 1.0))))
+	p = int(round(p * buyer_factor()))
 	return maxi(1, p)
 
 

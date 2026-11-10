@@ -8,6 +8,8 @@ const SMOKE := ["test_search_and_spawn", "test_dev_items_earn_nothing"]
 
 func test_search_and_spawn() -> void:
 	fresh_game()
+	check(DevTools.spawn("sword_iron", 1).is_empty(), "S2: with cheats off nothing spawns")
+	DevTools.set_enabled(true)   # S2: the developer tools work only while cheats are switched on for the session
 	eq(DevTools.search("").size(), DB.items.size(), "an empty search lists every item")
 	var found := DevTools.search("longsword")
 	check(found.any(func(d): return str(d["id"]) == "sword_iron"), "searching 'longsword' finds the Iron Longsword")
@@ -48,6 +50,9 @@ func test_money() -> void:
 	fresh_game()
 	var g0 := Game.gold()
 	DevTools.add_money(500)
+	eq(Game.gold(), g0, "S2: with cheats off no money is added")
+	DevTools.set_enabled(true)
+	DevTools.add_money(500)
 	eq(Game.gold(), g0 + 500, "500 gold added")
 	var last: Dictionary = Game.state["ledger"][-1]
 	eq(str(last["note"]), "Developer tools", "logged in the ledger as Developer tools")
@@ -58,6 +63,7 @@ func test_money() -> void:
 
 func test_dev_items_earn_nothing() -> void:
 	fresh_game()
+	DevTools.set_enabled(true)
 	var made := DevTools.spawn("sword_steel", 1, "legendary", 125.0)
 	if not check(made.size() == 1, "a legendary developer sword"):
 		return

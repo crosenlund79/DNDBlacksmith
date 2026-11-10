@@ -1,5 +1,5 @@
 {
- "_doc": "Generates game/data/commerce.json — the travelling caravan, the pawnshop, the rival smith's forge and the Hales'\ncreature yard. Read in game with DB.extra(\"commerce\") (Commerce.cfg()).\nRun: python3 tools/data/make_commerce.py   (make_data.py also writes it through extra_commerce.py)\n\ncaravan.stock: [item, price multiplier on the item's value, [min, max] qty, chance to be in the wagons].\ncaravan.equipment / curiosities: [item, price multiplier, chance] — single pieces.\ncaravan.wanted: [item, premium multiplier on value] — each visit picks `wanted_count` of them.\npawn: payout / buyback / sale shares of an item's value; hold_days before an unredeemed pledge goes on sale.\nrival.stock: [item, price multiplier, chance]; rival.materials: [item, mult, [min, max], chance].\ncreatures.ordinary / magical: [companion item, chance to be in the yard each week].\n",
+ "_doc": "Generates game/data/commerce.json — the travelling caravan, the pawnshop, the rival smith's forge and the Hales'\ncreature yard. Read in game with DB.extra(\"commerce\") (Commerce.cfg()).\nRun: python3 tools/data/make_commerce.py   (make_data.py also writes it through extra_commerce.py)\n\ncaravan.stock: [item, price multiplier on the item's value, [min, max] qty, chance to be in the wagons].\ncaravan.equipment / curiosities: [item, price multiplier, chance] — single pieces.\ncaravan.wanted: [item, premium multiplier on value] — each visit picks `wanted_count` of them.\npawn: payout / buyback / sale shares of an item's value; hold_days before an unredeemed pledge goes on sale.\nrival.stock: [item, price multiplier, chance]; rival.materials: [item, mult, [min, max], chance].\nrival.plain (S2): [item, price multiplier, chance, [min, max] craftsmanship] — her plain everyday work, always common, priced\n  within a starting adventurer's purse (PROP-015).\ncreatures.ordinary / magical: [companion item, chance to be in the yard each week].\n",
  "caravan": {
   "label": "The Brask Caravan",
   "schedule": {
@@ -445,6 +445,44 @@
      6
     ],
     0.6
+   ]
+  ],
+  "plain": [
+   [
+    "chainmail",
+    1.15,
+    0.45,
+    [
+     62,
+     78
+    ]
+   ],
+   [
+    "boots_leather",
+    1.2,
+    0.6,
+    [
+     62,
+     78
+    ]
+   ],
+   [
+    "gloves_leather",
+    1.2,
+    0.5,
+    [
+     62,
+     78
+    ]
+   ],
+   [
+    "belt_leather",
+    1.2,
+    0.4,
+    [
+     62,
+     78
+    ]
    ]
   ],
   "adv_chance": 0.5,

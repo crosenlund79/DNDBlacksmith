@@ -297,6 +297,8 @@ Equipment) and work in blocks of hours; apprentices can help.
 
 ## Quick evaluation with Developer Tools (F10)
 
+The tools are locked until **Enable cheats for this session** at the top of the F10 panel. Cheats are never saved and switch off after a new game or a load; a red **CHEATS ON** banner shows while they are on, and a save made since is marked as tested with cheats. The same bar holds the optional **skill-check bypass** (every check scores 100% without the minigame); **Test scenarios** open the forge with materials, the workshop with an apprentice, a commission request at the counter or a contract at the Project Bench.
+
 1. Add the **Smithing**, **Runecraft**, **Alchemy**, **Stitching**, **Gems** and **Relics** kits, plus +1000 gold, plus 2 levels in every craft.
 2. Send Borin out from the ledger. **Hirelings: finish expeditions now** brings him home, and his bag appears.
 3. Craft the Emberwarden. Put it on display, then **A customer sets out** (or talk to an adventurer).
