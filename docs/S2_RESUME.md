@@ -10,7 +10,7 @@ development branch, nothing is released.** This file and `docs/s2/` (plan and wo
 |---|---|---|---|
 | Development branch (default) | `claude/kind-dijkstra-nqkxn1` | `2e854af` | A1, S1, A2, Run 0, Run 0.1 integrated (Run 0.1 merged at the start of S2, `[skip ci]`) |
 | Recovery point before S2 | `backup/pre-s2-20261110-1055` | `2e854af` | Branch. The matching tag `pre-s2-20261110-1055` could not be pushed (the session's git proxy refuses tag pushes, HTTP 403). |
-| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs. No S2 code merged yet. |
+| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs + **CLARITY merged** (`4d887e3`; full tests green after the merge: 225 scripts, suite 300/300, unit 384/384). |
 | WIP checkpoint — STEWARD | `claude/s2-wip-steward` | `07263e0` (or later) | Unverified snapshot of the worker's worktree (17 files). |
 | WIP checkpoint — CLARITY | `claude/s2-wip-clarity` | `0af4e53` (or later) | 8 worker commits + snapshot (18 files). |
 | WIP checkpoint — EARLY | `claude/s2-wip-early` | `be317d5` (or later) | Unverified snapshot (29 files). |
@@ -33,7 +33,7 @@ items of NEW SCOPE explicitly approved by the S2 brief — the steward directing
 `s2_w_early.md`, `s2_w_econdev.md`) with the lead's design decisions.
 
 **Workers (in progress, NOT verified by the lead):**
-- **CLARITY (§4)** — committed: leather-curing batch feedback (OBS-11); skill-check type named before the work
+- **CLARITY (§4)** — FINISHED and MERGED into the S2 branch (`4d887e3`, worker report in `docs/s2/reports/clarity.md`): leather-curing batch feedback (OBS-11); skill-check type named before the work
   (OBS-12, BUG-044); potion offers follow the request and are greyed with reasons, optional filters (OBS-15, OBS-16,
   BUG-043); contracts panel keeps its width on closed orders (BUG-001); apprentices work from inside their station's room
   (OBS-21); floor drops kept clear of the Loft stair, contextual hint ring, night forge light (OBS-13/14); suite case
@@ -52,8 +52,8 @@ Worker reports (status first) are written to the session scratchpad `…/scratch
 is lost, the worker commit messages and this file are the record.
 
 ## 4. Pending (in order)
-1. Each worker finishes its brief, keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
-2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (suggested order: ECONDEV, CLARITY,
+1. CLARITY: done. STEWARD, EARLY and ECONDEV: each finishes its brief, keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
+2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (CLARITY merged; next ECONDEV,
    EARLY, STEWARD — the largest last). Expected conflict hot spots: `world.gd` (STEWARD/CLARITY/EARLY), `smithy.gd`
    (STEWARD/EARLY), `crafting.gd` (STEWARD/CLARITY), `shop.gd` (CLARITY/ECONDEV), `station_panel.gd` (CLARITY/EARLY),
    `player_nav.gd` (STEWARD/EARLY), `game.gd` (STEWARD/ECONDEV), `ui_root.gd` (EARLY/ECONDEV), `tests/playtest.gd` (phase
