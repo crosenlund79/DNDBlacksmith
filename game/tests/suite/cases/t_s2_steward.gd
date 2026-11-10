@@ -207,11 +207,15 @@ func test_protected_repair_left_for_the_smith() -> void:
 	a["gold"] = 300
 	Shop._add_customer("sigrun", "repair_own", slot)
 	_seat()
+	if not check(not Shop.customer("sigrun").is_empty(), "Sigrun waits with her Epic piece"):
+		return
 	var d0 := int(it["stats"]["durability"])
 	eq(Steward.activate(), "", "the steward takes over")
-	_hours(3)
+	_hours(2)
 	eq(int(it["stats"]["durability"]), d0, "the Epic piece was not touched")
-	check(Steward.deferred().any(func(e): return str(e["kind"]) == "repair"), "the repair of the protected piece waits for the smith")
+	check(Steward.deferred(true).any(func(e): return str(e["kind"]) == "repair" and str(e["source"].get("id", "")) == "sigrun"),
+		"the repair of the protected piece was left for the smith")
+	check(not _smith_log("smith_repair").any(func(e): return str(e["data"].get("npc", "")) == "sigrun"), "the smith did not mend it under the steward")
 	Steward.deactivate()
 
 
@@ -438,7 +442,9 @@ func test_never_masterwork_secret_or_masterpiece() -> void:
 		check(float(m["quality"]) <= StewardSmith.QUALITY_CAP + 0.01, "%s at %.1f%% stays below the cap" % [str(m["name"]), float(m["quality"])])
 		var it := ItemRegistry.find(int(m["uid"]))
 		if not it.is_empty():
-			check(not ItemStory.is_named(it) and not bool(it["craft"].get("masterwork", false)), "%s: no masterwork, no anvil name" % str(m["name"]))
+			var fam: Dictionary = ItemStory.st()["famous"].get(str(int(m["uid"])), {})
+			check(str(fam.get("kind", "")) != "masterwork" and not bool(it["craft"].get("masterwork", false)) and float(it["craft"].get("quality", 0)) < 115.0,
+				"%s: no masterwork, no anvil name" % str(m["name"]))
 			check(it.get("sockets", []).is_empty() and not it.has("coating") and not it.has("refined"), "%s: no socket, coating or refinement" % str(m["name"]))
 	check(int(r["smith"]["made_count"]) > 0, "a skilled smith worked (%d pieces)" % int(r["smith"]["made_count"]))
 	var high := Recognition.of_kind("craft").filter(func(e): return float(e.get("refs", {}).get("quality", 0)) >= 112.0)

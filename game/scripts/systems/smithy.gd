@@ -184,6 +184,13 @@ static func walk_to_station(sid: String, w: VillageWorld = null, use := true) ->
 		return "Nowhere to walk."
 	for e in w.interactables:
 		if str(e.get("kind", "")) == "station" and str(e.get("id", "")) == sid:
+			if not use:
+				# S2: to work there (not to open it) he goes to the station's working side, as the apprentices do
+				var aa := w.get_node_or_null("ApprenticeActors")
+				if aa != null and aa.has_method("work_spot"):
+					var ws: Dictionary = aa.call("work_spot", sid)
+					if ws.has("pos") and nav.walk_to_point(ws["pos"]):
+						return ""
 			return "" if nav.walk_to_entity(e, use) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
 	return "The %s is not set up in the workshop." % DB.station(sid).get("name", sid)
 

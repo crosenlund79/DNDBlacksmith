@@ -152,7 +152,7 @@ func _handover() -> void:
 
 
 ## S2: the steward's pace — normal (1×) or half again as fast (1.5×, the default); the whole simulation moves with it.
-func _pace_row() -> HBoxContainer:
+func _pace_row(with_note := false) -> HBoxContainer:
 	var row := UIKit.hbox(10)
 	row.name = "PaceRow"
 	var cur := Steward.pace() if not Game.state.is_empty() and Game.state.has("steward") else float(StewardUI.orders().get("pace", 1.5))
@@ -168,10 +168,14 @@ func _pace_row() -> HBoxContainer:
 		b.disabled = absf(cur - pv) < 0.01
 		b.add_theme_font_size_override("font_size", 17)
 		b.custom_minimum_size = Vector2(0, 38)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(b)
-	var note := UIKit.label("clock, people, walking and work all move together", 16, "body_italic", Color("#6e5a40"))
-	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(note)
+	if with_note:
+		var note := UIKit.label("the clock, people, walking and work all move together", 16, "body_italic", Color("#6e5a40"))
+		note.autowrap_mode = TextServer.AUTOWRAP_OFF
+		note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(note)
+	row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	return row
 
 
@@ -279,12 +283,10 @@ func _smith_card(sm: Dictionary) -> Control:
 		lines.append("[color=#7e2418]His own work is switched off in the standing instructions: he only rests and sleeps.[/color]")
 	var r := UIKit.rich("\n".join(lines), 18)
 	r.name = "SmithStatus"
-	r.custom_minimum_size = Vector2(1000, 0)
+	r.custom_minimum_size = Vector2(1400, 0)
 	v.add_child(r)
+	v.add_child(_pace_row(true))
 	h.add_child(v)
-	var pv := _pace_row()
-	pv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(pv)
 	c.add_child(h)
 	return c
 

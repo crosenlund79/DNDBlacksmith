@@ -110,7 +110,8 @@ func run(p: Node) -> void:
 	await pt.wait(1.6)
 	pt.expect(Steward.is_active() and Steward.smith_away(), "s1: the steward runs the forge")
 	pt.expect(_plate().plate.visible, "s1: the status plate is shown")
-	pt.expect(w.player.sprite.modulate.a < 0.1, "s1: the smith's miniature has left (he is away)")
+	# S2 supersedes "the smith's miniature fades away": he keeps working under the steward, on its autopilot
+	pt.expect(w.player.sprite.modulate.a > 0.9 and Steward.smith_away(), "s1: the smith stays in the world, working under the steward (S2)")
 	await pt.shot("s1_plate_away")
 	# the smith is away: a world action is refused with the reason; the stores do not open
 	var toasts: Array = []
