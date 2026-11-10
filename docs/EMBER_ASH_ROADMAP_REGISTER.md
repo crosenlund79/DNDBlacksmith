@@ -1,7 +1,7 @@
 # Ember & Ash — Roadmap Register
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
-`fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) on branch `claude/run0.1-integrity`.
+`fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`).
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -24,7 +24,9 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | **A2** Workshop Reliability & Early-Game Experience | Gate A (part); OBS-01…09 | Complete, integrated | `fa7b5b7` (A2 head `e045d67`) | No | `t_economy_a2` (13), `t_experience_a2` (6), 48/48 rendered phases, Windows CI install-and-launch smoke (run 42727168523) | No |
 | **Run 0** Roadmap reconciliation | CLAUDE.md §2, CV §16 | Complete | `3379375`, `f3c1505` | — | three registers | — |
 | Canonical v1.2 (editorial clarifications) | CLAUDE.md §2.5 | Done in Run 0.1 | branch `claude/run0.1-integrity` | — | DOCX and Markdown identical (6,019 words) | — |
-| **Run 0.1** Canonical corrections & critical integrity | D13, D14, D18; Gate A (part) | Complete on its isolated branch; not integrated | branch `claude/run0.1-integrity` | No | `t_run01` (8 tests), `t_identity` Unique audit, `t_saves` (schema 4), Steward soaks | No |
+| **Run 0.1** Canonical corrections & critical integrity | D13, D14, D18; Gate A (part) | Complete, integrated at the start of S2 | `2e854af` | No | `t_run01` (8 tests), `t_identity` Unique audit, `t_saves` (schema 4), Steward soaks | No |
+| Canonical v1.3 (Steward Mode: the working smith, the pace) | §4.5, D19, §14.1 | Done in S2 (approved in the S2 brief) | `8974092` (S2 branch) | — | DOCX and Markdown identical (6,340 words) | — |
+| **S2** The Living Smithy | v1.3 §4.5; OBS-11 … 16, 21, 22 … 36; Gate A (part) | Complete on its isolated branch; **not integrated** | branch `claude/s2-living-smithy` | No — Windows acceptance artifact (0.15) only | `t_s2_steward` (14), `t_s2_clarity` (9), `t_s2_early` (9), `t_s2_econdev` (8), `t_s2_lead` (2); rendered `s2_steward`, `s2_clarity`, `s2_early`, `s2_econdev`; soaks incl. a poor early game | No |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
@@ -45,7 +47,7 @@ contains A1, S1 or A2, and none of them has been accepted by a person playing on
 
 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 40 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 89 |
+| 39 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 86 |
 
 ---
 
@@ -175,7 +177,6 @@ All A-REM entries:
 | UX-011 | APPROVED | PARTIAL | Validate real Windows gameplay and rendered screenshots as UX acceptance; |
 | UX-013 | APPROVED | PARTIAL | Panels fit and stay readable on the 1920×1080 canvas (1600×900 scaled) with no overflow and no hidden controls. |
 | LORE-015 | APPROVED | NOT STARTED | Tavern rumours and table talk come from real Lore and state, not invented template facts. |
-| BUG-001 | APPROVED | NOT STARTED | Contracts panel opened directly on a closed order must not collapse its right column to one letter per line. |
 | BUG-017 | APPROVED | NOT STARTED | A dismissed hireling who leaves with gear in their name records a hand-over event. |
 | BUG-042 | APPROVED | NOT STARTED | Socketing a runestone must not overwrite a piece's name or silently change its rarity. |
 | BUG-049 | APPROVED | PARTIAL | Player, test and design documents describe the current build. |
@@ -426,7 +427,7 @@ converting pre-Iteration-011 Chronicle entries; a multi-year probe (TECH-026, pr
 
 ### 4.12 BACKLOG
 
-92 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 2, `WS` 3, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 28, `PROP` 20, `QST` 7, `HA` 5, `HB` 9.
+89 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 2, `WS` 3, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 23, `PROP` 21, `QST` 9, `HA` 5, `HB` 8.
 Items that need a placement decision rather than a scope decision: duplicate stations (WS-007, TECH-027), molds and
 patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), steward hiring (STW-018), apprentice economics
 (STAFF-019, TECH-032, HB-053). All `PROPOSED` entries are listed in the decision register §1.4.
@@ -528,8 +529,12 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
 1. Answer the clarifications in the observation register (the numbering itself was corrected in Run 0.1).
 2. Confirm the baseline features canonical does not name (decision register §1.5), perhaps in a future canonical
    revision. (The editorial points were clarified in canonical v1.2.)
-3. Rule on the fatigue-while-away decision taken in S1 (BUG-005); decide what legacy copies of a Unique in old saves
-   should show (QST-028); and decide whether to integrate Run 0.1.
+3. Decide what legacy copies of a Unique in old saves should show (QST-028). (BUG-005 was superseded by S2; Run 0.1 is
+   integrated.)
+3b. S2: accept or not after the Windows playtest; the working smith's earnings (QST-031); the front entrance (QST-029);
+   Y/Q bindings (QST-030); new proposals PROP-022 … PROP-026 (hunting/grocer, a dagger Design, cheap rings/amulets,
+   more counter filters, hirelings on upper floors); integrate S2 (a merge into the default branch would publish
+   build-0.15.x unless the merge commit carries [skip ci]).
 
 **Before the next implementation milestone:**
 4. Which Gate A items must close before B/C (QST-027), and whether to authorise an A-REM run (§4.1).
@@ -557,3 +562,4 @@ relationship meters (HA-029).
 |---|---|
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation) at `fa7b5b7`. |
 | 10 November 2026 | Run 0.1: milestone rows for canonical v1.2 and Run 0.1; D13, D14 and D18 items marked done; conflicts, at-risk items and decisions updated. |
+| 10 November 2026 | S2: rows for canonical v1.3 and S2; S2 decisions added. |

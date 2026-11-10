@@ -4,11 +4,13 @@
 `claude/kind-dijkstra-nqkxn1`; code evidence taken at `fa7b5b7` (A1, S1 and A2 integrated; tree identical to A2's head
 `e045d67`). **Updated in Run 0.1** (canonical corrections and critical integrity, 10 November 2026) on branch
 `claude/run0.1-integrity`: D13 Unique registry, the four D14 payment paths, D18 renown, the documented Chronicle/Lore
-split, canonical v1.2 and the corrected observation numbering.
+split, canonical v1.2 and the corrected observation numbering. **Updated in S2** ("The Living Smithy", 10 November
+2026) on branch `claude/s2-living-smithy`: the working smith, the 1.5× pace, zero XP under the steward, clarity, early-game,
+commerce and developer-tool work (canonical v1.3).
 
-**Authority.** [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) (Design Baseline 1.2) is the design authority.
+**Authority.** [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) (Design Baseline 1.3) is the design authority.
 This register is a tracking instrument derived from it. It does **not** change, extend or reprioritise the canonical
-design. Where something is not decided by canonical v1.2, the entry says so (`UNDECIDED` or `PROPOSED`) and asks.
+design. Where something is not decided by canonical v1.3, the entry says so (`UNDECIDED` or `PROPOSED`) and asks.
 
 **Approval is not authorisation.** `APPROVED` means the scope is part of the approved design (or was explicitly authorised
 technical work). No entry in this register authorises implementation; work starts only from an explicit user request
@@ -17,7 +19,7 @@ technical work). No entry in this register authorises implementation; work start
 **Companion documents:** [`EMBER_ASH_ROADMAP_REGISTER.md`](EMBER_ASH_ROADMAP_REGISTER.md) (milestones, gates, dependencies,
 risks) and [`EMBER_ASH_PLAYTEST_OBSERVATIONS.md`](EMBER_ASH_PLAYTEST_OBSERVATIONS.md) (playtest observations OBS-01 … OBS-21).
 
-**Size:** 571 entries in this register, plus 21 playtest observations in the observation register.
+**Size:** 590 entries in this register, plus 21 playtest observations in the observation register.
 
 ---
 
@@ -62,7 +64,7 @@ confirm them in a future canonical revision.
 
 `BASELINE` delivered before the canonical lock (≤ build-0.14.6) · `A1` Protect the Foundation · `S1` Steward Mode · `A2`
 Workshop Reliability & Early-Game Experience · `RUN0` this reconciliation · `RUN0.1` canonical corrections and critical
-integrity · `A-REM` remaining Gate A readiness ·
+integrity · `S2` the Living Smithy · `A-REM` remaining Gate A readiness ·
 `B1` worker capabilities and professions · `B2` player smithing specialisation and workshop Designs · `C1` staged
 collaborative production · `D` Commissions v2 · `E` Equipment depth · `F` Negotiation, trade and procurement · `G` World
 recognition · `H` Regional crisis proof · `I` Civilizations and authored stories · `J` Chronicle and campaign · `BACKLOG`
@@ -76,7 +78,7 @@ where canonical places the work; it is **not** a schedule and not an authorisati
 
 | Abbreviation | Source |
 |---|---|
-| CV §n, CV Dn | `docs/EMBER_ASH_CANONICAL_VISION.md` v1.2 (identical text to `docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.2.docx`; checked word for word in Run 0.1). Run 0 audited against v1.1; v1.2 changed wording only, and section and decision numbers are unchanged. |
+| CV §n, CV Dn | `docs/EMBER_ASH_CANONICAL_VISION.md` v1.3 (identical text to `docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.3.docx`; checked word for word in S2). Run 0 audited against v1.1; v1.2 changed wording only; v1.3 extended §4.5/D19 (the working smith, the pace); section and decision numbers are unchanged. |
 | MD | `docs/Ember_and_Ash_Master_Design_2026-11-09.docx` (historical evidence). |
 | AR | `docs/EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md` (technical evidence; its §7 questions D1–D18 were later settled by CV D1–D18). |
 | ST | `docs/EMBER_ASH_CURRENT_STATUS.md` (9 November 2026 status audit of build-0.14.6; now partly stale). |
@@ -122,26 +124,26 @@ passes recorded only what canonical does not name.
 | `WS` | 13 | 7 | 2 | 2 | 2 | 5 | 2 | 0 | 6 | 0 |
 | `STAFF` | 19 | 11 | 3 | 1 | 4 | 12 | 4 | 1 | 2 | 0 |
 | `PROD` | 26 | 19 | 4 | 2 | 1 | 15 | 8 | 0 | 3 | 0 |
-| `STW` | 28 | 27 | 0 | 1 | 0 | 2 | 3 | 6 | 17 | 0 |
+| `STW` | 32 | 31 | 0 | 1 | 0 | 2 | 3 | 6 | 21 | 0 |
 | `EQ` | 58 | 49 | 3 | 2 | 4 | 22 | 13 | 1 | 22 | 0 |
 | `ECO` | 46 | 43 | 0 | 1 | 2 | 9 | 6 | 1 | 30 | 0 |
 | `ADV` | 23 | 21 | 1 | 0 | 1 | 5 | 2 | 2 | 14 | 0 |
 | `WLD` | 21 | 18 | 0 | 1 | 2 | 10 | 6 | 0 | 5 | 0 |
 | `CIV` | 8 | 6 | 0 | 0 | 2 | 6 | 2 | 0 | 0 | 0 |
-| `UX` | 16 | 15 | 0 | 1 | 0 | 2 | 4 | 1 | 9 | 0 |
+| `UX` | 23 | 22 | 0 | 1 | 0 | 2 | 4 | 1 | 16 | 0 |
 | `LORE` | 17 | 12 | 2 | 2 | 1 | 10 | 4 | 1 | 2 | 0 |
-| `BUG` | 50 | 24 | 20 | 6 | 0 | 30 | 5 | 4 | 11 | 0 |
-| `PROP` | 21 | 0 | 21 | 0 | 0 | 18 | 3 | 0 | 0 | 0 |
-| `QST` | 28 | 19 | 0 | 9 | 0 | 18 | 6 | 3 | 1 | 0 |
+| `BUG` | 50 | 25 | 19 | 5 | 1 | 25 | 6 | 4 | 15 | 0 |
+| `PROP` | 26 | 4 | 22 | 0 | 0 | 19 | 3 | 0 | 4 | 0 |
+| `QST` | 31 | 19 | 0 | 12 | 0 | 20 | 6 | 4 | 1 | 0 |
 | `HA` | 57 | 51 | 2 | 3 | 1 | 2 | 2 | 15 | 38 | 0 |
-| `HB` | 62 | 54 | 0 | 7 | 1 | 5 | 3 | 5 | 48 | 1 |
-| **All** | **571** | **433** | **65** | **38** | **35** | **202** | **84** | **59** | **225** | **1** |
+| `HB` | 62 | 54 | 0 | 7 | 1 | 5 | 2 | 5 | 49 | 1 |
+| **All** | **590** | **449** | **65** | **40** | **36** | **200** | **84** | **60** | **245** | **1** |
 
 ### 1.2 Counts by target
 
-| BASELINE | A1 | S1 | A2 | RUN0 | RUN0.1 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG | — |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 196 | 31 | 29 | 16 | 1 | 8 | 40 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 92 | 35 |
+| BASELINE | A1 | S1 | A2 | RUN0 | RUN0.1 | S2 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG | — |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 196 | 31 | 28 | 15 | 1 | 8 | 24 | 39 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 89 | 36 |
 
 ### 1.3 Conflicts with canonical
 
@@ -175,12 +177,13 @@ third, renown bought with 2,500 gold (GOV-030), was removed in Run 0.1:
 - TECH-023, CIV-007 — `game/docs/LIVING_REALM_STATUS.md` still frames civilizations around "allegiance" before the
   regional proof (D15, CV §10.2).
 
-**A decision taken without explicit approval:** BUG-005 — during S1 the lead decided that the smith's fatigue holds while
-the steward runs the forge. It was disclosed in the S1 report but never approved; it is `UNDECIDED` until the user rules.
+**A decision taken without explicit approval — resolved:** BUG-005 — during S1 the lead decided that the smith's fatigue
+holds while the steward runs the forge. The user's S2 brief superseded it: the working smith now tires, rests and sleeps
+(canonical v1.3; BUG-005 `REJECTED`).
 
 ### 1.4 Decisions awaiting the user
 
-**`UNDECIDED` (38).** Open details, contradictions and older asks that canonical does not settle:
+**`UNDECIDED` (40).** Open details, contradictions and older asks that canonical does not settle:
 
 | ID | Question / requirement | Target |
 |---|---|---|
@@ -197,7 +200,6 @@ the steward runs the forge. It was disclosed in the S1 report but never approved
 | UX-015 | English/Danish documentation: EN/DA header comments in scripts and a Danish player summary (`game/docs/DANSK.md`). | BACKLOG |
 | LORE-004 | Decide the exact Lore indexing and retention policy and the chronology screens. | J |
 | LORE-013 | Compare major achievements and historical outcomes across campaigns using the shared event system, without a separate scoring game. | BACKLOG |
-| BUG-005 | The smith's fatigue must not rise while the steward runs the forge. | S1 |
 | BUG-014 | Villagers' payments have a real source (they keep no simulated purse; | BACKLOG |
 | BUG-031 | Caravan curiosities gain a use; advanced customer requests stop being underwhelming. | BACKLOG |
 | BUG-034 | Vertical-slice depth limits: relic study on the standard ring, trade runs buy a random mix without a wish list, thin romance/married life. | BACKLOG |
@@ -212,6 +214,9 @@ the steward runs the forge. It was disclosed in the S1 report but never approved
 | QST-025 | Exact room/station limits and the believable capacity of the full building (30 stations, 73 places). | BACKLOG |
 | QST-027 | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 gameplay; | A-REM |
 | QST-028 | What should a legacy copy of a Unique show the player? Saves from before Run 0.1 may hold more than one Grimhold: | E |
+| QST-029 | Front entrance: (a) a darkened threshold over the door and a brighter door lamp (code only); | BACKLOG |
+| QST-030 | Y and Q: keep Y = Workshop panel (matches its toolbar label) and Q = Workshop Ledger, or Y = Ledger with the button renamed "Property"? | S2 |
+| QST-031 | Is the working smith "competent, not superior"? With no apprentices and starting resources he earned 120 → 4,825 g in 30 days and 120 → 31,113 g in a year, mostly from … | BACKLOG |
 | HA-010 | Danish player-facing documentation/localisation kept current with new content. | BACKLOG |
 | HA-025 | Hirelings autonomously produce workshop goods from their allocation each work hour (mined ore/coal, gathered herbs, brewed draughts, prepared runestones, smelted ingots, … | BACKLOG |
 | HA-029 | Attitudes are communicated through dialogue, behaviour and events, without visible relationship or reputation meters in ordinary play. | BACKLOG |
@@ -260,7 +265,6 @@ the steward runs the forge. It was disclosed in the S1 report but never approved
 | BUG-015 | The "next step" for an unmakeable request may point to a far-off skill node. | NOT STARTED | BACKLOG |
 | BUG-016 | Pre-A2 ledger lines carry no payer/recipient. | IMPLEMENTED | A2 |
 | BUG-019 | Project Bench has a real station price (it falls back to 150 g). | NOT STARTED | BACKLOG |
-| BUG-020 | Hireling work spots (and talking items) also consider upper floors; | NOT STARTED | BACKLOG |
 | BUG-021 | Refined pieces' names and def-based checks reflect the refined material. | NOT STARTED | BACKLOG |
 | BUG-022 | Items crafted from developer-spawned materials inherit the dev flag (or the behaviour is documented). | NOT STARTED | BACKLOG |
 | BUG-023 | Talking items have refinement-specific lines; | NOT STARTED | BACKLOG |
@@ -287,13 +291,14 @@ the steward runs the forge. It was disclosed in the S1 report but never approved
 | PROP-012 | A lost party's pack is left at the site for later parties to find. | NOT STARTED | BACKLOG |
 | PROP-013 | Decide the commission payment split or cap the village subsidy (365-day soak: | NOT STARTED | BACKLOG |
 | PROP-014 | Draw gifts from the giver's real possessions (adventurer's pack; | NOT STARTED | BACKLOG |
-| PROP-015 | Stock a few plain common iron pieces (30–70 g) at the Salt Anvil for starting adventurers. | NOT STARTED | BACKLOG |
-| PROP-016 | `Adv.price_estimate` (saving goal) accounts for rarity price multipliers. | NOT STARTED | BACKLOG |
-| PROP-017 | Review difficulty pricing for adventurers: | NOT STARTED | BACKLOG |
 | PROP-018 | Aldric's weekly provisions are paid for (today free goods). | NOT STARTED | BACKLOG |
 | PROP-019 | Tune `OPPORTUNITY_CHANCE` (0.25) and `GIFT_SHARE` (0.5). | NOT STARTED | BACKLOG |
-| PROP-020 | Consultation: do not rank "keep your kit" (0.5) above purchase offers (0.45) for gear-seekers. | NOT STARTED | BACKLOG |
 | PROP-021 | Slot filters in the counter offer grid. | NOT STARTED | BACKLOG |
+| PROP-022 | Hirelings hunt for meat and rawhide and the grocer sells it. | NOT STARTED | BACKLOG |
+| PROP-023 | A dagger Design: no recipe makes a dagger today (the starter dagger is the only one); | NOT STARTED | BACKLOG |
+| PROP-024 | A cheap source of plain rings and amulets for starting adventurers. | NOT STARTED | BACKLOG |
+| PROP-025 | Optional filters at the caravan, pawnshop and harbour counters too. | NOT STARTED | BACKLOG |
+| PROP-026 | Field hirelings (Borin) also work at Loft and stitching stations. | NOT STARTED | BACKLOG |
 | HA-055 | Seasonal or regional events. | NOT STARTED | BACKLOG |
 | HA-056 | A deeper economy with supply-and-demand pricing. | NOT STARTED | BACKLOG |
 
@@ -328,7 +333,7 @@ sub-sections is listed under them):
 | §4.2 | GOV-026, TECH-002, TECH-028, STAFF-006, STAFF-007, STAFF-013, STAFF-015, STAFF-016, STAFF-017, PROD-019, EQ-029, UX-004, QST-002, QST-003 … (+1) |
 | §4.3 | GOV-029, GOV-035, TECH-004, STAFF-001, STAFF-002, STAFF-003, STAFF-005, STAFF-008, STAFF-009, STAFF-011, STAFF-016, EQ-031, QST-001, QST-007 … (+3) |
 | §4.4 | TECH-003, WS-012, PROD-005, PROD-006, PROD-007, PROD-008, PROD-009, PROD-010, PROD-012, PROD-014, PROD-015, PROD-017, EQ-008, EQ-009 … (+7) |
-| §4.5 | REL-005, STW-001, STW-002, STW-003, STW-004, STW-005, STW-006, STW-007, STW-008, STW-009, STW-010, STW-011, STW-012, STW-013 … (+11) |
+| §4.5 | REL-005, STW-001, STW-002, STW-003, STW-004, STW-005, STW-006, STW-007, STW-008, STW-009, STW-010, STW-011, STW-012, STW-013 … (+16) |
 | §5 | GOV-034, STAFF-017, PROD-018, PROD-019, PROD-020, PROD-021, QST-011, HB-027, HB-052 |
 | §6.1 | GOV-016, TECH-005, PROD-010, EQ-001, EQ-002, EQ-003, EQ-004, EQ-007, EQ-008, EQ-012, EQ-013, EQ-014, EQ-017, EQ-036 … (+3) |
 | §6.2 | EQ-015, EQ-020, EQ-022, EQ-023, EQ-024, EQ-025, EQ-027, EQ-028, EQ-053, UX-008, QST-013, QST-022, QST-028, HA-005 … (+1) |
@@ -658,7 +663,7 @@ records the change):
 | PROD-026 | Use the Emberwarden Longsword (forge → anvil → rune_engraving_stand → cauldron → grinding_wheel → stitching_table) as the one multi-discipline Design proved in Gate C. | AR §6; CV §12.2 C ("Prove one multi-discipline Design") | PROPOSED | NOT STARTED | C1 | `data/recipes.json` emberwarden_longsword; solo-crafted in `phase_slice` (`playtest.gd:1231`) | Confirm the proof Design. |
 
 
-### 7. Steward Mode (CV §4.5, D19) — `STW` (28)
+### 7. Steward Mode (CV §4.5, D19) — `STW` (32)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -681,7 +686,7 @@ records the change):
 | STW-017 | The steward never hires, dismisses, mentors or answers independence notices. Independence notices arrive as sealed letters, and if unanswered, masters leave by the normal rules. | SMD §5.1, §7 (Employees, gap 2); R:S1 §2, §7.1; CV §4.5 b5 | APPROVED | VERIFIED | S1 | **See STW-018** (may the steward hire / answer independence notices?). No `Apprentices.hire`/dismiss/mentor calls in `steward.gd`; notices are deferred and sealed (`_scan_deferrals`); 365-d soak: both apprentices left (days 183 and 290) and decisions fell to about 1 a month (SMD §6.1) | See STW-018. |
 | STW-018 | Decide whether the steward may hire replacement staff or act on independence notices within standing instructions. Otherwise a long absence ends with no apprentices. | R:S1 §7 ("Whether it should ever hire replacements is your decision"); SMD §7 gap 2; R:A2 known limitations | UNDECIDED | NOT STARTED | BACKLOG | **Related:** QST-021, STW-017. Depends on STW-017. Placement needs a decision. | Is hiring a "consequential personal decision" (defer it) or routine staffing (CV "assigns available employees")? |
 | STW-019 | Steward production planning covers the workshop's ordinary outputs and stock upkeep. Today it never brews potions or goods, does not restock the display while `stock_target` unsold pieces stand there, does not repair the smith's own worn pieces, and never uses imports, the caravan, the pawnshop or the rival smith. | CV §4.5 b2; SMD §7 gaps 3–4, §5.1; R:S1 §2 | APPROVED | PARTIAL | BACKLOG | `GOODS` are only for selling; `_restock` pauses at `stock_target`; SMD §7 | Which gaps must close for "plans production … manages stock"? Placement needs a decision (likely alongside the C1 adapters). |
-| STW-020 | Competent, not superior: the steward manages well but never outperforms the active player's craftsmanship or judgement. | CV §4.5 b6; D19; SMD §2, §7 gap 6 | APPROVED | IMPLEMENTED | S1 | By construction: it never crafts, plans conservatively (slowest hand ×1.25 against customer patience) and plans orders strictly. There is no player-versus-steward benchmark, and R:S1 §7 leaves the judgement to human acceptance. | How should "never outperforms" be measured? |
+| STW-020 | Competent, not superior: the steward manages well but never outperforms the active player's craftsmanship or judgement. | CV §4.5 b6; D19; SMD §2, §7 gap 6 | APPROVED | IMPLEMENTED | S1 | By construction: it never crafts, plans conservatively (slowest hand ×1.25 against customer patience) and plans orders strictly. There is no player-versus-steward benchmark, and R:S1 §7 leaves the judgement to human acceptance. S2: the working smith's automatic checks are average for his skill and capped at 110 % (`StewardSmith.QUALITY_CAP`); never masterwork or anvil names. | No measurable player baseline yet; see QST-031 (steward-smith earnings). |
 | STW-021 | While You Were Away shows actual elapsed time, money changes, completed and pending production and orders, purchases, sales, stock, employee activity, significant world developments, and outstanding decisions and letters. Each section links to its real place. | CV §4.5 b7; D19; SMD §5.3; B:S1 §5 | APPROVED | VERIFIED | S1 | `steward.gd:report()`; `welcome_back_panel.gd`; `t_steward_ui.test_report_builds_empty_real_and_full`; the soaks assert the report's counts match the accumulators; phase `steward_s1` | "In the wider world" lists Lore events but links to Most Wanted › Legends, which reads the separate Chronicle feed (see LORE-002). |
 | STW-022 | The report is truthful: every claim is backed by recorded events and real state changes, with no duplicates or invented narrative. Gold reconciles to the session's ledger lines; world events are Lore importance ≥ 2 excluding the steward's own sales; deferrals are de-duplicated. | CV §4.5 b7; D19; SMD §2, §5.3 | APPROVED | VERIFIED | S1 | `report().gold.reconciled`; `note_ledger` (works around the 400-line ledger cap); `_dkeys` de-duplication; `t_steward._soak` ("gold change == Σ ledger lines", "report counts every piece made/sale"); `t_steward.test_save_load_mid_session_mode_off` (the closed session's report reconciles) | — |
 | STW-023 | Sealed letters only for genuinely significant deferred matters from a real event or visitor. Contents stay unknown until opened, opening leads to the actual pending matter, and letters are special, not on every return (at most 1 per piece). | CV §4.5 b8; D19; CV §14.1 b5; SMD §5.2; B:S1 §5 | APPROVED | VERIFIED | S1 | `letters/open_letter/_seal_piece`; `sealed_letter.gd`; `contracts.gd:_announce` hides the subject while the smith is away (`c4c32e4`); `t_steward_ui.test_envelope_only_with_sealed_letters`; `t_steward.test_contract_letter_deferred_and_sealed`, `test_letter_contents_stay_sealed_while_away`; soak: 0 sealed in 30 d, 2 in 365 d | How rare letters feel is left to human acceptance (R:S1 §7). |
@@ -690,6 +695,10 @@ records the change):
 | STW-026 | While the steward runs the forge, the smith can look but not act. Information panels keep the clock running, and a non-blocking plate shows live status. | SMD §3; R:S1 §1; W:S1 (UI) | APPROVED | PARTIAL | S1 | Away gate in `ui_root.gd`; `ui_window.gd:away_runs_time`; gates in `world.gd`, `player.gd` and `player_nav.gd`; `steward_plate.gd`; `t_steward_ui.test_away_look_but_do_not_act`. Still open: some look-only panels keep minor action buttons enabled, e.g. dossier gift/compare and Help links (R:S1 §7.3; W:S1 UI gap 2). | — |
 | STW-027 | A human player accepts Steward Mode on Windows (steward performance against active play, how the report reads, how rare letters are). Steward Mode is in no published build. | R:S1 §7; CV §11 b6; CV §12.1 Phase 0 | APPROVED | NOT STARTED | A-REM | **See REL-005** (player acceptance of Steward Mode). The latest release, build-0.14.6 (`154d08a`), predates S1 (merged `e121241`) and A2 (`fa7b5b7`); `RELEASE_VERSION` is 0.14. CI smoke only. | Release and acceptance placement needs a decision. |
 | STW-028 | Steward Mode is delivered as the approved priority after A1 and before Gates B–C. | CV §12.2 (S1 paragraph); CV §14.1 b5; B:S1 | APPROVED | VERIFIED | S1 | A1 `5b8af75` → S1 `bc9ba1e`, merged at `e121241` → A2 `fa7b5b7`. S1 suite 264/264; CI run 42689711799 (R:S1 §4). After A2: suite 283/283, unit 384/384. | — |
+| STW-029 | The working smith: the steward directs the smith's own routine work — ordinary repairs paid by the customer, commissions no apprentice can make in time, smelting, display restocking — through the player's own functions, at real stations with real materials and time; he visibly walks there (stairs/lift) and works; masterpieces, refinement, experiments and protected/Unique/Epic items stay with the player. | S2 brief §2; CV v1.3 §4.5 | APPROVED | VERIFIED | S2 | `steward_smith.gd`, `steward_smith_actor.gd`, `Smithy.walk_to_station(sid, w, false)`; `t_s2_steward` (14 tests incl. early smith alone, repairs, commission, restock, apprentices and demand, never masterwork/secret/masterpiece); rendered `s2_steward`; soaks: poor early game 30 d 120 → 4,825 g (29 pieces, 98 repairs), 365 d 120 → 31,113 g (83 pieces, 1,282 repairs), ledger reconciled, scan/audit clean | Balance vs an active player: QST-031. |
+| STW-030 | Zero personal progression under the steward: no player XP, skill, mastery or unlocks while Steward Mode is active, and none for work begun under it even if it finishes after the player returns or after a save/load. | S2 brief §2; CV v1.3 §4.5 | APPROVED | VERIFIED | S2 | One guard in `Game.grant_player_xp`; steward-started work marked; `t_s2_steward.zero_xp_across_exit_and_save_load`; soaks report XP withheld (poor 365 d: 15,660) with skills unchanged | — |
+| STW-031 | Pace: the whole simulation runs at 1.5× by default while Steward Mode is active (1× option), restored immediately on exit, on load and on a new game; headless tests stay deterministic. | S2 brief §3; CV v1.3 §4.5 | APPROVED | VERIFIED | S2 | `Engine.time_scale`; `t_s2_steward.pace_on_restored_on_exit_and_load`, `deterministic_headless`; rendered measurement: clock 2.40 game-min/s and walking 335 px/s at 1.5×, 1.60 after the return | — |
+| STW-032 | The working smith keeps working hours (standing instruction, default 08–18), a midday break, rests when tired and sleeps in his bed; fatigue rises with his work. | S2 brief §2; CV v1.3 §4.5 | APPROVED | VERIFIED | S2 | `vitality.gd`; `t_s2_steward.hours_breaks_rest_and_sleep`; supersedes BUG-005 | — |
 
 
 ### 8. Equipment: identity, rarity, memory and transformation (CV §6, D13, D17) — `EQ` (58)
@@ -770,7 +779,7 @@ records the change):
 | ECO-008 | Field hirelings take a purse on trade runs. They buy from suppliers made known by scouting and sell trade goods the smith has marked; change and sales come back as ledger income. | B:Living Village §7.2 (employee gathering, merchants); MD §8 (mine-party dispatch) | APPROVED | IMPLEMENTED | BASELINE | hirelings.gd:send (budget) and return (Regions.run_trade); data/suppliers.json; used only as a helper in t_progression.test_beginner_to_master, which makes no direct assertion | The hireling staff model belongs to other agents (D1/B1). |
 | ECO-009 | Hale Farm creature trade: the smith can buy for the stores, give as a gift, sell on at a markup, or arrange a sale (the adventurer pays the Hales and the smith earns a finder's fee). | CV §7.1 | APPROVED | VERIFIED | BASELINE | commerce.gd:arrange_creature/creature_buy_for (purses debited); t_commerce.test_companion_for_adventurer | — |
 | ECO-010 | Adventurers offer finds and spare gear at the counter; when the smith buys, the price reaches the adventurer's purse and the piece transfers. | CV §7.3; B:Living Village §7.2 (expedition loot) | APPROVED | VERIFIED | BASELINE | shop.gd:accept_offer (a.gold += price, Provenance.transfer); test_runner "offers: a bought find enters the smith's stores" | — |
-| ECO-011 | Affordable ordinary-quality equipment is reasonably available to starting adventurers; quality and pricing are investigated before balance changes. | B:A2 obs 4; CV §7.3 | APPROVED | PARTIAL | A2 | Investigated only, with no balance change (W:A2-econ §2: starting purses 22–241 g; common q80 pieces 16–86 g; crafting at q80 gives 9 common, 16 magic and 5 rare of 30, and magic and rare sell at ×1.8 and ×3). The rest depends on ECO-031 and proposals W:A2-econ #3 (agent F). | Which affordability proposal, if any, does the user approve? |
+| ECO-011 | Affordable ordinary-quality equipment is reasonably available to starting adventurers; quality and pricing are investigated before balance changes. | B:A2 obs 4; CV §7.3 | APPROVED | PARTIAL | S2 | Investigated only, with no balance change (W:A2-econ §2: starting purses 22–241 g; common q80 pieces 16–86 g; crafting at q80 gives 9 common, 16 magic and 5 rare of 30, and magic and rare sell at ×1.8 and ×3). The rest depends on ECO-031 and proposals W:A2-econ #3 (agent F). S2: pricing defects fixed and plain stock added: starting adventurers' core needs with an affordable piece rose from 40 % to 60–65 % on every difficulty (`t_s2_econdev`). | Rings and amulets still have no cheap source (PROP-024). |
 | ECO-012 | Adventurer commissions are persistent orders: slot, stat minimum, metal tier, reward, deadline, priority (quality, speed or cost) and a bonus objective. Only a real piece made or held by the workshop fulfils them. | CV §3.1, §7.2; B:Living Village §7.1; B:First playable §12 | APPROVED | VERIFIED | BASELINE | shop.gd:create_order/order_need/_set_priority/item_meets/fulfil; sim.gd:_maybe_order; t_business.test_commission_and_expedition; t_economy_a2.test_commission_subsidy_explicit; t_steward.test_commission_queued_made_and_delivered | — |
 | ECO-013 | Requests lean toward what the workshop can make, and a share (OPPORTUNITY_CHANCE 0.25) stays as visible opportunities. Every request or commission card states "✓ craftable now", "craftable once materials arrive" or "✗ not yet", with one next step (skill-tree node, steel, stat range, stations). | B:A2 obs 3, 5; CV §3.2, §11; B:Living Village §7.1 ("orders must be achievable") | APPROVED | VERIFIED | A2 | shop.gd:slot_capability/can_make_slot/_add_capability/beyond_forge; Adv.request_slot/can_commission; f89397e; t_economy_a2.test_boots_request_explained_and_declined_politely, test_request_feasibility_mix (beyond the forge 72 % → 23 %), test_steel_recipes_count_as_steel; phase a2econ | OPPORTUNITY_CHANCE is a tunable value awaiting a decision (W:A2-econ #6). Feasibility rests on player-level gates (Crafting.recipe_locked_reason) and must follow capability when it moves to specialists (B1). The next step can point to a far-off node (R:A2 limitations). |
 | ECO-014 | Declining a request the forge cannot make costs no goodwill (the adventurer tries other traders), and a lapsed opportunity commission leaves no grudge. An ordinary missed deadline still costs affection. | B:A2 obs 3; CV §3.2 | APPROVED | VERIFIED | A2 | shop.gd:dismiss_customer (Adv.buy_elsewhere), expire_orders (order.opportunity); t_economy_a2.test_boots_request_explained_and_declined_politely; phase a2econ "declining the boots costs no affection" | — |
@@ -803,7 +812,7 @@ records the change):
 | ECO-041 | Any village/guild subsidy is explicit and recorded: the unpaid remainder of a commission is a separate ledger line from the village outfitting purse, and the order records who paid what. | CV §7.3; D14; AR I7 and §7 D14 | APPROVED | VERIFIED | A2 | shop.gd:fulfil (o.paid = {by, gold, subsidy, subsidy_by}); Payments.VILLAGE; t_economy_a2.test_commission_subsidy_explicit; phase a2econ (a2econ_ledger_journal) | By construction the subsidy is at least the adventurer's share (shop.gd:911–912: the adventurer pays at most reward/2). In the 365-day soak: subsidy 6,827 g vs adventurers 3,833 g. The village purse has no limit. The split or a limit awaits a decision (W:A2-econ #1, agent F). |
 | ECO-042 | Payments between the smith and people who hold purses are conserved: what the smith pays a named adventurer reaches their purse, what they pay leaves it, and sums the smith owes are settled or written off. | D14; CV §7.3; B:A2 Economy ("every payment needs a real source and recipient") | APPROVED | VERIFIED | RUN0.1 | **Related:** TECH-016, QST-014, BUG-038, BUG-039, BUG-040, BUG-041. A2 fixed repairs, sharpening and commissions. Still open: (1) a dispute refund takes gold from the smith but never credits the adventurer (shop.gd:317). (2) The legacy expedition resolver credits the smith with the spouse's "share of the spoils" without debiting her purse (adventurers.gd:395); it is still reachable for away adventurers without an `exp`. (3) A sponsored party's "still owed" sum is never settled (sponsor.gd:814 has no later payment path). Run 0.1: all four paths conserve money (BUG-038 … BUG-041); `t_run01`.test_payments_conserve_money, test_withdrawn_contract_returns_the_advance. | — |
 | ECO-043 | Villagers' payments (repairs, goods, old-blade repairs) come from a real source. | D14; B:A2 Economy | UNDECIDED | PARTIAL | BACKLOG | **Related:** BUG-014. A2 names the villager as payer, but the amounts are random (shop.gd:_add_customer: repair pay 8–18 g, goods budget 30–80 g; item_story stranger repair: 14 g). There is no household purse (R:A2: "Villagers have no purse"). | Is a named villager with no simulated purse enough for D14 ("payments have real payers")? |
-| ECO-044 | Gifts and commission reward packages are proportionate to the giver's real dealings with the forge: at most GIFT_SHARE (0.5) of their business in the last 30 days, or of the commission. | B:A2 obs 6; CV §7.3 | APPROVED | VERIFIED | A2 | **See ECO-045** (gifts from real possessions). payments.gd:gift_budget/gift_within/note_gift; sim.gd:gift_from/_social_events; shop.gd:fulfil reward package; t_economy_a2.test_gifts_scaled_to_business | GIFT_SHARE 0.5 and GIFT_DAYS 30 are tunable values awaiting a decision (W:A2-econ #6). business_with reads the 400-line ledger. |
+| ECO-044 | Gifts and commission reward packages are proportionate to the giver's real dealings with the forge: at most GIFT_SHARE (0.5) of their business in the last 30 days, or of the commission. | B:A2 obs 6; CV §7.3 | APPROVED | VERIFIED | A2 | **See ECO-045** (gifts from real possessions). payments.gd:gift_budget/gift_within/note_gift; sim.gd:gift_from/_social_events; shop.gd:fulfil reward package; t_economy_a2.test_gifts_scaled_to_business S2: the gratitude relic goes through the cap (BUG-045); a commission's reward package is capped by the giver's OWN payment, not the whole reward (`t_s2_lead`, lead `29f9edd`). | GIFT_SHARE 0.5 and GIFT_DAYS 30 are tunable values awaiting a decision (W:A2-econ #6). business_with reads the 400-line ledger. |
 | ECO-045 | Gifts come from the giver's actual possessions or means, not from conjured loot. | CV §1.2 ("inventories … must reflect simulation state"); D14 (in spirit) | APPROVED | NOT STARTED | BACKLOG | **Related:** PROP-014, ECO-044. Gifts and packages are rolled from the "gift" and "reward" loot tables (sim.gd:gift_from; shop.gd:fulfil), and the giver's purse and loot stay unchanged. Proposal W:A2-econ #2 (agent F). | Confirm that CV §1.2 covers gifts. Placement needs a decision. |
 | ECO-046 | The grocer delivers weekly provisions as a relationship-driven event: their quality follows how the smith treats his daughter, with occasional gifts and no food or provisioning mechanics. | B:First playable §15 | APPROVED | VERIFIED | BASELINE | sim.gd:_grocer_check/take_delivery (no gold changes hands); test_runner "grocer: a warm grocer brings the good provisions" | The provisions are free. Should they be paid for (W:A2-econ #5)? The older brief made them atmospheric, and D14 covers money only. |
 
@@ -878,7 +887,7 @@ records the change):
 | CIV-008 | An inevitable final-war questline, a countdown to mandatory battle, a scripted single peace solution, or armies simulated as a separate strategy game. | CV §1.3; CV §10.1; CV §1.2 (depth over sprawl); MD §11.4 | REJECTED | NOT STARTED | — | Absent | — |
 
 
-### 13. User experience and visual identity (CV §3.2, §11) — `UX` (16)
+### 13. User experience and visual identity (CV §3.2, §11) — `UX` (23)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -898,6 +907,13 @@ records the change):
 | UX-014 | Difficulty presentation: Apprentice, Journeyman and Master are chosen at New Game (and can be changed in the menu) and differ in risk, visible information (live overview) and economy. | B:Living Village §4.4; GD:DANSK ("Sværhedsgrad"); CV silent | APPROVED | IMPLEMENTED | BASELINE | **Related:** HB-006. `difficulty_panel.gd`; `DB.expeditions.difficulty`; `game.gd:new_game(difficulty)` | This is implemented baseline, but the canonical design never mentions difficulty. Confirm it is kept. The direction of `Commerce.price_factor` belongs to economy (agent C). Run 0 normalisation: scope UNDECIDED → APPROVED (implemented pre-canonical baseline kept under CV §2/§7.1 (as HB-006); confirmation requested). |
 | UX-015 | English/Danish documentation: EN/DA header comments in scripts and a Danish player summary (`game/docs/DANSK.md`). In-game text is English only. | B:First Playable §1 ("English and Danish script documentation"); CV silent | UNDECIDED | PARTIAL | BACKLOG | **Related:** HA-009, HA-010, BUG-035. Script headers carry EN:/DA: (e.g. `steward.gd`, `lore.gd`). `DANSK.md` stops at Iteration 009 (no Living Realm, A1, S1 or A2). There is no locale or translation system. | Is in-game Danish wanted, or only the docs? Placement needs a decision. This may overlap the history agents. |
 | UX-016 | The developer catalogue (F10) stays apart from normal play. Developer-spawned items and money get valid identities but earn nothing. | B:UX §9 (user-authorised tooling); CV §16.1 | APPROVED | VERIFIED | BASELINE | **Related:** HA-053, HB-056, BUG-022. `dev_tools.gd`, `dev_catalogue_panel.gd`; `t_devtools.test_search_and_spawn`, `test_money`, `test_dev_items_earn_nothing`; `Steward.protection_reason` ("A developer's piece") | Items crafted from developer materials still count as normal work (ST §6). |
+| UX-017 | Optional automatic walking to the next station after a skill check (Settings, off by default): it only walks — nothing opens, no check starts, no recipe is chosen. | S2 brief §5 | APPROVED | VERIFIED | S2 | `Smithy.walk_to_station(sid, w, false)`; `t_s2_early.auto_walk_off_by_default_and_only_walks`; rendered `s2_early` | — |
+| UX-018 | Shortcuts are true and discoverable: Help, Settings and the tutorial list keys from the real input map; the toolbar shows key badges; K, J and Y complete their tutorial steps; Y opens the Workshop panel (its toolbar label), the Workshop Ledger moves to Q. | S2 brief §5 | APPROVED | VERIFIED | S2 | `hud_toolbar.gd`, `ui_root.gd`, `reference.gd`; `t_s2_early.keys_match_labels_and_help`; `t_workshop_ui` expects Q | Keep Y = Workshop panel / Q = Ledger, or Y = Ledger with the button renamed "Property"? (QST-030) |
+| UX-019 | Restrained contextual highlighting: a hint ring on the nearest usable station or person in reach; the gilt focus ring now draws above interior floors (it was hidden under them indoors). | S2 brief §4 | APPROVED | VERIFIED | S2 | `world.gd`; `t_s2_clarity`; rendered `s2_clarity` (CLARITY `460ddc2`, `2a7f3d8`) | — |
+| UX-020 | Warm, flickering forge light in the evening and at night using the existing lighting. | S2 brief §4 | APPROVED | VERIFIED | S2 | `world.gd` light masks; `t_s2_clarity`; rendered `s2_clarity` | — |
+| UX-021 | The post-check result stays readable but costs less time (2.12 s → 1.34 s of game time; a click skips). | S2 brief §5 | APPROVED | VERIFIED | S2 | `check_overlay.gd`, `skillcheck_panel.gd`; `t_s2_early`; rendered `s2_early` | — |
+| UX-022 | Developer tools behind a per-session cheat switch: off by default, never saved, off again after a new game or load, a CHEATS ON banner, saves marked `dev_used`; F10 tools, the skill-check bypass, four test scenarios and skill/XP adjusters work only while it is on. | S2 brief §7 | APPROVED | VERIFIED | S2 | `dev_tools.gd`, `dev_panel.gd`, `dev_catalogue_panel.gd`, `game.gd`, `ui_root.gd`; `t_s2_econdev`, `t_devtools`; rendered `s2_econdev`, `slice`, `refine_ux` switch cheats on first | — |
+| UX-023 | The first hour never softlocks: Borin waits in the stock hall from 07:30 on a new game for his tutorial, then keeps his schedule; Mira's objective and the selling step complete on delivery even with an empty purse (no conjured money); a lapsed commission closes the objective; quick-save counts; every stage completes on a fresh save. | S2 brief §5 | APPROVED | VERIFIED | S2 | `tutorial.gd`, `hirelings.gd`, `objectives.gd`; `t_s2_early` (9 tests); rendered `s2_early` | — |
 
 
 ### 14. Lore, Chronicle and replayability (CV §10.4, D9, D16) — `LORE` (17)
@@ -930,11 +946,11 @@ records the change):
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
-| BUG-001 | Contracts panel opened directly on a closed order must not collapse its right column to one letter per line. | W:A1 identity "Found along the way"; R:A1 §3; R:#842; R:A2 limitations | APPROVED | NOT STARTED | A-REM | Present since 0.14.6; `contracts_panel.gd` last changed `b72940a` (3 lines, resolved masterpiece). Not visually re-verified here. Breaks CV §1.2 clarity / Gate A "trustworthy UI" | — |
+| BUG-001 | Contracts panel opened directly on a closed order must not collapse its right column to one letter per line. | W:A1 identity "Found along the way"; R:A1 §3; R:#842; R:A2 limitations | APPROVED | VERIFIED | S2 | Present since 0.14.6; `contracts_panel.gd` last changed `b72940a` (3 lines, resolved masterpiece). Not visually re-verified here. Breaks CV §1.2 clarity / Gate A "trustworthy UI" S2: the title box gets a width (UIKit.label wrapped titles over 48 characters); `t_s2_clarity`, rendered `s2_clarity` (CLARITY `27ba827`). | — |
 | BUG-002 | A second UI root must not log "Signal 'inventory_changed' is already connected". | W:S1-UI #4; R:S1 §7.2; R:A2 limitations | PROPOSED | NOT STARTED | BACKLOG | `ui_root.gd:53` connects static `Reference.note_seen` without a guard; affects tests and post-load | — |
 | BUG-003 | While away, "look" panels must not offer enabled action buttons (dossier gift/compare, Help "show me how"). | W:S1-UI #2; R:S1 §7.3 | PROPOSED | NOT STARTED | BACKLOG | Actions are blocked anyway by `StewardUI.away_block`; not re-verified. Domain E | — |
 | BUG-004 | A sealed contract letter's subject must stay hidden while the smith is away. | W:S1-UI #1; CV §4.5 sealed correspondence | APPROVED | VERIFIED | S1 | `c4c32e4`; `contracts.gd:283-286` (sender only when `Steward.smith_away()`); `t_steward.test_letter_contents_stay_sealed_while_away` | — |
-| BUG-005 | The smith's fatigue must not rise while the steward runs the forge. | W:S1-engine "Known gaps"; R:S1 §2 "Lead" fix | UNDECIDED | VERIFIED | S1 | `0a3b820`; `t_steward.test_fatigue_holds_while_away` | The engine worker called it a design decision; the lead implemented and disclosed it, no explicit user ratification recorded |
+| BUG-005 | The smith's fatigue must not rise while the steward runs the forge. | W:S1-engine "Known gaps"; R:S1 §2 "Lead" fix | REJECTED | NOT STARTED | — | `0a3b820`; `t_steward.test_fatigue_holds_while_away` S2: superseded by the user's S2 decision and canonical v1.3: the working smith tires, takes breaks, rests and sleeps while the steward runs the forge (`t_s2_steward.hours_breaks_rest_and_sleep`; `t_steward` rewritten). | — |
 | BUG-006 | S1 presentation defects: toasts overlapping the wider toolbar, toast overflow, envelope sender cut mid-word, status plate off-screen. | R:S1 §2; W:S1-UI "Fixed after looking" | APPROVED | VERIFIED | S1 | `d4590cc`, `bc9ba1e`, `9a60fa4`, `152c52f`; rendered `interface`, `steward_s1` (46/46); `t_steward_ui` | — |
 | BUG-007 | Rendered phase `consult_rl` must actually run (its `ph.run` was never awaited). | W:A2-exp known gaps | APPROVED | VERIFIED | A2 | `2af5f6e` ("13/13 checks pass") | — |
 | BUG-008 | Steel recipes (`steel_shortsword`, `steel_cutlass`, `steel_battle_axe`) must yield steel-tier pieces. | W:A2-econ proposal 4; R:A2 "Related fix" | APPROVED | VERIFIED | A2 | `items.gd:_def_tier` recipe fallback (`:146ff`); `t_economy_a2.test_steel_recipes_count_as_steel` | — |
@@ -949,7 +965,7 @@ records the change):
 | BUG-017 | A dismissed hireling who leaves with gear in their name records a hand-over event. | W:A1 identity "Hand-overs not recorded"; CV §6.1 | APPROVED | NOT STARTED | A-REM | No event added in A1 | — |
 | BUG-018 | Pruned routine Lore events must not leave adventurer histories silently skipping; pre-011 Chronicle entries become Lore events. | GD:ITERATION_011_AUDIT "Known limitations"; R:It011; CV §10.4, D9 | APPROVED | NOT STARTED | J | **See LORE-008** (Lore growth, indices, retention and long-campaign probe). `lore.gd:_prune` erases events but not ids in `a["lore"]`; no conversion step for old Chronicle entries | — |
 | BUG-019 | Project Bench has a real station price (it falls back to 150 g). | AR §2.1; ST §3–5 contracts gaps | PROPOSED | NOT STARTED | BACKLOG | **See WS-013** (Project Bench price fallback). `property.gd` `station_price()` → `PRICE.get(id, 150)`; no `project_bench` key | — |
-| BUG-020 | Hireling work spots (and talking items) also consider upper floors; apprentices' real-time stair walking tested. | ST §3–5 smithy gaps; AR §2.1, §2.3, §4.3 | PROPOSED | NOT STARTED | BACKLOG | `world.gd:2497` requires `Property.station_floor(sid) == "ground"`; stair-walking test not re-verified (AR: teleported). Domain A | — |
+| BUG-020 | Hireling work spots (and talking items) also consider upper floors; apprentices' real-time stair walking tested. | ST §3–5 smithy gaps; AR §2.1, §2.3, §4.3 | APPROVED | PARTIAL | S2 | `world.gd:2497` requires `Property.station_floor(sid) == "ground"`; stair-walking test not re-verified (AR: teleported). Domain A S2: apprentices' working spots stay inside their station's room (3 real defects fixed, CLARITY `55fb74b`); field hirelings at Loft/stitching stations not done (PROP-026). | Hireling work spots on upper floors remain a proposal (PROP-026). |
 | BUG-021 | Refined pieces' names and def-based checks reflect the refined material. | ST §6; AR §4.3 optional | PROPOSED | NOT STARTED | BACKLOG | `items.gd:132-135` tier honours `refine.material`; names still from the base def | — |
 | BUG-022 | Items crafted from developer-spawned materials inherit the dev flag (or the behaviour is documented). | ST §6; AR §4.3 optional; R:UX 0.13 | PROPOSED | NOT STARTED | BACKLOG | **See UX-016** (developer catalogue (F10)). No `dev` handling in `crafting.gd`; `dev_tools.gd` marks only spawned items | — |
 | BUG-023 | Talking items have refinement-specific lines; voices beyond one whisper sound and English only. | ST §6; AR §4.3; GD:ITERATION_011_AUDIT | PROPOSED | NOT STARTED | BACKLOG | `data/personalities.json`: 0 "refine" entries | — |
@@ -972,17 +988,17 @@ records the change):
 | BUG-040 | A sponsored company's "still owed" balance must be settled later or recorded as a real debt. | CV §7.3, D14; agent C ECO-042 (3) | APPROVED | VERIFIED | RUN0.1 | **See ECO-042** (money conservation (D14): named payers done in A2, four leaks open). `sponsor.gd:805-815` pays `min(owed, gold)`; the shortfall only becomes a social memory ("still owes us") and reputation −2; no debt record or later settlement. Fix not yet authorised Run 0.1: `Sponsor.settle_debts()` each morning (Sim.on_day) pays what is owed to the surviving members as coin allows (ledger line, journal note); with none alive the debt stays recorded; `t_run01`.test_payments_conserve_money. | — |
 | BUG-041 | An abandoned or withdrawn contract must not let the smith keep the patron's advance without a recorded consequence. | CV §7.3, D14; agent C ECO-042 (4) | APPROVED | VERIFIED | RUN0.1 | **See ECO-042** (money conservation (D14): named payers done in A2, four leaks open). `contracts.gd:396` `abandon()` comment "the advance is kept"; `_close` refunds nothing. Fix not yet authorised Run 0.1: `Contracts._close` returns the advance on a failed order (abandoned or withdrawn), records `advance_returned`; the abandon tooltip says so; `t_run01`.test_payments_conserve_money, test_withdrawn_contract_returns_the_advance. | Is keeping the advance an intended penalty rule? (needs a decision) |
 | BUG-042 | Socketing a runestone must not overwrite a piece's name or silently change its rarity. Today `Crafting.socket` renames a Common piece "Runed …" (an earned name included) and raises it to Magic; the Lore event mentions only the runestone. | CV §6.1 ("preserve … names"); Run 0 equipment audit | APPROVED | NOT STARTED | A-REM | `crafting.gd:775-778`; contrast `Refinement` (no rarity or name change; `t_refine.test_identity_kept`); related EQ-008, EQ-032 | Is any rarity change through rune socketing allowed (Refinement forbids one)? Fix not authorised. |
-| BUG-043 | A counter "goods" customer receives what they asked for. Today `Shop.sell_goods` never checks `looking_for`, so any potion type fills a request for a healing draught. | CV §11 (honest information); Run 0 observation audit (OBS-15) | APPROVED | NOT STARTED | BACKLOG | `shop.gd:281-302`; related OBS-15, OBS-16 | Defect in an existing feature; fix not authorised. Candidate placement A-REM. |
-| BUG-044 | The station panel describes the check mechanic actually used. Today its header quotes precision-ring zone and needle values for every mechanic (align, edge, multihit, rune, rings). | CV §11 (honest information); Run 0 observation audit (OBS-12) | APPROVED | NOT STARTED | BACKLOG | `station_panel.gd:49-50`; `Minigames.type_for`; related OBS-12 | Fix not authorised. Candidate placement A-REM ("trustworthy UI"). |
-| BUG-045 | The once-per-friend "deep gratitude" relic satchel is bounded like other gifts. Today it bypasses the A2 gift cap. | B:A2 obs 6; D14; Run 0 observation audit (OBS-06 residual) | APPROVED | NOT STARTED | BACKLOG | `sim.gd:_social_events`, `Loot.roll_table("gratitude")` (not routed through `Sim.gift_from` / `Payments.gift_budget`); related ECO-044, ECO-045 | Fix not authorised. |
+| BUG-043 | A counter "goods" customer receives what they asked for. Today `Shop.sell_goods` never checks `looking_for`, so any potion type fills a request for a healing draught. | CV §11 (honest information); Run 0 observation audit (OBS-15) | APPROVED | VERIFIED | S2 | `shop.gd:281-302`; related OBS-15, OBS-16 S2: `Shop.sell_goods` sells only what the customer asked for; unaffordable or unwanted draughts greyed with reasons; `t_s2_clarity` (CLARITY `e7327b7`). | Defect in an existing feature; fix not authorised. Candidate placement A-REM. |
+| BUG-044 | The station panel describes the check mechanic actually used. Today its header quotes precision-ring zone and needle values for every mechanic (align, edge, multihit, rune, rings). | CV §11 (honest information); Run 0 observation audit (OBS-12) | APPROVED | VERIFIED | S2 | `station_panel.gd:49-50`; `Minigames.type_for`; related OBS-12 S2: the check type is named in the world prompt, the station header and per operation; `t_s2_clarity` (CLARITY `67b0ada`). | Fix not authorised. Candidate placement A-REM ("trustworthy UI"). |
+| BUG-045 | The once-per-friend "deep gratitude" relic satchel is bounded like other gifts. Today it bypasses the A2 gift cap. | B:A2 obs 6; D14; Run 0 observation audit (OBS-06 residual) | APPROVED | VERIFIED | S2 | `sim.gd:_social_events`, `Loot.roll_table("gratitude")` (not routed through `Sim.gift_from` / `Payments.gift_budget`); related ECO-044, ECO-045 S2: the gratitude relic goes through the gift cap; `t_s2_econdev`. | Fix not authorised. |
 | BUG-046 | Customers never conjure spare parts. Today `Shop.multi_parts_for` makes a "spare they carry" with `Items.make` when the adventurer has no worn piece. | CV §1.2 ("inventories … must reflect simulation state"); Run 0 history audit | APPROVED | NOT STARTED | BACKLOG | `shop.gd:multi_parts_for`; related HB-037 | Fix not authorised. |
 | BUG-047 | The pawnshop's weekly house stock does not claim a pledge history that never happened. Today it is labelled "Sat on Silas Quell's shelf, unredeemed". | CV §1.2; CV §10.3 (no fabricated histories); Run 0 economy audit | APPROVED | NOT STARTED | BACKLOG | `commerce.gd:389`; related EQ-003, ECO-005 | Fix not authorised. |
 | BUG-048 | Payment records that D14 relies on survive long campaigns. Today `Game.state.ledger` keeps only its last 400 lines (a 365-day steward soak writes about 1,447), yet `Payments.business_with`, `gift_budget` and `unaccounted` read it; contract history keeps 30 entries. | D14 ("explicit and recorded"); CV §10.4; Run 0 economy audit | UNDECIDED | PARTIAL | BACKLOG | `game.gd:190`; `payments.gd`; `contracts.gd:851`; the durable record is `order.paid` on `Shop.orders` (never pruned); related ECO-042, LORE-008 | Which payment records must be permanent, and where (Gate J retention policy)? |
 | BUG-049 | Player, test and design documents describe the current build. Today no `game/docs` file or README mentions Steward Mode; `TESTING.md` lacks rows for `t_steward`, `t_steward_ui`, `t_economy_a2`, `t_experience_a2` and other suites; `STEWARD_MODE_DESIGN.md` §6.1 soak figures predate A2; `DANSK.md` stops at Iteration 009; `VERTICAL_SLICE_REPORT.md` is an unlabelled historical snapshot. | CLAUDE.md §2.7 (honest status); Run 0 Steward/UX/Lore and history audits | APPROVED | PARTIAL | A-REM | related TECH-023, PROP-010, UX-015 Run 0.1: `TESTING.md` gained the `t_run01` row and the corrected `t_smithy` renown wording; `TECHNICAL.md` gained schema 4 and the history section. The other gaps remain. | Documentation only. Run 0 deliberately changed no existing document; authorise a documentation pass? |
-| BUG-050 | The selling-tutorial gate tells a customer's payment from background income. Borin's hourly "sales" line can still complete the step while a counter-class panel (e.g. a conversation) is open. | B:A2 obs 1; Run 0 observation audit (OBS-01 residual) | APPROVED | NOT STARTED | BACKLOG | `tutorial.gd:_on_gold`, `serving_at_counter()`; the A2 ledger `party` field could distinguish them; inferred from code, not reproduced | Reproduce first; fix not authorised. |
+| BUG-050 | The selling-tutorial gate tells a customer's payment from background income. Borin's hourly "sales" line can still complete the step while a counter-class panel (e.g. a conversation) is open. | B:A2 obs 1; Run 0 observation audit (OBS-01 residual) | APPROVED | VERIFIED | S2 | `tutorial.gd:_on_gold`, `serving_at_counter()`; the A2 ledger `party` field could distinguish them; inferred from code, not reproduced S2: only the served customer's payment completes the selling step; `t_s2_early`, unit check in `test_runner`. | Reproduce first; fix not authorised. |
 
 
-### 16. Proposals awaiting a decision — `PROP` (21)
+### 16. Proposals awaiting a decision — `PROP` (26)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -1000,16 +1016,21 @@ records the change):
 | PROP-012 | A lost party's pack is left at the site for later parties to find. | W:A1 identity #5; R:A1 §3 "later gates" | PROPOSED | NOT STARTED | BACKLOG | A1 recorded it as `Provenance.lose` instead; "new gameplay" → NEW SCOPE classification needed | — |
 | PROP-013 | Decide the commission payment split or cap the village subsidy (365-day soak: subsidy 6,827 g > adventurers' 3,833 g). | W:A2-econ proposal 1; R:A2 Proposals | PROPOSED | NOT STARTED | BACKLOG | **Related:** QST-024. `shop.gd:907-918` subsidy = reward − paid, uncapped | — |
 | PROP-014 | Draw gifts from the giver's real possessions (adventurer's pack; villagers' household goods). | W:A2-econ proposal 2; R:A2; CV §1.2 autonomy | PROPOSED | NOT STARTED | BACKLOG | **See ECO-045** (gifts from real possessions). Gifts still rolled from loot tables, value-bounded (`shop.gd:924` `Payments.gift_within(Loot.roll_table(...))`) | — |
-| PROP-015 | Stock a few plain common iron pieces (30–70 g) at the Salt Anvil for starting adventurers. | W:A2-econ proposal 3; R:A2 (obs 4) | PROPOSED | NOT STARTED | BACKLOG | `data/commerce.json` `rival.stock`: sea-bronze, steel, starsteel only | — |
-| PROP-016 | `Adv.price_estimate` (saving goal) accounts for rarity price multipliers. | W:A2-econ proposal 3; R:A2 | PROPOSED | NOT STARTED | BACKLOG | `adventurers.gd:725-736` uses the def `value` only | — |
-| PROP-017 | Review difficulty pricing for adventurers: Salt Anvil stock sold to adventurers uses the smith's buying factor, and `Adv.purchase_check`'s "fair" price ignores difficulty. (W:A2-econ's "price_factor inverted" claim is not a defect: the reciprocal is documented as intended.) | W:A2-econ proposal 3; R:A2; agent C ECO findings | PROPOSED | NOT STARTED | BACKLOG | `trade.gd:48-50` documents the 1/x buying factor (Apprentice cheaper, Master dearer); rival stock priced with `pf` (`commerce.gd:438`); `adventurers.gd:466` `fair` = value × (1.15 + tolerance + affection + reputation), no difficulty term | Should adventurers face difficulty-scaled prices at all? |
+| PROP-015 | Stock a few plain common iron pieces (30–70 g) at the Salt Anvil for starting adventurers. | W:A2-econ proposal 3; R:A2 (obs 4) | APPROVED | VERIFIED | S2 | `data/commerce.json` `rival.stock`: sea-bronze, steel, starsteel only S2: requested in the S2 brief §6; the Salt Anvil stocks plain common mail, leather boots, gloves and belt (always common, 62–78 %; Journeyman boots 29 g, gloves 23 g, belt 18 g, mail 112 g); plain iron weapons/helmets/shields were tried and dropped (they pushed requests beyond the forge); `t_s2_econdev`. | — |
+| PROP-016 | `Adv.price_estimate` (saving goal) accounts for rarity price multipliers. | W:A2-econ proposal 3; R:A2 | APPROVED | VERIFIED | S2 | `adventurers.gd:725-736` uses the def `value` only S2: `Adv.price_estimate` is the shop's real price for the piece (wrong in 856 of 856 saving goals before, 0 after); `t_s2_econdev`. | — |
+| PROP-017 | Review difficulty pricing for adventurers: Salt Anvil stock sold to adventurers uses the smith's buying factor, and `Adv.purchase_check`'s "fair" price ignores difficulty. (W:A2-econ's "price_factor inverted" claim is not a defect: the reciprocal is documented as intended.) | W:A2-econ proposal 3; R:A2; agent C ECO findings | APPROVED | VERIFIED | S2 | `trade.gd:48-50` documents the 1/x buying factor (Apprentice cheaper, Master dearer); rival stock priced with `pf` (`commerce.gd:438`); `adventurers.gd:466` `fair` = value × (1.15 + tolerance + affection + reputation), no difficulty term S2: adventurers pay the Salt Anvil with the same difficulty factor as the smith's display; `purchase_check`'s fair price includes the difficulty; class-appropriate stock; `t_s2_econdev`. | Should adventurers face difficulty-scaled prices at all? |
 | PROP-018 | Aldric's weekly provisions are paid for (today free goods). | W:A2-econ proposal 5; R:A2; CV §7.3, D14 | PROPOSED | NOT STARTED | BACKLOG | `sim.gd:57-75` `take_delivery` adds items, no `add_gold`; the steward takes them in (`steward.gd:742-760`) | — |
 | PROP-019 | Tune `OPPORTUNITY_CHANCE` (0.25) and `GIFT_SHARE` (0.5). | W:A2-econ proposal 6; R:A2 | PROPOSED | NOT STARTED | BACKLOG | `shop.gd:203`, `payments.gd:18` | — |
-| PROP-020 | Consultation: do not rank "keep your kit" (0.5) above purchase offers (0.45) for gear-seekers. | W:A2-exp known gaps; R:A2 | PROPOSED | NOT STARTED | BACKLOG | `consult.gd:434-439` | — |
+| PROP-020 | Consultation: do not rank "keep your kit" (0.5) above purchase offers (0.45) for gear-seekers. | W:A2-exp known gaps; R:A2 | APPROVED | VERIFIED | S2 | `consult.gd:434-439` S2: proven (2 of 36 gear-seekers heard 'keep your coin' before a purchase they would make); fixed by ranking only; `t_s2_econdev`. | — |
 | PROP-021 | Slot filters in the counter offer grid. | W:A2-exp known gaps; R:A2 | PROPOSED | NOT STARTED | BACKLOG | `offer_picker.gd` has no filter | — |
+| PROP-022 | Hirelings hunt for meat and rawhide and the grocer sells it. | User's 10 Nov observations (summarised in the S2 brief §8) | PROPOSED | NOT STARTED | BACKLOG | Deferred by the user in S2 §8 (scope protection) | Approve as new scope? |
+| PROP-023 | A dagger Design: no recipe makes a dagger today (the starter dagger is the only one); the guide now says so plainly. | S2 EARLY investigation | PROPOSED | NOT STARTED | BACKLOG | `t_s2_early.dagger_prerequisites` | New content: approve or not? |
+| PROP-024 | A cheap source of plain rings and amulets for starting adventurers. | S2 ECONDEV numbers | PROPOSED | NOT STARTED | BACKLOG | ECO-011 | — |
+| PROP-025 | Optional filters at the caravan, pawnshop and harbour counters too. | S2 CLARITY | PROPOSED | NOT STARTED | BACKLOG | OBS-16 | — |
+| PROP-026 | Field hirelings (Borin) also work at Loft and stitching stations. | S2 CLARITY | PROPOSED | NOT STARTED | BACKLOG | BUG-020, OBS-21 | — |
 
 
-### 17. Design questions (architecture review §7 and others) — `QST` (28)
+### 17. Design questions (architecture review §7 and others) — `QST` (31)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -1041,6 +1062,9 @@ records the change):
 | QST-026 | Canonical §14 introduces "the eighteen architectural decisions" but lists D19; CLAUDE.md §2.2 cites "D1–D18". Update wording (needs a recorded revision)? | CV §14 heading, §14.1; CLAUDE.md §2.2 | APPROVED | IMPLEMENTED | RUN0.1 | Text inconsistency only; any canonical edit needs approval + version + DOCX/MD sync (GOV-007) Run 0.1: canonical v1.2 §14 counts D19 beside the eighteen audit decisions; CLAUDE.md cites D1–D19. | — |
 | QST-027 | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 gameplay; danger/reputation entry points are required "Before G/H". | CV §12.2 A, §12.3; R:A1 §5; R:A2 | UNDECIDED | NOT STARTED | A-REM | **See REL-004** (human Windows gameplay acceptance and the 'Before B/C' gate). Open: TECH-017…TECH-021, TECH-023, REL-004 | — |
 | QST-028 | What should a legacy copy of a Unique show the player? Saves from before Run 0.1 may hold more than one Grimhold: the registry names the authentic piece (lowest uid) and records the others, which are kept whole and today look identical to it. | D13; CV §6.1, §6.2; Run 0.1 | UNDECIDED | NOT STARTED | E | EQ-024; `Uniques.is_legacy_copy()` already tells them apart | Leave them as they are; label them in the item panel (e.g. "one of several forged before the realm kept count"); or treat them as ordinary legendary pieces. Renaming them or changing their stats is excluded (§6.1). |
+| QST-029 | Front entrance: (a) a darkened threshold over the door and a brighter door lamp (code only); (b) a door hood/awning prop with a `template_` fallback; (c) a second "yard" entrance through the material store's loading door (new door, navigation, keep-clear and customer routing). | S2 brief §4; CLARITY investigation | UNDECIDED | NOT STARTED | BACKLOG | `docs/s2/reports/clarity.md` §10 | Which did the user mean? CLARITY recommends (a) or (b) if the issue is "I cannot see where the door is". |
+| QST-030 | Y and Q: keep Y = Workshop panel (matches its toolbar label) and Q = Workshop Ledger, or Y = Ledger with the button renamed "Property"? | S2 EARLY | UNDECIDED | IMPLEMENTED | S2 | UX-018 (first option built) | — |
+| QST-031 | Is the working smith "competent, not superior"? With no apprentices and starting resources he earned 120 → 4,825 g in 30 days and 120 → 31,113 g in a year, mostly from paid repairs (about 3.5 a day; every coin from real purses, ledger reconciled). There is no player baseline to compare. | CV v1.3 §4.5; S2 soaks | UNDECIDED | NOT STARTED | BACKLOG | STW-020, STW-029; needs a human playtest / a scripted player baseline (PROP-001) | Cap repairs per day, slow him, or accept? |
 
 
 ## Part IV — Requirements from pre-canonical briefs not named in canonical v1.1
@@ -1234,7 +1258,7 @@ records the change):
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
 | HB-055 | Map and shop clarity: each shop shows name, business type, opening hours and live open/closed status from one schedule source, merchandise categories, whether it has a purchasing interface and how to reach/quick-travel there; closed counters say when they open; full stock stays inside the shop screen. | CV §11 "honest information" baseline; B:UX §4 | APPROVED | VERIFIED | BASELINE | `systems/venues.gd`, `map_panel.gd`; `t_venues.test_hours_match_keepers`, `test_status_and_card`, `test_closed_counter`, `test_travel_labels`, `test_prompts`; `phase_world_ux` | — |
-| HB-056 | Developer catalogue (F10): searchable catalogue of all items, spawn with quantity/rarity/quality, add preset or custom money, valid identities; developer-spawned items marked so they cannot earn achievements, names, Epic, knowledge or contaminate tests. | User-authorised technical work (B:UX §9) | APPROVED | PARTIAL | BACKLOG | **See UX-016** (developer catalogue (F10)). `systems/dev_tools.gd` (`it["dev"]`), `dev_catalogue_panel.gd`; `t_devtools.test_search_and_spawn`, `test_money`, `test_dev_items_earn_nothing`. Missing: items crafted from dev-spawned materials are not marked and count as normal work (R:#753; no `dev` propagation in `crafting.gd`). | Fix under A-REM identity hygiene, or leave as known limitation? |
+| HB-056 | Developer catalogue (F10): searchable catalogue of all items, spawn with quantity/rarity/quality, add preset or custom money, valid identities; developer-spawned items marked so they cannot earn achievements, names, Epic, knowledge or contaminate tests. | User-authorised technical work (B:UX §9) | APPROVED | VERIFIED | S2 | **See UX-016** (developer catalogue (F10)). `systems/dev_tools.gd` (`it["dev"]`), `dev_catalogue_panel.gd`; `t_devtools.test_search_and_spawn`, `test_money`, `test_dev_items_earn_nothing`. Missing: items crafted from dev-spawned materials are not marked and count as normal work (R:#753; no `dev` propagation in `crafting.gd`). S2: F10 extended: per-session cheat switch, scenarios, skill/XP adjusters (UX-022). | Fix under A-REM identity hygiene, or leave as known limitation? |
 
 #### THE LIVING REALM — consolidated 10-phase roadmap (B:Living Realm, brief #754)
 
@@ -1257,3 +1281,4 @@ records the change):
 |---|---|
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation) from canonical v1.1 and nine verified audit passes at `fa7b5b7`. |
 | 10 November 2026 | Run 0.1: EQ-024, QST-013 (D13 registry), ECO-042, TECH-016, QST-014, BUG-038 … BUG-041 (D14), GOV-030, WLD-015, QST-018 (D18), LORE-017, GOV-031 (split documented), QST-026, QST-015 (canonical v1.2), BUG-049, TECH-006, WS-005 updated; QST-028 added; target `RUN0.1` added. |
+| 10 November 2026 | S2: BUG-001, BUG-043, BUG-044, BUG-045, BUG-050 verified; BUG-005 superseded; BUG-020, ECO-011 partial; PROP-015/016/017/020 approved by the S2 brief and verified; ECO-044, STW-020, HB-056 updated; added STW-029 … STW-032, UX-017 … UX-023, PROP-022 … PROP-026, QST-029 … QST-031; target `S2`; canonical v1.3. |
