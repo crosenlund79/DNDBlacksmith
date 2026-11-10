@@ -172,10 +172,10 @@ static func _world() -> VillageWorld:
 	return tree.get_first_node_in_group("world") as VillageWorld
 
 
-## Walk (click-to-move, stairs and lift included) to a station and use it on arrival.
-## S2: use_on_arrival = false only walks there (the optional auto-walk after a check: nothing opens, nothing starts).
-## Backward compatible: the two-argument form behaves exactly as before.
-static func walk_to_station(sid: String, w: VillageWorld = null, use_on_arrival := true) -> String:
+## Walk (click-to-move, stairs and lift included) to a station and use it on arrival. S2 (backward compatible):
+## `use` false only walks him up to it — nothing opens, nothing starts (the steward's autopilot, and the optional
+## auto-walk after a skill check).
+static func walk_to_station(sid: String, w: VillageWorld = null, use := true) -> String:
 	if w == null:
 		w = _world()
 	if w == null:
@@ -185,7 +185,14 @@ static func walk_to_station(sid: String, w: VillageWorld = null, use_on_arrival 
 		return "Nowhere to walk."
 	for e in w.interactables:
 		if str(e.get("kind", "")) == "station" and str(e.get("id", "")) == sid:
-			return "" if nav.walk_to_entity(e, use_on_arrival) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
+			if not use:
+				# S2: to work there (not to open it) he goes to the station's working side, as the apprentices do
+				var aa := w.get_node_or_null("ApprenticeActors")
+				if aa != null and aa.has_method("work_spot"):
+					var ws: Dictionary = aa.call("work_spot", sid)
+					if ws.has("pos") and nav.walk_to_point(ws["pos"]):
+						return ""
+			return "" if nav.walk_to_entity(e, use) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
 	return "The %s is not set up in the workshop." % DB.station(sid).get("name", sid)
 
 

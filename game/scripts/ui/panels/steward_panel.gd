@@ -85,9 +85,11 @@ func _handover() -> void:
 	left.custom_minimum_size = Vector2(800, 0)
 	left.add_child(UIKit.label("Hand the running forge to your steward", 30, "heading", UIKit.RUBRIC))
 	var intro := UIKit.rich("While you are away the steward runs the [b]routine business[/b] of the workshop through the same actions you would take: "
-		+ "it takes on suitable ordinary commissions for your apprentices, buys materials at the village counters, keeps the display stocked, "
-		+ "serves waiting customers and delivers finished orders. It never crafts — [i]you gain no crafting experience while away[/i] — and it "
-		+ "leaves anything consequential (major contracts, famous pieces, personal matters) for you.", 20)
+		+ "it takes on suitable ordinary commissions, buys materials at the village counters, keeps the display stocked, "
+		+ "serves waiting customers and delivers finished orders. [b]It sets you to routine work[/b] — ordinary forging, customers' repairs and "
+		+ "smelting at a steady, average standard, in working hours, with your breaks and your night's sleep — and [i]you gain no experience "
+		+ "from it[/i]. It never makes masterpieces, never reworks or enchants, and leaves anything consequential (major contracts, famous "
+		+ "pieces, personal matters) for you.", 20)
 	intro.custom_minimum_size = Vector2(780, 0)
 	left.add_child(intro)
 	# the confirmation
@@ -103,13 +105,14 @@ func _handover() -> void:
 	var cv := UIKit.vbox(6)
 	cv.add_child(UIKit.label("BEFORE YOU GO", 17, "heading", Color("#e8cc84")))
 	var ct := UIKit.rich("[b]The steward will run the forge while the game runs; nothing happens while the game is closed.[/b]\n"
-		+ "Time keeps flowing at the speed you choose (%s pauses, + / − change the speed). Loading a save always finds you back at the forge, with the mode off. "
+		+ "The whole village keeps moving at the steward's pace (%s pauses); you are back at your own speed the moment you return. Loading a save always finds you back at the forge, with the mode off. "
 		% Settings.key_label("time_pause")
 		+ "While away you can look around, but not act in the world. Take the workshop back from the steward's plate or with %s." % StewardUI.key(), 19, true)
 	ct.custom_minimum_size = Vector2(740, 0)
 	cv.add_child(ct)
 	conf.add_child(cv)
 	left.add_child(conf)
+	left.add_child(_pace_row())
 	var why := StewardUI.can_activate()
 	refusal = UIKit.label(("Not now: " + why) if why != "" else "", 19, "body_bold", UIKit.RUBRIC)
 	refusal.name = "Refusal"
@@ -148,6 +151,34 @@ func _handover() -> void:
 	body.add_child(h)
 
 
+## S2: the steward's pace — normal (1×) or half again as fast (1.5×, the default); the whole simulation moves with it.
+func _pace_row(with_note := false) -> HBoxContainer:
+	var row := UIKit.hbox(10)
+	row.name = "PaceRow"
+	var cur := Steward.pace() if not Game.state.is_empty() and Game.state.has("steward") else float(StewardUI.orders().get("pace", 1.5))
+	row.add_child(UIKit.label("Pace while away:", 19, "body_bold"))
+	for p in [1.0, 1.5]:
+		var pv: float = p
+		var b := UIKit.button("%s %s" % ["Normal" if pv <= 1.0 else "Steward's pace", StewardUI.pace_text(pv)], func():
+			var why := Steward.set_orders({"pace": pv})
+			if why != "":
+				Events.toast.emit(why, "bad")
+			build(), 0)
+		b.name = "Pace_%s" % ("1" if pv <= 1.0 else "15")
+		b.disabled = absf(cur - pv) < 0.01
+		b.add_theme_font_size_override("font_size", 17)
+		b.custom_minimum_size = Vector2(0, 38)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(b)
+	if with_note:
+		var note := UIKit.label("the clock, people, walking and work all move together", 16, "body_italic", Color("#6e5a40"))
+		note.autowrap_mode = TextServer.AUTOWRAP_OFF
+		note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(note)
+	row.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	return row
+
+
 func _activate() -> void:
 	var why := StewardUI.hand_over()
 	if why != "":
@@ -167,9 +198,9 @@ func _status() -> void:
 	var top := UIKit.hbox(24)
 	var v := UIKit.vbox(4)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.add_child(UIKit.rich("[font_size=26][b]Away %s[/b][/font_size]   [color=#6e5a40]since day %d, %s · now day %d, %s%s[/color]" % [
+	v.add_child(UIKit.rich("[font_size=26][b]Away %s[/b][/font_size]   [color=#6e5a40]since day %d, %s · now day %d, %s · pace %s[/color]" % [
 		StewardUI.elapsed(int(s.get("elapsed_minutes", 0))), int(s.get("since_day", 0)), str(s.get("since_time", "")), Game.day(), Game.time_string(),
-		("  · time ×%d" % Game.speed) if Game.speed > 1 else ""], 19))
+		StewardUI.pace_text(float(s.get("pace", 1.5)))], 19))
 	var o := Steward.orders()
 	v.add_child(UIKit.rich("Purse [b]%d g[/b] (%d g when you left, [color=%s]%s[/color]) · spent today %d of %d g · this absence %d of %d g · keeps at least %d g · may still spend %d g now" % [
 		gold, since, "#26622f" if gold >= since else "#7e2418", StewardUI.signed(gold - since), int(s.get("spent_today", 0)), int(o["daily_limit"]),
@@ -180,6 +211,7 @@ func _status() -> void:
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(back)
 	body.add_child(top)
+	body.add_child(_smith_card(s.get("smith", {})))
 	var stalls: Array = s.get("stalls", [])
 	if not stalls.is_empty():
 		var sl := PackedStringArray()
@@ -200,8 +232,8 @@ func _status() -> void:
 		var r := UIKit.rich(StewardUI.log_line(e, true), 17)
 		r.custom_minimum_size = Vector2(820, 0)
 		logbox.add_child(r)
-	var ls := UIKit.scroll(logbox, 560)
-	ls.custom_minimum_size = Vector2(860, 560)
+	var ls := UIKit.scroll(logbox, 420)
+	ls.custom_minimum_size = Vector2(860, 420)
 	lv.add_child(ls)
 	h.add_child(lv)
 	var rv := UIKit.vbox(4)
@@ -218,11 +250,45 @@ func _status() -> void:
 			"#26622f" if amt >= 0 else "#7e2418", StewardUI.signed(amt), str(l.get("cat", "")), str(l.get("note", ""))], 16)
 		lr.custom_minimum_size = Vector2(560, 0)
 		led.add_child(lr)
-	var rs := UIKit.scroll(led, 560)
-	rs.custom_minimum_size = Vector2(580, 560)
+	var rs := UIKit.scroll(led, 420)
+	rs.custom_minimum_size = Vector2(580, 420)
 	rv.add_child(rs)
 	h.add_child(rv)
 	body.add_child(h)
+
+
+## S2: the smith himself at work under the steward — what he is doing now, how tired he is, what he has done so far
+## this absence, the piece in his hands — and the pace.
+func _smith_card(sm: Dictionary) -> Control:
+	var c := ApprenticeUI.card(1480)
+	c.name = "SmithAtWork"
+	var h := UIKit.hbox(18)
+	var v := UIKit.vbox(2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(InkIcons.heading("ic_work", "You, at work under the steward", 22))
+	var lines := PackedStringArray()
+	lines.append("[b]%s[/b]" % str(sm.get("activity", "—")))
+	var piece: Dictionary = sm.get("piece", {})
+	var bits := PackedStringArray()
+	bits.append("%s, fatigue %d" % [str(sm.get("band", Vitality.band())), int(round(float(sm.get("fatigue", Vitality.fatigue()))))])
+	var hrs: Array = sm.get("hours", [8, 18])
+	bits.append("works %02d:00–%02d:00, midday hour off, asleep 22:00–6:00" % [int(hrs[0]), int(hrs[1])])
+	if not piece.is_empty():
+		bits.append("in hand: %s (step %d of %d)" % [str(piece.get("name", "")), int(piece.get("step", 0)) + 1, int(piece.get("steps", 1))])
+	lines.append("[color=#6e5a40]%s[/color]" % " · ".join(bits))
+	var mins := int(sm.get("minutes", 0))
+	lines.append("This absence: %d piece%s made, %d repair%s, %d h %02d min at the stations · no experience gained (the steward's work)" % [int(sm.get("made", 0)),
+		"" if int(sm.get("made", 0)) == 1 else "s", int(sm.get("repairs", 0)), "" if int(sm.get("repairs", 0)) == 1 else "s", int(mins / 60), mins % 60])
+	if not bool(sm.get("on", true)):
+		lines.append("[color=#7e2418]His own work is switched off in the standing instructions: he only rests and sleeps.[/color]")
+	var r := UIKit.rich("\n".join(lines), 18)
+	r.name = "SmithStatus"
+	r.custom_minimum_size = Vector2(1400, 0)
+	v.add_child(r)
+	v.add_child(_pace_row(true))
+	h.add_child(v)
+	c.add_child(h)
+	return c
 
 
 # ======================================================================= standing instructions
@@ -331,8 +397,18 @@ func _orders() -> void:
 		var dk := str(d)
 		_check(dg, str(Steward.DUTY_NAME.get(dk, dk)), bool(o["duties"].get(dk, false)), func(on): _apply({"duties": {dk: on}}))
 	du.add_child(dg)
-	du.add_child(UIKit.label("Never: hiring or dismissing, crafting, major contracts, imports — those stay with you.", 16, "body_italic", Color("#6e5a40")))
+	du.add_child(UIKit.label("Never: hiring or dismissing, masterpieces, refinement, enchanting or experiments, major contracts, imports — those stay with you.", 16, "body_italic", Color("#6e5a40")))
 	c1.add_child(du.get_meta("card"))
+	# S2: the smith's own working day under the steward, and the pace
+	var wk := _card("Your own work while away", "ic_work")
+	wk.name = "SmithWork"
+	var hrs: Array = o.get("smith_hours", [8, 18])
+	_num(wk, "Start work at (hour)", int(hrs[0]), 5, 12, 1, func(v): _apply({"smith_hours": [v, int(Steward.orders()["smith_hours"][1])]}), ":00")
+	_num(wk, "Stop work at (hour)", int(hrs[1]), 13, 21, 1, func(v): _apply({"smith_hours": [int(Steward.orders()["smith_hours"][0]), v]}), ":00",
+		"the midday hour by the hearth; to bed at 22:00, up at 6:00")
+	wk.add_child(UIKit.label("Routine smithing Designs you know, at a steady average standard (never a masterwork); no experience is gained.", 16, "body_italic", Color("#6e5a40")))
+	wk.add_child(_pace_row())
+	c2.add_child(wk.get_meta("card"))
 	# ordinary orders
 	var orr: Dictionary = o["order_rules"]
 	var oc := _card("Ordinary orders", "tb_orders")

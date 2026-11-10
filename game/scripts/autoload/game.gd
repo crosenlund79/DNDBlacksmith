@@ -31,6 +31,7 @@ func _ready() -> void:
 # ------------------------------------------------------------------ new game
 func new_game(difficulty := "journeyman") -> void:
 	DevTools.end_session()   # S2: developer cheats never carry into a new game
+	Steward.on_new_game()   # S2: no steward session (or its pace) carries over into a new game
 	state = {
 		"version": SAVE_VERSION,
 		"day": 1, "minute": 7 * 60 + 30,
@@ -86,6 +87,8 @@ func new_game(difficulty := "journeyman") -> void:
 
 # ------------------------------------------------------------------ clock
 func _process(delta: float) -> void:
+	if Steward.pace_on() and not Steward.is_active():
+		Steward.restore_pace()   # S2: the steward's pace never outlives its session (exit, load or a new game)
 	if not running or ui_blockers > 0 or state.is_empty() or paused:
 		return
 	_acc += delta * MINUTES_PER_SECOND * float(Settings.get_value("gameplay/time_scale", 1.0)) * speed
@@ -101,6 +104,9 @@ func now() -> int:
 
 
 func set_speed(v: int) -> void:
+	if Steward.is_active() and v != 1:
+		Steward.speed_request(v)   # S2: the steward keeps one pace for the whole simulation; the choice applies on return
+		v = 1
 	speed = v if SPEEDS.has(v) else 1
 	Events.time_changed.emit(day(), int(state.get("minute", 0)))
 
@@ -116,6 +122,8 @@ func advance_minutes(m: int) -> void:
 		if state["minute"] % 5 == 0:
 			Expeditions.tick()
 			Apprentices.tick(5)   # workshop apprentices work in the same 5-minute steps (sleep and travel included)
+			if Steward.is_active():
+				StewardSmith.tick(5)   # S2: the smith working under the steward, in the same steps
 		if state["minute"] % 60 == 0:
 			if state["minute"] >= 24 * 60:
 				state["minute"] = 0
@@ -339,7 +347,13 @@ func player_level(skill: String) -> int:
 	return SkillSys.level(player_skills(), skill)
 
 
+## The one place the smith's own experience is granted. S2 (Steward Mode): none at all while the steward runs the
+## forge, nor for work begun under it (marked jobs, even when finished after the return or after loading a save) —
+## no experience, so no level, no tree requirement met by it, nothing deferred (Steward.xp_blocked).
 func grant_player_xp(skill: String, amount: int) -> void:
+	if Steward.xp_blocked():
+		Steward.note_xp_withheld(skill, amount)
+		return
 	SkillSys.add_xp(player_skills(), skill, amount, "player")
 
 

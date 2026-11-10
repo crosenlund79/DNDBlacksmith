@@ -5,8 +5,9 @@
 ##     (Shop.accept_part / decline_part), finished commissions delivered (Shop.fulfil), materials bought at the village
 ##     counters while they are open (Trade.buy_store), new workshop pieces put on display (Shop.set_for_sale) and sold
 ##     to waiting customers at the listed price (Shop.sell_to / sell_goods). Wages and upkeep are paid by the normal
-##     daily loop. The steward never crafts (the smith is away and gains no crafting experience), never edits state to
-##     conjure gold, items or progress, never acts offline and never catches up: a loaded save starts with the mode OFF.
+##     daily loop. S2: the smith himself keeps working under the steward (StewardSmith) without gaining experience. The
+##     steward never edits state to conjure gold, items or progress, never acts offline and never catches up: a loaded
+##     save starts with the mode OFF.
 ##     Each duty: evaluate → choose → act through an adapter → record (or record a stall reason once per change).
 ##     Matters it may not decide (major contract letters, independence notices, advice visitors, disputes, fame
 ##     commissions, famous pieces' deeds and losses, deaths touching the smith's work, the spouse's affairs) are
@@ -28,11 +29,20 @@
 ##   report() -> Dictionary   last_report() -> Dictionary   take_pending_report() -> Dictionary
 ##   status() -> Dictionary   recent_log(n := 20) -> Array   stats() -> Dictionary   note_ledger(amount, cat, note)
 ##   duty_on(d) -> bool   spendable() -> int   min_price(it) -> int
+##   S2: xp_blocked() -> bool   marked(job) -> bool   begin_marked(on) / end_marked(on)   note_xp_withheld(skill, n)
+##       pace() -> float   pace_on() -> bool   restore_pace()   speed_request(v)   on_new_game()
+##       defer_protected_repair(c, it, why)
+## S2 (the working smith): the smith himself keeps working while the steward runs the forge — the duty "smith"
+##     (StewardSmith, scripts/systems/steward_smith.gd): routine forging, counter repairs, preparation and restocking at
+##     an average, capped craftsmanship, in working hours, resting and sleeping by the Vitality rules, without any
+##     experience (Game.grant_player_xp asks xp_blocked()). The whole simulation runs at the steward's pace (1.5× by
+##     default: Engine.time_scale, so the clock, walking, animations and timers move together), restored on exit.
 class_name Steward
 extends RefCounted
 
-const DUTIES := ["orders", "repairs", "production", "replenish", "sales", "upkeep", "contracts"]
-const DUTY_NAME := {"orders": "Take on ordinary commissions", "repairs": "Customers' repairs (apprentices)",
+const DUTIES := ["smith", "orders", "repairs", "production", "replenish", "sales", "upkeep", "contracts"]
+const DUTY_NAME := {"smith": "The smith's own routine work (forging, repairs, preparation)", "orders": "Take on ordinary commissions",
+	"repairs": "Customers' repairs",
 	"production": "Production & restocking", "replenish": "Buy materials at the village counters",
 	"sales": "Display & counter sales", "upkeep": "Upkeep, reserve & weekly provisions",
 	"contracts": "Apprentice hours on contracts already accepted"}
@@ -46,8 +56,17 @@ const SHIFT_MINUTES := 540.0
 const GOODS := ["potion_healing", "oil_whetstone"]
 const SEALED_PATRONS := ["royal", "leader"]
 
+## The steward's pace choices (standing instruction "pace"): normal speed or half again as fast.
+const PACES := [1.0, 1.5]
+
 ## Runtime-only: the mode is on in THIS process. A loaded save never turns it on (on_loaded clears both flags).
 static var _on := false
+## S2: experience is held back while work begun under the steward is being recorded (Crafting, marked jobs).
+static var _hold := 0
+## S2: the steward's pace is applied (Engine.time_scale) — and what to restore on exit.
+static var _pace_on := false
+static var _prev_speed := 1
+static var _prev_scale := 1.0
 ## The steward state dictionary whose keys st() has already completed (identity check; a loaded save is a new one).
 static var _checked: Dictionary = {}
 
@@ -106,6 +125,8 @@ static func default_orders() -> Dictionary:
 		"reserved": {},              # def -> minimum kept in the stores
 		"order_rules": {"max_difficulty": 4, "min_reward": 20, "deadline_margin": 1, "decline_unsuitable": true},
 		"sell_rules": {"min_price_pct": 100, "list_new_work": true, "list_existing": false, "stock_target": 3, "sell_goods": true},
+		"smith_hours": [8, 18],      # S2: the smith's working hours (the midday hour off); outside them he rests and sleeps
+		"pace": 1.5,                 # S2: the whole simulation runs half again as fast while the steward works (1.0 or 1.5)
 	}
 
 
@@ -209,6 +230,18 @@ static func set_orders(patch: Dictionary) -> String:
 							cur[k][rk] = bool(v[rk])
 						_:
 							return "Unknown order rule: %s." % str(rk)
+			"smith_hours":
+				if not v is Array or (v as Array).size() != 2:
+					return "Working hours are a start and an end hour."
+				var hs := int(v[0])
+				var he := int(v[1])
+				if hs < 5 or hs > 12 or he < 13 or he > 21 or he - hs < 4:
+					return "Working hours must start between 5:00 and 12:00, end between 13:00 and 21:00 and last at least four hours."
+				cur[k] = [hs, he]
+			"pace":
+				if not (v is int or v is float) or not PACES.has(float(v)):
+					return "The steward's pace is normal (1×) or half again as fast (1.5×)."
+				cur[k] = float(v)
 			"sell_rules":
 				if not v is Dictionary:
 					return "Selling rules must be a dictionary."
@@ -227,6 +260,8 @@ static func set_orders(patch: Dictionary) -> String:
 	if int(cur["session_limit"]) < int(cur["daily_limit"]):
 		cur["session_limit"] = int(cur["daily_limit"])
 	st()["orders"] = cur
+	if is_active() and _pace_on:
+		Engine.time_scale = pace()   # a new pace applies at once
 	_changed()
 	return ""
 
@@ -281,12 +316,14 @@ static func protection_reason(it: Dictionary) -> String:
 
 # ======================================================================= activation
 ## Why the steward cannot take over now ("" = it can).
+## S2: no skill, level or staff is needed — only the real refusals (a piece of the smith's own in hand, a Project Bench
+## block). A piece the steward's smith began and left in his hands is simply taken up again.
 static func can_activate() -> String:
 	if Game.state.is_empty():
 		return "There is no game running."
 	if is_active():
 		return "The steward is already running the workshop."
-	if Crafting.active():
+	if Crafting.active() and not marked(Crafting.job()):
 		return "Finish or set aside the work at the station first — the steward does not take over a piece in your hands."
 	if Contracts.smith_working:
 		return "You are in the middle of a block at the Project Bench."
@@ -314,8 +351,10 @@ static func activate() -> String:
 		for t in Apprentices.tasks():   # work already queued: only what it does from now on counts
 			s["acc"]["task_seen"][str(int(t["id"]))] = [int(t.get("done", 0)), (t.get("made", []) as Array).size(), str(t["state"])]
 	_on = true
-	_log("activate", "You handed the workshop to the steward (purse %d g, reserve %d g, %d g a day at most)." % [Game.gold(),
-		int(s["orders"]["reserve"]), int(s["orders"]["daily_limit"])], {}, false)
+	StewardSmith.on_activate()
+	_apply_pace()
+	_log("activate", "You handed the workshop to the steward (purse %d g, reserve %d g, %d g a day at most; pace %s×)." % [Game.gold(),
+		int(s["orders"]["reserve"]), int(s["orders"]["daily_limit"]), _pace_word()], {}, false)
 	_scan_deferrals(true)
 	_changed()
 	return ""
@@ -344,8 +383,10 @@ static func _stand_down(how: String) -> Dictionary:
 	var r := report()
 	r["ended"] = how
 	s["last_report"] = r
+	StewardSmith.on_stand_down()
 	s["active"] = false
 	_on = false
+	restore_pace()
 	return r
 
 
@@ -353,6 +394,8 @@ static func _stand_down(how: String) -> Dictionary:
 ## while the steward ran, the session is closed with the state as it was saved (a truthful report of that span).
 static func on_loaded() -> void:
 	_on = false
+	_hold = 0
+	restore_pace()   # a session loaded with the mode off runs at normal speed
 	if Game.state.is_empty() or not Game.state.has("steward"):
 		return
 	var s: Dictionary = Game.state["steward"]
@@ -362,6 +405,92 @@ static func on_loaded() -> void:
 	var r := _stand_down("closed")
 	s["pending_report"] = true
 	Log.info("Steward: the saved session was closed on load (mode OFF, no catch-up; report covers %s)." % str(r.get("elapsed_text", "")))
+
+
+## Game.new_game: a new game never inherits this process's steward session (runtime flags and the pace).
+static func on_new_game() -> void:
+	_on = false
+	_hold = 0
+	restore_pace()
+
+
+# ======================================================================= S2: experience and pace
+## Is player experience withheld right now? While the steward runs the forge, and while work begun under it is being
+## recorded (a marked Crafting job — also after the smith took the workshop back or loaded a save).
+static func xp_blocked() -> bool:
+	return is_active() or _hold > 0
+
+
+## Was this Crafting job begun by the steward's smith?
+static func marked(job: Dictionary) -> bool:
+	return job.has("steward")
+
+
+static func begin_marked(on: bool) -> void:
+	if on:
+		_hold += 1
+
+
+static func end_marked(on: bool) -> void:
+	if on:
+		_hold = maxi(0, _hold - 1)
+
+
+## Game.grant_player_xp refused `amount` (counted for the report: the guard at work).
+static func note_xp_withheld(_skill: String, amount: int) -> void:
+	if Game.state.is_empty() or not Game.state.has("steward"):
+		return
+	var s := st()
+	s["stats"]["xp_withheld"] = int(s["stats"].get("xp_withheld", 0)) + amount
+	if is_active():
+		var a: Dictionary = StewardSmith.acc()
+		a["xp_withheld"] = int(a.get("xp_withheld", 0)) + amount
+
+
+## The steward's pace (standing instruction): 1.0 or 1.5.
+static func pace() -> float:
+	if Game.state.is_empty() or not Game.state.has("steward"):
+		return 1.5
+	var p := float((Game.state["steward"].get("orders", {}) as Dictionary).get("pace", 1.5))
+	return p if PACES.has(p) else 1.5
+
+
+static func pace_on() -> bool:
+	return _pace_on
+
+
+static func _pace_word() -> String:
+	return "1.5" if pace() > 1.0 else "1"
+
+
+## The whole simulation at the steward's pace: Engine.time_scale scales every frame's delta — the clock (Game._process),
+## walking (the smith, NPCs, apprentices), animations, tweens and timers alike; Game.speed (the clock alone) is held at
+## 1 so nothing runs ahead of the rest. Headless tests drive Game.advance_minutes and are unaffected.
+static func _apply_pace() -> void:
+	if not _pace_on:
+		_prev_speed = Game.speed
+		_prev_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0
+		_pace_on = true
+	Game.speed = 1
+	Engine.time_scale = pace()
+	Events.time_changed.emit(Game.day(), int(Game.state.get("minute", 0)))
+
+
+## Back to the speed before the hand-over, at once (exit, load, a new game).
+static func restore_pace() -> void:
+	if not _pace_on:
+		return
+	_pace_on = false
+	Engine.time_scale = _prev_scale if _prev_scale > 0.0 else 1.0
+	Game.speed = _prev_speed if Game.SPEEDS.has(_prev_speed) else 1
+	if not Game.state.is_empty():
+		Events.time_changed.emit(Game.day(), int(Game.state.get("minute", 0)))
+
+
+## Game.set_speed while the steward runs: the steward keeps its own pace; the choice applies on return.
+static func speed_request(v: int) -> void:
+	_prev_speed = v if Game.SPEEDS.has(v) else 1
+	Events.toast.emit("The steward keeps the forge at its own pace (%s×). Time ×%d applies when you take the workshop back; the pace is set in the steward's panel." % [_pace_word(), _prev_speed], "info")
 
 
 static func last_report() -> Dictionary:
@@ -406,7 +535,7 @@ static func _snapshot() -> Dictionary:
 	return {"t": Game.now(), "day": Game.day(), "time": Game.time_string(), "gold": Game.gold(), "inv": _inv_counts(),
 		"equip": equip, "staff": staff, "orders_open": oo, "taken": taken, "lore_next": int(Lore.st()["next"]),
 		"crafted": int(Game.state["stats"].get("crafted", 0)), "apprentice_crafted": int(Game.state["stats"].get("apprentice_crafted", 0)),
-		"sold_stat": int(Game.state["stats"].get("sold", 0))}
+		"sold_stat": int(Game.state["stats"].get("sold", 0)), "skills": JSON.stringify(Game.player_skills()), "fatigue": Vitality.fatigue()}
 
 
 # ======================================================================= ledger, log, stalls
@@ -529,6 +658,8 @@ static func tick() -> void:
 		_duty_repairs()
 	if duty_on("production") or duty_on("contracts"):
 		_duty_production()
+	if duty_on("smith") and (hourly or StewardSmith.idle()):
+		StewardSmith.plan()   # S2: the smith's own work for the display (his commissions are committed by the orders duty)
 	if duty_on("replenish"):
 		_duty_replenish()
 	if duty_on("sales"):
@@ -613,8 +744,25 @@ static func _category_ok(def_id: String) -> bool:
 	return (st()["orders"]["buy_categories"] as Array).has(Venues.category_of(def_id))
 
 
-## The prep recipe (non-equipment) the smith knows that makes def_id, or "".
+## The prep recipe (non-equipment) the smith knows that makes def_id, or "". S2: remembered for the day (planning asks
+## for it many times an hour; it changes only with the skill tree, the stations or a new day).
+static var _prep_memo := {}
+static var _prep_key := ""
+static var _prep_state: Dictionary = {}
+
+
 static func _prep_recipe(def_id: String) -> String:
+	var key := "%d|%d|%d" % [Game.day(), (Game.state.get("skilltree", {}).get("nodes", []) as Array).size(), (Property.st()["stations"] as Dictionary).size()]
+	if key != _prep_key or not is_same(_prep_state, Game.state):
+		_prep_key = key
+		_prep_state = Game.state
+		_prep_memo = {}
+	if not _prep_memo.has(def_id):
+		_prep_memo[def_id] = _prep_recipe_now(def_id)
+	return str(_prep_memo[def_id])
+
+
+static func _prep_recipe_now(def_id: String) -> String:
 	var best := ""
 	var best_d := 999
 	var ids := DB.recipes.keys()
@@ -652,9 +800,11 @@ static func _maker_for(rid: String) -> Dictionary:
 	return {}
 
 
-## Materials still to be taken by the open apprentice tasks: {def: n}.
-static func _needs() -> Dictionary:
+## Materials still to be taken by the open apprentice tasks (and, S2, by the smith's queued work): {def: n}.
+static func _needs(include_smith := true) -> Dictionary:
 	var need := {}
+	if include_smith:
+		need = StewardSmith.queue_needs()
 	if not Game.state.has("apprentices"):
 		return need
 	for t in Apprentices.open_tasks():
@@ -701,7 +851,7 @@ static func _obtain(def_id: String, n: int, need: Dictionary, plan: Dictionary, 
 		return ""
 	if depth < 2:
 		var prid := _prep_recipe(def_id)
-		if prid != "" and not _maker_for(prid).is_empty():
+		if prid != "" and (not _maker_for(prid).is_empty() or StewardSmith.can_make(prid)):
 			var per := maxi(1, int(DB.recipe(prid).get("qty", 1)))
 			var runs := int(ceil(float(short) / float(per)))
 			var inputs: Dictionary = DB.recipe(prid).get("inputs", {})
@@ -784,15 +934,31 @@ static func _extraordinary(o: Dictionary) -> String:
 	return ""
 
 
-## Can the workshop make this order in time with what it has? {ok, rid, app, cost, why}.
+## Can the workshop make this order in time with what it has? {ok, rid, app, who ("smith" = the smith himself), cost,
+## why}. The apprentices first (S1); S2: otherwise the smith himself, when it is routine work for him and fits his time.
 static func _order_plan(o: Dictionary, need: Dictionary) -> Dictionary:
 	var rules: Dictionary = st()["orders"]["order_rules"]
-	if Apprentices.staff().is_empty():
-		return {"ok": false, "why": "There are no apprentices to make it."}
 	var reward := int(o.get("reward", 0))
 	if reward < int(rules["min_reward"]):
 		return {"ok": false, "why": "The reward (%d g) is below your minimum of %d g." % [reward, int(rules["min_reward"])]}
-	var why := "Nobody in the workshop can make it yet."
+	var why := "There are no apprentices to make it." if Apprentices.staff().is_empty() else "Nobody in the workshop can make it yet."
+	var ap := _order_plan_apprentices(o, need, why)
+	if bool(ap["ok"]):
+		return ap
+	var sp := StewardSmith.order_plan(o, need)
+	if bool(sp["ok"]):
+		return sp
+	if Apprentices.staff().is_empty():
+		return {"ok": false, "why": str(sp["why"])}
+	if not duty_on("smith"):
+		return {"ok": false, "why": str(ap["why"])}
+	return {"ok": false, "why": "%s (the smith: %s)" % [str(ap["why"]).trim_suffix("."), str(sp["why"]).trim_suffix(".").to_lower()]}
+
+
+static func _order_plan_apprentices(o: Dictionary, need: Dictionary, why: String) -> Dictionary:
+	var rules: Dictionary = st()["orders"]["order_rules"]
+	if Apprentices.staff().is_empty():
+		return {"ok": false, "why": why}
 	var ids: Array = []
 	for a in Apprentices.staff():
 		ids.append(str(a["id"]))
@@ -823,7 +989,7 @@ static func _order_plan(o: Dictionary, need: Dictionary) -> Dictionary:
 			var days_need := int(ceil(mins / SHIFT_MINUTES))
 			why = "Not enough time before the deadline (about %d working day%s of work, the queue included)." % [days_need, "" if days_need == 1 else "s"]
 			continue
-		return {"ok": true, "rid": rid, "app": str(a["id"]), "cost": int(plan["cost"]), "why": ""}
+		return {"ok": true, "rid": rid, "app": str(a["id"]), "who": "apprentice", "cost": int(plan["cost"]), "why": ""}
 	return {"ok": false, "why": why}
 
 
@@ -866,7 +1032,10 @@ static func _duty_orders() -> void:
 				continue
 			var why := ""
 			if str(pt.get("kind", "")) != "craft":
-				why = "a repair at the counter's grinding wheel is the smith's own work"
+				if StewardSmith.will_mend(npc, pt):
+					continue   # S2: the smith mends it himself at the wheel when he is free (before they give up)
+				why = "a repair at the counter's grinding wheel is the smith's own work, and he cannot get to it in time" if duty_on("smith") \
+					else "a repair at the counter's grinding wheel is the smith's own work"
 			elif bool(pt.get("advanced", false)):
 				why = "it is beyond the workshop for now"
 			else:
@@ -878,10 +1047,15 @@ static func _duty_orders() -> void:
 					if err == "":
 						var oid := str(pt.get("order", ""))
 						var o := _order(oid)
-						var t := Apprentices.add_task("commission", {"order_id": oid, "recipe": str(plan["rid"]), "priority": 3})
-						if not t.has("error"):
-							st()["mine"][str(int(t["id"]))] = "commission"
-						var line := "Took on %s for %s (%d g, by day %d)." % [Shop.order_text(o), Talk.npc_name(npc), int(o.get("reward", 0)), int(o.get("deadline", 0))]
+						var by_smith := str(plan.get("who", "")) == "smith"
+						if by_smith:
+							StewardSmith.enqueue_commission(oid, str(plan["rid"]))
+						else:
+							var t := Apprentices.add_task("commission", {"order_id": oid, "recipe": str(plan["rid"]), "priority": 3})
+							if not t.has("error"):
+								st()["mine"][str(int(t["id"]))] = "commission"
+						var line := "Took on %s for %s (%d g, by day %d)%s." % [Shop.order_text(o), Talk.npc_name(npc), int(o.get("reward", 0)), int(o.get("deadline", 0)),
+							" — the smith makes it himself" if by_smith else ""]
 						(st()["acc"]["accepted"] as Array).append(line)
 						_log("accept", line, {"order": oid, "npc": npc})
 						need = _needs()
@@ -899,7 +1073,7 @@ static func _duty_orders() -> void:
 		if not hourly:
 			break
 		var oid := str(o["id"])
-		if not _commission_task(oid).is_empty():
+		if not _commission_task(oid).is_empty() or StewardSmith.has_order(oid):
 			continue
 		var ex := _extraordinary(o)
 		if ex != "":
@@ -915,6 +1089,14 @@ static func _duty_orders() -> void:
 			if str(seen.get(key, "")) != str(plan["why"]):
 				seen[key] = str(plan["why"])
 				_log("order_left", "Left %s's commission (%s) for you — %s" % [Talk.npc_name(str(o["npc"])), Shop.order_text(o), str(plan["why"])], {"order": oid}, false)
+			continue
+		if str(plan.get("who", "")) == "smith":
+			StewardSmith.enqueue_commission(oid, str(plan["rid"]))
+			var sline := "Committed the smith himself to %s's commission: %s (%d g, by day %d) — %s." % [Talk.npc_name(str(o["npc"])), Shop.order_text(o),
+				int(o.get("reward", 0)), int(o.get("deadline", 0)), str(DB.recipe(str(plan["rid"])).get("name", plan["rid"]))]
+			(st()["acc"]["accepted"] as Array).append(sline)
+			_log("commit", sline, {"order": oid, "by": "smith"})
+			need = _needs()
 			continue
 		var t := Apprentices.add_task("commission", {"order_id": oid, "recipe": str(plan["rid"]), "priority": 3})
 		if t.has("error"):
@@ -951,7 +1133,8 @@ static func _duty_orders() -> void:
 			_log("deliver", line2, {"order": oid2, "uid": int(o2.get("delivered_uid", -1)), "gold": Game.gold() - g0})
 
 
-## What the workshop's hands can do (ids, ranks and skill levels) — order plans are revisited when it changes.
+## What the workshop's hands can do (ids, ranks and skill levels; S2: the smith's level and how much waits for him)
+## — order plans are revisited when it changes.
 static func _staff_sig() -> String:
 	var parts := PackedStringArray()
 	for a in Apprentices.staff():
@@ -959,7 +1142,19 @@ static func _staff_sig() -> String:
 		for sk in a.get("skills", {}):
 			lv.append(str(int(a["skills"][sk].get("lvl", 0))))
 		parts.append("%s:%s:%s" % [str(a["id"]), str(a["rank"]), ",".join(lv)])
+	if duty_on("smith"):
+		parts.append("smith:%d:%d" % [Game.player_level("smithing"), int(StewardSmith.backlog_minutes() / 240.0)])
 	return "|".join(parts)
+
+
+## A customer's piece the steward may not touch (Epic, named, notable …): left for the smith's own hands, one matter
+## per piece per absence.
+static func defer_protected_repair(c: Dictionary, it: Dictionary, prot: String) -> void:
+	var npc := str(c["npc"])
+	defer("repair", "%s brought %s to be mended — %s, so the steward left it for your own hands." % [Talk.npc_name(npc), Items.display_name(it), prot.trim_suffix(".").to_lower()],
+		{"type": "customer", "id": npc, "arrived": int(c.get("arrived", 0)), "from": Talk.npc_name(npc),
+			"key": "repair_piece:%d:%d" % [int(it.get("uid", -1)), int(st().get("sessions", 0))]},   # one matter per piece per absence
+		false, {"route": "shop", "args": {"npc": npc}})
 
 
 static func _personal(npc: String) -> bool:
@@ -979,22 +1174,20 @@ static func _duty_repairs() -> void:
 		if seen.has(visit):
 			continue   # decided once per visit
 		var exists := Apprentices.open_tasks().any(func(t): return str(t["kind"]) == "repair" and str(t["target"]) == npc)
-		if exists:
+		if exists or StewardSmith.claims(npc):
 			seen[visit] = true
 			continue
 		var it := Apprentices.repair_item({"kind": "repair", "target": npc})
 		if it.is_empty():
 			continue
 		if Apprentices.staff().is_empty():
-			_stall("repairs", "no_staff", "A customer wants a repair, but there is no apprentice to do it.")
+			if not duty_on("smith"):   # S2: otherwise the smith mends it himself when he is free
+				_stall("repairs", "no_staff", "A customer wants a repair, but there is no apprentice to do it.")
 			continue
 		seen[visit] = true
 		var prot := protection_reason(it)
 		if prot != "" and not prot.begins_with("You marked"):
-			defer("repair", "%s brought %s to be mended — %s, so the steward left it for your own hands." % [Talk.npc_name(npc), Items.display_name(it), prot.trim_suffix(".").to_lower()],
-				{"type": "customer", "id": npc, "arrived": int(c.get("arrived", 0)), "from": Talk.npc_name(npc),
-					"key": "repair_piece:%d:%d" % [int(it.get("uid", -1)), int(st().get("sessions", 0))]},   # one matter per piece per absence
-				false, {"route": "shop", "args": {"npc": npc}})
+			defer_protected_repair(c, it, prot)
 			continue
 		# will an apprentice finish before the customer gives up waiting?
 		# conservative: the slowest hand might take it, behind the urgent work already waiting, with a quarter to spare
@@ -1079,7 +1272,7 @@ static func _duty_production() -> void:
 					mine.erase(k)
 					_log("cancel", "Took %s off the work queue — %s" % [lab, prob.to_lower()], {"task": int(t["id"])})
 	if Apprentices.staff().is_empty():
-		if Apprentices.unlocked():
+		if Apprentices.unlocked() and not duty_on("smith"):   # S2: the smith himself still works
 			_stall("production", "no_staff", "There are no apprentices — nothing can be made while you are away.")
 		return
 	# 2. automatic assignment off: the steward pins its own waiting work to a free, eligible hand
@@ -1202,7 +1395,7 @@ static func _restock() -> void:
 
 # ----------------------------------------------------------------------- duty: replenishment
 static func _duty_replenish() -> void:
-	if not Game.state.has("apprentices"):
+	if not Game.state.has("apprentices") and not duty_on("smith"):
 		return
 	var need := _needs()
 	var ks := need.keys()
@@ -1227,6 +1420,11 @@ static func _duty_replenish() -> void:
 		if blk != "":
 			_stall("replenish", blk, {"reserve": "The purse is at the reserve — no materials bought.",
 				"daily_limit": "Today's spending limit is reached.", "session_limit": "The spending limit for your absence is reached."}[blk])
+			continue
+		if spendable() < int(sp["price"]):
+			# S2: one reason for every material, not one per material in turn (a long absence near its limit would
+			# otherwise fill the steward's book with the same stall again and again)
+			_stall("replenish", "limit", "What the steward may still spend now (%d g) buys none of the materials the planned work needs." % spendable())
 			continue
 		var left := 0
 		var price := int(sp["price"])
@@ -1257,14 +1455,19 @@ static func _duty_replenish() -> void:
 
 ## Materials the counters do not sell are prepared by an apprentice (e.g. smelting iron for a blade).
 static func _queue_prep(def_id: String, short: int) -> void:
-	for t in Apprentices.open_tasks():
-		if str(t["kind"]) == "prep" and str(DB.recipe(str(t.get("recipe", ""))).get("output", "")) == def_id:
-			return
+	if Game.state.has("apprentices"):
+		for t in Apprentices.open_tasks():
+			if str(t["kind"]) == "prep" and str(DB.recipe(str(t.get("recipe", ""))).get("output", "")) == def_id:
+				return
+	if (StewardSmith.sm()["queue"] as Array).any(func(e): return str(e["purpose"]) == "prep" and str(e.get("def", "")) == def_id):
+		return   # S2: the smith is already preparing it
 	var rid := _prep_recipe(def_id)
 	if rid == "":
 		_stall("production", "no_source", "%s is needed, and there is no ordinary way to get it." % str(DB.item(def_id).get("name", def_id)))
 		return
-	if _maker_for(rid).is_empty():
+	if not Game.state.has("apprentices") or _maker_for(rid).is_empty():
+		if StewardSmith.enqueue_prep(def_id, short):   # S2: no apprentice can — the smith smelts it himself
+			return
 		_stall("production", "skill", "%s is needed, but no apprentice can make %s yet." % [str(DB.item(def_id).get("name", def_id)), str(DB.recipe(rid).get("name", rid))])
 		return
 	var per := maxi(1, int(DB.recipe(rid).get("qty", 1)))
@@ -1679,7 +1882,8 @@ static func status() -> Dictionary:
 		"elapsed_minutes": (Game.now() - int(since.get("t", Game.now()))) if is_active() else 0,
 		"decisions": int(s["acc"].get("decisions", 0)), "last": last, "stalls": stalls, "deferred": deferred().size(), "letters": letters().size(),
 		"spent_today": _spent_today() if is_active() else 0, "spent_session": int(s["acc"].get("spent", 0)), "spendable": spendable(),
-		"gold": Game.gold(), "reserve": int(s["orders"]["reserve"])}
+		"gold": Game.gold(), "reserve": int(s["orders"]["reserve"]), "pace": pace(), "pace_on": _pace_on,
+		"smith": StewardSmith.status() if is_active() else {}}
 
 
 # ======================================================================= the report
@@ -1713,8 +1917,9 @@ static func report() -> Dictionary:
 	var pending: Array = []
 	for o in Shop.open_orders():
 		var t := _commission_task(str(o["id"]))
+		var by_smith := t.is_empty() and StewardSmith.has_order(str(o["id"]))
 		pending.append({"id": str(o["id"]), "text": "%s for %s" % [Shop.order_text(o), Talk.npc_name(str(o["npc"]))], "deadline": int(o.get("deadline", 0)),
-			"in_hand": not t.is_empty(), "state": str(t.get("state", "")) if not t.is_empty() else "not taken on"})
+			"in_hand": not t.is_empty() or by_smith, "state": str(t.get("state", "")) if not t.is_empty() else ("the smith's work" if by_smith else "not taken on")})
 	r["orders"] = {"accepted": (acc["accepted"] as Array).duplicate(), "delivered": (acc["delivered"] as Array).duplicate(),
 		"declined": (acc["declined"] as Array).duplicate(), "pending": pending,
 		"counts": {"accepted": (acc["accepted"] as Array).size(), "delivered": (acc["delivered"] as Array).size(),
@@ -1797,4 +2002,7 @@ static func report() -> Dictionary:
 		stalls.append({"code": str(code), "count": int(acc["stalled"][code]["n"]), "text": str(acc["stalled"][code]["text"]), "duty": str(acc["stalled"][code].get("duty", ""))})
 	r["decisions"] = {"total": int(acc.get("decisions", 0)), "by_kind": (acc["by_kind"] as Dictionary).duplicate(), "stalls": stalls,
 		"deferrals": (acc.get("deferrals", {}) as Dictionary).duplicate()}
+	# S2: the smith's own work under the steward (his made pieces, repairs, preparations, hours, rest and sleep)
+	r["smith"] = StewardSmith.report_part(since)
+	r["pace"] = pace()
 	return r

@@ -164,9 +164,13 @@ func _soak(days: int, label: String) -> Dictionary:
 	for pu in protected_uids:
 		var pit := Game.find_uid(int(pu))
 		check(not pit.is_empty() and not bool(pit.get("for_sale", false)), "%s: protected piece %d is still in the stores, not on display" % [label, int(pu)])
-	# the absent smith gained no crafting experience and made nothing himself
+	# the smith gained no experience; S2 (supersedes S1 "the absent smith made nothing"): what he made himself under the
+	# steward is exactly what the steward's records say he made (pieces and preparations)
 	eq(_smith_xp(), xp0, "%s: the smith's skills are unchanged" % label)
-	eq(int(Game.state["stats"].get("crafted", 0)), crafted0, "%s: the smith crafted nothing" % label)
+	var sm_rec: Dictionary = r.get("smith", {})
+	eq(int(Game.state["stats"].get("crafted", 0)) - crafted0, int(r["production"]["smith_crafted"]), "%s: the report counts what the smith crafted himself" % label)
+	check(int(r["production"]["smith_crafted"]) >= int(sm_rec.get("made_count", 0)), "%s: every piece the smith made is in his own count (%d ≥ %d)" % [label,
+		int(r["production"]["smith_crafted"]), int(sm_rec.get("made_count", 0))])
 	# identity: no duplicates now, nor after a save/load round trip
 	eq((ItemRegistry.scan()["dup"] as Array).size(), 0, "%s: no duplicate uids after" % label)
 	check(save_load("steward_soak_" + label), "%s: save and load after the soak" % label)
@@ -484,17 +488,28 @@ func test_soak_365_days() -> void:
 	check(int(r["sales"]["count"]) + int(r["orders"]["counts"]["delivered"]) > 0, "a year of sales or deliveries")
 
 
-## S1 (lead): while the smith is away his fatigue neither rises nor falls; after return it moves normally again.
-func test_fatigue_holds_while_away() -> void:
+## S2 (lead decision 3, supersedes the S1 rule "fatigue holds while away", register BUG-005): the smith keeps working
+## under the steward, so his fatigue follows the ordinary Vitality rules — work and waking hours tire him, the midday
+## break by the hearth eases it, a night in his bed clears it; after his return it simply goes on by the same rules.
+func test_fatigue_follows_vitality_rules_while_away() -> void:
 	fresh_game()
 	Vitality.set_fatigue(30.0)
 	if not check(Steward.activate() == "", "the steward takes over"):
 		return
-	Game.advance_minutes(48 * 60)
-	eq(snappedf(Vitality.fatigue(), 0.01), 30.0, "two days away: fatigue unchanged")
+	Game.advance_minutes(4 * 60 + 25)   # 7:30 → 11:55: a morning's work
+	check(Vitality.fatigue() > 30.0, "a morning at the forge tires him (%.1f)" % Vitality.fatigue())
+	var noon := Vitality.fatigue()
+	Game.advance_minutes(50)
+	check(Vitality.fatigue() < noon, "the midday break by the hearth eases it (%.1f → %.1f)" % [noon, Vitality.fatigue()])
+	Game.advance_minutes(10 * 60 + 30)   # → 23:15: asleep in his bed
+	eq(StewardSmith.sm()["act"], "sleep", "at night he sleeps")
+	eq(snappedf(Vitality.fatigue(), 0.01), 0.0, "a night in his bed clears it")
+	Game.advance_minutes(9 * 60)   # → 8:15 the next morning
+	check(Vitality.fatigue() > 0.0 and Vitality.fatigue() < 20.0, "a fresh morning (%.1f)" % Vitality.fatigue())
 	Steward.deactivate()
+	var f0 := Vitality.fatigue()
 	Game.advance_minutes(3 * 60)
-	check(Vitality.fatigue() > 30.0, "back at the forge, waking hours tire him again (%.1f)" % Vitality.fatigue())
+	check(Vitality.fatigue() > f0, "back at the forge, waking hours tire him as before (%.1f)" % Vitality.fatigue())
 
 
 ## S1 (lead): a contract letter that arrives while the smith is away does not reveal its contents in the toast,

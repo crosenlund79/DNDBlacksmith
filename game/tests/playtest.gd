@@ -3957,6 +3957,13 @@ func phase_steward_s1() -> void:
 	await ph.run(self)
 
 
+## Milestone S2 (STEWARD): the smith working under the steward — walks, works, breaks, sleeps; the 1.5× pace measured;
+## a Loft station; While You Were Away with his own work (tests/playtest_s2_steward.gd). Shots s2st_*.
+func phase_s2_steward() -> void:
+	var ph: RefCounted = load("res://tests/playtest_s2_steward.gd").new()
+	await ph.run(self)
+
+
 # ======================================================================= Milestone A2: early-game experience (EXPERIENCE worker)
 ## The selling tutorial waits for a real customer, the consultation's offers and footer, the stores with 120 pieces,
 ## and the graphical offer at the counter with an explicit sale (tests/playtest_experience_a2.gd). Shots a2x_*.
