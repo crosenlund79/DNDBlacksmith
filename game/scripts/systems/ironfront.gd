@@ -354,7 +354,7 @@ static func buy_pack() -> Array:
 	var price := int(shop_cfg().get("pack_price", 60))
 	if not Game.can_afford(price):
 		return []
-	Game.add_gold(-price, "ironfront", "Ironfront pack")
+	Game.add_gold(-price, "ironfront", "Ironfront pack", "ironfront")
 	var ids: Array = []
 	for i in int(shop_cfg().get("pack_size", 5)):
 		var r := _weighted_rarity(shop_cfg().get("pack_odds", {}))
@@ -373,7 +373,7 @@ static func buy_single(id: String) -> bool:
 	var price := single_price(id)
 	if not Game.can_afford(price):
 		return false
-	Game.add_gold(-price, "ironfront", "Ironfront card: " + str(c["name"]))
+	Game.add_gold(-price, "ironfront", "Ironfront card: " + str(c["name"]), "ironfront")
 	grant_card(id, "shop")
 	return true
 
@@ -1100,7 +1100,7 @@ static func finish_reward(m: Dictionary) -> Dictionary:
 	else:
 		out["gold"] = int(rw.get("gold_loss", 8))
 	if int(out["gold"]) > 0:
-		Game.add_gold(int(out["gold"]), "ironfront", "Ironfront at Barnaby's table")
+		Game.add_gold(int(out["gold"]), "ironfront", "Ironfront at Barnaby's table", "ironfront")
 	if opp != "" and not m.get("tutorial", false):
 		var rec := record(opp)
 		rec[{"win": "w", "loss": "l", "draw": "d"}[res]] = int(rec.get({"win": "w", "loss": "l", "draw": "d"}[res], 0)) + 1

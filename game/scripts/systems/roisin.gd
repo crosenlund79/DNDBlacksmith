@@ -158,7 +158,7 @@ static func choose(opt: String, _area: String) -> Dictionary:
 	if opt == "r_tea":
 		if not Game.can_afford(TEA_PRICE):
 			return {"text": "Your purse is too light even for tea."}
-		Game.add_gold(-TEA_PRICE, "inn", "Tea with Róisín")
+		Game.add_gold(-TEA_PRICE, "inn", "Tea with Róisín", "lantern")
 		s["tea_day"] = Game.day()
 		s["teas"] = int(s["teas"]) + 1
 		Social.change(ID, 5.0, 5.0, "tea_" + str(Game.day()), "Shared a pot of tea with the smith.")
@@ -194,7 +194,7 @@ static func choose(opt: String, _area: String) -> Dictionary:
 	if opt == "r_contract":
 		if not Game.can_afford(INSTALMENT):
 			return {"text": "Your purse is too light."}
-		Game.add_gold(-INSTALMENT, "inn", "Toward Róisín's contract")
+		Game.add_gold(-INSTALMENT, "inn", "Toward Róisín's contract", "lantern")
 		s["contract_paid"] = int(s["contract_paid"]) + INSTALMENT
 		Social.change(ID, 4.0, 2.0)
 		if int(s["contract_paid"]) >= CONTRACT:

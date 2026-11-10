@@ -122,8 +122,8 @@
   {
    "id": "s_blades",
    "branch": "smithing",
-   "name": "Simple Blades & Armour",
-   "desc": "Once your first sword has left the anvil: plate for the body and silver for the hand.",
+   "name": "Mail, Plate & Silverwork",
+   "desc": "Once your first sword has left the anvil: chainmail and an iron cuirass for the body, a silver band for the hand.",
    "x": 1,
    "y": 1,
    "requires": {

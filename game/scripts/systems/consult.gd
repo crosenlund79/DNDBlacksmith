@@ -159,7 +159,7 @@ static func worn_pieces(a: Dictionary) -> Array:
 		if it.is_empty() or not (it.get("stats", {}) as Dictionary).has("durability_max"):
 			continue
 		var f := Items.durability_frac(it)
-		if bool(it.get("broken", false)) or f < 0.45:
+		if Items.needs_mending(it):   # Items.WORN — the one threshold (A2; was 0.45 here)
 			out.append({"slot": str(slot), "item": it, "frac": 0.0 if bool(it.get("broken", false)) else f, "broken": bool(it.get("broken", false))})
 	out.sort_custom(func(x, y): return float(x["frac"]) < float(y["frac"]))
 	return out
@@ -317,7 +317,7 @@ static func recommendations(a: Dictionary) -> Array:
 			"title": "Mend your %s before %s" % [str(it.get("name", "gear")), dn],
 			"why": "It is broken — it will barely serve." if bool(w["broken"]) else "It is down to %d%% — the next hard fight may break it." % pct,
 			"details": ["Repair at the grinding wheel, about %d g." % cost, "They wait a day for it before setting out."],
-			"relevance": 0.95 if bool(w["broken"]) else 0.6 + (0.45 - float(w["frac"])) * 0.6})
+			"relevance": 0.95 if bool(w["broken"]) else 0.6 + (Items.WORN - float(w["frac"])) * 0.6})
 	# 2. the damage their destination's threats fear
 	for gp in g:
 		if str(gp["kind"]) != "weak":
@@ -333,7 +333,7 @@ static func recommendations(a: Dictionary) -> Array:
 			var price := Shop.price_of(piece)
 			out.append({"id": "buy_%s_%d" % [prop, int(piece["uid"])], "kind": "buy", "slot": Items.slot(piece), "uid": int(piece["uid"]), "prop": prop, "cost": price,
 				"title": "Take %s — the %s" % [Items.display_name(piece), fear], "why": "Nothing you carry bites with %s." % prop,
-				"details": ["On your display for %d g." % price, "%s: %s %d." % [Items.display_name(piece), prop, Items.stat(piece, prop) + Expeditions.coat(piece, prop)]],
+				"details": [where_text(piece, price),"%s: %s %d." % [Items.display_name(piece), prop, Items.stat(piece, prop) + Expeditions.coat(piece, prop)]],
 				"relevance": 0.6 + 0.12 * names.size()})
 		elif not coat.is_empty() and not w2.is_empty():
 			var cprice := maxi(6, int(Items.value(coat) * 1.2))
@@ -352,7 +352,7 @@ static func recommendations(a: Dictionary) -> Array:
 	for need in Adv.gear_needs(a):
 		if not str(need["why"]) in ["missing", "inferior"]:
 			continue
-		var best := Adv.best_stock(a, str(need["slot"]))
+		var best := Adv.best_stock(a, str(need["slot"]), offer_pool())
 		if best.is_empty() or _has(out, "uid", int(best["uid"])):
 			continue
 		var cur: Dictionary = a["equipment"].get(str(need["slot"]), {})
@@ -360,12 +360,37 @@ static func recommendations(a: Dictionary) -> Array:
 		out.append({"id": "buy_%d" % int(best["uid"]), "kind": "buy", "slot": str(need["slot"]), "uid": int(best["uid"]), "cost": p2,
 			"title": ("Your %s is too light for %s — take %s" % [str(cur.get("name", "")), dn, Items.display_name(best)]) if not cur.is_empty() else ("Don't go to %s without %s — take %s" % [dn, Shop.slot_phrase(str(need["slot"])), Items.display_name(best)]),
 			"why": "Their %s is %s." % [Adv._slot_name(str(need["slot"])).to_lower(), Adv.WHY_WORD.get(str(need["why"]), "lacking")],
-			"details": ["On your display for %d g." % p2, "Rated %d against %d for what they wear." % [int(Items.score(best)), int(Items.score(cur))]],
+			"details": [where_text(best, p2), "Rated %d against %d for what they wear." % [int(Items.score(best)), int(Items.score(cur))]],
 			"relevance": 0.55 if str(need["why"]) == "missing" else 0.45})
 		break
-	# 4. an upgrade to a better metal for a veteran's weapon
+	# 3b. (A2) nothing pressing, but the forge has a real step up they would buy — a gear-seeker asking where to spend
+	#     their coin, or a slot their class fills only when it can: offer the best one (by how much it improves on theirs)
+	if not _has(out, "kind", "buy"):
+		var up := {}
+		var up_gain := 0.0
+		for s in Adv.desired_slots(a):
+			if str(s) == "companion":
+				continue
+			var cand := Adv.best_stock(a, str(s), offer_pool())
+			if cand.is_empty():
+				continue
+			var gain := (Items.score(cand) - Items.score(a["equipment"].get(str(s), {}))) * float(Adv.SLOT_WEIGHT.get(str(s), 0.4))
+			if gain > up_gain:
+				up_gain = gain
+				up = {"slot": str(s), "item": cand}
+		if not up.is_empty():
+			var ui: Dictionary = up["item"]
+			var us := str(up["slot"])
+			var ucur: Dictionary = a["equipment"].get(us, {})
+			var up3 := Shop.price_of(ui)
+			out.append({"id": "buy_%d" % int(ui["uid"]), "kind": "buy", "slot": us, "uid": int(ui["uid"]), "cost": up3,
+				"title": ("Trade up your %s — take %s" % [str(ucur.get("name", "")), Items.display_name(ui)]) if not ucur.is_empty() else ("Add %s to your kit — take %s" % [Shop.slot_phrase(us), Items.display_name(ui)]),
+				"why": ("A real step up from their %s." % str(ucur.get("name", "")).to_lower()) if not ucur.is_empty() else "Their %s is empty." % Adv._slot_name(us).to_lower(),
+				"details": [where_text(ui, up3), "Rated %d against %d for what they wear." % [int(Items.score(ui)), int(Items.score(ucur))]],
+				"relevance": 0.5 if Living.has_goal(a, "gear") else 0.4})
+	# 4. an upgrade to a better metal for a veteran's weapon (A2: only advised when the forge can really work steel)
 	var wpn: Dictionary = a["equipment"].get("weapon", {})
-	if not has_order and not wpn.is_empty() and int(a.get("level", 1)) >= 3 and Items.tier(wpn) < 2 and Adv.can_commission(a, "weapon") and not _has(out, "kind", "commission"):
+	if not has_order and not wpn.is_empty() and int(a.get("level", 1)) >= 3 and Items.tier(wpn) < 2 and Shop.can_make_slot("weapon", a, {"tier": 2}) and not _has(out, "kind", "commission"):
 		var ucost := int(Adv.commission_cost(a) * 1.4)
 		out.append({"id": "upgrade_weapon", "kind": "upgrade", "slot": "weapon", "cost": ucost,
 			"title": "Have your %s made anew in steel" % str(wpn.get("name", "weapon")),
@@ -430,10 +455,33 @@ static func _has(recs: Array, key: String, v: Variant) -> bool:
 	return false
 
 
-## A piece on display (for sale) that carries `prop` and that they would actually buy.
+## What the forge could put in front of them (A2): every piece of equipment in the stores, those on display first. A
+## consultation used to look at the display only, so a sword the smith had just forged (still in the stores) was
+## never advised and a gear-seeker got nothing but "keep your kit". Selling it goes through Shop.sell_to as before.
+static func offer_pool() -> Array:
+	var shown := []
+	var kept := []
+	for it in Game.inventory():
+		if not Items.is_equipment(it):
+			continue
+		if bool(it.get("for_sale", false)):
+			shown.append(it)
+		else:
+			kept.append(it)
+	return shown + kept
+
+
+## Where a piece offered in a consultation comes from, in words (details line).
+static func where_text(it: Dictionary, price: int) -> String:
+	if bool(it.get("for_sale", false)):
+		return "On your display for %d g." % price
+	return "From your stores (not on display) — %d g at your price." % price
+
+
+## A piece in the stores or on display that carries `prop` and that they would actually buy (display preferred).
 static func _stock_with(a: Dictionary, prop: String) -> Dictionary:
 	var best := {}
-	for it in Shop.stock():
+	for it in offer_pool():
 		if not Items.is_equipment(it) or Items.stat(it, prop) + Expeditions.coat(it, prop) <= 0:
 			continue
 		if Items.slot(it) != "weapon" or Adv.purchase_check(a, it, Shop.price_of(it)) != "":
@@ -615,6 +663,8 @@ static func _apply(a: Dictionary, rec: Dictionary) -> String:
 			var it: Dictionary = a["equipment"].get(str(rec["slot"]), {})
 			if it.is_empty():
 				return "!the piece is gone"
+			if int(a.get("gold", 0)) < int(rec["cost"]):
+				return "!can't afford it"   # A2: they pay for the repair themselves when it is done
 			var c := Shop.customer(npc)
 			if c.is_empty():
 				var seat := Shop.free_seat()
@@ -643,7 +693,7 @@ static func _apply(a: Dictionary, rec: Dictionary) -> String:
 			w["coating"] = {"name": str(t[1]), "stat": str(t[0]), "value": val, "uses": 3}
 			Provenance.workshop(w, "treated", "Treated with %s at the Ironhand forge for %s (+%d %s), on the smith's advice." % [t[1], a["name"], val, t[0]])
 			a["gold"] = int(a["gold"]) - int(rec["cost"])
-			Game.add_gold(int(rec["cost"]), "sales", "%s for %s's %s" % [t[1], a["name"], w.get("name", "weapon")])
+			Game.add_gold(int(rec["cost"]), "sales", "%s for %s's %s" % [t[1], a["name"], w.get("name", "weapon")], npc)
 			Game.grant_player_xp("alchemy", 4)
 			Events.inventory_changed.emit()
 			return "Their %s now bites with %s (+%d for three trips)." % [w.get("name", "weapon"), t[0], val]

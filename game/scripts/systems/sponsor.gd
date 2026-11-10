@@ -515,7 +515,7 @@ static func _contract(obj: Dictionary, cand: Dictionary, terms: Dictionary) -> S
 	var ids: Array = (cand["members"] as Array).duplicate()
 	var fee := int(terms.get("fee", 0))
 	if fee > 0:
-		Game.add_gold(-fee, "sponsor", "Fee held for %s (sponsored expedition)" % str(cand["name"]))
+		Game.add_gold(-fee, "sponsor", "Fee held for %s (sponsored expedition)" % str(cand["name"]), str(ids[0]))
 	var rec := {"id": sid, "day": Game.day(), "t": Game.now(), "objective": obj.duplicate(true), "party": ids, "leader": str(ids[0]),
 		"company": str(cand.get("company", "")), "who": str(cand["name"]), "terms": {"fee": fee, "bonus": int(terms.get("bonus", 0)), "share": int(terms.get("share", 0))},
 		"status": "contracted", "escrow": fee, "paid": {}, "exp": "", "pid": "", "outcome": "", "result": {}, "lore": "", "reached": false, "searched": false}
@@ -556,7 +556,7 @@ static func cancel(sid: String, why := "") -> String:
 static func _refund(sp: Dictionary) -> void:
 	var fee := int(sp.get("escrow", 0))
 	if fee > 0:
-		Game.add_gold(fee, "sponsor", "Fee returned by %s" % sp["who"])
+		Game.add_gold(fee, "sponsor", "Fee returned by %s" % sp["who"], str(sp.get("leader", "")))
 	sp["escrow"] = 0
 
 
@@ -804,7 +804,7 @@ static func on_finish(e: Dictionary, alive: Array) -> void:
 	if owed > 0 and not alive.is_empty():
 		paid = mini(owed, maxi(0, Game.gold()))
 		if paid > 0:
-			Game.add_gold(-paid, "sponsor", "Paid %s for the sponsored expedition" % sp["who"])
+			Game.add_gold(-paid, "sponsor", "Paid %s for the sponsored expedition" % sp["who"], str(sp.get("leader", "")))
 			for i in alive.size():
 				var part := paid / alive.size() + (1 if i < paid % alive.size() else 0)
 				var a := Adv.get_a(str(alive[i]))

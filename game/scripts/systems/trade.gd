@@ -155,7 +155,7 @@ static func buy_store(store_id: String, def_id: String, qty := 1) -> String:
 		if not Game.can_afford(cost):
 			return "You cannot afford it (%d g)." % cost
 		var who := "Herbalist" if store_id == "herbalist" else store_name(store_id)
-		Game.add_gold(-cost, "materials", "%s: %d × %s" % [who, qty, DB.item(def_id).get("name", def_id)])
+		Game.add_gold(-cost, "materials", "%s: %d × %s" % [who, qty, DB.item(def_id).get("name", def_id)], Payments.store_party(store_id))
 		Game.add_item(Items.make(def_id, {"qty": qty, "quality": randf_range(68, 90)}), false)
 		e["qty"] = int(e["qty"]) - qty
 		mark_seen(def_id)
@@ -283,11 +283,11 @@ static func buy_from_ship(index: int, qty := 1) -> String:
 		var ok: Variant = _ironfront_call("grant_card", [str(e["card"]), "harbour"])
 		if ok == null:
 			return "The card cannot be traded right now."
-		Game.add_gold(-cost, "imports", "Ironfront card from %s" % s["name"])
+		Game.add_gold(-cost, "imports", "Ironfront card from %s" % s["name"], "ships")
 		e["qty"] = 0
 		return ""
 	var what: String = DB.item(str(e["def"])).get("name", e["def"])
-	Game.add_gold(-cost, "imports", "%s: %d × %s" % [s["name"], qty, what])
+	Game.add_gold(-cost, "imports", "%s: %d × %s" % [s["name"], qty, what], "ships")
 	if e.has("item"):
 		# the piece itself comes ashore: same uid, same story (never a fresh copy)
 		var it: Dictionary = e["item"]
@@ -364,7 +364,7 @@ static func place_import(def_id: String, qty := 1) -> String:
 	var o := {"id": _new_id("imp"), "def": def_id, "qty": qty, "total": total, "deposit": deposit, "balance": total - deposit,
 		"placed": Game.day(), "due": Game.day() + lead, "status": "ordered", "tier": info["tier"]}
 	imports().append(o)
-	Game.add_gold(-deposit, "imports", "Import deposit: %d × %s" % [qty, nm])
+	Game.add_gold(-deposit, "imports", "Import deposit: %d × %s" % [qty, nm], "harbourmaster")
 	Chronicle.add("trade", "The smith ordered %d × %s from abroad (%d g, due in about %d days)." % [qty, nm, total, lead], {"item": def_id})
 	return ""
 
@@ -380,7 +380,7 @@ static func collect_delivery(oid: String) -> String:
 			return "The balance is %d g — you cannot afford it yet." % bal
 		var nm: String = DB.item(str(o["def"])).get("name", o["def"])
 		if bal > 0:
-			Game.add_gold(-bal, "imports", "Import balance: %d × %s" % [int(o["qty"]), nm])
+			Game.add_gold(-bal, "imports", "Import balance: %d × %s" % [int(o["qty"]), nm], "harbourmaster")
 		var it := Items.make(str(o["def"]), {"qty": int(o["qty"]), "quality": randf_range(72, 94)})
 		Game.add_item(it, false)
 		mark_seen(str(o["def"]))

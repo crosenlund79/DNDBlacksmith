@@ -82,10 +82,10 @@ static func knucklebones(npc: String) -> String:
 	Audio.play("sfx/dice_roll")
 	var t := "You throw %s (%d); %s throws %s (%d). " % [str(you["faces"]), int(you["total"]), Talk.npc_name(npc), str(them["faces"]), int(them["total"])]
 	if int(you["total"]) > int(them["total"]):
-		Game.add_gold(5, "inn", "Won at knucklebones")
+		Game.add_gold(5, "inn", "Won at knucklebones", "dice")
 		return t + "\"Bah. Again tomorrow.\""
 	if int(you["total"]) < int(them["total"]):
-		Game.add_gold(-5, "inn", "Lost at knucklebones")
+		Game.add_gold(-5, "inn", "Lost at knucklebones", "dice")
 		return t + "They sweep up your coins with a grin."
 	return t + "A draw. You both drink to it."
 

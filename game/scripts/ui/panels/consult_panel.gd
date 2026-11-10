@@ -15,6 +15,10 @@ const KIND_ICON := {"repair": "ui/warn_worn", "buy": "icons/purse_gift", "coat":
 var npc := ""
 var body: VBoxContainer
 var open_details := {}
+## A2: the footer stays at the bottom of the window, outside the scrolling body (it used to be the last row of the
+## scroll, where a collapsed hint label pushed it far below the visible area).
+var foot: PanelContainer
+var foot_note: RichTextLabel
 
 
 func _init(id := "") -> void:
@@ -25,8 +29,39 @@ func _init(id := "") -> void:
 func _ready() -> void:
 	super._ready()
 	body = UIKit.vbox(10)
-	content.add_child(UIKit.scroll(body, 840))
+	var sc := UIKit.scroll(body, 520)
+	sc.name = "ConsultScroll"
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(sc)
+	content.add_child(_footer())
 	_build()
+
+
+## The fixed footer: Finish (they go) and what closing instead means; the picks left are repeated here.
+func _footer() -> Control:
+	foot = PanelContainer.new()
+	foot.name = "ConsultFooter"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#e3d2a6")
+	sb.border_color = Color(UIKit.INK, 0.45)
+	sb.border_width_top = 2
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 6
+	foot.add_theme_stylebox_override("panel", sb)
+	var h := UIKit.hbox(16)
+	var b := UIKit.button("Finish the consultation", func():
+		Consult.finish(npc)
+		close(), 300)
+	b.name = "FinishConsult"
+	h.add_child(b)
+	foot_note = UIKit.rich("", 18)
+	foot_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(foot_note)
+	foot.add_child(h)
+	return foot
 
 
 func _build() -> void:
@@ -35,6 +70,7 @@ func _build() -> void:
 	var ses := Consult.session(npc)
 	if a.is_empty() or ses.is_empty():
 		body.add_child(UIKit.label("They have gone.", 24, "body_italic"))
+		foot.visible = false
 		return
 	title_label.text = "A Word of Advice — %s" % a["name"]
 	_header(a, ses)
@@ -132,17 +168,64 @@ func _counsel(a: Dictionary, ses: Dictionary) -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 16)
 	grid.add_theme_constant_override("v_separation", 14)
+	var has_buy := false
 	for rec in ses["recs"]:
 		grid.add_child(_card(a, ses, rec, left))
+		has_buy = has_buy or str(rec["kind"]) == "buy"
 	body.add_child(grid)
-	var foot := UIKit.hbox(12)
-	foot.add_child(UIKit.button("Finish the consultation", func():
-		Consult.finish(npc)
-		close(), 300))
-	var hint := UIKit.label("Closing keeps today's consultation open; finishing lets them go.", 17, "body_italic")
-	hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	foot.add_child(hint)
-	body.add_child(foot)
+	if not has_buy:
+		body.add_child(_no_offer_note(a))
+	foot_note.text = "[i]%s · closing (✕ or Esc) keeps today's consultation open; finishing lets them go.[/i]" % (
+		("You may put forward %d more" % left) if left > 0 else "You have given your counsel")
+
+
+## (A2) Why no piece from the forge is among the advice, and the practical next step: the equipment in the stores (on
+## display or not) judged with the adventurer's own buying rules (Adv.purchase_check / best_stock).
+func _no_offer_note(a: Dictionary) -> Control:
+	var pc := PanelContainer.new()
+	pc.name = "NoOfferNote"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#efe3c2")
+	sb.border_color = Color(UIKit.GILT, 0.9)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(3)
+	sb.set_content_margin_all(12)
+	pc.add_theme_stylebox_override("panel", sb)
+	var v := UIKit.vbox(4)
+	pc.add_child(v)
+	var h := UIKit.hbox(10)
+	h.add_child(UIKit.icon("icons/purse_gift", 36))
+	h.add_child(UIKit.label("Nothing from your forge to offer %s" % str(a["name"]).split(" ")[0], 22, "heading"))
+	v.add_child(h)
+	var slots: Array = Adv.desired_slots(a)
+	var lines := PackedStringArray()
+	var reasons := {}
+	for it in Consult.offer_pool():
+		var sl := Items.slot(it)
+		if not slots.has(sl):
+			continue
+		var price := Shop.price_of(it)
+		var why := Adv.purchase_check(a, it, price)
+		if why == "" and Adv.best_stock(a, sl, [it]).is_empty():
+			why = "not enough of a step up for their level"
+		if why == "":
+			continue
+		reasons[why] = int(reasons.get(why, 0)) + 1
+		if lines.size() < 4:
+			var extra := (" — they have %d g" % int(a.get("gold", 0))) if why == "can't afford it" else ""
+			lines.append("· %s (%d g, %s): %s%s" % [Items.display_name(it), price, "on display" if bool(it.get("for_sale", false)) else "in the stores", why, extra])
+	if lines.is_empty():
+		v.add_child(UIKit.rich("Your stores hold no equipment for the slots a %s fills." % str(a.get("cls", "fighter")).to_lower(), 19))
+	else:
+		for l in lines:
+			v.add_child(UIKit.rich(l, 18))
+	var next := "Forge a piece for their %s, or advise a commission." % Adv._slot_name(Adv._weakest_slot(a)).to_lower()
+	if reasons.has("can't afford it") or reasons.has("thinks it's overpriced"):
+		next = "Lower its price in your stores [I], or forge something plainer they can pay for."
+	elif reasons.has("already has better") or reasons.has("not enough of a step up for their level"):
+		next = "Forge something stronger than what they wear, or advise a commission."
+	v.add_child(UIKit.rich("[color=#7e2418][b]Next:[/b][/color] " + next, 19))
+	return pc
 
 
 func _card(a: Dictionary, ses: Dictionary, rec: Dictionary, left: int) -> Control:
@@ -169,7 +252,11 @@ func _card(a: Dictionary, ses: Dictionary, rec: Dictionary, left: int) -> Contro
 	h.add_child(UIKit.icon(str(KIND_ICON.get(str(rec["kind"]), "ui/ic_talk")), 44))
 	var hv := UIKit.vbox(0)
 	hv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hv.add_child(UIKit.label(str(Consult.KIND_WORD.get(str(rec["kind"]), "")).to_upper(), 14, "heading", UIKit.RUBRIC))
+	var kw := str(Consult.KIND_WORD.get(str(rec["kind"]), ""))
+	var piece := Game.find_uid(int(rec.get("uid", -1))) if str(rec["kind"]) == "buy" else {}
+	if not piece.is_empty() and not bool(piece.get("for_sale", false)):
+		kw = "Buy from your stores"   # A2: a piece still in the stores, not yet on display
+	hv.add_child(UIKit.label(kw.to_upper(), 14, "heading", UIKit.RUBRIC))
 	var t := UIKit.rich("[b]%s[/b]" % str(rec["title"]), 21)
 	t.custom_minimum_size = Vector2(CARD_W - 90, 0)
 	hv.add_child(t)

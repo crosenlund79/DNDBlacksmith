@@ -374,7 +374,7 @@ func phase_full() -> void:
 	expect(panel() is ShopPanel, "shop counter opens the shop panel")
 	await shot("shop_counter")
 	var gold0 := Game.gold()
-	await click("Hand Axe")
+	await sell_at_counter("Hand Axe")   # A2: the offer grid selects; "Sell for N g" sells
 	await wait(0.4)
 	expect(Game.gold() > gold0 or Adv.get_a("varn")["equipment"].get("weapon", {}).get("uid", -1) == axe["uid"], "shop: Varn bought the hand axe (gold %d → %d)" % [gold0, Game.gold()])
 	await press("cancel")
@@ -1253,7 +1253,7 @@ func phase_slice() -> void:
 	await use("counter", "smithy")
 	await shot("slice_shop_garrick")
 	# the piece may have earned a name of its own at the anvil (a 120%+ masterwork): click it by its current name
-	await click(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
+	await sell_at_counter(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
 	await wait(0.5)
 	expect(gar["equipment"].get("weapon", {}).get("uid", -1) == ember.get("uid", -2), "slice: Garrick bought and equipped the Emberwarden")
 	await close_panel()
@@ -3870,6 +3870,7 @@ func phase_equip_rl() -> void:
 # ======================================================================= The Living Realm: consultations (CONSULT worker)
 func phase_consult_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_consult.gd").new()
+	await ph.run(self)   # A2: the call was missing, so this phase silently tested nothing
 
 # ======================================================================= The Living Realm: sponsored expeditions (SPONSOR worker)
 func phase_sponsor_rl() -> void:
@@ -3882,6 +3883,13 @@ func phase_sponsor_rl() -> void:
 ## counter (a reference to the piece they wear), a delivered masterpiece from the holdings archive (tests/playtest_identity_a1.gd).
 func phase_identity_a1() -> void:
 	var ph: RefCounted = load("res://tests/playtest_identity_a1.gd").new()
+	await ph.run(self)
+
+
+## Milestone A2 (economy): request cards that explain what the workshop cannot make, repairs paid by the customer,
+## the commission's payer and subsidy in the ledger, the renamed skill-tree node (tests/playtest_econ_a2.gd).
+func phase_a2econ() -> void:
+	var ph: RefCounted = load("res://tests/playtest_econ_a2.gd").new()
 	await ph.run(self)
 
 
@@ -3933,6 +3941,14 @@ func phase_steward_s1() -> void:
 	await ph.run(self)
 
 
+# ======================================================================= Milestone A2: early-game experience (EXPERIENCE worker)
+## The selling tutorial waits for a real customer, the consultation's offers and footer, the stores with 120 pieces,
+## and the graphical offer at the counter with an explicit sale (tests/playtest_experience_a2.gd). Shots a2x_*.
+func phase_a2_experience() -> void:
+	var ph: RefCounted = load("res://tests/playtest_experience_a2.gd").new()
+	await ph.run(self)
+
+
 ## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
 func find_label_containing(root: Node, needle: String) -> Control:
 	for n in root.find_children("*", "Label", true, false):
@@ -3942,3 +3958,23 @@ func find_label_containing(root: Node, needle: String) -> Control:
 		if (n as RichTextLabel).visible and (n as RichTextLabel).get_parsed_text().contains(needle):
 			return n
 	return null
+
+
+## A2: sell a displayed piece at the counter the way a player does — choose it in the offer grid (OfferPicker), then
+## press the explicit "Sell for N g" button. `name` matches the piece's current name (first match on display).
+func sell_at_counter(name: String) -> bool:
+	var pickers := get_tree().root.find_children("*", "OfferPicker", true, false)
+	if pickers.is_empty():
+		note("no offer grid open")
+		return false
+	var uid := -1
+	for it in Game.inventory():
+		if bool(it.get("for_sale", false)) and str(it.get("name", "")).contains(name):
+			uid = int(it["uid"])
+			break
+	if uid < 0:
+		note("nothing on display called " + name)
+		return false
+	(pickers[0] as OfferPicker).select_uid(uid)
+	await wait(0.3)
+	return await click("Sell for", pickers[0])

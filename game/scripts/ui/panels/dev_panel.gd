@@ -306,7 +306,7 @@ func _set_level(skill: String, lvl: int) -> void:
 
 
 func _buy_all_stations() -> void:
-	Game.add_gold(20000, "dev", "Developer tools: funds for stations")
+	Game.add_gold(20000, "dev", "Developer tools: funds for stations", "dev")
 	var n := 0
 	for sid in DB.stations:
 		if not Property.is_owned_station(sid):

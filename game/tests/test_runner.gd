@@ -998,7 +998,11 @@ func _interface() -> void:
 	check(Tutorial.is_done("craft"), "interface: a worked station check completes the crafting step")
 	Events.item_crafted.emit({})
 	check(Tutorial.is_done("dice"), "interface: finishing a piece completes the dice step")
+	Game.add_gold(4, "sales", "Borin sold horseshoes and nails")   # A2: background income is not serving a customer
+	check(not Tutorial.is_done("customer"), "interface: background income does not complete the customer step")
+	Tutorial.serving_override = true   # the smith at the counter (a counter panel open)
 	Game.add_gold(12, "repairs", "Test repair")
+	Tutorial.serving_override = null
 	check(Tutorial.is_done("customer"), "interface: being paid by a customer completes the customer step")
 	Events.open_panel.emit("skills", {})
 	Events.hireling_departed.emit("borin", "north")

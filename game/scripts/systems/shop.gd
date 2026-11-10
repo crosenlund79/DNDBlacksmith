@@ -90,7 +90,7 @@ static func reputation_word() -> String:
 ## Daily running costs: coal, rent to the reeve, the odd broken tool.
 static func pay_upkeep() -> void:
 	var cost: int = UPKEEP + Game.state.get("upgrades", []).size()
-	Game.add_gold(-cost, "upkeep", "Coal, rent and tools")
+	Game.add_gold(-cost, "upkeep", "Coal, rent and tools", "reeve")
 
 
 # ------------------------------------------------------------------ offers from returning adventurers
@@ -125,7 +125,7 @@ static func accept_offer(oid: String) -> String:
 		if not Game.can_afford(price):
 			return "You cannot afford it."
 		var a := Adv.get_a(o["from"])
-		Game.add_gold(-price, "materials", "Bought %s from %s" % [o["item"]["name"], a.get("name", "")])
+		Game.add_gold(-price, "materials", "Bought %s from %s" % [o["item"]["name"], a.get("name", "")], str(o["from"]))
 		a["gold"] = int(a.get("gold", 0)) + price
 		var it: Dictionary = o["item"]
 		Provenance.transfer(it, "smith", "bought", "brindlewick", "%s sold %s to the forge for %d g." % [a.get("name", ""), Items.display_name(it), price])
@@ -161,16 +161,116 @@ static func expire_offers() -> void:
 			offers().erase(o)
 
 
-## An adventurer's most worn piece, if anything is below 40% durability.
-static func worn_slot(a: Dictionary) -> String:
-	for slot in a.get("equipment", {}):
-		if a["equipment"][slot].get("broken", false):
-			return slot   # a broken piece comes first
-	for slot in a.get("equipment", {}):
-		var st: Dictionary = a["equipment"][slot].get("stats", {})
-		if st.has("durability_max") and float(st["durability"]) < float(st["durability_max"]) * 0.4:
-			return slot
-	return ""
+## The piece an adventurer brings for mending ("" = nothing needs it; Items.WORN is the one threshold).
+## `prefer`: the slot they planned to have repaired — that one, when it needs mending (Milestone A2: the note and the
+## repair always name the same piece). Otherwise a broken piece first, then the most worn.
+static func worn_slot(a: Dictionary, prefer := "") -> String:
+	var eq: Dictionary = a.get("equipment", {})
+	if prefer != "" and Items.needs_mending(eq.get(prefer, {})):
+		return prefer
+	for slot in eq:
+		if bool(eq[slot].get("broken", false)):
+			return str(slot)
+	var worst := ""
+	var worst_f := 2.0
+	for slot in eq:
+		if Items.needs_mending(eq[slot]) and Items.durability_frac(eq[slot]) < worst_f:
+			worst_f = Items.durability_frac(eq[slot])
+			worst = str(slot)
+	return worst
+
+
+## What mending this adventurer's piece costs them, before the craftsmanship adjusts it (Adv.repair_cost).
+static func repair_quote(a: Dictionary, slot: String) -> int:
+	return Adv.repair_cost(a.get("equipment", {}).get(slot, {}))
+
+
+## Can this adventurer pay for the repair of `slot` out of their own purse? (The smith's wife pays too: a repair is
+## real work, not a gift.)
+static func can_pay_repair(a: Dictionary, slot: String) -> bool:
+	return not a.is_empty() and slot != "" and int(a.get("gold", 0)) >= repair_quote(a, slot)
+
+
+## Takes up to `amount` gold out of an adventurer's purse for the forge; returns what they actually paid.
+static func _charge(a: Dictionary, amount: int) -> int:
+	var paid := clampi(amount, 0, maxi(0, int(a.get("gold", 0))))
+	a["gold"] = int(a.get("gold", 0)) - paid
+	return paid
+
+
+# ------------------------------------------------------------------ what the workshop can really make (A2)
+## Now and then an adventurer still asks for something beyond the forge — a visible opportunity, with the next step.
+const OPPORTUNITY_CHANCE := 0.25
+
+
+## Can the workshop make a piece for `slot` (one this adventurer's class would use, when `a` is given)?
+## {"state": "now" | "materials" | "locked" | "none", "recipe": id, "why": words, "next": the one next step}.
+## now = everything is ready · materials = known and set up, materials still to get · locked = beyond the forge
+## today (skill-tree knowledge, skill or station) · none = no Design in the game makes it.
+## `req` (optional, as Shop.order_need gives it): {tier, stat, min} — only Designs whose piece can meet them count
+## (steel or better for a veteran's commission; enough attack or protection at the top of the piece's range).
+static func slot_capability(slot: String, a := {}, req := {}) -> Dictionary:
+	var best_rid := ""
+	var best_state := "none"
+	var locked_rid := ""
+	var locked_diff := 1 << 20
+	for r in DB.recipes.values():
+		if not _recipe_for(r, slot, a, req):
+			continue
+		var rid := str(r["id"])
+		if Crafting.recipe_locked_reason(rid) != "":
+			if Guide.recipe_visible(rid) and int(r.get("difficulty", 1)) < locked_diff:
+				locked_diff = int(r.get("difficulty", 1))
+				locked_rid = rid
+			continue
+		var st := "now" if Crafting.missing_inputs(rid).is_empty() else "materials"
+		if best_state != "now" and (st == "now" or best_state == "none"):
+			best_state = st
+			best_rid = rid
+	if best_state == "now":
+		return {"state": "now", "recipe": best_rid, "why": "you can make %s now" % str(DB.recipe(best_rid).get("name", best_rid)), "next": ""}
+	if best_state == "materials":
+		var miss := Crafting.missing_inputs(best_rid)
+		var bits := PackedStringArray()
+		for k in miss:
+			bits.append("%d %s" % [int(miss[k]), DB.item(k).get("name", k)])
+		return {"state": "materials", "recipe": best_rid, "why": "you know how (%s) — still need %s" % [str(DB.recipe(best_rid).get("name", best_rid)), ", ".join(bits)],
+			"next": str(Guide.next_step("recipe:" + best_rid).get("text", ""))}
+	if locked_rid != "":
+		# the one next step when the Guide knows it (it already names what is missing), else the lock itself
+		var step := str(Guide.next_step("recipe:" + locked_rid).get("text", ""))
+		var lock := Crafting.recipe_locked_reason(locked_rid).trim_suffix(".")
+		return {"state": "locked", "recipe": locked_rid, "why": "%s (for %s)" % [step if step != "" else lock, str(DB.recipe(locked_rid).get("name", locked_rid))], "next": step}
+	return {"state": "none", "recipe": "", "why": "no Design you know of makes that", "next": ""}
+
+
+## Does the workshop really know how to make (and have the stations for) a piece for `slot`? Materials may be missing.
+static func can_make_slot(slot: String, a := {}, req := {}) -> bool:
+	if slot == "" or slot == "companion":
+		return false
+	for r in DB.recipes.values():
+		if _recipe_for(r, slot, a, req) and Crafting.recipe_locked_reason(str(r["id"])) == "":
+			return true
+	return false
+
+
+## Does recipe `r` make a piece for `slot` that this adventurer would use and that can meet `req` ({tier, stat, min})?
+static func _recipe_for(r: Dictionary, slot: String, a: Dictionary, req: Dictionary) -> bool:
+	var out := str(r.get("output", ""))
+	var d := DB.item(out)
+	if str(d.get("slot", "")) != slot or str(d.get("type", "")) == "companion":
+		return false
+	if not a.is_empty() and Adv.affinity(a, {"def": out}) <= 0.0:
+		return false
+	if Items.tier({"def": out}) < int(req.get("tier", 1)):
+		return false
+	var stat := str(req.get("stat", ""))
+	if stat in ["attack", "protection", "magic"] and int(req.get("min", 0)) > 0:
+		var v: Variant = d.get("stats", {}).get(stat, 0)
+		var top := float(v[1]) if v is Array else float(v)
+		if int(floor(top * 1.2)) < int(req["min"]):
+			return false
+	return true
 
 
 ## Would this person deal with the smith at all?
@@ -194,7 +294,7 @@ static func sell_goods(npc: String, uid: int) -> String:
 	else:
 		Game.inventory().erase(it)
 		ItemRegistry.leave(it, npc, Talk.npc_name(npc), "sold", "Sold to %s for %d g." % [Talk.npc_name(npc), price])
-	Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], Talk.npc_name(npc)])
+	Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], Talk.npc_name(npc)], npc)
 	Social.change(npc, 3.0, 3.0)
 	rep_change(0.5)
 	remove_customer(npc)
@@ -214,7 +314,7 @@ static func settle_dispute(npc: String, refund: bool) -> String:
 	var amount := int(c.get("refund", 20))
 	remove_customer(npc)
 	if refund:
-		Game.add_gold(-amount, "refunds", "Refund to %s" % Talk.npc_name(npc))
+		Game.add_gold(-amount, "refunds", "Refund to %s" % Talk.npc_name(npc), npc)
 		Social.change(npc, 8.0, 4.0, "refund_" + str(Game.day()), "The smith refunded me without argument when his work failed.")
 		rep_change(4.0, "the smith stands by his work.")
 		return "You count out %d g. \"That's... fair of you, smith.\"" % amount
@@ -352,8 +452,27 @@ static func request(c: Dictionary) -> Dictionary:
 				var sl := str(c["slot"])
 				r["headline"] = ("Wants better %s" % ("armour" if sl == "armor" else sl)) if sl in ["boots", "gloves", "armor"] else ("Wants a better %s" % sl)
 				r["reward_text"] = "pays your display price, remembers fine work" if Social.spouse() != npc else "your wife: gear is free"
+				_add_capability(r, sl, a, {"stat": str(c["stat"]), "min": int(c["min"])})
 	r["summary"] = request_summary(r)
 	return r
+
+
+## A2: what the request card says about the workshop's capability (CustomerCard shows "availability" and "why"):
+## ✓ craftable now / craftable once the materials are in / ✗ not yet — what is missing and the one next step.
+static func _add_capability(r: Dictionary, slot: String, a: Dictionary, req := {}) -> void:
+	if slot == "" or slot == "companion":
+		return
+	var cap := slot_capability(slot, a, req)
+	if str(cap["state"]) == "none":
+		return
+	r["availability"] = "now" if str(cap["state"]) == "now" else ("materials" if str(cap["state"]) == "materials" else "locked")
+	r["why"] = str(cap["why"])
+	r["next_step"] = str(cap.get("next", ""))
+	if str(cap["state"]) == "locked":
+		var st: Dictionary = Adv.best_stock(a, slot) if not a.is_empty() else {}
+		if not st.is_empty():
+			r["availability"] = "now"
+			r["why"] = "%s is on your display" % Items.display_name(st)
 
 
 ## A commission as a request card (same look as the counter).
@@ -382,6 +501,19 @@ static func order_request(o: Dictionary) -> Dictionary:
 		r["item_def"] = str(o["def"])
 		r["materials"] = []
 		r["headline"] = "Commission: %s" % DB.item(str(o["def"])).get("name", o["def"])
+	# A2: can the workshop make it? (open commissions only: delivered ones are history)
+	if str(o.get("status", "open")) == "open":
+		if o.has("recipe") and str(o["recipe"]) != "":
+			var av := part_availability({"kind": "craft", "recipe": str(o["recipe"])})
+			r["availability"] = str(av["state"])
+			r["why"] = str(av["why"])
+			if str(av["state"]) == "locked":
+				var step := str(Guide.next_step("recipe:" + str(o["recipe"])).get("text", ""))
+				r["next_step"] = step
+				if step != "":
+					r["why"] += ". Next step: " + step
+		else:
+			_add_capability(r, str(o["slot"]), a, {"tier": int(o.get("tier", 1)), "stat": str(o["stat"]), "min": int(o["min"])})
 	r["summary"] = request_summary(r)
 	return r
 
@@ -450,7 +582,8 @@ static func customer_hour(h: int) -> void:
 	var pool := []
 	for a in Adv.in_town():
 		if not refuses(a["id"]):
-			var w := "repair_own" if worn_slot(a) != "" else "browse"
+			var ws0 := worn_slot(a)
+			var w := "repair_own" if ws0 != "" and can_pay_repair(a, ws0) else "browse"   # a repair they cannot pay for is no errand
 			if randf() < MULTI_CHANCE and open_orders().filter(func(o): return o["npc"] == a["id"]).is_empty():
 				w = "multi"   # several requests at once (one may be beyond the smith for now)
 			pool.append([a["id"], w])
@@ -465,10 +598,18 @@ static func customer_hour(h: int) -> void:
 		break
 
 
-static func _add_customer(npc: String, want: String) -> void:
+## `slot`: for "repair_own", the piece the adventurer planned to have mended (Adv.act_on_plans; a broken weapon after
+## an expedition). They set out only when the piece needs mending and they can pay the quote from their own purse.
+static func _add_customer(npc: String, want: String, slot := "") -> void:
 	var seat := free_seat()
 	if seat < 0:
 		return
+	if want == "repair_own":
+		var ar := Adv.get_a(npc)
+		var sr := worn_slot(ar, slot)
+		if sr == "" or not can_pay_repair(ar, sr):
+			return
+		slot = sr
 	var c := {"npc": npc, "want": want, "arrived": Game.day() * 24 + Game.hour(), "seat": seat, "present": false}
 	if want == "repair":
 		var defs := ["sword_iron", "axe_hand", "dagger", "helm_iron", "shield_round"]
@@ -479,11 +620,11 @@ static func _add_customer(npc: String, want: String) -> void:
 		c["pay"] = randi_range(8, 18)
 	elif want == "repair_own":
 		var a2 := Adv.get_a(npc)
-		var slot2 := worn_slot(a2)
+		var slot2 := slot
 		c["want"] = "repair"
 		c["own_slot"] = slot2
 		c["item"] = ItemRegistry.ref(a2["equipment"][slot2])   # the piece stays on them; the request refers to it
-		c["pay"] = 10 + int(Items.value(a2["equipment"][slot2]) * 0.06)
+		c["pay"] = repair_quote(a2, slot2)   # the quote; they pay it (adjusted for the work) from their own purse
 	elif want == "multi":
 		var a3 := Adv.get_a(npc)
 		c["parts"] = multi_parts_for(a3)
@@ -492,6 +633,8 @@ static func _add_customer(npc: String, want: String) -> void:
 			c["want"] = "browse"
 			c.erase("parts")
 			c["looking_for"] = a3.get("needs", "")
+			var want3 := str(a3.get("needs", ""))
+			c["slot"] = Adv.request_slot(a3, want3 if want3 != "" else Adv._weakest_slot(a3))
 			_equipment_wish(c, a3)
 	elif want == "goods":
 		c["budget"] = randi_range(30, 80)
@@ -501,6 +644,9 @@ static func _add_customer(npc: String, want: String) -> void:
 		c["budget"] = int(a.get("gold", 0))
 		c["looking_for"] = a.get("needs", "")
 		if not a.is_empty():
+			# A2: mostly what the workshop can make; now and then an opportunity beyond it (the card says what is missing)
+			var want0 := str(a.get("needs", ""))
+			c["slot"] = Adv.request_slot(a, want0 if want0 != "" else Adv._weakest_slot(a))
 			_equipment_wish(c, a)
 	customers().append(c)
 	Events.customers_changed.emit()
@@ -520,12 +666,28 @@ static func mark_arrived(npc: String, notify := true) -> void:
 
 
 ## Politely sends a waiting customer away; their seat is freed.
+## A2: declining something the workshop cannot make yet (and has none on display) is no slight — they understand,
+## and try the other traders in the village instead (Adv.buy_elsewhere: the Salt Anvil, a former apprentice …).
 static func dismiss_customer(npc: String) -> void:
 	for c in customers().duplicate():
 		if c["npc"] == npc:
 			customers().erase(c)
-			Social.change(npc, -1.0, 0.5, "", "", false)
+			if beyond_forge(c):
+				var a := Adv.get_a(npc)
+				Adv._gear_note(a, "The smith can't make %s yet — tried elsewhere." % slot_phrase(str(c["slot"])), false)
+				Adv.buy_elsewhere(a, {"slot": str(c["slot"])})
+			else:
+				Social.change(npc, -1.0, 0.5, "", "", false)
 			Events.customers_changed.emit()
+
+
+## Is this waiting adventurer asking for a piece the workshop cannot make yet and has none of on display?
+static func beyond_forge(c: Dictionary) -> bool:
+	var a := Adv.get_a(str(c.get("npc", "")))
+	var w := str(c.get("want", ""))
+	if a.is_empty() or not w in ["browse", ""] or str(c.get("slot", "")) == "":
+		return false
+	return not can_make_slot(str(c["slot"]), a, {"stat": str(c.get("stat", "")), "min": int(c.get("min", 0))}) and Adv.best_stock(a, str(c["slot"])).is_empty()
 
 
 static func remove_customer(npc: String) -> void:
@@ -550,10 +712,13 @@ static func sell_to(npc: String, uid: int) -> String:
 	Items.add_history(it, "Sold to %s for %d g." % [a["name"], price] if not married else "Given to %s, the smith's wife." % a["name"])
 	Adv.give_item(a, it, price)
 	if not married:
-		Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], a["name"]])
+		Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], a["name"]], npc)
 	Game.state["stats"]["sold"] += 1
 	rep_change(1.0 if float(it.get("quality", 70)) >= 85.0 else 0.3)
-	remove_customer(npc)
+	# A2: a repair they are waiting for stays asked for — unless this purchase replaced the very piece to be mended
+	var waiting_repair := customer(npc)
+	if str(waiting_repair.get("want", "")) != "repair" or str(waiting_repair.get("own_slot", "")) in ["", Items.slot(it)]:
+		remove_customer(npc)
 	Objectives.on_sold(npc, it)
 	if npc == "mira":
 		Sim.on_mira_equipped(it, price)
@@ -577,8 +742,12 @@ static func do_repair(npc: String, quality: float, by := "") -> void:
 				Chronicle.add("item", "%s mended %s's broken %s." % [hand, a.get("name", npc), it.get("name", "blade")], {"adv": npc, "item": str(it.get("uid", ""))})
 			Provenance.workshop(it, "repaired", "Repaired at the Ironhand forge for %s (%d%%)%s." % [a.get("name", npc), int(quality), "" if by == "" else " by " + by])
 			ItemSpirit.speak(it, "repair")
-			var pay2 := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
-			Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")])
+			# A2 (canon D14): the adventurer pays out of their own purse — their gold down, the smith's up, by the same
+			# amount, the ledger naming them. (They only set out when they could pay the quote; if their purse has
+			# shrunk since, they pay what they have.)
+			var pay2 := _charge(a, int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7))))
+			if pay2 > 0:
+				Game.add_gold(pay2, "repairs", "Repaired %s's %s" % [a.get("name", npc), it.get("name", "gear")], npc)
 			Social.change(npc, 5.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()), "%s mended my %s %s." % [hand, it.get("name", "gear"), "beautifully" if quality >= 95 else "well enough"])
 			if by == "":
 				Game.grant_player_xp("smithing", 10)
@@ -588,7 +757,8 @@ static func do_repair(npc: String, quality: float, by := "") -> void:
 			ItemSpirit.speak(c.get("item", {}), "repair")
 			ItemStory.on_villager_repair(c, quality)   # mended pieces remember it
 			var pay := int(round(float(c["pay"]) * (0.5 + quality / 100.0 * 0.7)))
-			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]])
+			# a villager pays from their household (villagers keep no simulated purse: a named outside party)
+			Game.add_gold(pay, "repairs", "Repaired %s's %s" % [DB.character(npc)["name"], c["item"]["name"]], npc)
 			Social.change(npc, 4.0 if quality >= 75 else -2.0, 4.0, "repair_" + str(Game.day()),
 				"%s my %s %s." % ["Mended" if by == "" else by + " mended", c["item"]["name"], "beautifully" if quality >= 95 else ("well enough" if quality >= 75 else "poorly")])
 			if by == "":
@@ -606,30 +776,43 @@ static func open_orders() -> Array:
 	return orders().filter(func(o): return o["status"] == "open")
 
 
+## What a commission from this adventurer for `slot` will ask for: {stat, min, tier} (the rules create_order has always
+## used: two better than what they wear or their level's due, a damage type their next trip's threats fear, steel or
+## better for veterans' weapons, armour and shields — never more than any piece for that slot can give).
+static func order_need(a: Dictionary, slot: String) -> Dictionary:
+	var stat := "attack" if slot == "weapon" else ("magic" if slot in ["ring", "amulet"] else "protection")
+	var current := Items.stat(a.get("equipment", {}).get(slot, {}), stat)
+	var need: int = maxi(current + 2, int(a.get("level", 1)) * 2 + 4)
+	var prop := str(a.get("wants_prop", ""))
+	var tier := 2 if int(a.get("level", 1)) >= 5 and slot in ["weapon", "armor", "shield"] else 1
+	if prop != "" and slot == "weapon":
+		stat = prop
+		need = 3 + int(a.get("level", 1)) / 3
+	# never ask for more than any craftable piece for that slot can give (found by the integrity suite)
+	need = mini(need, slot_ceiling(slot, stat))
+	return {"stat": stat, "min": need, "tier": tier}
+
+
 ## Creates a commission from an adventurer for their weakest slot.
 static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 	var a := Adv.get_a(npc)
 	if a.is_empty() or refuses(npc):
 		return {}
 	if slot == "":
-		slot = Adv._weakest_slot(a)
-	var stat := "attack" if slot == "weapon" else ("magic" if slot in ["ring", "amulet"] else "protection")
-	var current := Items.stat(a["equipment"].get(slot, {}), stat)
-	var need: int = maxi(current + 2, int(a["level"]) * 2 + 4)
-	# what the next trip demands: a damage type its threats fear, a better metal for veterans
+		slot = Adv.request_slot(a, Adv._weakest_slot(a))   # A2: weighted toward what the workshop can make
+	var req := order_need(a, slot)
+	var stat := str(req["stat"])
+	var need := int(req["min"])
+	var tier := int(req["tier"])
 	var prop := str(a.get("wants_prop", ""))
-	var tier := 2 if int(a["level"]) >= 5 and slot in ["weapon", "armor", "shield"] else 1
-	if prop != "" and slot == "weapon":
-		stat = prop
-		need = 3 + int(a["level"]) / 3
-	# never ask for more than any craftable piece for that slot can give (found by the integrity suite)
-	need = mini(need, slot_ceiling(slot, stat))
 	var dest_name: String = DB.destinations.get(a.get("next_dest", ""), {}).get("name", "")
 	if note == "" and dest_name != "":
 		note = "For %s%s." % [dest_name, (" — they say the things there fear " + prop) if prop != "" else ""]
 	var o := {"id": "ord_%d" % Game.new_uid(), "npc": npc, "slot": slot, "stat": stat, "min": need, "tier": tier,
 		"reward": 40 + int(a["level"]) * 18 + need * 3 + (30 if tier >= 2 else 0) + (25 if prop != "" else 0), "deadline": Game.day() + 3, "status": "open", "note": note,
 		"placed": Game.day()}
+	if not can_make_slot(slot, a, req):
+		o["opportunity"] = true   # A2: beyond the forge when placed — the card names the next step; no grudge if it lapses
 	_set_priority(o, a)
 	orders().append(o)
 	Events.orders_changed.emit()
@@ -717,21 +900,34 @@ static func fulfil(order_id: String, uid: int) -> String:
 		o["delivered_uid"] = int(it["uid"])
 		Items.add_history(it, "Commissioned by %s (%s)." % [a["name"], PRIORITY.get(o.get("priority", ""), {}).get("name", "commission")])
 		Chronicle.add("commission", "Brannoc delivered %s's commission: %s%s." % [a["name"], Items.display_name(it), " — and beat the bonus" if got_bonus else ""], {"adv": o["npc"], "uid": int(it["uid"])})
+		# A2 (canon D14, review I7): who pays is explicit. The adventurer pays their share — half the reward, as before
+		# — out of their own purse; the rest is the village's outfitting subsidy (adventurers keep Brindlewick's roads
+		# safe), recorded as its own ledger line with its payer. The smith's total is unchanged.
+		var paid := 0
+		var subsidy := 0
 		if Social.spouse() == o["npc"]:
 			reward = 0
 		else:
-			a["gold"] = maxi(0, int(a["gold"]) - reward / 2)   # the village/guild covers the rest
+			paid = _charge(a, reward / 2)
+			subsidy = reward - paid
+		o["paid"] = {"by": str(o["npc"]), "gold": paid, "subsidy": subsidy, "subsidy_by": Payments.VILLAGE if subsidy > 0 else ""}
 		Adv.give_item(a, it, 0)
-		if reward > 0:
-			Game.add_gold(reward, "commissions", "Commission for %s" % a["name"])
+		if paid > 0:
+			Game.add_gold(paid, "commissions", "Commission for %s (their share)" % a["name"], str(o["npc"]))
+		if subsidy > 0:
+			Game.add_gold(subsidy, "subsidy", "Village subsidy: %s's commission" % a["name"], Payments.VILLAGE)
 		o["status"] = "done"
 		Social.change(o["npc"], 10.0 + margin, 8.0, "order_" + o["id"], "Brannoc delivered my %s, and it was %s." % [it["name"], "superb" if margin >= 4 else "as promised"])
-		# exceptional work is sometimes rewarded with something rare
+		# exceptional work is sometimes rewarded with something rare — A2: worth at most Payments.GIFT_SHARE of the
+		# commission it thanks you for (before, the package came from the open loot tables: 935 g on average)
 		if margin >= 5 or it.get("rarity") in ["legendary", "rare"]:
-			Game.state["returns"].append(Loot.make_container("package_reward", Loot.roll_table("reward", 10.0), a["name"],
-				"%s left this for you: 'Work like yours deserves more than coin.'" % a["name"]))
-			Events.inventory_changed.emit()   # world redraws the waiting bags
-			Events.toast.emit("%s left you a reward package in the workshop!" % a["name"], "good")
+			var pkg := Payments.gift_within(Loot.roll_table("reward", 10.0), int(float(reward) * Payments.GIFT_SHARE))
+			if not pkg.is_empty():
+				Payments.note_gift(str(o["npc"]), Payments.value_of(pkg))
+				Game.state["returns"].append(Loot.make_container("package_reward", pkg, a["name"],
+					"%s left this for you: 'Work like yours deserves more than coin.'" % a["name"]))
+				Events.inventory_changed.emit()   # world redraws the waiting bags
+				Events.toast.emit("%s left you a reward package in the workshop!" % a["name"], "good")
 		Events.orders_changed.emit()
 		Objectives.on_sold(o["npc"], it)
 		if o["npc"] == "mira":
@@ -744,6 +940,10 @@ static func expire_orders() -> void:
 	for o in orders():
 		if o["status"] == "open" and Game.day() > int(o["deadline"]):
 			o["status"] = "expired"
+			if bool(o.get("opportunity", false)) and not can_make_slot(str(o["slot"]), Adv.get_a(str(o["npc"])), {"tier": int(o.get("tier", 1)), "stat": str(o["stat"]), "min": int(o["min"])}):
+				# they asked knowing it was beyond the forge (A2): no grudge — they look elsewhere
+				Adv._gear_note(Adv.get_a(str(o["npc"])), "The smith could not make %s in time — looking elsewhere." % slot_phrase(str(o["slot"])), false)
+				continue
 			Social.change(o["npc"], -8.0, 2.0, "order_missed_" + o["id"], "The smith never delivered what I ordered.")
 	Events.orders_changed.emit()
 
@@ -762,7 +962,7 @@ static func buy_upgrade(id: String) -> String:
 		return "Needs mithril in your stores first."
 	if not Game.can_afford(int(u["cost"])):
 		return "You cannot afford it."
-	Game.add_gold(-int(u["cost"]), "upgrades", u["name"])
+	Game.add_gold(-int(u["cost"]), "upgrades", u["name"], "village_trades")
 	(Game.state["upgrades"] as Array).append(id)
 	if id == "arcane_foundry":
 		var sk := Game.player_skills()
@@ -836,14 +1036,18 @@ static func multi_parts_for(a: Dictionary) -> Array:
 	if not pool.is_empty():
 		parts.append(_craft_part(pool[randi() % pool.size()], a, false))
 	# 3. a simple repair: their own worn piece, or a spare they carry
+	#    (A2: only what they can pay for out of their own purse — they pay when it is done)
 	var ws := worn_slot(a)
 	if ws != "":
-		parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": ItemRegistry.ref(a["equipment"][ws]), "pay": 10 + int(Items.value(a["equipment"][ws]) * 0.06), "status": "pending"})
+		if can_pay_repair(a, ws):
+			parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": ItemRegistry.ref(a["equipment"][ws]), "pay": repair_quote(a, ws), "status": "pending"})
 	else:
 		var it := Items.make(["dagger", "helm_iron", "shield_round", "axe_hand"].pick_random(), {"quality": randf_range(55, 75)})
 		if it["stats"].has("durability"):
 			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.25, 0.5))
-		parts.append({"pid": "rep", "kind": "repair", "item": it, "pay": randi_range(8, 16), "status": "pending"})
+		var pay := randi_range(8, 16)
+		if int(a.get("gold", 0)) >= pay:
+			parts.append({"pid": "rep", "kind": "repair", "item": it, "pay": pay, "status": "pending"})
 	return parts
 
 
@@ -966,8 +1170,13 @@ static func repair_part(npc: String, pid: String, quality: float) -> void:
 	it.erase("broken")
 	Items.add_history(it, "Repaired at the Ironhand forge (%d%%)." % int(quality))
 	ItemSpirit.speak(it, "repair")
+	# A2: the customer pays out of their own purse (an adventurer's gold goes down by what the smith receives)
 	var pay := int(round(float(pt.get("pay", 10)) * (0.5 + quality / 100.0 * 0.7)))
-	Game.add_gold(pay, "repairs", "Repaired %s's %s" % [Talk.npc_name(npc), it.get("name", "gear")])
+	var payer := Adv.get_a(npc)
+	if not payer.is_empty():
+		pay = _charge(payer, pay)
+	if pay > 0:
+		Game.add_gold(pay, "repairs", "Repaired %s's %s" % [Talk.npc_name(npc), it.get("name", "gear")], npc)
 	Social.change(npc, 3.0 if quality >= 75 else -1.5, 2.0, "", "", false)
 	Game.grant_player_xp("smithing", 8)
 	pt["status"] = "done"

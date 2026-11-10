@@ -373,7 +373,7 @@ static func accept(id: String) -> String:
 	active().append(c)
 	_pst(str(c["patron"]))["last_day"] = Game.day()
 	if int(c["advance"]) > 0:
-		Game.add_gold(int(c["advance"]), "contract", "Advance: " + str(c["title"]))
+		Game.add_gold(int(c["advance"]), "contract", "Advance: " + str(c["title"]), "patron:" + str(c["patron"]))
 	_log(c, "Accepted on day %d; deadline day %d. %s sent a crate: %s." % [Game.day(), int(c["deadline"]), patron_name(str(c["patron"])), defs_text(c["crate"])])
 	Lore.record("commission", "Brannoc accepted a major contract from %s: %s." % [patron_name(str(c["patron"])), c["title"]],
 		{"importance": 1, "place": "brindlewick", "data": {"contract": id}, "chronicle": true})
@@ -829,7 +829,7 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 		ps["good"] = int(ps["good"]) + 1
 	ps["last_day"] = Game.day()
 	if pay > 0:
-		Game.add_gold(pay, "contract", "Contract delivered: " + str(c["title"]))
+		Game.add_gold(pay, "contract", "Contract delivered: " + str(c["title"]), "patron:" + str(c["patron"]))
 	Shop.rep_change(rep, text)
 	_log(c, text)
 	var tier := int(patron(pid).get("tier", 1))

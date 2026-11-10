@@ -6,7 +6,10 @@ extends PanelContainer
 var step_label: Label
 var title: Label
 var body: RichTextLabel
+## A2: the selling step's live status (who is waiting / on the way / nobody yet), refreshed with the card.
+var status: RichTextLabel
 var _shown_id := "-"
+var _status_text := ""
 
 
 func _init() -> void:
@@ -26,6 +29,11 @@ func _init() -> void:
 	body = UIKit.rich("", 18)
 	body.custom_minimum_size = Vector2(380, 0)
 	v.add_child(body)
+	status = UIKit.rich("", 17)
+	status.name = "TutorialStatus"
+	status.custom_minimum_size = Vector2(380, 0)
+	status.visible = false
+	v.add_child(status)
 	var row := UIKit.hbox(8)
 	var skip := UIKit.button("Skip step", func(): Tutorial.skip_step(); refresh(), 0)
 	skip.custom_minimum_size = Vector2(0, 34)
@@ -46,7 +54,10 @@ func _init() -> void:
 func refresh() -> void:
 	var c := Tutorial.current()
 	visible = not c.is_empty()
-	if c.is_empty() or str(c["id"]) == _shown_id:
+	if c.is_empty():
+		return
+	_refresh_status(str(c["id"]))
+	if str(c["id"]) == _shown_id:
 		return
 	_shown_id = str(c["id"])
 	step_label.text = "Tutorial · step %d of %d" % [Tutorial.index_of(_shown_id) + 1, Tutorial.STEPS.size()]
@@ -56,3 +67,18 @@ func refresh() -> void:
 	# a little flourish when a new step appears
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.35)
+
+
+## The live line under the "Serve a customer" step: a seated customer (act now), one on the way, or nobody yet.
+func _refresh_status(id: String) -> void:
+	var st := Tutorial.customer_status() if id == "customer" else {}
+	var t := ""
+	if not st.is_empty():
+		var ok := str(st["state"]) == "ready"
+		t = "[color=%s]%s %s[/color]" % ["#26622f" if ok else "#5e421c", "✓" if ok else "◷", str(st["text"])]
+	if t == _status_text:
+		return
+	_status_text = t
+	status.text = t
+	status.visible = t != ""
+	reset_size()
