@@ -20,6 +20,8 @@ const DISCIPLINE_SKILL := {"classic": "smithing", "runecraft": "runecraft", "alc
 const DISCIPLINE_NAME := {"classic": "Classic Smithing", "runecraft": "Runecrafting", "alchemy": "Alchemy",
 	"arcane": "Arcane Metalworking", "stitching": "Enchanted Stitching"}
 const NON_EQUIP_RARITY := {"magic": ["Fine", 1.15], "rare": ["Exquisite", 1.3], "legendary": ["Flawless", 1.6]}
+## Stackable materials and goods: craftsmanship at or above this (or a purity die of 6) adds one unit to the batch.
+const YIELD_BONUS_Q := 105.0
 
 
 static func cfg(section: String) -> Dictionary:
@@ -659,9 +661,13 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		else:
 			_apply_rarity_plain(it, rar)
 	# materials: excellent work or a pure batch yields a bonus unit
+	var yield_rec := {}
 	if not Items.is_equipment(it) and d.get("stack", false):
-		if q >= 105.0 or int(totals.get("purity", 0)) >= 6:
+		yield_rec = {"base": int(it["qty"]), "bonus": 0, "why": "", "purity": int(totals.get("purity", 0)) if totals.has("purity") else -1}
+		if q >= YIELD_BONUS_Q or int(totals.get("purity", 0)) >= 6:
 			it["qty"] = int(it["qty"]) + 1
+			yield_rec["bonus"] = 1
+			yield_rec["why"] = "craftsmanship" if q >= YIELD_BONUS_Q else "purity"
 	var parts := []
 	for k in totals:
 		parts.append("%s %d" % [k, int(totals[k])])
@@ -686,6 +692,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		"advantage": {"tier": int(adv["tier"]), "word": str(adv["word"]), "rolls": int(adv["rolls"])},
 		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid) if player else 0.0, "assist_bonus": hireling_assist(rid) if player else 0.0,
 	}
+	if not yield_rec.is_empty():
+		it["craft"]["yield"] = yield_rec   # S2: what made the batch (shown on the result screen)
 	if not player:
 		it["craft"]["maker"] = str(maker.get("id", ""))
 		it["craft"]["maker_name"] = str(maker.get("name", ""))
