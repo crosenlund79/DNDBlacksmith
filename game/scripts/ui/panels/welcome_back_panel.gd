@@ -59,7 +59,7 @@ func build() -> void:
 	content.add_child(sc)
 	var left_n := 0
 	var right_n := 0
-	for s in [_money(r), _matters(r), _orders(r), _production(r), _trade(r), _staff(r), _stock(r), _world(r), _conduct(r)]:
+	for s in [_money(r), _smith(r), _matters(r), _orders(r), _production(r), _trade(r), _staff(r), _stock(r), _world(r), _conduct(r)]:
 		if s == null:
 			continue
 		var card: Control = s
@@ -232,8 +232,70 @@ func _production(r: Dictionary) -> Variant:
 			why.append("%s ×%d" % [str(k2), int(p["failed_why"][k2])])
 		_text(v, "[color=#7e2418]%d task%s failed%s.[/color]" % [int(p["failed"]), "" if int(p["failed"]) == 1 else "s", (" (" + ", ".join(why) + ")") if not why.is_empty() else ""], 16)
 	if int(p.get("smith_crafted", 0)) == 0:
-		_text(v, "[i]You made nothing yourself — you were away (no crafting experience gained).[/i]", 15)
+		if (r.get("smith", {}) as Dictionary).is_empty():
+			_text(v, "[i]You made nothing yourself — you were away (no crafting experience gained).[/i]", 15)
+		else:
+			_text(v, "[i]You made no new piece yourself under the steward.[/i]", 15)
 	return _done(v, 5)
+
+
+## S2: the smith's own work under the steward — hours at the stations, pieces made (quality, what for), repairs paid by
+## the customers, preparations, materials used, his rest and sleep, the piece still in his hands, and that no
+## experience was gained (the guard's count). From the session's records only.
+func _smith(r: Dictionary) -> Variant:
+	var s: Dictionary = r.get("smith", {})
+	if s.is_empty() or (int(s.get("minutes", 0)) == 0 and int(s.get("made_count", 0)) == 0 and int(s.get("repairs_count", 0)) == 0
+			and int(s.get("nights", 0)) == 0 and int(s.get("breaks", 0)) == 0 and (s.get("in_hand", {}) as Dictionary).is_empty()):
+		return null
+	var v := _section("smith", "Your own work under the steward", "ic_work", "Your stores", "inventory")
+	var w := 2
+	var prep: Dictionary = s.get("prepared", {})
+	var pl := PackedStringArray()
+	for d in prep:
+		pl.append("%s ×%d" % [str(DB.item(str(d)).get("name", d)), int(prep[d])])
+	_text(v, "[b]%s at the stations[/b] · %d piece%s made · %d repair%s%s%s" % [str(s.get("hours_text", "")), int(s.get("made_count", 0)),
+		"" if int(s.get("made_count", 0)) == 1 else "s", int(s.get("repairs_count", 0)), "" if int(s.get("repairs_count", 0)) == 1 else "s",
+		(" (%d g paid by the customers)" % int(s.get("repair_gold", 0))) if int(s.get("repairs_count", 0)) > 0 else "",
+		(" · prepared " + ", ".join(pl)) if not pl.is_empty() else ""], 17)
+	var made: Array = s.get("made", [])
+	if not made.is_empty():
+		var ml: Array = []
+		for i in range(made.size() - 1, -1, -1):
+			var m: Dictionary = made[i]
+			var what := ("for %s's commission" % str(m["for"])) if m.has("for") else str(StewardUI.PURPOSE_NAME.get(str(m.get("purpose", "")), ""))
+			ml.append("%s — %d%%, %s [color=#6e5a40](day %d)[/color]" % [str(m.get("name", "")), int(round(float(m.get("quality", 0)))), what, int(m.get("day", 0))])
+		_text(v, "[b]Made by your hand[/b]\n" + _list(ml, 5), 16)
+		w += 2
+	var reps: Array = s.get("repairs", [])
+	if not reps.is_empty():
+		var rl: Array = []
+		for i2 in range(reps.size() - 1, -1, -1):
+			var x: Dictionary = reps[i2]
+			rl.append("%s's %s — %d%%, paid %d g" % [str(x.get("who", "")), str(x.get("name", "")).to_lower(), int(round(float(x.get("quality", 0)))), int(x.get("paid", 0))])
+		_text(v, "[b]Mended at the counter[/b]\n" + _list(rl, 3), 16)
+		w += 2
+	var used: Dictionary = s.get("used", {})
+	if not used.is_empty():
+		var ul := PackedStringArray()
+		for d2 in used:
+			ul.append("%s ×%d" % [str(DB.item(str(d2)).get("name", d2)), int(used[d2])])
+		_text(v, "[color=#6e5a40]Materials used from the stores: %s[/color]" % ", ".join(ul), 15)
+	_text(v, "[color=#6e5a40]Slept %d night%s in your bed, %d midday break%s, %d rest%s when your hands were unsteady · now %s (fatigue %d)[/color]" % [
+		int(s.get("nights", 0)), "" if int(s.get("nights", 0)) == 1 else "s", int(s.get("breaks", 0)), "" if int(s.get("breaks", 0)) == 1 else "s",
+		int(s.get("rests", 0)), "" if int(s.get("rests", 0)) == 1 else "s", str(s.get("band", "")), int(round(float(s.get("fatigue", 0))))], 15)
+	var ih: Dictionary = s.get("in_hand", {})
+	if not ih.is_empty():
+		_text(v, "[b]Still in your hands:[/b] %s — step %d of %d%s. Finish it yourself or set it aside; it brings no experience (the steward began it)." % [
+			str(ih.get("name", "")), int(ih.get("step", 0)) + 1, int(ih.get("steps", 1)),
+			(" at " + Smithy.station_ref(str(ih["station"]))) if str(ih.get("station", "")) != "" else ""], 16)
+		w += 1
+	for ab in s.get("abandoned", []):
+		_text(v, "[color=#7e2418]%s[/color]" % str(ab), 15)
+	if bool(s.get("xp_unchanged", true)):
+		_text(v, "[i]No experience gained: your skills are as you left them%s.[/i]" % ((" (%d points of experience withheld)" % int(s["xp_withheld"])) if int(s.get("xp_withheld", 0)) > 0 else ""), 15)
+	else:
+		_text(v, "[color=#7e2418]Your skills changed while the steward ran the forge.[/color]", 15)
+	return _done(v, w + 2)
 
 
 func _trade(r: Dictionary) -> Variant:

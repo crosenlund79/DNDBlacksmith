@@ -44,17 +44,20 @@ func _attach_nav() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Steward Mode: while the steward runs the forge the smith is away — his miniature fades out and stays put
+	# Steward Mode (S2): while the steward runs the forge the smith keeps working under it — this figure on the
+	# steward's autopilot (StewardSmithActor walks him through PlayerNav): deaf to the keyboard and the mouse, walking
+	# on while the player only looks at panels; only a stopped clock (ui_blockers) halts him
 	var away := Steward.smith_away()
-	sprite.modulate.a = move_toward(sprite.modulate.a, 0.0 if away else 1.0, delta * 2.0)
-	if frozen or away or Game.ui_blockers > 0 or Game.ui_open > 0:
+	if sprite.modulate.a < 1.0:
+		sprite.modulate.a = move_toward(sprite.modulate.a, 1.0, delta * 2.0)
+	if frozen or Game.ui_blockers > 0 or (Game.ui_open > 0 and not away):
 		velocity = Vector2.ZERO
 		_anim(Vector2.ZERO)
 		if nav and nav.traveling():
 			nav.stop_travel()        # something opened on the way: stop where we are
 		return
-	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var spd := RUN if Input.is_action_pressed("run") else WALK
+	var dir := Vector2.ZERO if away else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var spd := WALK if away else (RUN if Input.is_action_pressed("run") else WALK)
 	if nav and nav.active():
 		if dir != Vector2.ZERO:
 			nav.stop_travel()
@@ -100,7 +103,7 @@ func _anim(dir: Vector2) -> void:
 			facing = "e" if dir.x > 0 else "w"
 		else:
 			facing = "s" if dir.y > 0 else "n"
-		sprite.speed_scale = 1.35 if Input.is_action_pressed("run") else 1.0
+		sprite.speed_scale = 1.35 if Input.is_action_pressed("run") and not Steward.smith_away() else 1.0
 		_play("walk_" + facing)
 	else:
 		sprite.speed_scale = 1.0

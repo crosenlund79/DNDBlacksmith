@@ -78,13 +78,13 @@ static func band() -> String:
 
 
 ## Called by Sim.on_hour: a waking hour (sleep and rest hours are exempt).
+## S2: also while the steward runs the forge — the smith keeps working under it and tires, rests and sleeps by these
+## same rules (StewardSmith); the S1 rule "fatigue holds while away" is superseded.
 static func on_hour() -> void:
 	if _p().is_empty():
 		return
 	if Game.now() <= int(_p().get("resting_until", -1)):
 		return
-	if Steward.smith_away():
-		return   # Steward Mode: the smith is away from the forge — his fatigue holds where it was (no rest bonus, no penalty)
 	add_fatigue(WAKING_PER_HOUR)
 
 

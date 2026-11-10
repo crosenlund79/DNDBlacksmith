@@ -28,7 +28,9 @@ const KIND_SENDER := {"deed": "News of your work", "loss": "News of your work", 
 const LOG_ICON := {"buy": "⚖", "sell": "⚖", "list": "▣", "accept": "✎", "commit": "⚒", "deliver": "✓", "decline": "✗",
 	"repair": "⚒", "restock": "⚒", "prep": "⚒", "contract_hours": "⚒", "assign": "☞", "cancel": "✗", "provisions": "▤",
 	"stall": "‼", "defer": "✉", "activate": "➜", "deactivate": "⌂", "stood_down": "⌂", "order_left": "·", "repair_left": "·",
-	"reserve_ok": "·"}
+	"reserve_ok": "·", "smith_begin": "⚒", "smith_made": "✓", "smith_repair": "⚒"}
+## S2: what the smith's own work was for (the report and the panel).
+const PURPOSE_NAME := {"restock": "for the display", "commission": "for a commission", "prep": "prepared material"}
 const COMPLETED_NAME := {"repair": ["customer repair", "customer repairs"], "commission": ["commission", "commissions"],
 	"craft": ["piece for the display", "pieces for the display"], "prep": ["material preparation", "material preparations"],
 	"maintain": ["station upkeep", "station upkeeps"], "contract": ["block of contract work", "blocks of contract work"],
@@ -122,6 +124,11 @@ static func summary_bbcode(o: Dictionary) -> String:
 		"new workshop pieces go on display" if bool(sr["list_new_work"]) else "new pieces stay in the stores",
 		", your ordinary stored pieces too" if bool(sr["list_existing"]) else "", int(sr["stock_target"]), "" if int(sr["stock_target"]) == 1 else "s",
 		"; serves goods customers from your shelf" if bool(sr["sell_goods"]) else ""])
+	var hrs: Array = o.get("smith_hours", [8, 18])
+	lines.append("• [b]Your own work:[/b] %s, %02d:00–%02d:00 with the midday hour off; you rest and sleep as usual and gain no experience from it." % [
+		"routine forging, counter repairs and preparation at an ordinary, steady standard" if bool(o["duties"].get("smith", false)) else "none (you only rest)",
+		int(hrs[0]), int(hrs[1])])
+	lines.append("• [b]Pace:[/b] %s." % ("the whole village runs half again as fast (1.5×) while you are away" if float(o.get("pace", 1.5)) > 1.0 else "normal speed (1×)"))
 	var prot := (o.get("protected", []) as Array).size()
 	var res: Dictionary = o.get("reserved", {})
 	var rl := PackedStringArray()
@@ -166,6 +173,18 @@ static func away_note() -> String:
 	return "You are away: the steward runs the forge. Look around as you like; take the workshop back to act yourself."
 
 
+## S2: one line on the smith at work for the plate and the panel ("" when the steward is not running).
+static func smith_line(s: Dictionary) -> String:
+	if s.is_empty():
+		return ""
+	return "[b]You:[/b] %s [color=#6e5a40]· %s (fatigue %d)[/color]" % [str(s.get("activity", "")), str(s.get("band", "")), int(round(float(s.get("fatigue", 0.0))))]
+
+
+## S2: "1.5×" / "1×".
+static func pace_text(p: float) -> String:
+	return "1.5×" if p > 1.0 else "1×"
+
+
 # ======================================================================= hand-over and return
 ## The UI's own reason not to hand over now (the engine's first; then a fade or check in progress).
 static func can_activate() -> String:
@@ -185,7 +204,7 @@ static func hand_over() -> String:
 	why = Steward.activate()
 	if why != "":
 		return why
-	Events.toast.emit("The steward runs the forge. You are away — time keeps running; nothing happens while the game is closed.", "good")
+	Events.toast.emit("The steward runs the forge and sets you to routine work (pace %s) — you gain no experience from it; nothing happens while the game is closed." % pace_text(Steward.pace()), "good")
 	return ""
 
 

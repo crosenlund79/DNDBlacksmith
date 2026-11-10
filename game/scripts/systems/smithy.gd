@@ -172,8 +172,9 @@ static func _world() -> VillageWorld:
 	return tree.get_first_node_in_group("world") as VillageWorld
 
 
-## Walk (click-to-move, stairs and lift included) to a station and use it on arrival.
-static func walk_to_station(sid: String, w: VillageWorld = null) -> String:
+## Walk (click-to-move, stairs and lift included) to a station and use it on arrival. S2 (backward compatible):
+## `use` false only walks him up to it (the steward's autopilot; nothing opens).
+static func walk_to_station(sid: String, w: VillageWorld = null, use := true) -> String:
 	if w == null:
 		w = _world()
 	if w == null:
@@ -183,7 +184,7 @@ static func walk_to_station(sid: String, w: VillageWorld = null) -> String:
 		return "Nowhere to walk."
 	for e in w.interactables:
 		if str(e.get("kind", "")) == "station" and str(e.get("id", "")) == sid:
-			return "" if nav.walk_to_entity(e) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
+			return "" if nav.walk_to_entity(e, use) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
 	return "The %s is not set up in the workshop." % DB.station(sid).get("name", sid)
 
 

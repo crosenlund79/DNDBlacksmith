@@ -149,7 +149,8 @@ static func start(recipe_id: String) -> bool:
 	Game.state["craft"] = {"recipe": recipe_id, "step": 0, "samples": [], "ops": [], "awaiting_dice": false, "day": Game.day()}
 	Events.crafting_changed.emit()
 	Audio.play("sfx/page_turn")
-	Objectives.complete("select_recipe")
+	if not Steward.is_active():
+		Objectives.complete("select_recipe")   # S2: the steward's smith completes no objective for the player
 	return true
 
 
@@ -317,7 +318,10 @@ static func record_step(station_id: String, qualities: Array) -> void:
 	j["ops"].append({"op": str(o.get("op", "")), "station": station_id, "q": sum / maxf(1.0, qualities.size()),
 		"checks": qualities.duplicate(), "w": w})
 	j["step"] = int(j["step"]) + 1
+	var sw := Steward.marked(j)   # S2: work begun under the steward teaches the smith nothing (also when he finishes it later)
+	Steward.begin_marked(sw)
 	Game.grant_player_xp(skill_for_station(station_id), 3 + qualities.size() * 2)
+	Steward.end_marked(sw)
 	Vitality.on_craft_step(qualities.size())
 	if int(j["step"]) >= operations(j["recipe"]).size():
 		j["awaiting_dice"] = true
@@ -588,6 +592,7 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 ## the Ironhand forge; experience is the caller's business (Apprentices). `base` = quality before the skill bonus.
 static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "digital", maker := {}, base := -1.0) -> Dictionary:
 	var player := maker.is_empty()
+	var marked := player and Steward.marked(job())   # S2: a piece begun under the steward (no experience, no knowledge)
 	var r := DB.recipe(rid)
 	var spec: Dictionary = r.get("dice", {})
 	var totals := {}
@@ -671,12 +676,16 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	var xp := {}
 	var expert := lvl - difficulty(rid) >= int(sk.get("xp_expert_gap", 5))
 	if player:
+		Steward.begin_marked(marked)
 		for skill in r.get("xp", {}):
 			var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
 			if expert:
 				amt *= float(sk.get("xp_expert_mult", 0.4))
 			xp[skill] = int(round(amt))
 			Game.grant_player_xp(skill, xp[skill])
+		Steward.end_marked(marked)
+		if marked or Steward.is_active():
+			xp = {}   # withheld (Game.grant_player_xp refused it): the record says what was really gained
 	it["craft"] = {
 		"recipe": rid, "recipe_name": r.get("name", rid), "material": mat.get("name", ""),
 		"difficulty": difficulty(rid), "skill": skill_id, "level": lvl,
@@ -703,7 +712,7 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	if player and (out_def == "ingot_mithril" or out_def == "sword_mithril"):
 		Game.set_flag("crafted_arcane")
 	# some work teaches the smith something (restoring an old runestone → rune lore)
-	var teach := str(r.get("teaches_flag", "")) if player else ""
+	var teach := str(r.get("teaches_flag", "")) if player and not marked and not Steward.is_active() else ""
 	if teach != "" and not Game.has_flag(teach):
 		Game.set_flag(teach)
 		var fi := SkillTree.flag_info(teach)
@@ -716,7 +725,7 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	if it.get("rarity") == "legendary":
 		Game.state["stats"]["legendaries"] += 1
 		Events.legendary_found.emit(it)
-	if player:
+	if player and not marked and not Steward.is_active():
 		Objectives.on_crafted(it)
 	Recognition.on_crafted(it)
 	Log.info("Crafted %s (q %.1f%%, %s, score %.1f)%s" % [it["name"], q, it["rarity"], float(rev["score"]), "" if player else " by " + str(maker.get("name", ""))])

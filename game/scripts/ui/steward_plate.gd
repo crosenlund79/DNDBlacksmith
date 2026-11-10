@@ -1,5 +1,6 @@
 ## StewardPlate — the steward's compact, non-blocking status plate on the HUD (Milestone S1).
-## EN: While the steward runs the forge: how long the smith has been away, the purse now against when he left, what the
+## EN: While the steward runs the forge: how long the smith has been away, the pace, what the smith himself is doing
+##     (S2: his work, break or sleep, and how tired he is), the purse now against when he left, what the
 ##     steward spent today, its last few actions, what holds it up, the matters waiting, and two buttons — the details
 ##     (the steward panel) and "Take the workshop back" (→ While You Were Away). It never stops the clock. When the mode
 ##     is off it shrinks to a small envelope chip, shown only while a sealed letter waits unopened.
@@ -121,15 +122,23 @@ func refresh() -> void:
 		return
 	var s := Steward.status()
 	var lg := Steward.recent_log(14)
-	var sig := "%d|%d|%d|%d|%d" % [int(s.get("elapsed_minutes", 0)), int(s.get("gold", 0)), lg.size(), int(s.get("deferred", 0)), (s.get("stalls", []) as Array).size()]
+	var sm: Dictionary = s.get("smith", {})
+	var sig := "%d|%d|%d|%d|%d|%s" % [int(s.get("elapsed_minutes", 0)), int(s.get("gold", 0)), lg.size(), int(s.get("deferred", 0)), (s.get("stalls", []) as Array).size(),
+		str(sm.get("activity", ""))]
 	if sig == _sig:
 		return
 	_sig = sig
 	var lines := PackedStringArray()
 	var since := int(Steward.st()["since"].get("gold", s.get("gold", 0)))
 	var gold := int(s.get("gold", 0))
-	lines.append("[b]Away %s[/b] [color=#6e5a40]· since day %d, %s · %d decision%s[/color]" % [StewardUI.elapsed(int(s.get("elapsed_minutes", 0))),
-		int(s.get("since_day", 0)), str(s.get("since_time", "")), int(s.get("decisions", 0)), "" if int(s.get("decisions", 0)) == 1 else "s"])
+	lines.append("[b]Away %s[/b] [color=#6e5a40]· since day %d, %s · pace %s · %d decision%s[/color]" % [StewardUI.elapsed(int(s.get("elapsed_minutes", 0))),
+		int(s.get("since_day", 0)), str(s.get("since_time", "")), StewardUI.pace_text(float(s.get("pace", 1.5))), int(s.get("decisions", 0)),
+		"" if int(s.get("decisions", 0)) == 1 else "s"])
+	# S2: the smith himself at work under the steward
+	if not sm.is_empty():
+		var sl := sm.duplicate()
+		sl["activity"] = StewardUI.clip(str(sm.get("activity", "")), 78)
+		lines.append(StewardUI.smith_line(sl))
 	var col := "#26622f" if gold >= since else "#7e2418"
 	lines.append("Purse [b]%d g[/b] [color=%s](%s since you left)[/color] · spent today %d g" % [gold, col, StewardUI.signed(gold - since), int(s.get("spent_today", 0))])
 	# the last few things it did (no stalls or notes)
