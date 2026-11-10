@@ -587,21 +587,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("panel_wanted"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("wanted", {})
+		Events.open_panel.emit("wanted", {})
 		return
+	# S2: through the Events bus like a toolbar click, so a key counts for the tutorial ("Open the Skill Tree with K"
+	# used to complete only from the toolbar) and clears the button's glow; UIRoot itself routes it (_on_open_panel)
 	for action in HOTKEY_PANELS:
 		if event.is_action_pressed(action):
 			get_viewport().set_input_as_handled()
-			_on_open_panel(HOTKEY_PANELS[action], {})
+			Events.open_panel.emit(HOTKEY_PANELS[action], {})
 			return
 	if event.is_action_pressed("panel_map"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("map", {})
+		Events.open_panel.emit("map", {})
 	elif event.is_action_pressed("panel_help"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("help", {})
+		Events.open_panel.emit("help", {})
 	elif event.is_action_pressed("panel_ledger"):
-		_on_open_panel("shop", {"tab": "ledger"})
+		Events.open_panel.emit("shop", {"tab": "ledger"})
 	elif event.is_action_pressed("quick_save"):
 		if Saves.save("quicksave"):
 			toast("Quick-saved.", "good")

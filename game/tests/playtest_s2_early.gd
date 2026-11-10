@@ -29,10 +29,19 @@ func _timed_check(st: String) -> float:
 	if sc == null:
 		return -1.0
 	await pt._play_ring(sc, 0.05)
-	var t0 := Time.get_ticks_msec()
-	while is_instance_valid(sc) and not sc.is_queued_for_deletion() and Time.get_ticks_msec() - t0 < 6000:
+	# game time (the sum of frame deltas the timers run on): under Xvfb's software renderer a game second takes several
+	# wall-clock seconds, so wall-clock time would measure the test machine, not what a player waits
+	var ov: CheckOverlay = pt._overlay_of(sc)
+	var t := 0.0
+	var banner := -1.0
+	var wall0 := Time.get_ticks_msec()
+	while is_instance_valid(sc) and not sc.is_queued_for_deletion() and t < 6.0:
 		await pt.get_tree().process_frame
-	return (Time.get_ticks_msec() - t0) / 1000.0
+		t += pt.get_process_delta_time()
+		if banner < 0.0 and is_instance_valid(ov) and ov.result_t >= 0.0:
+			banner = t
+	pt.note("  check %s: banner from %.2f s, flow on after %.2f s of game time (%.1f s wall clock)" % [st, banner, t, (Time.get_ticks_msec() - wall0) / 1000.0])
+	return t
 
 
 ## Presses a panel key with nothing open (closing whatever is) — what the player does on the map.
