@@ -15,9 +15,9 @@ Treat this as a permanent project safety requirement, not a one-time instruction
 
 ## 2. Canonical design governance
 
-**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.2; source:
-`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.2.docx`; the v1.1 and v1.0 .docx files are kept as the dated
-historical copies). It is
+**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.3; source:
+`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.3.docx`; the v1.2, v1.1 and v1.0 .docx files are kept as the
+dated historical copies). It is
 the authoritative baseline for what the game is.
 
 1. **Read it first.** Every implementation session must read `docs/EMBER_ASH_CANONICAL_VISION.md` before planning or

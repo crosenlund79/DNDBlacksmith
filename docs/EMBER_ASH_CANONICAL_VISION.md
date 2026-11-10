@@ -1,8 +1,8 @@
 <!--
-  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.2.docx (Design Baseline 1.2, 10 November 2026).
+  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.3.docx (Design Baseline 1.3, 10 November 2026).
   The .docx is the approved source; this file reproduces its text faithfully for use in the repository (generated from
   the .docx, so both share one revision history — see "Revision history" at the end). Only formatting was adapted for
-  Markdown (boxed callouts → blockquotes). The v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
+  Markdown (boxed callouts → blockquotes). The v1.2, v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
   explicit user approval, a version increment and matching updates to both files (CLAUDE.md §2.5).
 -->
 
@@ -16,7 +16,7 @@
 >
 > A blacksmith may create a sword, see it travel through generations, repair it when it returns, and discover that its history helped shape the fate of a realm. The smith need not become its hero.
 
-**DESIGN BASELINE 1.2**
+**DESIGN BASELINE 1.3**
 
 9 November 2026 · Authoritative creative direction
 
@@ -29,7 +29,7 @@ This document is the **single canonical map for the intended game**. It supersed
 | **Field**             | **Rule**                                                                                                                                                |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.                                                        |
-| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) and v1.2 (editorial clarifications, 10 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
+| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) v1.2 (editorial clarifications, 10 November 2026) and v1.3 (Steward Mode: the working smith and its pace, 10 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
 | Code baseline at adoption | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026). Later delivery status is tracked in the repository’s roadmap register, not here.                                                              |
 | Technical evidence    | Claude status audit, Extra High architecture report and the repository’s decision, roadmap and playtest-observation registers are evidence, not the game’s creative authority.                                                 |
 | What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                                                                   |
@@ -176,13 +176,17 @@ Steward Mode lets the player explicitly hand the running workshop to a steward a
 
 - **Routine business, really done.** The steward evaluates the workshop and independently accepts suitable ordinary orders, assigns available employees, plans production, replenishes materials, manages stock and handles ordinary sales, and it responds to unavailable workers, shortages and production bottlenecks.
 
-- **Nothing is conjured.** It uses real inventory, money, contracts, production time, people, skills and world simulation; it never creates goods, money, work or accomplishments. Employees progress by the normal rules; the absent smith gains no crafting experience. It never automates work that needs a specialist, station or capability the workshop does not have.
+- **Nothing is conjured.** It uses real inventory, money, contracts, production time, people, skills and world simulation; it never creates goods, money, work or accomplishments. Employees progress by the normal rules; the smith gains no experience, skill, mastery or unlocks while the steward runs the forge, even for work he performs himself or that finishes after the player returns. It never automates work that needs a specialist, station or capability the workshop does not have.
 
 - **The player sets the boundaries.** Persistent, understandable standing instructions cover spending limits and permitted purchases, allowed activities, protected items and reserved supplies, and the rules for ordinary orders and selling.
 
 - **The steward defers; it does not decide.** Unique, Epic and historically significant equipment, dangerous reworking, extraordinary commissions, political commitments, inheritance, major relationships and other consequential personal decisions are left for the smith. The world is never frozen for them: significant visitors may leave requests or correspondence, and existing timers continue.
 
 - **Competent, not superior.** The steward manages well but never outperforms the active player’s craftsmanship or judgment.
+
+- **The working smith.** The steward may also direct the smith’s own routine work — ordinary repairs, routine commissions, preparation such as smelting, and restocking — using his existing skills, unlocked Designs, real materials, time and stations. He visibly walks to the station and works there, keeps working hours and breaks, tires, rests and sleeps. His work is competent rather than exceptional; masterpieces, risky reworking, experiments and protected, Unique or Epic items stay with the player.
+
+- **Pace.** While Steward Mode is active the whole simulation runs at 1.5× normal speed by default (the player may choose normal speed): world time, people, production, movement, travel, commerce, fatigue and events together; nothing is multiplied separately. Normal speed returns immediately on exit. There is still no offline progression or catch-up.
 
 - **While You Were Away.** On return the player sees the actual elapsed game time, financial changes, completed and pending production and orders, purchases, sales, stock and employee activity, significant world developments, and outstanding decisions and correspondence. Every claim is backed by recorded events and real state changes, without duplicates or invented narrative.
 
@@ -454,7 +458,7 @@ The following records the eighteen architectural decisions (D1–D18) explicitly
 | D16 Replayability        | Reproducible beginnings, emergent and potentially different histories; deterministic test mode as needed.                                                                  |
 | D17 Historic upgrades    | Arcanists may enchant and specialists may refine old existing artifacts while identity remains.                                                                            |
 | D18 Earned renown        | Reputation cannot be bought directly; acclaim follows actual deeds and credible spread.                                                                                    |
-| D19 Steward Mode         | Explicit, online-only autonomous workshop management within standing instructions; real actions only; consequential matters deferred; truthful While You Were Away report. |
+| D19 Steward Mode         | Explicit, online-only autonomous workshop management within standing instructions; real actions only; consequential matters deferred; truthful While You Were Away report. The steward may direct the smith’s own routine work without any experience gain; 1.5× default pace while active. |
 
 ## 14.1 Later design additions now included
 
@@ -466,7 +470,7 @@ The following records the eighteen architectural decisions (D1–D18) explicitly
 
 - **Ancestral binding:** some truly Unique items may depend on heir cooperation for full restoration; non-heir attempts can be difficult, expensive, incomplete or riskier. Not universal across all Unique items.
 
-- **Steward Mode (D19):** an explicit, online-only autonomous workshop manager acting within the player’s standing instructions; it defers consequential matters, reports truthfully on return and may deliver sealed correspondence from real events. Approved 9 November 2026 as the next development priority (v1.1).
+- **Steward Mode (D19):** an explicit, online-only autonomous workshop manager acting within the player’s standing instructions; it defers consequential matters, reports truthfully on return and may deliver sealed correspondence from real events. Approved 9 November 2026 as the next development priority (v1.1). Extended 10 November 2026 (v1.3): the steward may direct the smith’s own routine, visible work (no experience) at a default 1.5× pace.
 
 # 15 Open details, not invitations to change direction
 
@@ -486,7 +490,7 @@ Other mechanics that would meaningfully widen scope—full naval travel, family-
 
 ## 16.1 Authority and revision control
 
-- **Treat this document (v1.2) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
+- **Treat this document (v1.3) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
 
 - Any new scope or reversal requires an explicit decision. Add a short change record: what changed, why, impacts and date.
 
@@ -521,3 +525,4 @@ Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE
 | 1.0 — 9 November 2026 | Design Baseline 1.0 adopted as the canonical game design.                                                                                                              |
 | 1.1 — 9 November 2026 | Added §4.5 Steward Mode, its priority in §12 and decision D19 (§14, §14.1); version labels updated. All v1.0 decisions are unchanged. Approved explicitly by the user. |
 | 1.2 — 10 November 2026 | Editorial clarifications only, requested by the user (Run 0.1): the charter, §2 and the appendix date the 0.14.6 code baseline to the document’s adoption and point to the repository registers for later delivery status; the appendix says where each design source is kept; §14 counts D19 alongside the eighteen audit decisions; D15 names the Master Design’s Phase 0–10 roadmap as restated in §12.1 and confirms that this document prevails over the Master Design’s wording; version labels updated. No design decision, scope, priority or boundary changed. |
+| 1.3 — 10 November 2026 | Approved by the user in the S2 brief (10 November 2026): §4.5 Steward Mode — the steward may direct the smith’s own routine, visible work (repairs, routine commissions, preparation, restocking) within working hours, breaks, fatigue and sleep, competent rather than exceptional; the smith gains no experience, skill, mastery or unlocks for it (replaces “the absent smith gains no crafting experience”); the whole simulation runs at 1.5× by default while the mode is active (normal speed optional) and returns to normal on exit. D19 and §14.1 updated. Supersedes the S1 implementation rule that the smith’s fatigue holds while the steward runs the forge. All other decisions unchanged. |
