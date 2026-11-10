@@ -117,8 +117,9 @@ func test_ledger_builds() -> void:
 	check(p3.get_combined_minimum_size().x <= 1900.0 and p3.get_combined_minimum_size().y <= 1080.0,
 		"the ledger fits 1920×1080 (%s)" % str(p3.get_combined_minimum_size()))
 	_unmount(p3)
-	eq(UIRoot.panel_for_action("panel_workshop"), "workshop", "Y opens the workshop ledger")
-	check((Settings.DEFAULT_KEYS["panel_workshop"] as Array).has(KEY_Y), "panel_workshop is bound to Y")
+	eq(UIRoot.panel_for_action("panel_workshop"), "workshop", "its key opens the workshop ledger")
+	# S2: Y opens the toolbar's "Workshop" (rooms & stations) so key and label match; the ledger moved to Q
+	check((Settings.DEFAULT_KEYS["panel_workshop"] as Array).has(KEY_Q), "panel_workshop is bound to Q")
 
 
 func test_notice_board_hires() -> void:

@@ -15,7 +15,9 @@
 | E / Mellemrum | Interager |
 | I | Lager |
 | H | Ansatte |
-| K | Færdigheder |
+| K | Færdighedstræet (U: dine færdighedsniveauer) |
+| Y | Værkstedet: rum, stationer og indretning |
+| Q | Værkstedsregnskabet: lærlinge og arbejdskø |
 | J | Eventyrere |
 | O | Bestillinger |
 | L | Regnskab |

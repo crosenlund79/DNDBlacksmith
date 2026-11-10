@@ -522,7 +522,7 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Training & careers** | Novice → apprentice → journeyman → master by real works and skill; specialties after enough work in one category; proportionate mistakes and pleasant surprises; the smith teaches once a day (1 hour). Apprentice work stays below the smith's exceptional craftsmanship | `apprentices.gd` |
 | **Living histories** | Apprentice pieces carry the apprentice as maker with their own mark (and the smith as supervisor when he watched); they can become named and Epic and hang in the Hall of Fame; their maker recognises them when they come back | `provenance.gd` (`is_workshop`), `item_story.gd` |
 | **Independence** | Rarely, a loyal master asks (with a week's notice) to open their own workshop: give your blessing (they become a friendly competitor whose marked work enters the adventurer economy) or ask them to stay | `apprentices.gd` |
-| **The Workshop Ledger (Y)** | Apprentices, stations and occupancy, the queues with priorities, assignees, materials, estimates and blockers, bottlenecks, add work | `workshop_panel.gd` |
+| **The Workshop Ledger (Q)** | Apprentices, stations and occupancy, the queues with priorities, assignees, materials, estimates and blockers, bottlenecks, add work | `workshop_panel.gd` |
 | **Living miniatures** | Apprentices walk in at 8:00, work beside their stations with small motions and bubbles, carry materials, take their break and leave at 18:00 | `apprentice_actors.gd` |
 | **Workshop space** | One station per eight square tiles (was twelve): all 29 stations fit the whole building; *Find a spot for everything in storage* sets stations up automatically | `property.gd` (`auto_place`) |
 

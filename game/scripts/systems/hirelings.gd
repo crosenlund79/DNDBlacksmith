@@ -174,6 +174,39 @@ static func hire_from_character(char_id: String) -> void:
 	list().append(h)
 
 
+## S2: Borin begins a new game inside the smithy, in the stock hall beside the smith (the layout's spot there,
+## "work_relic_hunting", a step east of where a new game puts the smith), for the opening's first step ("Speak with
+## Borin in the workshop"; the play guide says the stock hall) — before his shift starts at 8:00 he used to be nowhere,
+## then walked over from the inn door. He waits there through his first working day (until 18:00) for that talk; once
+## it is done (or he is away, or the day's work is over) his ordinary schedule applies — talked to before 8:00, he
+## simply goes to his work. The world
+## asks this before its schedule (VillageWorld.spot_for); "" = no hold. Old saves are past day 1 or past the talk.
+const TUTORIAL_SPOT := "work_relic_hunting"
+
+
+static func tutorial_spot(h: Dictionary) -> String:
+	if str(h.get("id", "")) != "borin" or str(h.get("status", "")) != "working" or Game.day() > 1:
+		return ""
+	var ob: Dictionary = Game.state.get("objectives", {})
+	if ob.is_empty():
+		return ""
+	if not Objectives.is_done("talk_borin"):
+		return TUTORIAL_SPOT if Game.hour() < 18 else ""   # through his first working day; the evening is his own
+	if Game.hour() < 8:
+		return "work_" + top_alloc(h)   # talked to before his shift: he stays at work instead of leaving and coming back
+	return ""
+
+
+## The work a hireling spends most of the day on (the world puts them at its spot).
+static func top_alloc(h: Dictionary) -> String:
+	var top := "mining"
+	var alloc: Dictionary = h.get("alloc", {})
+	for k in alloc:
+		if int(alloc[k]) > int(alloc.get(top, 0)):
+			top = str(k)
+	return top
+
+
 # ------------------------------------------------------------------ recruitment
 static func refresh_applicants() -> void:
 	var out := []
@@ -569,8 +602,8 @@ static func health(h: Dictionary) -> float:
 ## working / away / injured / resting (off duty) / dead.
 static func hud_status(h: Dictionary) -> String:
 	var s := str(h.get("status", "working"))
-	if s == "working" and not Game.is_work_hours():
-		return "resting"
+	if s == "working" and not Game.is_work_hours() and tutorial_spot(h) == "":
+		return "resting"   # S2: not while he stands in the smithy for the opening (tutorial_spot)
 	return s
 
 

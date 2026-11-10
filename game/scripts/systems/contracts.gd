@@ -288,7 +288,7 @@ static func _announce(c: Dictionary) -> void:
 		Chronicle.add("contract", sealed_line, {"contract": str(c["id"])})
 		return
 	var line := "A messenger brings a sealed letter from %s: %s." % [pn, c["title"]]
-	Events.toast.emit(line + " Read it at your Project Bench or in the Workshop Ledger (Y).", "legendary" if str(patron(str(c["patron"])).get("kind", "")) == "royal" else "good")
+	Events.toast.emit(line + " Read it at your Project Bench or in the Workshop Ledger (%s)." % Settings.key_label("panel_workshop"), "legendary" if str(patron(str(c["patron"])).get("kind", "")) == "royal" else "good")
 	Game.journal(line + " " + str(c.get("why", "")))
 	Chronicle.add("contract", line, {"contract": str(c["id"])})
 

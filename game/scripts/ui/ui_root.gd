@@ -543,10 +543,12 @@ func _overlay(p: Control, hide_under: bool) -> void:
 
 
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
+## S2: Y opens the toolbar's "Workshop" (Property & Workshop: rooms, stations, furnishings); Q the Workshop Ledger
+## (apprentices and their work queue, also a right-click on that button). Settings.HOTKEY_HELP lists them all.
 const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
 	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
 	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map", "panel_workshop": "workshop",
-	"panel_steward": "steward"}
+	"panel_property": "property", "panel_steward": "steward"}
 
 
 static func panel_for_action(action: String) -> String:
@@ -603,6 +605,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("quick_save"):
 		if Saves.save("quicksave"):
 			toast("Quick-saved.", "good")
+			Objectives.complete("save_game")   # S2: a quick-save is saving the game too
 	elif event.is_action_pressed("quick_load"):
 		if Saves.exists("quicksave"):
 			get_tree().root.get_node("Main").call("load_slot", "quicksave")

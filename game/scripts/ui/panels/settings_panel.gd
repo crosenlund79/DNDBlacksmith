@@ -28,9 +28,11 @@ func _ready() -> void:
 		content.add_child(row)
 	for t in [["display/fullscreen", "Fullscreen"], ["display/vsync", "V-Sync"], ["gameplay/show_hints", "Show objective hints"],
 			["gameplay/check_assist", "Assist: skill checks at tutorial difficulty (wider zones, slower motion)"],
-			["gameplay/click_to_move", "Click to move: left-click the ground, an object or a person to walk there"]]:
+			["gameplay/click_to_move", "Click to move: left-click the ground, an object or a person to walk there"],
+			["gameplay/auto_walk", "Auto-walk to the next station after a skill check (only walks — opens and starts nothing)"]]:
 		var cb := CheckBox.new()
 		cb.text = t[1]
+		cb.name = "Setting_" + str(t[0]).get_file()
 		cb.button_pressed = bool(Settings.get_value(t[0], t[0] == "gameplay/click_to_move"))
 		var k2: String = t[0]
 		cb.toggled.connect(func(on): Settings.set_value(k2, on))
@@ -75,4 +77,9 @@ func _ready() -> void:
 	ob2.item_selected.connect(func(i): Settings.set_value("gameplay/time_scale", [0.5, 1.0, 2.0][i]))
 	ts.add_child(ob2)
 	content.add_child(ts)
-	content.add_child(UIKit.label("Controls: WASD/arrows move (or click), Shift run, E/Space interact, I inventory, H hirelings, Y workshop ledger, N steward, K skill tree, U skill levels, T quick travel, J adventurers, O orders, L ledger, F5/F9 quick save/load, F3 diagnostics.", 18, "body_italic"))
+	# S2: generated from the real bindings (Settings.HOTKEY_HELP), the same list Help shows
+	var ctl := UIKit.label("Controls: WASD/arrows move (or click), " + Settings.controls_text(false) + ".", 16, "body_italic")
+	ctl.name = "ControlsLine"
+	ctl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ctl.custom_minimum_size = Vector2(800, 0)
+	content.add_child(ctl)

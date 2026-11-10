@@ -2,7 +2,7 @@
 ## EN: Adds to any check: a small "?" button that reopens the mechanic's how-to card; the card itself
 ##     (illustration, what to watch, which keys, what scores well, a "Practice (tutorial difficulty)"
 ##     button and "Don't show again"); hit/miss colour pulses; and the closing result banner that
-##     shows the grade and percentage for ~1.5 s with a sound, then continues the crafting flow by
+##     shows the grade and percentage for ~1 s with a sound, then continues the crafting flow by
 ##     itself (click / E / Space continues at once). The host check stays the owner of its callback.
 ##     Host contract: host.set_suspended(on: bool) pauses/resumes the check while a card or a
 ##     practice run is open; host.begin() starts the first round if it has not started yet.
@@ -13,7 +13,13 @@ extends Control
 
 signal result_closed
 
-const RESULT_SECS := 1.5
+## S2: the closing banner was 1.5 s after a 0.55 s pause (≈2 s before the flow went on, and a click was ignored for its
+## first 0.25 s). It now shows for 1.0 s after a 0.3 s pause (LAST_ROUND_PAUSE): the grade, percentage and one pip per
+## round stay readable, the station panel's toast repeats them, and a click / E / Space continues after 0.1 s.
+const RESULT_SECS := 1.0
+const SKIP_AFTER := 0.1
+## The pause after the last round's own grade before the banner (the ring check and every minigame use it).
+const LAST_ROUND_PAUSE := 0.3
 const INK := Color("#20140c")
 const PAPER := Color("#efe4cc")
 const GILT := Color("#b8923e")
@@ -121,7 +127,7 @@ func _finish_result() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if result_t >= 0.0 and result_t < RESULT_SECS - 0.25:
+	if result_t >= 0.0 and result_t < RESULT_SECS - SKIP_AFTER:
 		var press: bool = event.is_action_pressed("interact") or event.is_action_pressed("cancel") \
 			or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 		if press:

@@ -58,7 +58,7 @@ func run(p: Node) -> void:
 	if Contracts.offers().is_empty():
 		return
 	var o: Dictionary = Contracts.offers()[0]
-	Events.toast.emit("A messenger brings a sealed letter from %s: %s. Read it at your Project Bench or in the Workshop Ledger (Y)." % [Contracts.patron_name(str(o["patron"])), o["title"]], "good")
+	Events.toast.emit("A messenger brings a sealed letter from %s: %s. Read it at your Project Bench or in the Workshop Ledger (%s)." % [Contracts.patron_name(str(o["patron"])), o["title"], Settings.key_label("panel_workshop")], "good")
 	await pt.wait(0.4)
 	await pt.shot("ct_letter_arrives")
 	# ---- the letter at the bench

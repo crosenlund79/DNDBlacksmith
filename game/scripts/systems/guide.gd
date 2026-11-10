@@ -216,8 +216,9 @@ static func _src_craft(def: String, out: Array) -> void:
 		s["yield"] = int(r.get("qty", 1))
 		# an apprentice can prepare materials (not equipment) from the same recipe
 		if lock == "" and not Items.is_equipment({"def": def}) and Game.state.has("apprentices") and not Apprentices.staff().is_empty():
-			_src(out, "apprentice", rid, "Your apprentice", "Workshop Ledger (Y)",
-				"Queue “%s” for an apprentice — Workshop Ledger (Y)" % str(r.get("name", rid)), "obtainable" if not miss.is_empty() else "ready",
+			var wl := "Workshop Ledger (%s)" % Settings.key_label("panel_workshop")
+			_src(out, "apprentice", rid, "Your apprentice", wl,
+				"Queue “%s” for an apprentice — %s" % [str(r.get("name", rid)), wl], "obtainable" if not miss.is_empty() else "ready",
 				why, "during their shift, 8:00–18:00", {"route": "workshop", "args": {}})
 
 
@@ -681,7 +682,20 @@ static func _item_step(def: String, n: int, visiting: Array, for_what: String) -
 					sub2["why"] = why
 					return sub2
 			return {"text": "%s — %s" % [str(s["how"]), str(s["why"])], "action": s.get("link", {}), "why": why, "source": s}
+	# S2 (dagger investigation): a piece that no Design in the game makes — not even a secret one — is not "unknown
+	# yet": the forge cannot make it at all, and the honest answer says where such pieces come from instead
+	if Items.is_equipment({"def": def}) and not no_design(def).is_empty():
+		return {"text": no_design(def), "action": {}, "why": why}
 	return {"text": "No known way to get %s yet — explore, trade and listen for rumours." % iname(def), "action": {}, "why": why}
+
+
+## S2: "" when some Design (known, locked or secret) makes `def`; otherwise one honest line for an equipment piece the
+## workshop cannot make at all (the dagger: adventurers start with one, it turns up in loot and at the pawnbroker's).
+static func no_design(def: String) -> String:
+	for r in DB.recipes.values():
+		if str(r.get("output", "")) == def:
+			return ""
+	return "No Design makes %s — the workshop cannot forge it. Such pieces come into the smithy by trade, loot or a customer's own kit; for the same slot, ask the Equipment Designer what you can make." % iname(def)
 
 
 ## One imperative line for a source and a quantity.

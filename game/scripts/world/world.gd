@@ -1754,6 +1754,9 @@ func spot_for(id: String) -> String:
 		return cer
 	var hire := Hire.get_h(id)
 	if not hire.is_empty():
+		var hold := Hire.tutorial_spot(hire)   # S2: Borin waits in the smithy for his first talk on a new game
+		if hold != "":
+			return hold
 		match hire["status"]:
 			"away", "dead":
 				return ""
