@@ -2,6 +2,7 @@
 ## EN: Left: every item definition, searchable by name / id / type, filtered by kind. Right: the chosen item with
 ##     quantity, rarity and craftsmanship (where they apply) and "Spawn into stores"; below: money presets and a
 ##     custom amount. Everything spawned is marked as a developer item (DevTools) and never counts for fame.
+##     S2: spawning and money work only while cheats are switched on for the session (DevTools.enabled).
 ## DA: Udviklerkatalog: søg alle genstande, vælg antal/sjældenhed/kvalitet og læg dem i lageret; tilføj penge.
 class_name DevCataloguePanel
 extends UIWindow

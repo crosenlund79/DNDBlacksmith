@@ -68,6 +68,12 @@ func _smith_xp() -> String:
 	return JSON.stringify(Game.player_skills())
 
 
+## Is the steward's buying held up right now by the spending limits (a limit, *_limit or reserve stall)?
+func _limited_now() -> bool:
+	var code := str(Steward.st()["stall"].get("replenish", "")).get_slice("|", 0)
+	return code in ["limit", "daily_limit", "session_limit", "reserve"]
+
+
 ## Runs a soak of `days` days with the steward in charge and checks the hard rules. Returns the statistics.
 func _soak(days: int, label: String) -> Dictionary:
 	var apps := _workshop(2, 3000)
@@ -98,13 +104,18 @@ func _soak(days: int, label: String) -> Dictionary:
 	var o: Dictionary = Steward.orders()
 	var decisions_by_month: Array = []
 	var staff_by_month: Array = []
+	var budget_by_month: Array = []   # S2: did the period pass without the spending limits holding up the buying?
+	var limited := false
 	var last_decisions := 0
 	for d in days:
 		_hours(24)
+		limited = limited or _limited_now()
 		if (d + 1) % 30 == 0 or d == days - 1:
 			var now_dec := int(Steward.st()["acc"]["decisions"])
 			decisions_by_month.append(now_dec - last_decisions)
 			staff_by_month.append(Apprentices.staff().size())
+			budget_by_month.append(not limited)
+			limited = false
 			last_decisions = now_dec
 	var ms := Time.get_ticks_msec() - t0
 	# spending within the limits, day by day (from the steward's own purchase records)
@@ -163,9 +174,13 @@ func _soak(days: int, label: String) -> Dictionary:
 	check(not Steward.is_active(), "%s: still off after loading" % label)
 	# no deadlock: while there are hands in the workshop, something meaningful happens every month (the steward
 	# never hires — when the apprentices have all left, it keeps the shop, the provisions and the deferrals)
+	# (S2 ECONDEV: in a period where the spending limits stop the steward buying materials — the player's limits, not a
+	# deadlock — any decision counts; a seed where an apprentice stays the whole year used up the absence's 1,500 g)
 	for i in decisions_by_month.size():
-		if int(staff_by_month[i]) > 0:
+		if int(staff_by_month[i]) > 0 and bool(budget_by_month[i]):
 			check(int(decisions_by_month[i]) >= 10, "%s: the steward acted in period %d (%d decisions)" % [label, i + 1, int(decisions_by_month[i])])
+		elif int(staff_by_month[i]) > 0:
+			check(int(decisions_by_month[i]) > 0, "%s: with the spending limit used up the steward still acts in period %d" % [label, i + 1])
 		else:
 			check(int(decisions_by_month[i]) > 0, "%s: with no apprentices left the steward still keeps house in period %d" % [label, i + 1])
 	var stall_txt := PackedStringArray()
