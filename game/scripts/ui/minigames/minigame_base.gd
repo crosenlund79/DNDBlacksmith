@@ -153,7 +153,7 @@ func finish_round(q: float, label := "") -> void:
 		Audio.play("sfx/" + sfx, -6.0)
 	finished = true
 	var last := results.size() >= count
-	await get_tree().create_timer(0.55 if last else 0.8).timeout
+	await get_tree().create_timer(CheckOverlay.LAST_ROUND_PAUSE if last else 0.8).timeout
 	if not is_inside_tree():
 		return
 	if not last:

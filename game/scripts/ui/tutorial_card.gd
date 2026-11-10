@@ -62,7 +62,7 @@ func refresh() -> void:
 	_shown_id = str(c["id"])
 	step_label.text = "Tutorial · step %d of %d" % [Tutorial.index_of(_shown_id) + 1, Tutorial.STEPS.size()]
 	title.text = str(c["title"])
-	body.text = str(c["text"])
+	body.text = Tutorial.step_text(c)
 	reset_size()
 	# a little flourish when a new step appears
 	modulate.a = 0.0

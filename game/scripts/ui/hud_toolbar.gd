@@ -11,17 +11,21 @@ const SOCKET := 68.0
 ## id, title, icon, hotkey action ("" = none), panel, args, right-click panel, right args, description
 const BUTTONS := [
 	["inventory", "Inventory", "ui/tb_inventory", "inventory", "inventory", {}, "", {}, "Your stores, equipment and pieces for sale."],
-	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth. Right-click (or U) for your skill levels."],
+	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth: the techniques, stations and recipes you can learn."],
 	["hirelings", "Hirelings", "ui/tb_hirelings", "panel_hirelings", "hirelings", {}, "", {}, "Hire, assign work and send people on expeditions."],
-	["adventurers", "Adventurers", "ui/tb_adventurers", "panel_adventurers", "adventurers", {}, "wanted", {}, "Who is in town and how they fare. Right-click (or B) for the Most Wanted board."],
+	["adventurers", "Adventurers", "ui/tb_adventurers", "panel_adventurers", "adventurers", {}, "wanted", {}, "Who is in town and how they fare."],
 	["orders", "Commissions", "ui/tb_orders", "panel_orders", "orders", {}, "", {}, "Special orders placed by adventurers."],
 	["ledger", "Ledger", "ui/tb_ledger", "panel_ledger", "shop", {"tab": "ledger"}, "", {}, "Accounts, status of the business, journal and upgrades."],
 	["designer", "Crafting", "ui/tb_designer", "", "designer", {}, "", {}, "Design a piece and plan its work."],
-	["property", "Workshop", "ui/tb_property", "", "property", {}, "workshop", {}, "Your rooms, stations and furnishings. Right-click (or Y) for the workshop ledger: apprentices and their work."],
+	["property", "Workshop", "ui/tb_property", "panel_property", "property", {}, "workshop", {}, "Your rooms, stations and furnishings."],
 	["steward", "Steward", "ui/act_road", "panel_steward", "steward", {}, "", {}, "Hand the running forge to your steward while you are away — or see how it fares and take it back."],
-	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "world_map", {}, "The village of Brindlewick, its people and its roads. Right-click (or G) for the world map."],
-	["help", "Help", "ui/tb_help", "panel_help", "help", {}, "", {}, "Controls, rules and the reference guide. Restart the tutorial here."],
+	["map", "Map", "ui/tb_map", "panel_map", "map", {}, "world_map", {}, "The village of Brindlewick, its people and its roads."],
+	["help", "Help", "ui/tb_help", "panel_help", "help", {}, "", {}, "Controls, every shortcut, rules and the reference guide. Restart the tutorial here."],
 ]
+## S2: the right-click panels — what they are and their own hotkey. Shown in the tooltip and as the small badge at the
+## socket's upper left, so every shortcut is visible on the toolbar (Help lists them all: Settings.HOTKEY_HELP).
+const RIGHT := {"skills": ["your skill levels", "panel_skill_levels"], "wanted": ["the Most Wanted board", "panel_wanted"],
+	"workshop": ["the Workshop Ledger — apprentices and their work queue", "panel_workshop"], "world_map": ["the world map", "panel_world_map"]}
 
 var buttons := {}          # id -> ToolbarButton
 var attention := {}        # id -> reason text ("" = none)
@@ -173,13 +177,18 @@ class ToolbarButton extends Control:
 		var a := str(def[3])
 		return Settings.key_label(a) if a != "" else ""
 
+	## The right-click panel's own hotkey ("" = none).
+	func right_key_text() -> String:
+		var r: Array = HudToolbar.RIGHT.get(str(def[6]), [])
+		return Settings.key_label(str(r[1])) if r.size() > 1 else ""
+
 	func tooltip() -> String:
 		var k := key_text()
 		var t := "[b]%s[/b]%s\n[i]%s[/i]" % [def[1], ("   [color=#e8cc84][%s][/color]" % k) if k != "" else "", def[8]]
 		if str(def[6]) != "":
-			var rk := "B" if def[6] == "wanted" else (Settings.key_label("panel_skill_levels") if def[6] == "skills" else (Settings.key_label("panel_workshop") if def[6] == "workshop" else ""))
-			var rn: String = {"wanted": "Most Wanted board", "workshop": "workshop ledger", "world_map": "world map"}.get(str(def[6]), "skill levels")
-			t += "\n[color=#cbb894]Right-click: %s%s[/color]" % [rn, (" [%s]" % rk) if rk != "" else ""]
+			var rk := right_key_text()
+			var rn := str((HudToolbar.RIGHT.get(str(def[6]), [str(def[6])]) as Array)[0])
+			t += "\n[color=#cbb894]Right-click%s: %s[/color]" % [(" (or [color=#e8cc84]%s[/color])" % rk) if rk != "" else "", rn]
 		if attention != "":
 			t += "\n[color=#ffa050]%s[/color]" % attention
 		return t
@@ -228,6 +237,17 @@ class ToolbarButton extends Control:
 			draw_rect(br, Color("#20140c"))
 			draw_rect(br, Color("#b8923e"), false, 1.0)
 			draw_string(f, br.position + Vector2((bw - tw) * 0.5, 14), k, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("#efe4cc"))
+		# the right-click panel's own key, quieter, at the upper left — clear of the neighbour's key below
+		# (S2: every shortcut visible on the toolbar)
+		var rk := right_key_text()
+		if rk != "":
+			var f2 := Assets.font("body_bold")
+			var tw2 := f2.get_string_size(rk, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+			var bw2 := maxf(16.0, tw2 + 6.0)
+			var br2 := Rect2(Vector2(-2.0, -1.0 + lift), Vector2(bw2, 16))
+			draw_rect(br2, Color("#3a2a1a"))
+			draw_rect(br2, Color("#8a7a5a"), false, 1.0)
+			draw_string(f2, br2.position + Vector2((bw2 - tw2) * 0.5, 12), rk, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#cbb894"))
 		if attention != "":
 			var dp := Vector2(s.x - 10.0, 10.0 + lift)
 			draw_circle(dp, 8.0, Color("#20140c"))

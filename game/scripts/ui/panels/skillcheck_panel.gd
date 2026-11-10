@@ -127,7 +127,7 @@ func _resolve(missed: bool) -> void:
 	elif sfx != "":
 		Audio.play("sfx/" + sfx, -5.0)
 	var last := results.size() >= count
-	await get_tree().create_timer(0.55 if last else 0.75).timeout
+	await get_tree().create_timer(CheckOverlay.LAST_ROUND_PAUSE if last else 0.75).timeout
 	if not is_inside_tree():
 		return
 	if not last:

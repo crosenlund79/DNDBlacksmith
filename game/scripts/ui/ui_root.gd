@@ -545,10 +545,12 @@ func _overlay(p: Control, hide_under: bool) -> void:
 
 
 ## Hotkey -> panel. K opens the Skill Tree; U (or a right-click on the toolbar's tree) shows the skill levels.
+## S2: Y opens the toolbar's "Workshop" (Property & Workshop: rooms, stations, furnishings); Q the Workshop Ledger
+## (apprentices and their work queue, also a right-click on that button). Settings.HOTKEY_HELP lists them all.
 const HOTKEY_PANELS := {"inventory": "inventory", "panel_hirelings": "hirelings", "panel_skills": "skilltree",
 	"panel_skill_levels": "skills", "panel_adventurers": "adventurers", "panel_orders": "orders",
 	"quick_travel": "quick_travel", "cancel": "pause", "panel_world_map": "world_map", "panel_workshop": "workshop",
-	"panel_steward": "steward"}
+	"panel_property": "property", "panel_steward": "steward"}
 
 
 static func panel_for_action(action: String) -> String:
@@ -587,24 +589,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("panel_wanted"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("wanted", {})
+		Events.open_panel.emit("wanted", {})
 		return
+	# S2: through the Events bus like a toolbar click, so a key counts for the tutorial ("Open the Skill Tree with K"
+	# used to complete only from the toolbar) and clears the button's glow; UIRoot itself routes it (_on_open_panel)
 	for action in HOTKEY_PANELS:
 		if event.is_action_pressed(action):
 			get_viewport().set_input_as_handled()
-			_on_open_panel(HOTKEY_PANELS[action], {})
+			Events.open_panel.emit(HOTKEY_PANELS[action], {})
 			return
 	if event.is_action_pressed("panel_map"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("map", {})
+		Events.open_panel.emit("map", {})
 	elif event.is_action_pressed("panel_help"):
 		get_viewport().set_input_as_handled()
-		_on_open_panel("help", {})
+		Events.open_panel.emit("help", {})
 	elif event.is_action_pressed("panel_ledger"):
-		_on_open_panel("shop", {"tab": "ledger"})
+		Events.open_panel.emit("shop", {"tab": "ledger"})
 	elif event.is_action_pressed("quick_save"):
 		if Saves.save("quicksave"):
 			toast("Quick-saved.", "good")
+			Objectives.complete("save_game")   # S2: a quick-save is saving the game too
 	elif event.is_action_pressed("quick_load"):
 		if Saves.exists("quicksave"):
 			get_tree().root.get_node("Main").call("load_slot", "quicksave")

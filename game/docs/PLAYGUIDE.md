@@ -11,7 +11,9 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 | I | Stores and equipment |
 | H | Hirelings (Ledger of Hands) |
 | J | Adventurers |
-| K | Skills |
+| K | Skill Tree (U: your skill levels) |
+| Y | Workshop: rooms, stations and furnishings (Property & Workshop) |
+| Q | Workshop Ledger: apprentices and their work queue (also a right-click on the Workshop button) |
 | L | Shop ledger and upgrades |
 | O | Orders |
 | F5 / F9 | Quick-save / quick-load |
@@ -25,7 +27,7 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 
 ### 1. Start the forge
 
-1. Talk to Borin in the stock hall.
+1. Talk to Borin: on a new game he waits in the stock hall beside you.
 2. Craft an **Iron Longsword**: Begin it at the Forge, then follow the marker to the anvil, quench trough and grinding wheel.
    - The grinding wheel is the *Edge Control* minigame.
    - Roll the dice digitally or enter physical rolls.
@@ -260,7 +262,7 @@ Settings → Gameplay: *Item voices* on/off and *rare/normal* frequency.
 ## Iteration 012: the workshop comes alive
 
 Once you can teach (Smithing 6, or as soon as you buy the first room next door), the **notice board** has a
-*Workshop apprentices* tab. Take one on, then open the **Workshop Ledger (Y)** and give them work: customer repairs,
+*Workshop apprentices* tab. Take one on, then open the **Workshop Ledger (Q)** and give them work: customer repairs,
 commissions, a run of longswords, smelting, or station upkeep. They work 8:00–18:00 at the real stations with the real
 materials — you always have priority at a station. Talk to them to see how they are doing or to teach them for an hour.
 Their pieces carry their own mark; they rise from novice to master and, one day, a master may want a workshop of their own.

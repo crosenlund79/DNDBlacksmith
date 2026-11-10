@@ -1001,8 +1001,12 @@ func _interface() -> void:
 	Game.add_gold(4, "sales", "Borin sold horseshoes and nails")   # A2: background income is not serving a customer
 	check(not Tutorial.is_done("customer"), "interface: background income does not complete the customer step")
 	Tutorial.serving_override = true   # the smith at the counter (a counter panel open)
-	Game.add_gold(12, "repairs", "Test repair")
+	Game.add_gold(5, "sales", "Borin Flintbeard sold horseshoes and nails", "market")   # S2 (BUG-050): the market's coin
+	check(not Tutorial.is_done("customer"), "interface: Borin's sale while the counter is open does not complete the customer step")
+	Tutorial.served_override = "tobin"   # S2: the payer is the person being served (the ledger's party)
+	Game.add_gold(12, "repairs", "Test repair", "tobin")
 	Tutorial.serving_override = null
+	Tutorial.served_override = ""
 	check(Tutorial.is_done("customer"), "interface: being paid by a customer completes the customer step")
 	Events.open_panel.emit("skills", {})
 	Events.hireling_departed.emit("borin", "north")

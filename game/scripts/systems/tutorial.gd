@@ -9,16 +9,25 @@ extends RefCounted
 
 ## id, title, text, events that complete it
 const STEPS := [
-	{"id": "move", "title": "Find your feet", "text": "Walk with W A S D or the arrow keys. Hold Shift to hurry.", "on": ["moved"]},
-	{"id": "interact", "title": "Lend a hand", "text": "Walk up to a person or a workstation and press E (or Space) when its name appears.", "on": ["panel:dialogue", "panel:station", "panel:shop", "panel:notice", "panel:loot", "panel:sleep"]},
-	{"id": "craft", "title": "Work the metal", "text": "At a station, choose a recipe, then play its precision checks: press E as the needle crosses the gilt zone.", "on": ["station_worked"]},
+	{"id": "move", "title": "Find your feet", "text": "Walk with W A S D or the arrow keys. Hold {run} to hurry.", "on": ["moved"]},
+	{"id": "interact", "title": "Lend a hand", "text": "Walk up to a person or a workstation and press {interact} (or Space) when its name appears.", "on": ["panel:dialogue", "panel:station", "panel:shop", "panel:notice", "panel:loot", "panel:sleep"]},
+	{"id": "craft", "title": "Work the metal", "text": "At a station, choose a recipe, then play its precision checks: press {interact} as the needle crosses the gilt zone.", "on": ["station_worked"]},
 	{"id": "dice", "title": "Roll for fortune", "text": "Finish every step of the recipe, then roll the dice. Craftsmanship and the fortune die decide the rarity.", "on": ["item_crafted"]},
 	{"id": "customer", "title": "Serve a customer", "text": "Customers sit outside the shop door (speech marks on the minimap). Talk to them to sell, repair or deliver a commission.", "on": ["sale"]},
-	{"id": "skills", "title": "Know your craft", "text": "Open the skill tree with K or from the toolbar; U (or a right-click on the button) shows your skill levels.", "on": ["panel:skills", "panel:skilltree"]},
-	{"id": "hirelings", "title": "Put your people to work", "text": "Open Hirelings (H) and set what Borin works at — or send him on an expedition.", "on": ["hireling_work"]},
-	{"id": "adventurers", "title": "Meet the adventurers", "text": "Adventurers buy your gear and risk their lives with it. See them with J, or the Most Wanted board with B.", "on": ["panel:adventurers", "panel:wanted", "panel:dossier", "adventurer_talk"]},
-	{"id": "progress", "title": "Grow the forge", "text": "Plan your future: spend points in the skill tree, or open Workshop to buy and furnish rooms.", "on": ["panel:property"]},
+	{"id": "skills", "title": "Know your craft", "text": "Open the Skill Tree with {panel_skills} (or its toolbar button); {panel_skill_levels} (or a right-click on that button) shows your skill levels.", "on": ["panel:skills", "panel:skilltree"]},
+	{"id": "hirelings", "title": "Put your people to work", "text": "Open Hirelings ({panel_hirelings}) and set what Borin works at — or send him on an expedition.", "on": ["hireling_work"]},
+	{"id": "adventurers", "title": "Meet the adventurers", "text": "Adventurers buy your gear and risk their lives with it. See them with {panel_adventurers}, or the Most Wanted board with {panel_wanted}.", "on": ["panel:adventurers", "panel:wanted", "panel:dossier", "adventurer_talk"]},
+	{"id": "progress", "title": "Grow the forge", "text": "Plan your future: spend points in the Skill Tree, or open the Workshop ({panel_property}) to buy and furnish rooms.", "on": ["panel:property"]},
 ]
+
+
+## S2: a step's text with its {action} placeholders replaced by the real keys (Settings), so the tutorial can never
+## name a key that does something else.
+static func step_text(s: Dictionary) -> String:
+	var t := str(s.get("text", ""))
+	for action in Settings.DEFAULT_KEYS:
+		t = t.replace("{%s}" % action, Settings.key_label(str(action)))
+	return t
 
 static var _wired := false
 static var _moved := 0.0
@@ -129,6 +138,7 @@ static func wire() -> void:
 	Events.gold_changed.connect(_on_gold)
 	Events.hireling_departed.connect(func(_id, _ex): notify("hireling_work"))
 	Events.hirelings_changed.connect(_on_hirelings)
+	Objectives.wire()   # S2: the opening objectives move on when one can no longer happen (Mira's lapsed commission)
 
 
 static func _on_panel(id: String, args: Dictionary) -> void:
@@ -149,11 +159,52 @@ static var serving_override: Variant = null
 ## adventurer buying a draught or a piece off the display by themselves, an apprentice's repair or the steward's sales
 ## while the smith is away write the same ledger categories but teach the player nothing about selling (A2 observation
 ## 1: those background sales used to tick the step off before any customer had sat down).
+## S2 (BUG-050): the counter panel alone is not enough — Borin's hourly "sales" line (payer "market") arriving while a
+## conversation or the counter is open used to tick the step. The A2 ledger names the payer (`party`): only a payment by
+## the person the smith is serving there and then counts (party_served).
 static func _on_gold(_g: int) -> void:
 	var l: Array = Game.state.get("ledger", [])
 	if not l.is_empty() and str(l[-1].get("cat", "")) in ["sales", "repairs", "commissions"] and int(l[-1].get("amount", 0)) > 0 \
-			and serving_at_counter():
+			and serving_at_counter() and party_served(str(l[-1].get("party", ""))):
 		notify("sale")
+
+
+## S2: the smith served `npc` in person — a sale or a delivered commission (Objectives.on_sold). A commission whose
+## customer's purse was empty is paid entirely by the recorded village subsidy (A2, canon D14), so no "commissions"
+## line in their name reaches _on_gold; the service itself still counts (Mira Pell's opening commission).
+static func on_served(npc: String) -> void:
+	if not Game.state.is_empty() and serving_at_counter() and party_served(npc):
+		notify("sale")
+
+
+## Tests: a person id forces party_served() to "the smith is serving this person" ("" = serving_override, else the UI).
+static var served_override := ""
+
+
+## Is `party` (a ledger payer) the person the smith is serving at the counter right now: seated at the counter, or the
+## one the open conversation, consultation or commission board is about? The market (Borin's horseshoes), the village
+## subsidy, a collector or a farm are never "a customer at the counter".
+static func party_served(party: String) -> bool:
+	if party == "" or (Adv.get_a(party).is_empty() and DB.character(party).is_empty()):
+		return false
+	if served_override != "":
+		return party == served_override
+	if serving_override != null:
+		return bool(serving_override)   # tests that force "a counter panel is open" serve whoever pays in person
+	var c := Shop.customer(party)
+	if not c.is_empty() and bool(c.get("present", true)):
+		return true
+	var ui := UIRoot.instance
+	if not is_instance_valid(ui) or not is_instance_valid(ui.current):
+		return false
+	var p: Control = ui.current
+	if p is DialoguePanel:
+		return (p as DialoguePanel).npc == party
+	if p is ConsultPanel:
+		return (p as ConsultPanel).npc == party
+	if p is OrdersPanel:
+		return Shop.orders().any(func(o): return str(o.get("npc", "")) == party)
+	return false
 
 
 ## Is the smith serving someone in person right now (a counter panel open, and not away with the steward in charge)?
@@ -163,7 +214,7 @@ static func serving_at_counter() -> bool:
 	if Steward.smith_away():
 		return false
 	var ui := UIRoot.instance
-	return ui != null and is_instance_valid(ui) and is_instance_valid(ui.current) and ui.current_id in COUNTER_PANELS
+	return is_instance_valid(ui) and is_instance_valid(ui.current) and ui.current_id in COUNTER_PANELS
 
 
 ## The selling step's live status line, so the step stays useful until someone can actually be served:
@@ -191,5 +242,6 @@ static func customer_status() -> Dictionary:
 
 ## Allocation changes count while the Hirelings ledger is open (the daily wage tick does not).
 static func _on_hirelings() -> void:
-	if UIRoot.instance and is_instance_valid(UIRoot.instance.current) and UIRoot.instance.current is HirelingsPanel:
+	# is_instance_valid first: between leaving a game and the next one's HUD the old UIRoot is already freed
+	if is_instance_valid(UIRoot.instance) and is_instance_valid(UIRoot.instance.current) and UIRoot.instance.current is HirelingsPanel:
 		notify("hireling_work")

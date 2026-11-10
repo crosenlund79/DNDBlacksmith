@@ -93,6 +93,8 @@ func text_for(id: String, n: NPCActor) -> Dictionary:
 			"injured":
 				return {"icon": "ui/act_bandage", "text": "zzz" if hr >= 21 else "nursing a sore arm"}
 			"working":
+				if Hire.tutorial_spot(h) == Hire.TUTORIAL_SPOT:   # S2: a new game's Borin, waiting for the first talk
+					return {"icon": "ui/act_hammer", "text": "a word, boss?"}
 				if not Game.is_work_hours():
 					return {"icon": "ui/act_zzz", "text": "zzz"} if hr >= 22 else {"icon": "icons/ale_mug", "text": "a pint after work"}
 				var act := str(Hire.hud_info(h)["activity"])

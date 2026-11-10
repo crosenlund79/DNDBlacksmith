@@ -434,12 +434,14 @@ func _go(to: Vector2, reach: float, g: Dictionary, mark_at: Vector2) -> bool:
 
 ## Walk up to an interactable (a station, by the stairs or the lift if it is on another floor) and use it there.
 ## Used by "Walk to the <station>" and "Craft again" (Smithy). True when on the way (or already used).
-func walk_to_entity(e: Dictionary) -> bool:
+## S2: use = false only walks up to it (the optional auto-walk after a skill check): nothing is used on arrival.
+func walk_to_entity(e: Dictionary, use := true) -> bool:
 	cancel()
 	if _in_reach(e):
-		_use(e)
+		if use:
+			_use(e)
 		return true
-	return _go(e["pos"], float(e["r"]) - 12.0, {"kind": "entity", "e": e}, e["pos"])
+	return _go(e["pos"], float(e["r"]) - 12.0, {"kind": "entity", "e": e, "use": use}, e["pos"])
 
 
 func cancel() -> void:
@@ -511,8 +513,10 @@ func steer(delta: float) -> Vector2:
 				goal = g
 	if goal.get("kind", "") == "entity" and _in_reach(goal["e"]):
 		var e: Dictionary = goal["e"]
+		var use_it := bool(goal.get("use", true))
 		cancel()
-		_use(e)
+		if use_it:
+			_use(e)
 		return Vector2.ZERO
 	# take the stairs
 	if jumps.has(_i - 1):
@@ -557,7 +561,7 @@ func _finish_walk() -> void:
 	cancel()
 	if g.get("kind", "") == "entity":
 		var e: Dictionary = g["e"]
-		if player.position.distance_to(e["pos"]) < float(e["r"]) + 8.0:
+		if player.position.distance_to(e["pos"]) < float(e["r"]) + 8.0 and bool(g.get("use", true)):
 			_use(e)
 	elif g.get("kind", "") == "npc":
 		_arrive_npc(str(g["npc"]))

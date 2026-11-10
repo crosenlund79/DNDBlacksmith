@@ -391,6 +391,10 @@ func _on_work_done(qs: Array, sid: String) -> void:
 		var hint := Smithy.floor_hint(Crafting.current_station())
 		Events.toast.emit("%s — %d%%. Next: %s at %s%s." % [Crafting.grade(avg), int(round(avg)), Crafting.current_op().get("op", "?"),
 			Smithy.station_ref(Crafting.current_station()), (" (" + hint + ")") if hint != "" else ""], "good" if avg >= 90.0 else "info")
+		# S2: the optional auto-walk (Settings, off by default) — this panel closes and the smith only walks there
+		if Smithy.auto_walk_target(sid) != "":
+			close()
+			Smithy.auto_walk_next(sid)
 
 
 func _practice() -> void:

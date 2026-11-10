@@ -23,6 +23,7 @@ var values := {
 	"gameplay/click_to_move": true,           # left-click the ground, an object or a person to walk there
 	"gameplay/item_voices": true,             # awakened pieces now and then speak while worked on (ItemSpirit)
 	"gameplay/item_voice_freq": "normal",     # normal | rare
+	"gameplay/auto_walk": false,              # S2: after a skill check, walk to the recipe's next station (only walks)
 	"debug/overlay": false,
 }
 
@@ -54,9 +55,29 @@ const DEFAULT_KEYS := {
 	"quick_travel": [KEY_T],
 	"panel_skill_levels": [KEY_U],
 	"panel_world_map": [KEY_G],          # the world map (iteration 011)
-	"panel_workshop": [KEY_Y],           # the workshop ledger: apprentices and work queue (iteration 012)
+	# S2: Y opens what the toolbar's "Workshop" button opens (rooms, stations, furnishings), so the key and the label
+	# match; the workshop ledger (apprentices and their work queue, iteration 012) moved from Y to Q ("queue") and stays
+	# on that button's right-click
+	"panel_property": [KEY_Y],
+	"panel_workshop": [KEY_Q],
 	"panel_steward": [KEY_N],            # Steward Mode: hand over the forge / the steward at work (Milestone S1)
 }
+
+## S2: every shortcut, in the order Help and Settings list them: [action, what it does]. The keys shown come from
+## DEFAULT_KEYS through key_label/keys_label, so the lists can never drift from the real bindings.
+const HOTKEY_HELP := [
+	["interact", "Talk / use / stop a check needle"], ["run", "Hurry"],
+	["inventory", "Inventory"], ["panel_skills", "Skill Tree"], ["panel_skill_levels", "Skill levels"],
+	["panel_hirelings", "Hirelings"], ["panel_property", "Workshop (rooms, stations, furnishings)"],
+	["panel_workshop", "Workshop Ledger (apprentices & work queue)"], ["panel_steward", "Steward"],
+	["panel_adventurers", "Adventurers"], ["panel_wanted", "Most Wanted board"], ["panel_orders", "Commissions"],
+	["panel_ledger", "Ledger"], ["panel_map", "Map"], ["panel_world_map", "World map"], ["quick_travel", "Quick travel"],
+	["time_pause", "Pause time"], ["time_slower", "Slower"], ["time_faster", "Faster"],
+	["quick_save", "Quick-save"], ["quick_load", "Quick-load"], ["panel_help", "Help"], ["cancel", "Menu"],
+	["debug_overlay", "Diagnostics"],
+]
+## Readable names for keys whose engine names are long or cryptic.
+const KEY_NAMES := {KEY_ESCAPE: "Esc", KEY_EQUAL: "+", KEY_MINUS: "−", KEY_KP_ADD: "Num +", KEY_KP_SUBTRACT: "Num −"}
 
 
 func _ready() -> void:
@@ -127,4 +148,24 @@ func apply_display() -> void:
 func key_label(action: String) -> String:
 	if not DEFAULT_KEYS.has(action):
 		return "?"
-	return OS.get_keycode_string(DEFAULT_KEYS[action][0])
+	return key_name(DEFAULT_KEYS[action][0])
+
+
+## Every key bound to an action, e.g. "I / Tab" ("?" when unbound).
+func keys_label(action: String, sep := " / ") -> String:
+	if not DEFAULT_KEYS.has(action):
+		return "?"
+	return sep.join(PackedStringArray((DEFAULT_KEYS[action] as Array).map(func(k): return key_name(int(k)))))
+
+
+func key_name(code: int) -> String:
+	return str(KEY_NAMES.get(code, OS.get_keycode_string(code)))
+
+
+## S2: the shortcut list as "[b]key[/b] what · …" (bbcode) or "key what, …" (plain) — Help and Settings show this.
+func controls_text(bbcode := true) -> String:
+	var parts := PackedStringArray()
+	for h in HOTKEY_HELP:
+		var k := keys_label(str(h[0]), "/")
+		parts.append(("[b]%s[/b] %s" if bbcode else "%s %s") % [k, str(h[1])])
+	return (" · " if bbcode else ", ").join(parts)

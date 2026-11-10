@@ -3965,6 +3965,14 @@ func phase_a2_experience() -> void:
 	await ph.run(self)
 
 
+# ======================================================================= Milestone S2: early game (EARLY worker)
+## The first hour on a fresh save: Borin in the smithy, the keys and labels, auto-walk, the shorter check result, the
+## selling step and Mira's commission with an empty purse, every objective done (tests/playtest_s2_early.gd). Shots s2e_*.
+func phase_s2_early() -> void:
+	var ph: RefCounted = load("res://tests/playtest_s2_early.gd").new()
+	await ph.run(self)
+
+
 ## The first Label / RichTextLabel under `root` whose text contains `needle` (case-sensitive), or null.
 func find_label_containing(root: Node, needle: String) -> Control:
 	for n in root.find_children("*", "Label", true, false):

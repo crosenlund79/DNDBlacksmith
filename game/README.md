@@ -44,7 +44,7 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 |---|---|
 | WASD / arrows | Move (Shift runs) |
 | E / Space | Interact (also stops the skill-check needle) |
-| Bottom toolbar | Inventory, Skill Tree (right-click: skill levels), Hirelings, Adventurers (right-click: Most Wanted), Commissions, Ledger, Crafting (equipment designer), Workshop (property), Map, Help |
+| Bottom toolbar | Inventory, Skill Tree (right-click: skill levels), Hirelings, Adventurers (right-click: Most Wanted), Commissions, Ledger, Crafting (equipment designer), Workshop (property; right-click: Workshop Ledger), Steward, Map (right-click: world map), Help. Each button shows its key at the lower right, and the right-click panel's key at the upper left |
 | I | Inventory |
 | H | Hirelings |
 | K | Skill tree (U: skill levels) |
@@ -60,7 +60,8 @@ Other play-test phases are `smoke`, `stations`, `interiors`, `nav`, `minigames`,
 | F5 / F9 | Quick save / quick load |
 | M | Map of Brindlewick |
 | G | World map (persistent sites, their state and history) |
-| Y | Workshop Ledger — apprentices, stations and work queues |
+| Y | Workshop — rooms, stations and furnishings (Property & Workshop; the toolbar's Workshop button) |
+| Q | Workshop Ledger — apprentices, stations and work queues (right-click the Workshop button) |
 | Right-click an item | Inspect it: maker's mark, owners, its story |
 | F1 | Help & searchable reference |
 | F3 | Diagnostics overlay |

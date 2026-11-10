@@ -173,7 +173,9 @@ static func _world() -> VillageWorld:
 
 
 ## Walk (click-to-move, stairs and lift included) to a station and use it on arrival.
-static func walk_to_station(sid: String, w: VillageWorld = null) -> String:
+## S2: use_on_arrival = false only walks there (the optional auto-walk after a check: nothing opens, nothing starts).
+## Backward compatible: the two-argument form behaves exactly as before.
+static func walk_to_station(sid: String, w: VillageWorld = null, use_on_arrival := true) -> String:
 	if w == null:
 		w = _world()
 	if w == null:
@@ -183,8 +185,34 @@ static func walk_to_station(sid: String, w: VillageWorld = null) -> String:
 		return "Nowhere to walk."
 	for e in w.interactables:
 		if str(e.get("kind", "")) == "station" and str(e.get("id", "")) == sid:
-			return "" if nav.walk_to_entity(e) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
+			return "" if nav.walk_to_entity(e, use_on_arrival) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
 	return "The %s is not set up in the workshop." % DB.station(sid).get("name", sid)
+
+
+## S2: the optional auto-walk (Settings "gameplay/auto_walk", off unless the player turns it on). Called when a skill
+## check has finished an operation at `done_sid`: if the recipe continues at a different station that is set up, the
+## smith walks there. It only walks — it opens nothing, starts no work, never chooses a recipe or rolls the dice; the
+## dice, a finished piece, the steward in charge or the next step at the same station leave him where he is.
+## Returns the station he set off for ("" = no walk). `force` = ignore the setting (tests).
+const AUTO_WALK_KEY := "gameplay/auto_walk"
+
+
+static func auto_walk_target(done_sid: String, force := false) -> String:
+	if not force and not bool(Settings.get_value(AUTO_WALK_KEY, false)):
+		return ""
+	if not Crafting.active() or bool(Crafting.job().get("awaiting_dice", false)) or Steward.is_active():
+		return ""
+	var nsid := Crafting.current_station()
+	if nsid == "" or nsid == done_sid or not Property.is_installed(nsid):
+		return ""
+	return nsid
+
+
+static func auto_walk_next(done_sid: String, w: VillageWorld = null) -> String:
+	var nsid := auto_walk_target(done_sid)
+	if nsid == "":
+		return ""
+	return nsid if walk_to_station(nsid, w, false) == "" else ""
 
 
 static func craft_again_reason(rid: String) -> String:
