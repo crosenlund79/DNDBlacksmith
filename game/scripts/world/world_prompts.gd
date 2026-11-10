@@ -99,6 +99,9 @@ static func _station(sid: String) -> Dictionary:
 		p["actions"] = ["Details"]
 		p["off"] = ["Locked — " + why]
 		return p
+	# S2 (OBS-12): the skill check this station runs, named before the smith commits ("check: precision ring")
+	p["check"] = StationPanel.check_name(sid)
+	p["status"] = "check: " + str(p["check"])
 	var job := Crafting.job()
 	if not job.is_empty():
 		if bool(job.get("awaiting_dice", false)):

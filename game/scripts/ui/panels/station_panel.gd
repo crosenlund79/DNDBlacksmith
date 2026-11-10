@@ -45,10 +45,10 @@ func _build() -> void:
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_child(UIKit.label(Crafting.DISCIPLINE_NAME.get(st.get("discipline", ""), ""), 22, "heading_italic", UIKit.RUBRIC))
 	info.add_child(UIKit.label(st.get("purpose", ""), 22))
-	var c := Crafting.check_params(station_id)
-	var mech_name := str(Minigames.tutorial(Minigames.mechanic({"station": station_id})).get("name", "Precision ring"))
-	info.add_child(UIKit.label("%s at average difficulty: zone %d°, needle %.2f rev/s (your %s %d widens and slows it)" % [mech_name, int(c["zone"]), c["speed"],
-		SkillSys.skill_name(Crafting.skill_for_station(station_id)), Game.player_level(Crafting.skill_for_station(station_id))], 18, "body_italic"))
+	var chk := UIKit.label(check_line(station_id), 18, "body_italic")
+	chk.name = "CheckLine"
+	chk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_child(chk)
 	var why := Crafting.station_locked_reason(station_id)
 	if why != "":
 		info.add_child(UIKit.label("Locked — " + why, 22, "body_bold", UIKit.RUBRIC))
@@ -68,7 +68,8 @@ func _build() -> void:
 		var lines := []
 		for i in ops.size():
 			var o: Dictionary = ops[i]
-			var nm := "%d. %s — %s (%d check%s)" % [i + 1, o["op"], DB.station(o["station"]).get("name", o["station"]), int(o.get("checks", 1)), "s" if int(o.get("checks", 1)) > 1 else ""]
+			var nm := "%d. %s — %s (%d check%s · %s)" % [i + 1, o["op"], DB.station(o["station"]).get("name", o["station"]), int(o.get("checks", 1)), "s" if int(o.get("checks", 1)) > 1 else "",
+				check_name(str(o["station"]))]
 			if i < int(job["step"]):
 				var q := float(done[i]["q"]) if i < done.size() else 0.0
 				lines.append("[color=#5e421c][s]%s[/s]  [b]%d%%[/b][/color]" % [nm, int(round(q))])
@@ -82,7 +83,10 @@ func _build() -> void:
 			body.add_child(UIKit.button("Roll the dice and finish the piece", func(): Events.open_panel.emit("dice", {}), 420))
 		elif Crafting.current_station() == station_id:
 			var op := Crafting.op_params()
-			body.add_child(UIKit.button("%s (%d check%s)" % [op["op"], op["count"], "s" if op["count"] > 1 else ""], _work, 520))
+			var wb := UIKit.button("%s (%d check%s · %s)" % [op["op"], op["count"], "s" if op["count"] > 1 else "", check_name(station_id)], _work, 520)
+			wb.name = "WorkButton"
+			wb.tooltip_text = check_line(station_id)
+			body.add_child(wb)
 		else:
 			# The Living Realm: the next station is marked in the workshop; one click walks there (stairs/lift too)
 			var nsid := Crafting.current_station()
@@ -112,7 +116,7 @@ func _build() -> void:
 			body.add_child(svc)
 	if why == "":
 		body.add_child(UIKit.divider())
-		body.add_child(UIKit.button("Practise a check (no materials, a little experience)", _practice, 460))
+		body.add_child(UIKit.button("Practise a check — %s (no materials, a little experience)" % check_name(station_id), _practice, 460))
 	content.add_child(UIKit.scroll(body, 560 if job.is_empty() else 600))
 
 
@@ -160,6 +164,29 @@ func _filter_bar() -> Control:
 	chips_row = UIKit.hbox(6)
 	v.add_child(chips_row)
 	return v
+
+
+## S2 (OBS-12, BUG-044): the skill check a station runs, in a few words ("precision ring", "Spark & Ember alignment"…).
+static func check_name(sid: String) -> String:
+	var t := Minigames.mechanic({"station": sid})
+	return "precision ring" if t == "ring" else Minigames.label(t)
+
+
+## The header line: which check this station runs and what it is like at average difficulty, in that mechanic's own
+## terms — the ring's zone and needle for the precision ring; tolerance and pace against the standard for the others
+## (MinigameBase reads zone/speed as `ease` and `pace`).
+static func check_line(sid: String) -> String:
+	var c := Crafting.check_params(sid)
+	var sk := Crafting.skill_for_station(sid)
+	var you := "your %s %d" % [SkillSys.skill_name(sk), Game.player_level(sk)]
+	var t := Minigames.mechanic({"station": sid})
+	if t == "ring":
+		return "Check: precision ring — at average difficulty the target zone is %d° and the needle turns %.2f rev/s (%s widens and slows it)." % [
+			int(c["zone"]), float(c["speed"]), you]
+	var tol := clampf(float(c["zone"]) / 40.0, 0.55, 2.2)
+	var pc := clampf(float(c["speed"]) / 0.55, 0.6, 1.6)
+	return "Check: %s (not the precision ring) — at average difficulty: tolerance %d%%, pace %d%% of standard (%s makes it more forgiving and calmer)." % [
+		Minigames.label(t), int(round(tol * 100.0)), int(round(pc * 100.0)), you]
 
 
 static func recipe_cats(r: Dictionary) -> Array:
@@ -245,7 +272,7 @@ func _recipe_row(rec: Dictionary) -> Control:
 		ins.append("[url=item:%s][color=%s]%s %d/%d[/color][/url]" % [id, "#26622f" if have >= need else "#9e3a0c", DB.item(id).get("name", id), have, need])
 	var steps := []
 	for o in Crafting.operations(rid):
-		steps.append(str(o["op"]))
+		steps.append("%s (%s)" % [str(o["op"]), check_name(str(o["station"]))])   # S2: the check of every operation, before Begin
 	var rs := Guide.recipe_status(rid)
 	var lock := Crafting.recipe_locked_reason(rid)
 	var lock_txt := ""
