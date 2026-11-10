@@ -254,11 +254,13 @@ func work_spot(sid: String) -> Dictionary:
 	var sy := float(size[1])
 	var cands := [[Vector2(-sx * 0.5 - 24.0, sy * 0.3), "e"], [Vector2(sx * 0.5 + 24.0, sy * 0.3), "w"], [Vector2(0, sy * 0.5 + 40.0), "n"],
 		[Vector2(0, -sy * 0.5 - 6.0), "s"]]
+	var own_room := room_id(c)   # S2 (OBS-21): worked from its own room — never through a wall or from the street
 	for cnd in cands:
 		var p: Vector2 = c + (cnd[0] as Vector2)
-		if _spot_ok(p, sid):
+		if _spot_ok(p, sid) and room_id(p) == own_room:
 			return {"pos": p, "face": str(cnd[1])}
-	return {"pos": _free_near(c + (cands[2][0] as Vector2)), "face": "n"}
+	var near := _free_near(c + (cands[2][0] as Vector2), own_room)
+	return {"pos": near, "face": "n" if near.y >= c.y else "s"}
 
 
 ## Clear floor for a miniature: walkable, clear of walls and footprints, and its standing figure (about 44×86 px above
@@ -268,6 +270,8 @@ func _spot_ok(p: Vector2, own := "") -> bool:
 	if nav != null and not (nav.walkable(p) and nav.clear_at(p, 16.0)):
 		return false
 	var body := Rect2(p + Vector2(-22, -80), Vector2(44, 86))
+	if not _inside_room(body, p):
+		return false
 	for sid_v in (Property.st()["stations"] as Dictionary).keys():
 		var sid := str(sid_v)
 		if sid == own or not Property.is_installed(sid):
@@ -279,19 +283,40 @@ func _spot_ok(p: Vector2, own := "") -> bool:
 	return true
 
 
-func _free_near(p: Vector2) -> Vector2:
+## S2 (OBS-21): the standing figure stays inside the room whose floor it stands on — its picture never crosses a wall.
+## (Before, the side above a station by the north wall — the forge — put an apprentice on top of the outer wall.)
+func _inside_room(body: Rect2, feet: Vector2) -> bool:
+	for bid in ["smithy", "smithy_loft"]:
+		for rm in w.buildings.get(bid, {}).get("rooms", []):
+			var r: Rect2 = rm["rect"]
+			if r.has_point(feet):
+				return r.grow(2.0).encloses(body)
+	return false   # not on the workshop's floor at all (the street outside a wall)
+
+
+## The workshop room (ground floor or Loft) under `p` ("" = none).
+func room_id(p: Vector2) -> String:
+	for bid in ["smithy", "smithy_loft"]:
+		var rid := w.room_at(bid, p)
+		if rid != "":
+			return rid
+	return ""
+
+
+## Clear floor near `p`; with `in_room`, only in that room (a station's own room).
+func _free_near(p: Vector2, in_room := "") -> Vector2:
 	var nav := PlayerNav.of(w)
 	if nav == null:
 		return p
 	nav.ensure_grid()
-	if _spot_ok(p):
+	if _spot_ok(p) and (in_room == "" or room_id(p) == in_room):
 		return p
 	# spiral outwards for clear floor away from the stations
 	var r := 24.0
 	while r <= 260.0:
 		for k in 16:
 			var q := p + Vector2(cos(TAU * k / 16.0), sin(TAU * k / 16.0)) * r
-			if _spot_ok(q):
+			if _spot_ok(q) and (in_room == "" or room_id(q) == in_room):
 				return q
 		r += 20.0
 	var c := nav.nearest_cell(p, 200.0)
