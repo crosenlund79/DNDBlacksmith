@@ -24,6 +24,8 @@ const STEPS := [
 		"what": "Cloaks worn in the amulet slot move to the cloak slot (same instance) and cloak commissions name the cloak slot; saves from before the property system own the whole ground floor and every station (legacy); saves from before the Loft gain its unowned rooms and doorways; saves from before the skill tree learn every node their skills already meet."},
 	{"to": 3, "name": "canonical item identity",
 		"what": "Records that only refer to a piece (finished-expedition loot, repair requests for an adventurer's own piece) become uid + snapshot references; a delivered contract masterpiece moves to the holdings archive (out of the capped history); one uid held by two live holders keeps the most authoritative one. Same instances, same uids (ItemRegistry.migrate_records)."},
+	{"to": 4, "name": "campaign Unique registry",
+		"what": "Run 0.1 (decision D13): every piece or record of a Unique artifact in the save is registered; the lowest uid is the authentic piece and any others are kept whole as recorded legacy copies, so the campaign never mints that Unique again (Uniques.scan_state)."},
 ]
 
 
@@ -75,6 +77,8 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			_v1_to_v2(data)
 		3:
 			_v2_to_v3(data)
+		4:
+			_v3_to_v4(data)
 		_:
 			return false
 	return true
@@ -122,6 +126,16 @@ static func _v2_to_v3(data: Dictionary) -> void:
 		if n > 0:
 			Log.info("  item identity: %d record(s) converted" % n)
 	)
+
+
+## v3 → v4 (Run 0.1): the campaign's Unique registry. Idempotent; no item is changed, moved or removed.
+static func _v3_to_v4(data: Dictionary) -> void:
+	var n := Uniques.scan_state(data)
+	if n > 0:
+		var r: Dictionary = data["uniques"]
+		for d in r:
+			Log.info("  Unique %s: authentic uid %d, %d legacy cop%s kept" % [d, int(r[d]["uid"]), (r[d]["copies"] as Array).size(),
+				"y" if (r[d]["copies"] as Array).size() == 1 else "ies"])
 
 
 ## Runs `fn` with Game.state pointing at `data` (systems read the save through Game.state), then restores it.

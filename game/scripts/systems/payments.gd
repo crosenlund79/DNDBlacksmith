@@ -93,6 +93,10 @@ static func gift_within(items: Array, cap: int) -> Array:
 			break
 		out.append(it)
 		tot += v
+	# a Unique rolled for a gift but not given never reached the world: the campaign has not minted it (D13)
+	for it in sorted:
+		if not out.has(it):
+			Uniques.release(it)
 	return out
 
 

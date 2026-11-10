@@ -1,7 +1,7 @@
 # Ember & Ash — Playtest Observation Register
 
 **Status:** tracking register, created in Run 0 (10 November 2026) at development commit `fa7b5b7` (A2 integrated).
-**Authority:** [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) v1.1 governs. This register records what was
+**Authority:** [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) (v1.2) governs. This register records what was
 observed, what the code does now and what decision is pending. It approves nothing: an observation listed here is **not** an
 approved gameplay change, and no entry authorises implementation. Companion documents:
 [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGISTER.md) and [`EMBER_ASH_ROADMAP_REGISTER.md`](EMBER_ASH_ROADMAP_REGISTER.md).
@@ -39,7 +39,8 @@ the brief's own label is kept in the *User label* column:
 | OBS-20 | 18 | Artificial voices |
 | OBS-21 | 19 | Apprentices visible at their workplaces |
 
-**Please confirm this mapping.** This 1–21 series is separate from three other numbering schemes found in the sources (none
+**Corrected in Run 0.1** at the user's request: this is the register's numbering, and the brief's labels stay in the
+*User label* column for traceability. This 1–21 series is separate from three other numbering schemes found in the sources (none
 of which this register renumbers):
 - the user's earlier running list ("Observations #1–43 have already been implemented", B:Iteration 010; "Observation #80",
   B:Living Realm = the Evolving Smithy, delivered in 0.14.6). The list itself is not in any available source, so #1–43 cannot
@@ -103,7 +104,7 @@ Residual issues found while verifying 1–9 (recorded as decision-register entri
 
 ## Clarifications needed from the user (before any scoping)
 
-1. Confirm the OBS-11 … OBS-21 numbering above.
+1. *(Done in Run 0.1: the OBS-11 … OBS-21 numbering is corrected.)*
 2. OBS-10 — what "survival incentives" means (needs for the smith, or incentives tied to adventurers surviving), and
    whether it would revise the standing older-brief rulings "no hunger, thirst, hygiene, stamina or routine survival meters"
    (light fatigue was later approved in Iteration 009). The original wording of observation 10 is not in any available
@@ -117,3 +118,4 @@ Residual issues found while verifying 1–9 (recorded as decision-register entri
 | Date | Change |
 |---|---|
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation). All 21 observations recorded; 1–9 verified against A2. |
+| 10 November 2026 | Run 0.1: numbering OBS-11 … OBS-21 corrected and fixed as the register's numbering; authority updated to canonical v1.2. No observation's scope or status changed. |

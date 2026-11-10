@@ -15,7 +15,7 @@
 ##   trade_name(disc) -> String                 "Smithing", "Leatherworking & Tailoring", …
 ##   room_tier(r) -> int                        0 modest · 1 established · 2 masterwork (owned workshop rooms)
 ##   tier_info(r) -> Dictionary                 {tier, name, next}  — `next` says what the next tier needs
-##   renown() -> Dictionary                     {ok, why}  reputation ≥ 25, ≥ 3 Hall of Fame plaques or ≥ 2500 gold
+##   renown() -> Dictionary                     {ok, why}  reputation ≥ 25 or ≥ 3 Hall of Fame plaques (earned, never bought: D18)
 ##   capacity_report(plan := {}) -> Array       per discipline {disc, name, stations, installed, places, rooms, free}
 ##   floor_hint(sid) -> String                  "" on the ground floor, else "upstairs in the Loft"
 ##   craft_again_reason(rid) -> String          "" when the same recipe can be started again now
@@ -35,7 +35,6 @@ const TIER_SKILL := [0, 6, 12]
 const TIER_STATIONS := [0, 2, 3]
 const RENOWN_REP := 25.0
 const RENOWN_PLAQUES := 3
-const RENOWN_GOLD := 2500
 
 
 # ------------------------------------------------------------------ discipline areas
@@ -66,9 +65,8 @@ static func renown() -> Dictionary:
 		return {"ok": true, "why": "the village calls the forge renowned"}
 	if plaques >= RENOWN_PLAQUES:
 		return {"ok": true, "why": "%d plaques hang in the Hall of Fame" % plaques}
-	if Game.gold() >= RENOWN_GOLD:
-		return {"ok": true, "why": "the workshop is wealthy"}
-	return {"ok": false, "why": "renown — a renowned name (reputation %d of %d), %d Hall of Fame plaques or %d gold" % [int(rep), int(RENOWN_REP), RENOWN_PLAQUES, RENOWN_GOLD]}
+	# Run 0.1 (D18, canon §9.2): renown is earned, never bought — a full purse no longer counts as renown
+	return {"ok": false, "why": "renown — a renowned name (reputation %d of %d) or %d Hall of Fame plaques (now %d)" % [int(rep), int(RENOWN_REP), RENOWN_PLAQUES, plaques]}
 
 
 static func room_tier(r: Dictionary) -> int:

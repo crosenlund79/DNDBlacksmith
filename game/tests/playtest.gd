@@ -374,7 +374,7 @@ func phase_full() -> void:
 	expect(panel() is ShopPanel, "shop counter opens the shop panel")
 	await shot("shop_counter")
 	var gold0 := Game.gold()
-	await sell_at_counter("Hand Axe")   # A2: the offer grid selects; "Sell for N g" sells
+	await sell_at_counter("Hand Axe", "varn")   # A2: the offer grid selects; "Sell for N g" sells (Varn's own grid)
 	await wait(0.4)
 	expect(Game.gold() > gold0 or Adv.get_a("varn")["equipment"].get("weapon", {}).get("uid", -1) == axe["uid"], "shop: Varn bought the hand axe (gold %d → %d)" % [gold0, Game.gold()])
 	await press("cancel")
@@ -1253,7 +1253,7 @@ func phase_slice() -> void:
 	await use("counter", "smithy")
 	await shot("slice_shop_garrick")
 	# the piece may have earned a name of its own at the anvil (a 120%+ masterwork): click it by its current name
-	await sell_at_counter(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
+	await sell_at_counter(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")), "garrick")
 	await wait(0.5)
 	expect(gar["equipment"].get("weapon", {}).get("uid", -1) == ember.get("uid", -2), "slice: Garrick bought and equipped the Emberwarden")
 	await close_panel()
@@ -3962,10 +3962,14 @@ func find_label_containing(root: Node, needle: String) -> Control:
 
 ## A2: sell a displayed piece at the counter the way a player does — choose it in the offer grid (OfferPicker), then
 ## press the explicit "Sell for N g" button. `name` matches the piece's current name (first match on display).
-func sell_at_counter(name: String) -> bool:
+## Sells a displayed piece through a waiting customer's own offer grid (several customers may sit at the counter, each
+## with a grid; `who` picks the right one — Run 0.1: the first grid can belong to someone else, e.g. a penniless Mira).
+func sell_at_counter(name: String, who := "") -> bool:
 	var pickers := get_tree().root.find_children("*", "OfferPicker", true, false)
+	if who != "":
+		pickers = pickers.filter(func(p): return str((p as OfferPicker).npc) == who)
 	if pickers.is_empty():
-		note("no offer grid open")
+		note("no offer grid open" + (" for " + who if who != "" else ""))
 		return false
 	var uid := -1
 	for it in Game.inventory():

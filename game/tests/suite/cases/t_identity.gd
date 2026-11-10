@@ -24,6 +24,8 @@ func _clean(what: String, state := {}) -> bool:
 	var ok := check((r["dup"] as Array).is_empty(), "%s: no uid in two physical holders %s" % [what, str(r["dup"]).left(300)])
 	ok = check((r["shared"] as Array).is_empty(), "%s: no item dict shared between containers %s" % [what, str(r["shared"]).left(300)]) and ok
 	ok = check((r["stray"] as Array).is_empty(), "%s: no live copy outside a holder %s" % [what, str(r["stray"]).left(300)]) and ok
+	var u := Uniques.audit(state)
+	ok = check(u.is_empty(), "%s: every Unique piece is the campaign's registered one (D13) %s" % [what, str(u).left(300)]) and ok
 	return ok
 
 

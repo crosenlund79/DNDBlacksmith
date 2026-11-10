@@ -1,8 +1,8 @@
 <!--
-  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.1.docx (Design Baseline 1.1, 9 November 2026).
+  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.2.docx (Design Baseline 1.2, 10 November 2026).
   The .docx is the approved source; this file reproduces its text faithfully for use in the repository (generated from
   the .docx, so both share one revision history — see "Revision history" at the end). Only formatting was adapted for
-  Markdown (boxed callouts → blockquotes). The v1.0 .docx is kept as the dated historical copy. Revisions require
+  Markdown (boxed callouts → blockquotes). The v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
   explicit user approval, a version increment and matching updates to both files (CLAUDE.md §2.5).
 -->
 
@@ -16,7 +16,7 @@
 >
 > A blacksmith may create a sword, see it travel through generations, repair it when it returns, and discover that its history helped shape the fate of a realm. The smith need not become its hero.
 
-**DESIGN BASELINE 1.1**
+**DESIGN BASELINE 1.2**
 
 9 November 2026 · Authoritative creative direction
 
@@ -29,9 +29,9 @@ This document is the **single canonical map for the intended game**. It supersed
 | **Field**             | **Rule**                                                                                                                                                |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.                                                        |
-| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
-| Current code baseline | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026).                                                              |
-| Technical evidence    | Claude status audit and Extra High architecture report are evidence, not the game’s creative authority.                                                 |
+| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) and v1.2 (editorial clarifications, 10 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
+| Code baseline at adoption | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026). Later delivery status is tracked in the repository’s roadmap register, not here.                                                              |
+| Technical evidence    | Claude status audit, Extra High architecture report and the repository’s decision, roadmap and playtest-observation registers are evidence, not the game’s creative authority.                                                 |
 | What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                                                                   |
 
 ## Decision language
@@ -90,7 +90,7 @@ Not a Satisfactory-style production floor of infinite anvils; not a freeform bui
 
 # 2 Verified reality and the future boundary
 
-The **current technical baseline** is release **build-0.14.6**, commit **154d08a**. The Extra High read-only review reproduced 201 script compilations, 207/207 suite tests and 383/383 unit tests. Earlier rendered tests and Windows smoke checks were reported but not independently rerun in that review. Human Windows gameplay acceptance remains outstanding.
+At adoption, the **technical baseline** was release **build-0.14.6**, commit **154d08a**. The Extra High read-only review reproduced 201 script compilations, 207/207 suite tests and 383/383 unit tests. Earlier rendered tests and Windows smoke checks were reported but not independently rerun in that review. Human Windows gameplay acceptance remains outstanding. Delivery after adoption (Milestones A1, S1, A2 and later runs) is tracked in docs/EMBER_ASH_ROADMAP_REGISTER.md; this section is not updated for it.
 
 | **Already implemented / reported verified**                                                                                                   | **Still absent or incomplete for our final design**                                                                                                                        |
 |-----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -432,7 +432,7 @@ An extraordinary, clearly warned reworking fails. Damage and restoration matter,
 
 # 14 Decision register — approved creative canon
 
-The following records the eighteen architectural decisions explicitly settled after the Extra High audit. These are **creative commitments**; implementation and tuning remain conditional on stability, review and tests.
+The following records the eighteen architectural decisions (D1–D18) explicitly settled after the Extra High audit, and decision D19 (Steward Mode), added in v1.1. These are **creative commitments**; implementation and tuning remain conditional on stability, review and tests.
 
 | **Decision**             | **Locked direction**                                                                                                                                                       |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -450,7 +450,7 @@ The following records the eighteen architectural decisions explicitly settled af
 | D12 Maritime contacts    | Named persistent sailors/captains with relationships and simplified real voyages.                                                                                          |
 | D13 Unique               | Exactly one authentic defined Unique artifact per campaign; Epic is earned history.                                                                                        |
 | D14 Economy              | Payments have real payers; subsidies are explicit and recorded.                                                                                                            |
-| D15 Canonical roadmap    | This Master Design / original phase numbering govern; no forced political allegiance.                                                                                      |
+| D15 Canonical roadmap    | The original Phase 0–10 roadmap and numbering of the Master Design, as restated in §12.1, govern over other roadmap documents (where the Master Design’s wording differs, this document prevails); no forced political allegiance.                                                                                      |
 | D16 Replayability        | Reproducible beginnings, emergent and potentially different histories; deterministic test mode as needed.                                                                  |
 | D17 Historic upgrades    | Arcanists may enchant and specialists may refine old existing artifacts while identity remains.                                                                            |
 | D18 Earned renown        | Reputation cannot be bought directly; acclaim follows actual deeds and credible spread.                                                                                    |
@@ -486,7 +486,7 @@ Other mechanics that would meaningfully widen scope—full naval travel, family-
 
 ## 16.1 Authority and revision control
 
-- **Treat this v1.1 document as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
+- **Treat this document (v1.2) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
 
 - Any new scope or reversal requires an explicit decision. Add a short change record: what changed, why, impacts and date.
 
@@ -510,9 +510,9 @@ For every future Claude Code implementation run: verify repository identity, bra
 
 # Appendix — Sources and evidence boundary
 
-Design sources: **Ember & Ash Master Roadmap Handover** (20261109_Roadmap.txt); **Master Game Design & Development Roadmap** (9 November 2026); eighteen whiteboard observations and subsequent decisions in our Ember & Ash design discussion, including D1–D18, reworking risk, the Reliquary and heir-led restoration.
+Design sources: **Ember & Ash Master Roadmap Handover** (20261109_Roadmap.txt; not stored in the repository — its content survives as consolidated in the Master Design); **Master Game Design & Development Roadmap** (9 November 2026; docs/Ember_and_Ash_Master_Design_2026-11-09.docx); eighteen whiteboard observations and subsequent decisions in our Ember & Ash design discussion (recorded only as summarised in the Master Design and in this document), including D1–D18, reworking risk, the Reliquary and heir-led restoration.
 
-Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md**, both dated 9 November 2026, assessing build 0.14.6 / commit 154d08a. Technical reports verify the baseline, not future completion.
+Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md**, both dated 9 November 2026, assessing build 0.14.6 / commit 154d08a. Technical reports verify the baseline, not future completion. Delivery status after adoption is tracked in docs/EMBER_ASH_DECISION_REGISTER.md, docs/EMBER_ASH_ROADMAP_REGISTER.md and docs/EMBER_ASH_PLAYTEST_OBSERVATIONS.md (from 10 November 2026), which are evidence and tracking, not design authority.
 
 # Revision history
 
@@ -520,3 +520,4 @@ Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE
 |-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 1.0 — 9 November 2026 | Design Baseline 1.0 adopted as the canonical game design.                                                                                                              |
 | 1.1 — 9 November 2026 | Added §4.5 Steward Mode, its priority in §12 and decision D19 (§14, §14.1); version labels updated. All v1.0 decisions are unchanged. Approved explicitly by the user. |
+| 1.2 — 10 November 2026 | Editorial clarifications only, requested by the user (Run 0.1): the charter, §2 and the appendix date the 0.14.6 code baseline to the document’s adoption and point to the repository registers for later delivery status; the appendix says where each design source is kept; §14 counts D19 alongside the eighteen audit decisions; D15 names the Master Design’s Phase 0–10 roadmap as restated in §12.1 and confirms that this document prevails over the Master Design’s wording; version labels updated. No design decision, scope, priority or boundary changed. |

@@ -62,6 +62,7 @@ func run(p: Node) -> void:
 		var sset: Dictionary = Game.state["player"]["skills"]
 		sset[sk] = {"lvl": 14, "xp": 0}
 	Game.state["gold"] = 4000
+	(Game.state["world"] as Dictionary)["rep"] = 30.0   # a renowned name: renown is earned, never bought (D18, Run 0.1)
 	await _rebuild()
 	var tiers := []
 	for r in Property.rooms():

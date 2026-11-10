@@ -296,7 +296,7 @@ func _build_contract(c: Dictionary) -> void:
 		if err != "":
 			Events.toast.emit(err, "bad")
 		build(), 0)
-	ab.tooltip_text = "The patron is displeased: reputation and favour suffer; the advance is kept, the crate goes back."
+	ab.tooltip_text = "The patron is displeased: reputation and favour suffer; the advance is returned and the crate goes back."
 	ab.add_theme_font_size_override("font_size", 15)
 	ab.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	right.add_child(ab)

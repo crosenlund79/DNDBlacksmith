@@ -8,7 +8,7 @@
 extends Node
 
 ## The save-schema version this build writes; SaveMigrations.STEPS converts every older version up to it.
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 const MINUTES_PER_SECOND := 1.6   # one in-game day ≈ 15 real minutes
 const DAY_START_HOUR := 6
 

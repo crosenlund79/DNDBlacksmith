@@ -135,6 +135,9 @@ static func identify(uid: int, quality: float, by := "Brannoc") -> Dictionary:
 		"relic_unknown_tablet":
 			if randf() < 0.6 and not Game.has_flag("recipe_starsteel"):
 				res = Items.make("recipe_scroll")
+	for unused in found:
+		if unused != res:
+			Uniques.release(unused)   # rolls not kept never reach the world (D13: a Unique counts once it exists)
 	if int(it.get("qty", 1)) > 1:
 		it["qty"] = int(it["qty"]) - 1
 	else:

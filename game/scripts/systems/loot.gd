@@ -78,9 +78,14 @@ static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
 	var it := Items.make(def_id, {"quality": q, "dice": dice})
 	var fortune := randi_range(1, 100) + int(bias)
 	var score := q * 0.65 + fortune * 0.45
-	# very rare named drops
+	# very rare named drops. A Unique exists once per campaign (D13, Uniques): once it has been minted — whatever has
+	# happened to it since — the find is an ordinary piece instead. Set pieces may recur.
 	if score >= 112.0 and randf() < 0.25:
-		return Items.make("grimhold" if randf() < 0.5 else "wyvernscale_pauldron", {"quality": q})
+		var named := "grimhold" if randf() < 0.5 else "wyvernscale_pauldron"
+		if not Uniques.is_unique_def(named) or Uniques.can_mint(named):
+			var nit := Items.make(named, {"quality": q})
+			Uniques.register(nit, "loot")
+			return nit
 	var rar := Items.rarity_from(q, fortune)
 	if rar != "common":
 		Items.apply_rarity(it, rar)

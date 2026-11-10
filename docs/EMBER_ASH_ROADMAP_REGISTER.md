@@ -1,7 +1,7 @@
 # Ember & Ash — Roadmap Register
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
-`fa7b5b7` (A1, S1 and A2 integrated).
+`fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) on branch `claude/run0.1-integrity`.
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -22,7 +22,9 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | **A1** Protect the Foundation | Gate A (part) | Complete, integrated | `5b8af75` | No | `t_saves` (22 tests: golden saves 0.11.2–0.14.6, idempotence, newer-schema refusal, failure handling), `t_identity` (15, incl. the year-long integrity probe), CI test gate | No |
 | **S1** Steward Mode | §4.5, D19, §12.2 priority | Complete, integrated | `e121241` (S1 head `bc9ba1e`) | No | `t_steward` (13, incl. 30- and 365-day soaks), `t_steward_ui` (7) | No |
 | **A2** Workshop Reliability & Early-Game Experience | Gate A (part); OBS-01…09 | Complete, integrated | `fa7b5b7` (A2 head `e045d67`) | No | `t_economy_a2` (13), `t_experience_a2` (6), 48/48 rendered phases, Windows CI install-and-launch smoke (run 42727168523) | No |
-| **Run 0** Roadmap reconciliation | CLAUDE.md §2, CV §16 | This run | see the run report | — | three registers | — |
+| **Run 0** Roadmap reconciliation | CLAUDE.md §2, CV §16 | Complete | `3379375`, `f3c1505` | — | three registers | — |
+| Canonical v1.2 (editorial clarifications) | CLAUDE.md §2.5 | Done in Run 0.1 | branch `claude/run0.1-integrity` | — | DOCX and Markdown identical (6,019 words) | — |
+| **Run 0.1** Canonical corrections & critical integrity | D13, D14, D18; Gate A (part) | Complete on its isolated branch; not integrated | branch `claude/run0.1-integrity` | No | `t_run01` (8 tests), `t_identity` Unique audit, `t_saves` (schema 4), Steward soaks | No |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
@@ -43,7 +45,7 @@ contains A1, S1 or A2, and none of them has been accepted by a person playing on
 
 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 46 | 17 | 7 | 22 | 9 | 20 | 7 | 13 | 3 | 5 | 19 | 91 |
+| 40 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 89 |
 
 ---
 
@@ -126,7 +128,7 @@ threshold, adventurers paying for repairs and a named payer on every payment (A2
 - **Truthful UI and state:** live plans on character sheets, consultation threat data, scouting claims and rumours
   (TECH-017 cluster: ADV-012, ADV-017, WLD-018, WLD-019, LORE-015, UX-007); consultations must not redirect sponsored
   parties (ADV-018, TECH-021); retire the legacy expedition resolver (ADV-020, TECH-020, proposed).
-- **Money conservation (D14):** four leaks (ECO-042; BUG-038 … BUG-041).
+- ~~**Money conservation (D14):** four leaks (ECO-042; BUG-038 … BUG-041).~~ Done in Run 0.1.
 - **Identity hygiene, remainder:** relic identification mints a new uid (EQ-007); rune socketing renames pieces (BUG-042);
   a dismissed hireling's gear leaves no record (BUG-017); one item lookup for every system (EQ-006, QST-019, proposed);
   provenance created in a migration step rather than on first read (TECH-011, proposed); a golden save from the next
@@ -147,7 +149,6 @@ All A-REM entries:
 | TECH-001 | APPROVED | PARTIAL | Gate A readiness complete: human playtest, versioned migrations + golden saves, item identity hygiene, trustworthy UI/repair fixes, CI … |
 | TECH-011 | PROPOSED | NOT STARTED | No state-changing reads: legacy items' provenance created in a migration step, not lazily on first read. |
 | TECH-014 | APPROVED | PARTIAL | Stronger regression/release gates for Phase 0 beyond the smoke test. |
-| TECH-016 | APPROVED | PARTIAL | Money conservation: every payment has a real payer and recipient, money leaves one purse and reaches another, and subsidies are explicit … |
 | TECH-017 | APPROVED | NOT STARTED | Truthful UI: plans, advice threats, power ratings, rumours and toasts derive from live state and the same models used for decisions. |
 | TECH-018 | APPROVED | NOT STARTED | One common danger entry point used by decisions, combat, advice, sponsorship and hirelings. |
 | TECH-019 | APPROVED | NOT STARTED | One common reputation entry point (facade) so no new code reads `Shop.reputation()` directly. |
@@ -176,13 +177,8 @@ All A-REM entries:
 | LORE-015 | APPROVED | NOT STARTED | Tavern rumours and table talk come from real Lore and state, not invented template facts. |
 | BUG-001 | APPROVED | NOT STARTED | Contracts panel opened directly on a closed order must not collapse its right column to one letter per line. |
 | BUG-017 | APPROVED | NOT STARTED | A dismissed hireling who leaves with gear in their name records a hand-over event. |
-| BUG-038 | APPROVED | NOT STARTED | A dispute refund must reach the adventurer's purse, not only leave the smith's. |
-| BUG-039 | APPROVED | NOT STARTED | The spouse's "share of the spoils" must be debited from the spouse, not created. |
-| BUG-040 | APPROVED | NOT STARTED | A sponsored company's "still owed" balance must be settled later or recorded as a real debt. |
-| BUG-041 | APPROVED | NOT STARTED | An abandoned or withdrawn contract must not let the smith keep the patron's advance without a recorded consequence. |
 | BUG-042 | APPROVED | NOT STARTED | Socketing a runestone must not overwrite a piece's name or silently change its rarity. |
-| BUG-049 | APPROVED | NOT STARTED | Player, test and design documents describe the current build. |
-| QST-014 | APPROVED | PARTIAL | Decided: "Payments have real payers; subsidies are explicit and recorded." |
+| BUG-049 | APPROVED | PARTIAL | Player, test and design documents describe the current build. |
 | QST-015 | APPROVED | PARTIAL | Decided: "This Master Design / original phase numbering govern; |
 | QST-019 | UNDECIDED | NOT STARTED | Should all item lookups (`find_uid_anywhere`, `History.find_item`, `ItemStory.find`) search every holder? Affects Hall of Fame discovery … |
 | QST-027 | UNDECIDED | NOT STARTED | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 … |
@@ -305,8 +301,8 @@ Guard pieces (distinct from earned Epic); the size of the village subsidy (PROP-
 ### 4.6 E — Equipment depth
 
 Affixes with real effects, Arcana on existing items, Sets and a true one-of-one Unique, reworking risk and restoration.
-**Depends on:** B1 (specialists own rune, arcane and alchemical work); a migration policy for saves that already hold
-duplicate "Grimhold" Uniques and colliding legendary names (EQ-024, EQ-026); an "unusable" item state (only "broken", which
+**Depends on:** B1 (specialists own rune, arcane and alchemical work); colliding legendary names (EQ-026) — duplicate Uniques were resolved in Run 0.1 (EQ-024; what old saves' legacy copies
+should show is QST-028); an "unusable" item state (only "broken", which
 still works at half strength, exists) before the Reliquary. **Decisions:** affix mechanics and rune/arcane/alchemy
 boundaries (EQ-027, EQ-033); whether socketing may change rarity (BUG-042); whether other makers' pieces may become Epic
 (QST-022); where the Reliquary and heir restoration belong (canonical: E, I or J).
@@ -315,7 +311,7 @@ boundaries (EQ-027, EQ-033); whether socketing may change rarity (BUG-042); whet
 |---|---|---|---|
 | EQ-022 | APPROVED | PARTIAL | Affixes and rarity have a meaningful influence on actual adventurer decisions (purchases, consultations) and outcomes (combat, expeditions). |
 | EQ-023 | APPROVED | PARTIAL | Diablo-like variety: interesting affixes and distinctive magical effects rather than a "Sword +1" ladder (TECHNICAL RECOMMENDATION: |
-| EQ-024 | APPROVED | NOT STARTED | Unique: a defined Unique artifact exists in exactly ONE authentic instance per campaign and cannot respawn as a duplicate after sale, loss … |
+| EQ-024 | APPROVED | PARTIAL | Unique: a defined Unique artifact exists in exactly ONE authentic instance per campaign and cannot respawn as a duplicate after sale, loss … |
 | EQ-025 | APPROVED | NOT STARTED | Set: a collection category with distinctive combined-use mechanics (the exact bonus rules are open). |
 | EQ-026 | PROPOSED | NOT STARTED | Legendary names are unique per world, so returning-item recognition never confuses two "Emberfang"s. |
 | EQ-027 | UNDECIDED | NOT STARTED | Still to determine: exact affix mechanics, Set bonus rules, the boundaries between arcane and runic effects, and rarity balance. |
@@ -331,8 +327,9 @@ boundaries (EQ-027, EQ-033); whether socketing may change rarity (BUG-042); whet
 | EQ-056 | APPROVED | PARTIAL | Journey "The famous sword returns": the sword is sold, used in real adventures, earns Epic recognition, is inherited, and is later … |
 | EQ-058 | APPROVED | NOT STARTED | Journey "The cost of ambition": an extraordinary, clearly warned reworking fails; |
 | BUG-027 | APPROVED | NOT STARTED | Consultation "upgrade" advice can propose refining the adventurer's own piece, not only a commission. |
-| QST-013 | APPROVED | NOT STARTED | Decided: "Exactly one authentic defined Unique artifact per campaign; |
+| QST-013 | APPROVED | PARTIAL | Decided: "Exactly one authentic defined Unique artifact per campaign; |
 | QST-017 | APPROVED | NOT STARTED | Decided: "Arcanists may enchant and specialists may refine old existing artifacts while identity remains." |
+| QST-028 | UNDECIDED | NOT STARTED | What should a legacy copy of a Unique show the player? Saves from before Run 0.1 may hold more than one Grimhold: |
 
 ### 4.7 F — Negotiation, trade and procurement
 
@@ -355,8 +352,8 @@ valuation replacing about ten price routines (ECO-031, TECH-030); the danger ent
 
 Reputation by audience and place with gradual spread, earned renown, credible visitors, an independent mayor and militia
 equipped by commissions. **Depends on:** the reputation and danger entry points (A-REM), lot records (D), a civic entity
-with a real budget (D14), defined audiences and places (D10 open detail). **Conflict to resolve:** renown can be bought
-with 2,500 gold (GOV-030, WLD-015) and `t_smithy` asserts that path. **Decisions:** audiences and places; whether Reeve
+with a real budget (D14), defined audiences and places (D10 open detail). Renown can no longer be bought (removed in Run 0.1; GOV-030, WLD-015);
+what remains is credible, regional spread of acclaim. **Decisions:** audiences and places; whether Reeve
 Tamsin Hale is the canonical mayor; the role of bandits once militia protection exists (WLD-010).
 
 | ID | Scope | Delivery | Requirement |
@@ -369,11 +366,11 @@ Tamsin Hale is the canonical mayor; the role of bandits once militia protection 
 | WLD-011 | APPROVED | PARTIAL | Reputation differs by community/profession, person, institution and geography (dwarven artisans, adventurers, traders, nobles, each … |
 | WLD-012 | APPROVED | NOT STARTED | News and reputation spread gradually through travel, letters, goods, events and relationships — no instant worldwide fame meter. |
 | WLD-014 | APPROVED | NOT STARTED | Danger, reputation and delivered-equipment effects share authoritative state before Gates G/H. |
-| WLD-015 | APPROVED | NOT STARTED | Renown cannot be purchased: acclaim follows deeds and credible spread; |
+| WLD-015 | APPROVED | PARTIAL | Renown cannot be purchased: acclaim follows deeds and credible spread; |
 | WLD-016 | APPROVED | PARTIAL | Renowned merchants, adventurers and patrons who come are credible persistent people with reasons to come, not rank rewards. |
 | WLD-021 | APPROVED | NOT STARTED | Proof journey "A town safer by craftsmanship": |
 | QST-010 | APPROVED | NOT STARTED | Decided: "Audience- and place-dependent, gradual information spread through real-world channels." |
-| QST-018 | APPROVED | NOT STARTED | Decided: "Reputation cannot be bought directly; |
+| QST-018 | APPROVED | PARTIAL | Decided: "Reputation cannot be bought directly; |
 
 ### 4.9 H — Regional crisis proof
 
@@ -429,7 +426,7 @@ converting pre-Iteration-011 Chronicle entries; a multi-year probe (TECH-026, pr
 
 ### 4.12 BACKLOG
 
-94 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 2, `WS` 3, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 3, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 28, `PROP` 20, `QST` 8, `HA` 5, `HB` 9.
+92 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 2, `WS` 3, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 28, `PROP` 20, `QST` 7, `HA` 5, `HB` 9.
 Items that need a placement decision rather than a scope decision: duplicate stations (WS-007, TECH-027), molds and
 patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), steward hiring (STW-018), apprentice economics
 (STAFF-019, TECH-032, HB-053). All `PROPOSED` entries are listed in the decision register §1.4.
@@ -469,8 +466,7 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
    (PROD-011), identity through stages (EQ-010).
 5. **D and G need a recipient/civic entity** for lot records and militia equipment; none exists, and the village purse
    has no budget (D14 for any mayor-paid commission).
-6. **E needs B1** (specialist ownership of runes, arcana, alchemy), an unusable-item state for the Reliquary, a D13
-   migration policy and a counter service for refining an adventurer's own piece (EQ-032).
+6. **E needs B1** (specialist ownership of runes, arcana, alchemy), an unusable-item state for the Reliquary and a counter service for refining an adventurer's own piece (EQ-032).
 7. **F needs a shared valuation** and the danger entry point.
 8. **H needs seeded RNG streams and Lore indices; J needs the retention decision** and the Chronicle migration.
 9. **A2's request feasibility rides on the player's skill gating** and must move with B1/B2.
@@ -492,8 +488,9 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
 
 ## 8. Conflicts
 
-- **Code versus canonical:** three rejected behaviours are live — the smith masters every craft, renown bought with gold,
-  a separate Chronicle store — and further code falls short of approved requirements (decision register §1.3).
+- **Code versus canonical:** two rejected behaviours are live — the smith masters every craft (to be retired with B2)
+  and a separate Chronicle store (preserved and documented by the user's decision until Gate J); renown bought with gold
+  was removed in Run 0.1 — and further code falls short of approved requirements (decision register §1.3).
 - **Repository documents versus canonical:** `LIVING_REALM_STATUS.md` ("allegiance", phases 4–5 "Done" against original
   scope only, Windows 0.13 "playtested" on CI evidence); `GAMEPLAY.md` "Nobody is locked to a profession" (true of the code,
   not marked as superseded by D2/D7); `ITERATION_011_AUDIT.md` "one shared event system" (the Chronicle store remains);
@@ -515,7 +512,8 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
   STW-018); it made only 3 sales of its own in a 365-day soak (STW-019).
 - Lore: the pruning cliff above 4,000 events is untested; Chronicle-only records (including hireling deaths) vanish at 400
   entries; nothing runs beyond one in-game year (LORE-008, BUG-018).
-- Tests that encode rejected behaviour: `t_smithy` (gold renown), `t_progression` and `t_apprentices` (universal mastery).
+- Tests that encode rejected behaviour: `t_progression` and `t_apprentices` (universal mastery). (`t_smithy`'s gold-renown
+  assertion was replaced in Run 0.1.)
 - CI: the workflow runs only on release-file changes or manual dispatch, integration merges skip CI, rendered tests never
   run in CI, the default branch is unprotected (TECH-014, PROP-006).
 - Older open asks: caravan curiosities, compelling advanced requests, softer terrain edges (BUG-031, HB-060 … HB-062);
@@ -526,11 +524,12 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
 
 ## 10. Decisions needed from the user
 
-**Run 0 follow-ups (no milestone depends on code yet):**
-1. Confirm the observation numbering OBS-11 … OBS-21 and answer the clarifications in the observation register.
+**Run 0 / Run 0.1 follow-ups (no milestone depends on code yet):**
+1. Answer the clarifications in the observation register (the numbering itself was corrected in Run 0.1).
 2. Confirm the baseline features canonical does not name (decision register §1.5), perhaps in a future canonical
-   revision; and the editorial points in decision register §1.9 item 5.
-3. Rule on the fatigue-while-away decision taken in S1 (BUG-005).
+   revision. (The editorial points were clarified in canonical v1.2.)
+3. Rule on the fatigue-while-away decision taken in S1 (BUG-005); decide what legacy copies of a Unique in old saves
+   should show (QST-028); and decide whether to integrate Run 0.1.
 
 **Before the next implementation milestone:**
 4. Which Gate A items must close before B/C (QST-027), and whether to authorise an A-REM run (§4.1).
@@ -542,9 +541,9 @@ hireling off-station production (STAFF-004, HA-025); steward hiring (STW-018).
 **Before C1:** duplicate stations placement (WS-007); assistance and quality details (PROD-016); routing and queue UI
 (PROD-023); the reserved-uid approach (PROD-011).
 **Before D:** Honor Guard naming; the commission subsidy (PROP-013, QST-024); permanence of payment records (BUG-048).
-**Before E:** D13 migration of existing duplicate Uniques; rarity change by socketing (BUG-042); Epic for other makers
+**Before E:** rarity change by socketing (BUG-042); Epic for other makers
 (QST-022); Reliquary and heir placement.
-**Before G:** audiences and places (D10); the mayor; removing the gold path to renown.
+**Before G:** audiences and places (D10); the mayor.
 **Before J:** the Lore retention policy (LORE-004).
 **Contradictory sources:** the wall and doorway editor (WS-010, HB-020, QST-023); multiplayer (HB-001); visible
 relationship meters (HA-029).
@@ -557,3 +556,4 @@ relationship meters (HA-029).
 | Date | Change |
 |---|---|
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation) at `fa7b5b7`. |
+| 10 November 2026 | Run 0.1: milestone rows for canonical v1.2 and Run 0.1; D13, D14 and D18 items marked done; conflicts, at-risk items and decisions updated. |
