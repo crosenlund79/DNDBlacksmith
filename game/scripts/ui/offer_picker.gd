@@ -14,6 +14,10 @@ const COLS := 8
 const ROWS_SHOWN := 3
 const DETAIL_W := 540.0
 
+## S2 (OBS-16): optional "only what they would buy" filter for the counter's offer lists (this grid and the draughts
+## list). Off by default, so blockers stay discoverable (canon §3.2); remembered for the session.
+static var only_buyable := false
+
 var npc := ""
 var req: Dictionary = {}
 var on_sold: Callable
@@ -32,6 +36,19 @@ func _init(npc_id: String, request: Dictionary, sold_cb := Callable()) -> void:
 
 
 func _ready() -> void:
+	_build_ui()
+
+
+## Rebuilds the grid and the details (the optional filter changed).
+func rebuild() -> void:
+	for ch in get_children():
+		remove_child(ch)
+		ch.queue_free()
+	cells.clear()
+	_build_ui()
+
+
+func _build_ui() -> void:
 	var left := UIKit.vbox(4)
 	var cap := UIKit.label("On display — ✓ they would buy it (green: what they asked for)", 17, "heading_italic", UIKit.RUBRIC)
 	cap.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -40,15 +57,23 @@ func _ready() -> void:
 	grid.columns = COLS
 	grid.add_theme_constant_override("h_separation", 6)
 	grid.add_theme_constant_override("v_separation", 6)
-	var list := candidates(npc, req)
+	var all_list := candidates(npc, req)
+	var list := all_list.filter(func(c): return str(c["why"]) == "") if only_buyable else all_list
 	var rows := int(ceil(float(list.size()) / COLS))
 	var sc := UIKit.scroll(grid, mini(rows, ROWS_SHOWN) * (SLOT_PX + 6.0))
 	sc.name = "OfferGridScroll"
 	sc.custom_minimum_size.x = COLS * (SLOT_PX + 6.0) + 14.0
 	left.add_child(sc)
+	var hid := all_list.size() - list.size()
 	var foot := UIKit.label("%d piece%s · hover to read, right-click to inspect" % [list.size(), "" if list.size() == 1 else "s"], 15, "body_italic", Color("#5e421c"))
 	foot.autowrap_mode = TextServer.AUTOWRAP_OFF
+	foot.name = "OfferFoot"
 	left.add_child(foot)
+	var frow := UIKit.hbox(8)
+	frow.add_child(filter_toggle(rebuild))
+	if hid > 0:
+		frow.add_child(UIKit.label("%d hidden" % hid, 15, "body_italic", Color("#5e421c")))
+	left.add_child(frow)
 	add_child(left)
 	for c in list:
 		grid.add_child(_cell(c))
@@ -57,12 +82,36 @@ func _ready() -> void:
 	detail.custom_minimum_size = Vector2(DETAIL_W, 0)
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(detail)
-	# start on the best piece they would buy (nothing is sold until the smith presses Sell)
+	# start on the best piece they would buy (nothing is sold until the smith presses Sell); a rebuild keeps a shown choice
+	var shown := false
 	for c in list:
-		if str(c["why"]) == "":
-			sel_uid = int(c["item"]["uid"])
-			break
+		shown = shown or int(c["item"]["uid"]) == sel_uid
+	if not shown:
+		sel_uid = -1
+		for c in list:
+			if str(c["why"]) == "":
+				sel_uid = int(c["item"]["uid"])
+				break
 	_detail()
+
+
+## The opt-in filter's checkbox; `rebuild` redraws the list it filters.
+static func filter_toggle(rebuild: Callable) -> CheckBox:
+	var cb := CheckBox.new()
+	cb.name = "OnlyBuyable"
+	cb.text = "Only what they would buy"
+	cb.button_pressed = only_buyable
+	cb.tooltip_text = "Hide what they would not buy (off by default: dimmed pieces say why not)."
+	cb.add_theme_font_override("font", Assets.font("body"))
+	cb.add_theme_font_size_override("font_size", 15)
+	cb.add_theme_color_override("font_color", UIKit.INK)
+	cb.add_theme_color_override("font_pressed_color", UIKit.INK)
+	cb.add_theme_color_override("font_hover_color", UIKit.RUBRIC)
+	cb.toggled.connect(func(on: bool):
+		only_buyable = on
+		if rebuild.is_valid():
+			rebuild.call())
+	return cb
 
 
 ## The pieces that can be offered: [{item, price, why ("" = would buy), fits (matches the request)}], those they

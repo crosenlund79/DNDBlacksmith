@@ -76,17 +76,7 @@ func _customers() -> void:
 				if waiting:
 					(func(): ItemStory.at_counter(npc)).call_deferred()   # "A Familiar Creation" — once per reunion
 		elif cu.get("want", "") == "goods":
-			var anyg := false
-			for it in Game.inventory():
-				if DB.item(it["def"]).get("type", "") == "potion" and it["def"] != "ale_mug":
-					var b2 := UIKit.button("%s — %d g" % [Items.display_name(it), Shop.price_of(it) / maxi(1, int(it.get("qty", 1)))], func():
-						var err2 := Shop.sell_goods(npc, int(it["uid"]))
-						Events.toast.emit(err2 if err2 != "" else "%s pays and leaves happy." % Talk.npc_name(npc), "bad" if err2 != "" else "good")
-						_build(), 0)
-					actions.add_child(b2)
-					anyg = true
-			if not anyg:
-				actions.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
+			v.add_child(_goods_offers(npc, cu))   # S2 (OBS-15, BUG-043): what they asked for, the rest greyed with why
 		elif cu.get("want", "") == "dispute":
 			actions.add_child(UIKit.label("Talk to them outside to settle it.", 20, "body_italic"))
 		elif cu.get("want", "") == "advice":   # The Living Realm 3b (Consult)
@@ -110,6 +100,76 @@ func _customers() -> void:
 		row.add_child(v)
 		body.add_child(row)
 		body.add_child(UIKit.divider())
+
+
+## The draughts and oils in the stores a "goods" customer could be offered: [{item, price (one unit), why ("" = they
+## would buy it; else the reason in words)}], those they would buy first. Ale is the inn's, not the counter's.
+static func goods_candidates(c: Dictionary) -> Array:
+	var out := []
+	var want := str(c.get("looking_for", ""))
+	for it in Game.inventory():
+		if DB.item(str(it["def"])).get("type", "") != "potion" or str(it["def"]) == "ale_mug":
+			continue
+		var price := Shop.price_of(it) / maxi(1, int(it.get("qty", 1)))
+		var why := ""
+		match Shop.goods_refusal(c, it):
+			"wrong":
+				why = "not what they asked for — they want %s" % DB.item(want).get("name", want)
+			"budget":
+				why = "over their budget — %d g; they spend up to %d g" % [price, int(c.get("budget", 0))]
+		out.append({"item": it, "price": price, "why": why})
+	out.sort_custom(func(x, y): return (0 if str(x["why"]) == "" else 1) < (0 if str(y["why"]) == "" else 1))
+	return out
+
+
+## One row per draught: what it costs and either "Sell one" or, greyed, why they would not buy it. With the optional
+## "only what they would buy" filter on (off by default), the others are hidden and counted.
+func _goods_offers(npc: String, cu: Dictionary) -> Control:
+	var box := UIKit.vbox(4)
+	box.name = "GoodsOffers"
+	var want := str(cu.get("looking_for", ""))
+	var top := UIKit.hbox(12)
+	var cap := UIKit.label("From your stores — they want %s" % DB.item(want).get("name", "a draught"), 17, "heading_italic", UIKit.RUBRIC)
+	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(cap)
+	top.add_child(OfferPicker.filter_toggle(func(): _build.call_deferred()))
+	box.add_child(top)
+	var list := goods_candidates(cu)
+	var hidden := 0
+	for c in list:
+		var why := str(c["why"])
+		if why != "" and OfferPicker.only_buyable:
+			hidden += 1
+			continue
+		var it: Dictionary = c["item"]
+		var row := UIKit.hbox(10)
+		row.name = "Goods_%d" % int(it["uid"])
+		var slot := ItemSlot.new(it, 48.0)
+		if why != "":
+			slot.modulate = Color(0.62, 0.58, 0.52, 0.55)
+		row.add_child(slot)
+		var info := UIKit.rich("[b]%s[/b] — %d g each%s" % [Items.display_name(it), int(c["price"]),
+			("\n[color=#7e2418]✗ %s[/color]" % why) if why != "" else "\n[color=#26622f]✓ what they asked for, within their budget[/color]"], 18)
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(info)
+		var uid := int(it["uid"])
+		var b := UIKit.button("Sell one for %d g" % int(c["price"]), func():
+			var err := Shop.sell_goods(npc, uid)
+			Events.toast.emit(err if err != "" else "%s pays and leaves happy." % Talk.npc_name(npc), "bad" if err != "" else "good")
+			_build(), 220)
+		b.name = "SellGoods"
+		b.disabled = why != ""
+		b.tooltip_text = ("They would not buy it: %s." % why) if why != "" else "%s pays %d g and takes one." % [Talk.npc_name(npc), int(c["price"])]
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(b)
+		box.add_child(row)
+	if list.is_empty():
+		box.add_child(UIKit.label("You have no draughts or oils to sell.", 20, "body_italic"))
+	elif hidden > 0:
+		box.add_child(UIKit.label("%d other draught%s hidden — not what they asked for or over their budget (untick the filter to see them)." % [hidden, "" if hidden == 1 else "s"], 17, "body_italic", Color("#5e421c")))
+	if not list.is_empty() and list.filter(func(x): return str(x["why"]) == "").is_empty():
+		box.add_child(UIKit.label("Nothing in your stores fits their request.", 18, "body_italic"))
+	return box
 
 
 ## Finds brought home from expeditions, offered to the forge (they go elsewhere after three days).

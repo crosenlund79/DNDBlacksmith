@@ -278,6 +278,17 @@ static func refuses(npc: String) -> bool:
 	return Social.band(npc) == "hostile"
 
 
+## S2 (BUG-043, OBS-15): would this "goods" customer `c` take `it` (one unit)? "" = yes; "wrong" = not what they asked
+## for (`looking_for`, an item id); "budget" = one unit costs more than their budget. The counter greys out the rest.
+static func goods_refusal(c: Dictionary, it: Dictionary) -> String:
+	var want := str(c.get("looking_for", ""))
+	if want != "" and str(it.get("def", "")) != want:
+		return "wrong"
+	if price_of(it) / maxi(1, int(it.get("qty", 1))) > int(c.get("budget", 0)):
+		return "budget"
+	return ""
+
+
 static func sell_goods(npc: String, uid: int) -> String:
 	var it := Game.find_uid(uid)
 	var c := {}
@@ -287,7 +298,11 @@ static func sell_goods(npc: String, uid: int) -> String:
 	if it.is_empty() or c.is_empty():
 		return "Nothing to sell."
 	var price := price_of(it) / maxi(1, int(it.get("qty", 1)))
-	if price > int(c.get("budget", 0)):
+	# S2 (BUG-043): they buy what they asked for, within their budget
+	var refusal := goods_refusal(c, it)
+	if refusal == "wrong":
+		return "%s asked for %s, not %s." % [Talk.npc_name(npc), DB.item(str(c["looking_for"])).get("name", "something else"), str(DB.item(str(it["def"])).get("name", "that"))]
+	if refusal == "budget":
 		return "%s can't afford that." % Talk.npc_name(npc)
 	if int(it.get("qty", 1)) > 1:
 		it["qty"] = int(it["qty"]) - 1
