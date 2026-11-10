@@ -10,7 +10,7 @@ development branch, nothing is released.** This file and `docs/s2/` (plan and wo
 |---|---|---|---|
 | Development branch (default) | `claude/kind-dijkstra-nqkxn1` | `2e854af` | A1, S1, A2, Run 0, Run 0.1 integrated (Run 0.1 merged at the start of S2, `[skip ci]`) |
 | Recovery point before S2 | `backup/pre-s2-20261110-1055` | `2e854af` | Branch. The matching tag `pre-s2-20261110-1055` could not be pushed (the session's git proxy refuses tag pushes, HTTP 403). |
-| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs + **CLARITY merged** (`4d887e3`; green: 225 scripts, suite 300/300, unit 384/384) + **ECONDEV merged** (`53fe7b5`; green: 227 scripts, suite 308/308, unit 384/384). |
+| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs + **CLARITY merged** (`4d887e3`; green: 225 scripts, suite 300/300, unit 384/384) + **ECONDEV merged** (`53fe7b5`; green: 227 scripts, suite 308/308, unit 384/384) + **EARLY merged** (`8d86dd0`; green: 229 scripts, suite 317/317, unit 385/385). |
 | WIP checkpoint — STEWARD | `claude/s2-wip-steward` | `07263e0` (or later) | Unverified snapshot of the worker's worktree (17 files). |
 | WIP checkpoint — CLARITY | `claude/s2-wip-clarity` | `0af4e53` (or later) | 8 worker commits + snapshot (18 files). |
 | WIP checkpoint — EARLY | `claude/s2-wip-early` | `be317d5` (or later) | Unverified snapshot (29 files). |
@@ -42,7 +42,7 @@ items of NEW SCOPE explicitly approved by the S2 brief — the steward directing
   autopilot), changes to `steward.gd`, `vitality.gd`, `crafting.gd`, `game.gd`, `smithy.gd`, `player.gd`, `player_nav.gd`,
   `world.gd`, the steward UI and welcome-back report, `t_s2_steward`, and `t_steward` (fatigue rule). Contains a throwaway
   `t_zz_probe.gd` to drop before merging.
-- **EARLY (§5)** — WIP: tutorial, tutorial card, Borin, hud toolbar shortcuts, check overlay and skill-check panel timing,
+- **EARLY (§5)** — FINISHED and MERGED (`8d86dd0`, report `docs/s2/reports/early.md`; Y now opens the Workshop panel and the Workshop Ledger moved to Q; no recipe makes a dagger — adding one is a proposal): tutorial, tutorial card, Borin, hud toolbar shortcuts, check overlay and skill-check panel timing,
   settings (auto-walk), guide/reference/objectives wording, docs, `t_s2_early`, rendered phase `s2_early`.
 - **ECONDEV (§6–7)** — FINISHED and MERGED (`53fe7b5`, report `docs/s2/reports/econdev.md`; its change to the `t_steward` soak threshold — periods held by the player's spending limits need ≥ 1 decision instead of ≥ 10 — was reviewed and accepted; STEWARD to reconcile): pricing (`adventurers.gd`, `commerce.gd`, `shop.gd`, `commerce.json` via
   `tools/data/make_commerce.py`), consultation, gifts (`sim.gd`), developer tools (`dev_panel.gd`, `dev_catalogue_panel.gd`,
@@ -52,9 +52,10 @@ Worker reports (status first) are written to the session scratchpad `…/scratch
 is lost, the worker commit messages and this file are the record.
 
 ## 4. Pending (in order)
-1. CLARITY and ECONDEV: done and merged. STEWARD and EARLY: each finishes its brief, keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
-2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (CLARITY and ECONDEV merged; next
-   EARLY, then STEWARD — the largest last). Expected conflict hot spots: `world.gd` (STEWARD/CLARITY/EARLY), `smithy.gd`
+1. CLARITY, ECONDEV and EARLY: done and merged. STEWARD: finishes its brief, keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
+2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (CLARITY, ECONDEV and EARLY merged;
+   STEWARD last). Lead fix pending: a commission's reward package is capped by the commission's reward instead of
+   what the giver paid (a penniless Mira can "give" one — D14); cap it at Payments.GIFT_SHARE of the giver's own payment. Expected conflict hot spots: `world.gd` (STEWARD/CLARITY/EARLY), `smithy.gd`
    (STEWARD/EARLY), `crafting.gd` (STEWARD/CLARITY), `shop.gd` (CLARITY/ECONDEV), `station_panel.gd` (CLARITY/EARLY),
    `player_nav.gd` (STEWARD/EARLY), `game.gd` (STEWARD/ECONDEV), `ui_root.gd` (EARLY/ECONDEV), `tests/playtest.gd` (phase
    registrations), `game/README.md`, `docs/TESTING.md`, `docs/PLAYGUIDE.md`. Drop `t_zz_probe.gd`.
