@@ -832,10 +832,10 @@ func _forge_night_light() -> void:
 	if fr.size == Vector2.ZERO:
 		return
 	var fp := station_pos("forge") if Property.is_installed("forge") else fr.get_center()
-	var nl := FX.light(Color("#ff6a1c"), 700.0, 0.0, true)
+	var nl := FX.light(Color("#ff6a1c"), 640.0, 0.0, true)
 	nl.name = "ForgeNightLight"
 	nl.position = fp + Vector2(0, 24)
-	nl.set_meta("gain", 1.15)
+	nl.set_meta("gain", 1.7)
 	add_child(nl)
 	night_lights.append(nl)
 
@@ -2185,9 +2185,9 @@ func _update_hint(ppos: Vector2) -> void:
 			var a := TAU * i / 32.0
 			pts.append(Vector2(cos(a) * 46.0, sin(a) * 22.0))
 		_hint_ring.points = pts
-		_hint_ring.width = 2.0
+		_hint_ring.width = 2.5
 		_hint_ring.default_color = Color("#e8c060")
-		_hint_ring.z_index = -1
+		_hint_ring.z_index = 2   # above the floor, the station bases and the forge shade; below every figure
 		floor_layer.add_child(_hint_ring)
 	_hint_ring.visible = not _hint.is_empty()
 	if _hint.is_empty():
@@ -2203,7 +2203,7 @@ func _update_hint(ppos: Vector2) -> void:
 	_hint_phase += dt
 	_hint_ring.scale = Vector2(radius / 46.0, radius / 46.0)
 	_hint_ring.position = pos
-	_hint_ring.modulate.a = 0.26 + 0.12 * sin(_hint_phase * 1.6)
+	_hint_ring.modulate.a = 0.34 + 0.14 * sin(_hint_phase * 1.6)
 
 
 var _focus_key := "//"
@@ -2225,7 +2225,7 @@ func _set_highlight(e: Dictionary) -> void:
 		_hl_ring.points = pts
 		_hl_ring.width = 3.5
 		_hl_ring.default_color = Color("#e8c060")
-		_hl_ring.z_index = -1
+		_hl_ring.z_index = 2   # S2: was -1, under the interior floors (the ring showed only outdoors)
 		floor_layer.add_child(_hl_ring)
 	if is_instance_valid(_hl_sprite):
 		_hl_sprite.self_modulate = Color.WHITE
