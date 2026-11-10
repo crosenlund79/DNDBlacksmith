@@ -57,8 +57,22 @@ func _wait_unscaled(s: float) -> void:
 	await pt.get_tree().create_timer(s, true, false, true).timeout
 
 
-## {clock: game minutes per unscaled second, smith: px per unscaled second (0 when he is not walking), npc: px/s of a
-## walking villager, npc_base: that villager's own pace}.
+## Sums the frames' process deltas (scaled by Engine.time_scale) and what they are in unscaled engine time.
+class DeltaProbe:
+	extends Node
+	var scaled := 0.0
+	var unscaled := 0.0
+
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+
+	func _process(delta: float) -> void:
+		scaled += delta
+		unscaled += delta / maxf(0.001, Engine.time_scale)
+
+
+## Over `secs` of unscaled engine time: {clock: game minutes per unscaled second, smith: his px per unscaled second,
+## npc / npc_base: a walking villager's px per unscaled second and own pace, scaled: scaled seconds per unscaled one}.
 func _rates(secs: float) -> Dictionary:
 	var w := _w()
 	var walker: NPCActor = null
@@ -67,16 +81,24 @@ func _rates(secs: float) -> Dictionary:
 		if n.visible and n.path.size() > 1 and not n.get_meta("apprentice", false):
 			walker = n
 			break
+	var probe := DeltaProbe.new()
+	pt.add_child(probe)
+	await pt.get_tree().process_frame
 	var n0 := walker.position if walker != null else Vector2.ZERO
 	var p0 := w.player.position
 	var m0 := Game.now()
 	var acc0: float = Game.get("_acc")
-	await _wait_unscaled(secs)
-	var clock := (float(Game.now() - m0) + float(Game.get("_acc")) - acc0) / secs
-	var out := {"clock": clock, "smith": w.player.position.distance_to(p0) / secs, "npc": 0.0, "npc_base": 0.0}
+	var u0 := probe.unscaled
+	var s0 := probe.scaled
+	while probe.unscaled - u0 < secs:
+		await pt.get_tree().process_frame
+	var u := maxf(0.001, probe.unscaled - u0)
+	var out := {"clock": (float(Game.now() - m0) + float(Game.get("_acc")) - acc0) / u, "smith": w.player.position.distance_to(p0) / u,
+		"npc": 0.0, "npc_base": 0.0, "scaled": (probe.scaled - s0) / u}
 	if walker != null and is_instance_valid(walker):
-		out["npc"] = walker.position.distance_to(n0) / secs
+		out["npc"] = walker.position.distance_to(n0) / u
 		out["npc_base"] = walker.speed
+	probe.queue_free()
 	return out
 
 
@@ -109,7 +131,7 @@ func run(p: Node) -> void:
 	pt.expect(w.player.visible and w.player.sprite.modulate.a > 0.9, "s2st: the smith stays in the world (he works under the steward)")
 	# ---- the pace: the clock at 1.5× (1.6 game minutes a second × 1.5), measured against unscaled engine time
 	var r0 := await _rates(3.0)
-	pt.note("   at the steward's pace: clock %.2f game min/s, a villager walks %.0f px/s (own pace %.0f)" % [float(r0["clock"]), float(r0["npc"]), float(r0["npc_base"])])
+	pt.note("   at the steward's pace: clock %.2f game min per unscaled s, frame time ×%.2f, a villager walks %.0f px/s (own pace %.0f)" % [float(r0["clock"]), float(r0["scaled"]), float(r0["npc"]), float(r0["npc_base"])])
 	pt.expect(absf(float(r0["clock"]) - 1.6 * 1.5) < 0.35, "s2st: the clock runs at 2.4 game minutes a second (%.2f)" % float(r0["clock"]))
 	pt.expect(Engine.time_scale == 1.5, "s2st: one time scale for everything that moves (Engine.time_scale %s)" % str(Engine.time_scale))
 	# ---- 8:00: he walks to the forge — the walking pace measured too

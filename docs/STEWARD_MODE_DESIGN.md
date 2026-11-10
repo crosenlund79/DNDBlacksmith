@@ -263,3 +263,49 @@ could attempt, so that it never starts work a customer will walk away from.
 - **Sealed letters stay sealed** (`contracts.gd` `_announce`): a contract letter arriving while the smith is away is
   announced with its sender only (toast, journal, Chronicle); its subject is revealed when the player opens it. Test:
   `t_steward.letter_contents_stay_sealed_while_away`.
+
+---
+
+*Section 10 was added by the S2 STEWARD worker (10 November 2026). Where it differs from §§1–9 above, S2 supersedes S1
+(user's S2 brief, items 2–3): the smith is no longer "away doing nothing" — he works under the steward.*
+
+## 10. S2 — the working smith and the steward's pace
+**Engine.** `StewardSmith` (`scripts/systems/steward_smith.gd`) is the steward's duty `smith` ("The smith's own routine
+work"). `Game.advance_minutes` calls `StewardSmith.tick(5)` every 5 game minutes while the mode is active (like the
+apprentices); `Steward.tick` calls `StewardSmith.plan()` hourly (and when he is idle, at most every 30 min). He acts only
+through existing actions: `Crafting.start` (materials leave the stores), one `Crafting.record_step` per operation at the
+operation's station (fatigue by `Vitality.on_craft_step`), `Crafting.build` as the smith (provenance: his own hand;
+`craft.steward = true`), `Shop.do_repair` / `Shop.repair_part` (the customer pays from their own purse, A2).
+Commissions are committed to him by the orders duty when no apprentice can make them in time (`_order_plan` →
+`StewardSmith.order_plan`); preparation (smelting) is queued to him when no apprentice can (`_queue_prep` →
+`enqueue_prep`); restocking (`_plan_restock`) keeps the display at `stock_target`, counting apprentice restock tasks.
+His queued work's materials are part of `Steward._needs()`, so replenishment buys them within the limits.
+**Competent, not superior.** Each check resolves automatically at `Contracts.smith_hour_quality(rid, rng)` (the Project
+Bench's automatic estimate: skill vs difficulty, freshness, a little seeded chance), never above `QUALITY_CAP = 110`
+(below the Hall of Fame craftsmanship 112, masterwork 115, anvil naming 120). Only routine Designs: classic smithing,
+unlocked, no secret node, no forgotten/teaching/legendary-grade recipe, difficulty ≤ the order rule and ≤ his level.
+Never masterpieces (contract slot), refinement, reforging, sockets, coatings, enchanting, designer experiments,
+protected / Unique / Epic pieces (a protected customer piece is deferred: `Steward.defer_protected_repair`).
+**His day.** Standing instruction `smith_hours` (default `[8, 18]`, validated 5–12 / 13–21, ≥ 4 h); 12–13 the midday
+break by the hearth (`Vitality.rest`); fatigue ≥ 80 → an hour's rest; outside his hours at home; 22–6 asleep in his bed
+(`Vitality.sleep`, the bed's rule). The S1 rule "fatigue holds while away" is gone (`Vitality.on_hour`).
+**One engine.** Walking is a state (`smith.goal`, `walking`): headless, an estimate from station positions (0.45 min a
+tile, +3 min a floor, 4 min to the quarters); with a `VillageWorld`, `StewardSmithActor` (`scripts/world/`) walks the
+player's own figure with PlayerNav (`Smithy.walk_to_station(sid, w, false)` — to the station's working side, stairs
+and lift included; nothing opens) and reports arrival; game time passes while he walks. At the station: the
+apprentices' work motion, the world's sparks/flash after each operation, a bubble with his activity. The player body
+ignores keyboard and clicks while away but keeps walking while look-only panels are open.
+**Zero experience.** `Game.grant_player_xp` refuses while `Steward.xp_blocked()`: the mode is active, or a marked job
+(`Game.state.craft.steward`) is being recorded (`Crafting.record_step` / `build` hold the mark) — so a piece begun under
+the steward gives nothing when the smith finishes it after the return or after a load. No teaching flag, no objective;
+withheld amounts are counted (`stats.xp_withheld`, report `smith.xp_withheld`).
+**Pace.** Standing instruction `pace` (1.0 / 1.5, default 1.5). On activation `Engine.time_scale = pace` and
+`Game.speed = 1` (one scale for the clock, walking, animations, tweens and timers); `Game.set_speed` while active is
+remembered for the return; `restore_pace()` on exit, on load, on a new game and (safety) from `Game._process`.
+Headless tests drive `advance_minutes` and are unaffected (determinism test in `t_s2_steward`).
+**Report.** `report().smith`: pieces made (quality, purpose, for whom), repairs (who, quality, paid), prepared,
+materials used, minutes at the stations, walking minutes, operations, nights, breaks, rests, the piece still in hand,
+anything set down at the return, `xp_unchanged` (skills now vs the activation snapshot) and `xp_withheld`.
+**State added (lazy, no schema bump):** `steward.smith` {act, place, goal, walking, job (a repair in hand), op_progress,
+op_need, queue [{id, purpose, recipe, order_id?, repeat, done, def?}], …}, `steward.acc.smith`, orders `smith_hours`,
+`pace`, snapshot `skills`, `fatigue`, `stats.xp_withheld`; the Crafting job's `steward` mark.
