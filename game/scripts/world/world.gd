@@ -821,6 +821,23 @@ func _build_atmosphere() -> void:
 		em.position = fp + Vector2(40, 20)
 		add_child(em)
 	_build_night_dressing()
+	_forge_night_light()
+
+
+## S2: as the evening falls the forge fire becomes the workshop's light — a wide, warm, flickering glow from the hearth
+## that grows with `night_factor` (a night light: _update_light scales it, Flicker breathes it) and is gone by day.
+## Added after the night dressing so it keeps the interior light mask: it lights the workshop, not the street.
+func _forge_night_light() -> void:
+	var fr := _room_rect_by_id("smithy", "forge_room")
+	if fr.size == Vector2.ZERO:
+		return
+	var fp := station_pos("forge") if Property.is_installed("forge") else fr.get_center()
+	var nl := FX.light(Color("#ff6a1c"), 700.0, 0.0, true)
+	nl.name = "ForgeNightLight"
+	nl.position = fp + Vector2(0, 24)
+	nl.set_meta("gain", 1.15)
+	add_child(nl)
+	night_lights.append(nl)
 
 
 func _room_rect_by_id(bid: String, rid: String) -> Rect2:
@@ -1537,8 +1554,10 @@ func _refresh_bags() -> void:
 		if interactables[i]["kind"] == "bag":
 			interactables.remove_at(i)
 	var returns: Array = Game.state.get("returns", [])
+	# S2 (OBS-13/14): every bag on clear floor in the stock hall — never under the Loft stair or the hoist, nor in a doorway
+	var at := Property.drop_spots(returns.size())
 	for i in returns.size():
-		var pos: Vector2 = spots.get("smithy_bag", Vector2.ZERO) + Vector2((i % 4) * 56.0, int(i / 4) * 44.0)
+		var pos: Vector2 = bpos(Property.BID, (at[i] as Vector2).x, (at[i] as Vector2).y)
 		var s := _sprite("props/loot_pile", pos, floor_layer)
 		var glow := FX.motes(Items.COL_BORDER.get(Loot.best_rarity(returns[i].get("contents", [])), Color.WHITE), 5, 18.0)
 		s.add_child(glow)
@@ -2087,6 +2106,104 @@ func _update_focus() -> void:
 		_hl_ring.modulate.a = 0.55 + 0.35 * sin(_hl_t * 4.0)
 		if _focus.get("kind", "") == "npc" and npcs.has(_focus.get("id", "")):
 			_hl_ring.position = (npcs[_focus["id"]] as Node2D).position + Vector2(0, 6)
+	_update_hint(ppos)
+
+
+# ----------------------------------------------------------------------- S2: contextual hint
+## A restrained cue for the nearest station or person within a few steps that has something for the smith NOW (the
+## station of his next step or one where a recipe is ready to begin; a customer to serve, a delivery…), before he is in
+## reach: one faint, slowly breathing ring at a time, no brightening. The gilt focus ring takes over in reach.
+const HINT_RANGE := 320.0
+const HINT_EVERY := 0.4
+var _hint_ring: Line2D
+var _hint := {}
+var _hint_t := 0.0
+var _hint_phase := 0.0
+
+
+## Is there something to do at this station now? Unlocked, and either the current job's next station or (no job) one
+## where a recipe could begin; the Project Bench while a contract is in hand.
+static func station_usable(sid: String) -> bool:
+	if sid == Contracts.BENCH:
+		return Contracts.bench_installed() and not Contracts.active().is_empty()
+	if not Property.is_installed(sid) or Crafting.station_locked_reason(sid) != "":
+		return false
+	if Crafting.active():
+		return Crafting.current_station() == sid
+	return WorldPrompts._ready_count(sid) > 0
+
+
+## Does this person have something for the smith now beyond small talk (WorldPrompts' verbs)?
+static func person_usable(npc: String, where := "village") -> bool:
+	if npc.begins_with("app_"):
+		return false
+	for a in WorldPrompts.npc_actions(npc, where)["actions"]:
+		if str(a) != "Talk":
+			return true
+	return false
+
+
+## Pure: the nearest usable candidate ({kind, id, pos, usable}) within `max_d` of `from`, except `skip` ("kind/id").
+static func hint_pick(from: Vector2, cands: Array, skip := "", max_d := HINT_RANGE) -> Dictionary:
+	var best := {}
+	var best_d := max_d
+	for c: Dictionary in cands:
+		if not bool(c.get("usable", false)) or "%s/%s" % [c.get("kind", ""), c.get("id", "")] == skip:
+			continue
+		var d := from.distance_to(c["pos"])
+		if d < best_d:
+			best_d = d
+			best = c
+	return best
+
+
+## The candidates around `from`: interactable stations and visible people in range (usability asked only of those).
+func hint_candidates(from: Vector2) -> Array:
+	var out := []
+	for e in interactables:
+		if str(e.get("kind", "")) == "station" and from.distance_to(e["pos"]) < HINT_RANGE:
+			out.append({"kind": "station", "id": str(e["id"]), "pos": e["pos"], "usable": station_usable(str(e["id"]))})
+	for id in npcs:
+		var n: NPCActor = npcs[id]
+		if n.visible and from.distance_to(n.position) < HINT_RANGE:
+			out.append({"kind": "npc", "id": str(id), "pos": n.position, "usable": person_usable(str(id), area)})
+	return out
+
+
+func _update_hint(ppos: Vector2) -> void:
+	var dt := get_process_delta_time()
+	_hint_t -= dt
+	if _hint_t <= 0.0:
+		_hint_t = HINT_EVERY
+		var skip := "%s/%s" % [_focus.get("kind", ""), _focus.get("id", "")]
+		_hint = hint_pick(ppos, hint_candidates(ppos), skip) if Game.ui_blockers == 0 and not Steward.smith_away() else {}
+	if _hint_ring == null:
+		_hint_ring = Line2D.new()
+		_hint_ring.name = "HintRing"
+		var pts := PackedVector2Array()
+		for i in 33:
+			var a := TAU * i / 32.0
+			pts.append(Vector2(cos(a) * 46.0, sin(a) * 22.0))
+		_hint_ring.points = pts
+		_hint_ring.width = 2.0
+		_hint_ring.default_color = Color("#e8c060")
+		_hint_ring.z_index = -1
+		floor_layer.add_child(_hint_ring)
+	_hint_ring.visible = not _hint.is_empty()
+	if _hint.is_empty():
+		return
+	var pos: Vector2 = _hint["pos"]
+	var radius := 34.0
+	if str(_hint["kind"]) == "station":
+		var size: Array = DB.station(str(_hint["id"])).get("size", [96, 96])
+		radius = float(size[0]) * 0.55
+		pos += Vector2(0, float(size[1]) * 0.42)
+	elif npcs.has(_hint["id"]):
+		pos = (npcs[_hint["id"]] as Node2D).position + Vector2(0, 6)
+	_hint_phase += dt
+	_hint_ring.scale = Vector2(radius / 46.0, radius / 46.0)
+	_hint_ring.position = pos
+	_hint_ring.modulate.a = 0.26 + 0.12 * sin(_hint_phase * 1.6)
 
 
 var _focus_key := "//"
