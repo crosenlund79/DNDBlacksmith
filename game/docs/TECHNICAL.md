@@ -43,7 +43,11 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
 
 - Slots `slot_1..3`, `autosave` (written on sleep) and `quicksave` (F5), stored at `user://saves/<slot>.json` as `{meta, data}`.
 - Writes are atomic: temp file, then rename. The previous file is kept as `<slot>.bak` and used automatically if the main file is unreadable.
-- `data.version` is migrated step by step in `Saves.migrate()`.
+- `data.version` is migrated step by step by `SaveMigrations` (`save_migrations.gd`, one step per schema change; the
+  current schema is `Game.SAVE_VERSION`). Schema 4 (Run 0.1) adds `uniques`, the campaign's Unique-artifact registry
+  (`uniques.gd`): each Unique definition is minted once per campaign (decision D13); saves from before it register the
+  lowest-uid piece as authentic and keep any other pieces whole as recorded legacy copies.
+- A save from a newer schema is never loaded, migrated or overwritten; the player is told why (`Saves.newer_schema`).
 - JSON turns integers into floats; `Saves._restore_ints()` converts integral values back, except keys listed in `FLOAT_KEYS`.
 
 ## Template / override system
@@ -227,6 +231,28 @@ It is saved with the item, and the results panel can be reopened from the stores
 - **Item instances** carry `uid`, `owner`, `history` (cap 12), `crafted_by`, `craft` (quality, dice, operations) and optional `named`. `Game.find_uid_anywhere(uid)` finds an instance in the stores, on an adventurer or a hireling.
 - **Difficulty** factors live in `expeditions.json → difficulty` and are read at use: `Expeditions.diff()` (enemy, death, death_dc, heal_rate, prices, wages, loot, observe, detail).
 - **UI:** `WantedPanel` (board, `WantedSheet` cards), `DossierPanel`, `ObserverPanel` (`MapView`, `EncounterView`), `DifficultyPanel`. These set `blocks_time = false`; `Game.ui_open` freezes the player while any window is open.
+
+## History: Lore and the Chronicle (known inconsistency, preserved until Gate J)
+
+The canonical design wants **one** history: Lore as the shared memory and the Chronicle of the Realm as a *view* of it
+(canon §10.4; a separate chronicle truth database is outside the approved design, §15). The code is not there yet, and
+Run 0.1 deliberately **documents rather than rebuilds** it (decision register LORE-017, GOV-031; roadmap Gate J):
+
+- **Two stores.** `Lore` (`lore.gd`, `Game.state["lore"]`) keeps events with stable ids linked to items, actors and
+  places; importance ≥ 1 and anything still referenced is kept, routine events beyond 4,000 are *pruned* (not
+  summarised). `Chronicle` (`chronicle.gd`, `Game.state["chronicle"]`) is a feed capped at 400 entries.
+- **Who writes where.** `Lore.record(..., {"chronicle": true})` writes both. 66 call sites write `Chronicle.add`
+  directly and never reach Lore (33 call sites use `Lore.record`) — for example hireling deaths, funerals and graves
+  (`memorial.gd`) and many social notes. Such entries disappear once 400 newer ones arrive.
+- **Who reads where.** Item, adventurer and place histories (`Lore.of_item`, `of_actor`, `of_place`) and the
+  Steward's away report (including the welcome-back "wider world" section) read Lore. The Most Wanted "Legends & History" tab, dossier histories and the History panels
+  read the Chronicle; `Recognition.on_chronicle` awards plaques and Epic by matching Chronicle *text*.
+- **Old saves.** Chronicle entries from before Iteration 011 were never converted to Lore.
+- **Rule until Gate J:** keep both paths working as they are; do not move a writer from one store to the other
+  piecemeal. The Gate J work (Lore coverage, roles and causal links, indices, a retention policy that summarises
+  routine activity without losing meaningful links, converting old entries, retiring the separate store) is one
+  planned change. `t_run01.test_chronicle_and_lore_split_is_as_documented` pins today's behaviour so any change is
+  deliberate.
 
 ## Iteration 009 architecture notes
 

@@ -1,9 +1,15 @@
-## Chronicle — the village's single record of what happened.
-## EN: Every significant world event is written here once, by the authoritative simulation, with
-##     references to the people, items, expeditions and places involved. The Most Wanted board,
-##     dossiers, expedition histories, rumours and table talk all READ this record — no interface
-##     invents its own version of an event.
-## DA: Landsbyens ene fortegnelse over hændelser. Tavlen, dossierer, rygter og bordsnak læser herfra.
+## Chronicle — the village's news feed: the last CAP (400) notable happenings, newest last.
+## EN: Entries are written by the authoritative simulation, with references to the people, items, expeditions and
+##     places involved; the Most Wanted board (Legends & History), dossiers, History panels and Recognition read it.
+##     KNOWN INCONSISTENCY, preserved on purpose until Gate J (Run 0.1; decision register LORE-017 / GOV-031): Lore
+##     (lore.gd) is meant to be the single shared memory and this feed only a view of it (canon §10.4, §15), but today
+##     the two stores run side by side. About two thirds of writers call Chronicle.add directly and never reach Lore
+##     (hireling deaths and funerals, many social notes); the feed is capped, so such entries vanish after 400 newer
+##     ones; Recognition awards Hall of Fame plaques and Epic by matching Chronicle text. Do not "fix" one side alone:
+##     the rebuild (Lore coverage, roles and indices, a retention policy, converting old entries) belongs to Gate J.
+##     See game/docs/TECHNICAL.md "History: Lore and the Chronicle".
+## DA: Landsbyens nyhedsstrøm (de seneste 400 hændelser). Kendt uoverensstemmelse: den kører ved siden af Lore i
+##     stedet for at være en visning af den; det bevares bevidst, indtil historiksystemet samles i Gate J.
 class_name Chronicle
 extends RefCounted
 

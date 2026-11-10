@@ -816,6 +816,45 @@ static func on_finish(e: Dictionary, alive: Array) -> void:
 	elif outcome == "success" and not alive.is_empty():
 		Social.change(str(alive[0]), 2.0, 2.0)
 	_conclude(sp, e, outcome, deliver, paid, owed)
+	if owed > paid:
+		sp["result"]["creditors"] = alive.duplicate()   # D14 (Run 0.1): who is owed the rest — settle_debts() pays it
+
+
+## D14 (Run 0.1): what the smith still owes a sponsored company is a real debt, not a grudge alone. Each morning, while
+## he has coin, it is paid to the company's surviving members — their purses go up by what his goes down, one ledger
+## line names the leader — until nothing is owed. With nobody left alive to pay, the debt stays on the record.
+## Returns the gold paid today.
+static func settle_debts() -> int:
+	if not Game.state.has("sponsor"):
+		return 0
+	var total := 0
+	for sp in all():
+		var res: Dictionary = sp.get("result", {})
+		var owed := int(res.get("owed", 0))
+		if str(sp.get("status", "")) != "done" or owed <= 0:
+			continue
+		var to: Array = []
+		for i in (res.get("creditors", sp.get("party", [])) as Array):
+			var m := Adv.get_a(str(i))
+			if not m.is_empty() and str(m.get("status", "")) != "dead":
+				to.append(str(i))
+		if to.is_empty():
+			continue
+		var pay := mini(owed, maxi(0, Game.gold()))
+		if pay <= 0:
+			break
+		Game.add_gold(-pay, "sponsor", "Settled what was still owed to %s" % sp["who"], str(sp.get("leader", "")))
+		for i in to.size():
+			var part := pay / to.size() + (1 if i < pay % to.size() else 0)
+			var a := Adv.get_a(str(to[i]))
+			a["gold"] = int(a.get("gold", 0)) + part
+			sp["paid"][str(to[i])] = int(sp["paid"].get(str(to[i]), 0)) + part
+		res["owed"] = owed - pay
+		res["paid"] = int(res.get("paid", 0)) + pay
+		total += pay
+		Game.journal("You paid %s the %d g still owed for the sponsored expedition%s." % [sp["who"], pay,
+			"" if int(res["owed"]) == 0 else " (%d g still owed)" % int(res["owed"])])
+	return total
 
 
 ## Expeditions._wipe: nobody came back.

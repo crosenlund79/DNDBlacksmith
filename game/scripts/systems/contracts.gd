@@ -393,7 +393,7 @@ static func decline(id: String) -> String:
 	return "No such letter."
 
 
-## Give the order up: the patron is displeased (as if it were withdrawn), the advance is kept, the crate goes back.
+## Give the order up: the patron is displeased (as if it were withdrawn), the advance and the crate go back (Run 0.1, D14).
 static func abandon(id: String) -> String:
 	var c := _active(id)
 	if c.is_empty():
@@ -822,6 +822,10 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	c["crate_returned"] = (c["crate"] as Dictionary).duplicate()
 	c["crate"] = {}
 	var pid := str(c["patron"])
+	if outcome == "failed" and int(c.get("advance", 0)) > 0:
+		# D14 (Run 0.1): an order given up or withdrawn returns the patron's advance — nothing was delivered for it
+		Game.add_gold(-int(c["advance"]), "contract", "Advance returned: " + str(c["title"]), "patron:" + pid)
+		c["advance_returned"] = int(c["advance"])
 	var ps := _pst(pid)
 	ps["favour"] = clampi(int(ps["favour"]) + fav, -6, 10)
 	ps["done"] = int(ps["done"]) + 1

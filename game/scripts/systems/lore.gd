@@ -6,7 +6,11 @@
 ##     everything of importance 2+, is kept forever.
 ##     Event: {id, t, day, time, kind, text, actors[adv/npc ids], items[uids], place(location id), importance 0–3,
 ##     icon, data{}}. Chronicle (the news feed) gets notable events with refs.event = id.
-## DA: Verdens fælles hukommelse — én begivenhed, mange henvisninger.
+##     KNOWN INCONSISTENCY (Run 0.1; decision register LORE-017 / GOV-031): Lore is not yet complete. Many happenings
+##     are written only to the capped Chronicle feed (chronicle.gd), so "single memory" is the design target (canon
+##     §10.4), not today's fact; routine events past CAP are pruned rather than summarised (canon D9 asks for safe
+##     summaries). Both are preserved as they are until Gate J — see game/docs/TECHNICAL.md.
+## DA: Verdens fælles hukommelse — én begivenhed, mange henvisninger. (Endnu ikke komplet: se Chronicle og Gate J.)
 class_name Lore
 
 const CAP := 4000            # routine events beyond this are pruned (oldest, unimportant, unreferenced first)

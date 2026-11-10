@@ -15,8 +15,9 @@ Treat this as a permanent project safety requirement, not a one-time instruction
 
 ## 2. Canonical design governance
 
-**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.1; source:
-`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.1.docx`; the v1.0 .docx is kept as the dated historical copy). It is
+**The canonical game design is `docs/EMBER_ASH_CANONICAL_VISION.md`** (Design Baseline 1.2; source:
+`docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.2.docx`; the v1.1 and v1.0 .docx files are kept as the dated
+historical copies). It is
 the authoritative baseline for what the game is.
 
 1. **Read it first.** Every implementation session must read `docs/EMBER_ASH_CANONICAL_VISION.md` before planning or
@@ -27,7 +28,7 @@ the authoritative baseline for what the game is.
      the safety contract below).
    - **NEW SCOPE** — adds gameplay, systems or content the design does not approve (see its "NOT APPROVED" items and
      section 15). Name each addition and ask for explicit approval before building it.
-   - **CONFLICT** — contradicts a locked decision (e.g. sections 1.2–1.3, 6.1, the D1–D18 decision register, section
+   - **CONFLICT** — contradicts a locked decision (e.g. sections 1.2–1.3, 6.1, the D1–D19 decision register, section
      14.1). Quote the conflicting decision, explain the conflict and **STOP** until the user resolves it.
 3. **Technical improvements** (refactors, migrations, tests, performance, tooling) are allowed only within explicitly
    authorized work, and must preserve the approved game design.
@@ -41,7 +42,9 @@ the authoritative baseline for what the game is.
 6. **Precedence.** The canonical design takes precedence over older roadmap and design documents when they disagree —
    including `docs/Ember_and_Ash_Master_Design_2026-11-09.docx`, earlier iteration briefs, `game/docs/` status notes
    and Claude's own audits/reports (`docs/EMBER_ASH_ARCHITECTURE_REVIEW_2026-11-09.md`,
-   `docs/EMBER_ASH_CURRENT_STATUS.md`). Those reports are technical evidence, not creative authority.
+   `docs/EMBER_ASH_CURRENT_STATUS.md`) and tracking registers (`docs/EMBER_ASH_DECISION_REGISTER.md`,
+   `docs/EMBER_ASH_ROADMAP_REGISTER.md`, `docs/EMBER_ASH_PLAYTEST_OBSERVATIONS.md`). Those reports and registers are
+   technical evidence and tracking, not creative authority.
 7. **Honest status.** Keep the difference between *implemented*, *design approved*, *being evaluated* and *not approved*
    visible. Never report a feature as done because it was requested or designed.
 

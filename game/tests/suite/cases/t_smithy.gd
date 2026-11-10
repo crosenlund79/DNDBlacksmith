@@ -81,8 +81,9 @@ func test_tiers_follow_progress() -> void:
 	Game.state["gold"] = 100
 	eq(Smithy.room_tier(forge), 1, "skill alone does not make a Masterwork room (renown needed)")
 	check(str(Smithy.tier_info(forge)["next"]).contains("renown"), "it says renown is missing: %s" % Smithy.tier_info(forge)["next"])
-	Game.state["gold"] = 3000
-	eq(Smithy.room_tier(forge), 2, "with renown (a wealthy workshop) → Masterwork")
+	Game.state["gold"] = 50000
+	eq(Smithy.room_tier(forge), 1, "a full purse is not renown (D18: renown is earned, never bought)")
+	check(not bool(Smithy.renown()["ok"]) and not str(Smithy.renown()["why"]).contains("gold"), "renown asks for deeds, not gold: %s" % Smithy.renown()["why"])
 	Game.state["gold"] = 100
 	for i in 3:
 		Recognition.record("epic", "Plaque %d" % i, "test", {}, "suite_smithy_%d" % i)
@@ -136,6 +137,7 @@ func test_dressing_never_blocks() -> void:
 	for sk in ["runecraft", "alchemy", "enchanted_stitching", "arcane_metalwork"]:
 		train(sk, 12)
 	Game.state["gold"] = 4000
+	(Game.state["world"] as Dictionary)["rep"] = 30.0   # a renowned name (D18: renown is earned, not bought)
 	var w := _world()
 	var tiers := {}
 	var dressing := 0

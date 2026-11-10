@@ -392,6 +392,7 @@ static func _resolve(a: Dictionary) -> void:
 	# spouse shares the spoils
 	if spouse:
 		var share := gold / 2
+		a["gold"] = int(a["gold"]) - share   # D14 (Run 0.1): her share leaves her purse — the spoils were paid to her above
 		Game.add_gold(share, "family", "%s's share of the spoils" % a["name"], str(a["id"]))
 		if not loot.is_empty():
 			var gift := []

@@ -315,6 +315,9 @@ static func settle_dispute(npc: String, refund: bool) -> String:
 	remove_customer(npc)
 	if refund:
 		Game.add_gold(-amount, "refunds", "Refund to %s" % Talk.npc_name(npc), npc)
+		var claimant := Adv.get_a(npc)
+		if not claimant.is_empty():   # D14 (Run 0.1): the refund reaches the adventurer's own purse
+			claimant["gold"] = int(claimant.get("gold", 0)) + amount
 		Social.change(npc, 8.0, 4.0, "refund_" + str(Game.day()), "The smith refunded me without argument when his work failed.")
 		rep_change(4.0, "the smith stands by his work.")
 		return "You count out %d g. \"That's... fair of you, smith.\"" % amount
