@@ -126,8 +126,14 @@ func test_early_smith_alone_does_real_work() -> void:
 			continue   # sold or delivered: it lives on elsewhere
 		check(Provenance.is_mine(it), "%s carries the smith as its maker" % str(m["name"]))
 		check(bool(it["craft"].get("steward", false)), "%s is marked as made under the steward" % str(m["name"]))
-		check(float(it["quality"]) <= StewardSmith.QUALITY_CAP + 0.01 and not bool(it["craft"].get("masterwork", false)) and not ItemStory.is_named(it),
-			"%s: %.1f%%, no masterwork, no name" % [str(m["name"]), float(it["quality"])])
+		# no anvil naming (a masterwork name at the forge); a name EARNED LATER by a real deed in an adventurer's hands
+		# (e.g. a boss kill) is history, not the steward's doing, and is allowed (S2 integration: with fairer prices
+		# adventurers buy and use the working smith's pieces)
+		var anvil_named := ItemStory.is_named(it) and str(it["named"].get("kind", "")) == "masterwork"
+		check(float(it["quality"]) <= StewardSmith.QUALITY_CAP + 0.01 and not bool(it["craft"].get("masterwork", false)) and not anvil_named,
+			"%s: %.1f%%, no masterwork, no anvil name" % [str(m["name"]), float(it["quality"])])
+		if ItemStory.is_named(it) and not anvil_named:
+			note("%s later earned the name “%s” (%s) in an adventurer's hands" % [str(m["name"]), ItemStory.earned_name(it), str(it["named"].get("kind", ""))])
 		eq(StewardSmith.recipe_ok(str(it["craft"]["recipe"])), "", "%s is a routine Design he knows" % str(m["name"]))
 	# real materials: what he used came out of the stores
 	var used: Dictionary = sm["used"]
