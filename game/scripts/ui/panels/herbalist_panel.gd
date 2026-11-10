@@ -8,6 +8,9 @@ class_name HerbalistPanel
 extends UIWindow
 
 var qty := 1
+## S2 (OBS-16): optional "only what I can buy now" filter (off by default; sold-out and unaffordable cards stay visible,
+## greyed, until the smith asks to hide them). Remembered for the session.
+static var only_affordable := false
 var body: VBoxContainer
 var side: VBoxContainer
 var store_id := "herbalist"
@@ -64,15 +67,46 @@ func _build() -> void:
 		var b := UIKit.button("×%d" % q, func(): qty = qq; _build(), 70)
 		b.disabled = qty == q
 		qrow.add_child(b)
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	qrow.add_child(sp)
+	var cb := CheckBox.new()
+	cb.name = "OnlyAffordable"
+	cb.text = "Only what I can buy now"
+	cb.button_pressed = only_affordable
+	cb.tooltip_text = "Hide sold-out goods and what your purse cannot cover at this quantity."
+	cb.add_theme_font_override("font", Assets.font("body"))
+	cb.add_theme_font_size_override("font_size", 18)
+	cb.add_theme_color_override("font_color", UIKit.INK)
+	cb.add_theme_color_override("font_pressed_color", UIKit.INK)
+	cb.add_theme_color_override("font_hover_color", UIKit.RUBRIC)
+	cb.toggled.connect(func(on: bool): only_affordable = on; _build())
+	qrow.add_child(cb)
 	body.add_child(qrow)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.name = "StockGrid"
 	grid.add_theme_constant_override("h_separation", 18)
 	grid.add_theme_constant_override("v_separation", 12)
+	var hidden := 0
 	for e in Trade.store_stock(store_id):
+		if only_affordable and buy_blocker(e, qty) != "":
+			hidden += 1
+			continue
 		grid.add_child(_card(e))
+	if hidden > 0:
+		body.add_child(UIKit.label("%d item%s hidden — sold out or beyond your purse (untick to see them)." % [hidden, "" if hidden == 1 else "s"], 17, "body_italic", Color("#5e421c")))
 	body.add_child(UIKit.scroll(grid, 560))
+
+
+## Why a stock line cannot be bought now at quantity `q` ("" = it can): sold out, or the purse is short.
+static func buy_blocker(e: Dictionary, q: int) -> String:
+	var have := int(e["qty"])
+	if have <= 0:
+		return "sold out"
+	if not Game.can_afford(int(e["price"]) * maxi(mini(q, have), 1)):
+		return "you cannot afford it"
+	return ""
 
 
 func _card(e: Dictionary) -> Control:
@@ -97,5 +131,7 @@ func _card(e: Dictionary) -> Control:
 	if have > 0 and b.disabled:
 		b.tooltip_text = "You cannot afford it."
 	v.add_child(b)
+	if have > 0 and b.disabled:   # S2: the reason shown, not only in a tooltip
+		v.add_child(UIKit.label("Your purse holds %d g." % Game.gold(), 16, "body_italic", UIKit.RUBRIC))
 	h.add_child(v)
 	return h

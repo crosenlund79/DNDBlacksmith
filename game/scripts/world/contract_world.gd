@@ -9,6 +9,7 @@ extends Node2D
 
 const SYNC := 0.5
 const STACK := 4          # goods crates when the order is complete
+const CRATE_HALF := Vector2(0.4, 0.3)   # half a crate, in tiles (Property.drop_problem)
 
 var w: VillageWorld
 var _t := 0.0
@@ -74,6 +75,8 @@ static func free_spots(n: int) -> Array:
 	for o: Vector2 in cands:
 		var p := tp + o
 		if room.is_empty() or not Property.rect(room).grow(-0.35).has_point(p):
+			continue
+		if Property.drop_problem(p, CRATE_HALF, Contracts.BENCH) != "":   # S2: never on the stair, the lift or a doorway
 			continue
 		var clash := false
 		for sid in Property.st()["stations"]:

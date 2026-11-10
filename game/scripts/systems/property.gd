@@ -186,6 +186,79 @@ static func keep_clear_points() -> Array:
 	return out
 
 
+# ------------------------------------------------------------------ floor drops (S2: OBS-13/14)
+## Things set down on the floor — returns bags and chests (expedition finds, a hireling's haul or trade-run purchases,
+## sponsor deliveries, gifts) and the Project Bench's crates — keep clear of the stairwell and the hoist, of the stair
+## and lift themselves (so neither hides the other nor competes for [E]), of landings, doorways, the front door and
+## the stations, and stay wholly inside a room. Plan tiles; `half` = half the thing's size in tiles.
+const DROP_HALF := Vector2(0.5, 0.4)      # a loot pile is 64×48 px
+const DROP_STEP := Vector2(0.875, 0.7)    # the spacing of a row of piles
+const DROP_LINK_CLEAR := 1.6              # from a stair or lift's centre
+
+
+## Why a thing set down at `p` would be in the way ("" = clear). `beside` = a station it belongs next to (the bench's
+## own crates), whose footprint is the caller's business.
+static func drop_problem(p: Vector2, half := DROP_HALF, beside := "") -> String:
+	var box := Rect2(p - half, half * 2.0)
+	for rv: Rect2 in reserved_rects():
+		if box.grow(0.35).intersects(rv):
+			return "on the stairwell or the hoist"
+	for f in floors():
+		for k in ["down_stairs", "stairs", "down_lift", "lift"]:
+			if f.has(k) and p.distance_to(Vector2(float(f[k][0]), float(f[k][1]))) < DROP_LINK_CLEAR:
+				return "beside the stair or the lift"
+	for kp: Vector2 in keep_clear_points():
+		if box.grow(0.6).has_point(kp):
+			return "on a landing"
+	for d in doors():
+		var c := door_center(st(), d)
+		if c != Vector2.INF and box.grow(0.7).has_point(c):
+			return "in a doorway"
+	var ent: Array = data().get("entrance", [14.0, 0.6])
+	if box.grow(1.0).has_point(Vector2(float(ent[0]), float(ent[1]))):
+		return "at the front door"
+	for sid in st()["stations"]:
+		if str(sid) != beside and is_installed(str(sid)) and footprint(str(sid), st()["stations"][sid]).grow(0.3).intersects(box):
+			return "on the %s" % str(DB.station(str(sid)).get("name", sid)).to_lower()
+	var host := room_at_tile(rooms(), p)
+	if host.is_empty() or not rect(host).grow(-0.3).encloses(box):
+		return "not wholly inside a room"
+	return ""
+
+
+## `n` clear places (plan tiles) for floor drops in the room around `near` (default: the layout's "smithy_bag" spot in
+## the stock hall), the nearest first, a pile's width apart; when the room is full the last ones share a place (a pile
+## on a pile) rather than spill onto the stair or a doorway.
+static func drop_spots(n: int, near := Vector2.INF) -> Array:
+	if near == Vector2.INF:
+		var s: Array = data().get("spots", {}).get("smithy_bag", [14.6, 7.6])
+		near = Vector2(float(s[0]), float(s[1]))
+	var out := []
+	if n <= 0:
+		return out
+	var host := room_at_tile(rooms(), near)
+	var area := rect(host) if not host.is_empty() else Rect2(near - Vector2(4, 2), Vector2(8, 4))
+	var cands := []
+	var y := near.y - floorf((near.y - area.position.y) / DROP_STEP.y) * DROP_STEP.y
+	while y <= area.end.y:
+		var x := near.x - floorf((near.x - area.position.x) / DROP_STEP.x) * DROP_STEP.x
+		while x <= area.end.x:
+			var p := Vector2(x, y)
+			if drop_problem(p) == "":
+				cands.append(p)
+			x += DROP_STEP.x
+		y += DROP_STEP.y
+	cands.sort_custom(func(a: Vector2, b: Vector2): return a.distance_squared_to(near) < b.distance_squared_to(near))
+	for i in n:
+		if cands.is_empty():
+			out.append(near)
+		elif i < cands.size():
+			out.append(cands[i])
+		else:
+			out.append((cands[i % cands.size()] as Vector2) + Vector2(0.12, -0.1) * float(int(i / cands.size())))
+	return out
+
+
 # ------------------------------------------------------------------ the aetheric lift
 ## Ilse's old goods hoist (leather room ↔ weaving loft), re-rigged with a ley-stone from the Arcane Foundry.
 static func lift_cfg() -> Dictionary:

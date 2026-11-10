@@ -3893,6 +3893,13 @@ func phase_a2econ() -> void:
 	await ph.run(self)
 
 
+## Milestone S2 (clarity): leather batch feedback, named checks, bags clear of the Loft stair, potion offers and the
+## optional filters, a closed contract, the hint ring, the night forge light, apprentices at work (tests/playtest_s2_clarity.gd).
+func phase_s2_clarity() -> void:
+	var ph: RefCounted = load("res://tests/playtest_s2_clarity.gd").new()
+	await ph.run(self)
+
+
 # ======================================================================= Milestone A1: a save from a newer build
 ## A save written by a newer version is refused with a plain explanation: in the running game (quick-load keeps
 ## the game going) and on the main menu; the Load screen lists it as kept, not loadable; the file is untouched.

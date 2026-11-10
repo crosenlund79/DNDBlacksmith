@@ -138,6 +138,12 @@ func _work_column(cr: Dictionary) -> Control:
 	if q > 100.0:
 		note += " — [color=#ffa050]beyond perfection[/color]"
 	v.add_child(UIKit.rich("[i]%s[/i]" % note, 20, true))
+	# S2 (OBS-11): a material batch says what decided its size, and that its grade is not kept
+	var yl := yield_lines(item)
+	if not yl.is_empty():
+		var yr := UIKit.rich("\n".join(yl), 20, true)
+		yr.name = "YieldNote"
+		v.add_child(yr)
 	var xp: Dictionary = cr.get("xp", {})
 	var xl := []
 	for s in xp:
@@ -206,6 +212,42 @@ func _dice_column(cr: Dictionary) -> Control:
 			bits.append("[color=#ffa050]masterwork %.0f[/color]" % float(parts["masterwork"]))
 		v.add_child(UIKit.rich("[color=#c8b898]Score %.0f = %s[/color]" % [float(cr.get("rarity_score", 0)), " + ".join(bits)], 19, true))
 	return v
+
+
+## S2 (OBS-11): for a stackable batch (materials, draughts…), what decided its size — the recipe's units, and the bonus
+## unit with its cause (craftsmanship ≥ 105 % or a purity 6) or why there was none — and, for plain materials, that the
+## batch's craftsmanship is not kept: its units join the stock and work like any other in later recipes (inputs are
+## taken by kind; Crafting.build). Reads the craft record's "yield" (S2); older records are reconstructed. [] = n/a.
+static func yield_lines(it: Dictionary) -> Array:
+	var cr: Dictionary = it.get("craft", {})
+	var d := DB.item(str(it.get("def", "")))
+	if cr.is_empty() or Items.is_equipment(it) or not bool(d.get("stack", false)):
+		return []
+	var q := float(cr.get("quality", it.get("quality", 0)))
+	var y: Dictionary = cr.get("yield", {})
+	if y.is_empty():
+		var dice: Dictionary = cr.get("dice", {})
+		var pur := int((dice["purity"] as Dictionary).get("total", -1)) if dice.get("purity") is Dictionary else -1
+		var base0 := int(DB.recipe(str(cr.get("recipe", ""))).get("qty", 1))
+		var bonus0 := q >= Crafting.YIELD_BONUS_Q or pur >= 6
+		y = {"base": base0, "bonus": 1 if bonus0 else 0, "why": ("craftsmanship" if q >= Crafting.YIELD_BONUS_Q else "purity") if bonus0 else "", "purity": pur}
+	var nm := str(d.get("name", it.get("name", "")))
+	var base := int(y.get("base", 1))
+	var total := base + int(y.get("bonus", 0))
+	var pur_v := int(y.get("purity", -1))
+	var lines := []
+	var head := "[b]Batch: %d %s[/b] — the recipe makes %d" % [total, nm, base]
+	if int(y.get("bonus", 0)) > 0:
+		var cause := "your craftsmanship reached %d%% (105%% or more adds a unit)" % int(round(q)) if str(y.get("why", "")) == "craftsmanship" \
+			else "the purity die rolled a 6 (a pure batch adds a unit)"
+		head += ", [color=#ffc070]+1 bonus unit[/color] because %s." % cause
+	else:
+		head += ". No bonus unit: that needs 105%% craftsmanship or a purity 6 — this batch had %d%%%s." % [int(round(q)),
+			(", purity %d" % pur_v) if pur_v >= 0 else ""]
+	lines.append(head)
+	if str(d.get("type", "")) == "material":
+		lines.append("[i][color=#c8b898]Craftsmanship sets how many units a batch yields, not their grade: these join your %s stock and work exactly like the rest in later recipes.[/color][/i]" % nm)
+	return lines
 
 
 static func _qcol(q: float) -> Color:

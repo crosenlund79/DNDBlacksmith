@@ -137,7 +137,7 @@ SMITHY_FURNITURE = [
 ]
 SMITHY_SPOTS = {
     "smithy_counter_front": [14.5, 2.0], "smithy_counter_back": [14.5, 4.9], "smithy_inside": [14.0, 1.4],
-    "smithy_bag": [12.0, 7.6],
+    "smithy_bag": [14.6, 7.6],   # S2: clear of the Loft stairwell (Property.drop_spots keeps every drop clear)
     "work_mining": [15.6, 20.4], "work_smithing": [6.8, 6.8], "work_alchemy": [10.0, 12.8], "work_runecraft": [3.6, 13.6],
     "work_travelling": [11.6, 4.8], "work_relic_hunting": [16.4, 8.0],
     "quarters_table": [23.6, 2.4], "quarters_bed": [27.0, 11.4],
