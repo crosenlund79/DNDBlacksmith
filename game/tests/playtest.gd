@@ -1177,6 +1177,7 @@ func phase_slice() -> void:
 	await press("dev_panel")
 	await wait(0.6)
 	expect(panel() is DevPanel, "dev: F10 opens the developer tools")
+	await click("Enable cheats for this session")   # S2: the tools are locked until cheats are switched on
 	await shot("dev_panel")
 	for b in ["Smithing kit", "Runecraft kit", "Alchemy kit", "Stitching kit", "Gems & rare minerals", "Relics to study", "+1000 gold", "+2 levels in every craft"]:
 		await click(b)
@@ -3624,6 +3625,7 @@ func phase_refine_ux() -> void:
 	await press("dev_panel")
 	await wait(0.8)
 	expect(panel() is DevPanel, "refine_ux: F10 opens the developer tools")
+	await click("Enable cheats for this session")   # S2: the tools are locked until cheats are switched on
 	await shot("refine_ux_devpanel")
 	if _rux_node("OpenCatalogue") == null:
 		return
@@ -3897,6 +3899,13 @@ func phase_a2econ() -> void:
 ## optional filters, a closed contract, the hint ring, the night forge light, apprentices at work (tests/playtest_s2_clarity.gd).
 func phase_s2_clarity() -> void:
 	var ph: RefCounted = load("res://tests/playtest_s2_clarity.gd").new()
+	await ph.run(self)
+
+
+## Milestone S2 (ECONDEV): saving goals at the shop's price, plain pieces at the Salt Anvil, consultation and counter
+## sales, and the developer tools behind the cheat switch (tests/playtest_s2_econdev.gd).
+func phase_s2_econdev() -> void:
+	var ph: RefCounted = load("res://tests/playtest_s2_econdev.gd").new()
 	await ph.run(self)
 
 

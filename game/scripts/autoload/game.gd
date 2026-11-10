@@ -30,6 +30,7 @@ func _ready() -> void:
 
 # ------------------------------------------------------------------ new game
 func new_game(difficulty := "journeyman") -> void:
+	DevTools.end_session()   # S2: developer cheats never carry into a new game
 	state = {
 		"version": SAVE_VERSION,
 		"day": 1, "minute": 7 * 60 + 30,
@@ -349,6 +350,7 @@ func to_save() -> Dictionary:
 
 
 func from_save(data: Dictionary) -> void:
+	DevTools.end_session()   # S2: a loaded save starts with developer cheats off (a session switch, never saved)
 	state = data
 	Steward.on_loaded()   # a loaded save always starts with Steward Mode OFF — no offline progress, no catch-up
 	Events.game_loaded.emit()

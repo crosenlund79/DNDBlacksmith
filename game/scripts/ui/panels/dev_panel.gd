@@ -1,6 +1,9 @@
 ## DevPanel — developer testing tools (F10). Not part of normal play: it never appears in menus and
 ## is only opened with its own key. Accelerates time, hands out representative materials and test
 ## items, and pokes the simulation so every system can be exercised quickly during playtesting.
+## S2: every tool is locked until "Enable cheats for this session" (DevTools: a session switch, never saved, off after a
+## new game or a load; a "CHEATS ON" banner shows while it is on). The bar also holds the optional skill-check bypass;
+## "Test scenarios" open a crafting, workshop, counter-commission or Project Bench situation with the game's own setters.
 ## DA: Udviklerværktøj (F10) til test: tid, materialer, testgenstande og udløsning af hændelser.
 class_name DevPanel
 extends UIWindow
@@ -17,16 +20,23 @@ const KITS := {
 
 var body: VBoxContainer
 var out: RichTextLabel
+var cheat_state: RichTextLabel
+var cheat_btn: Button
+var bypass_btn: Button
+var skill_labels := {}
 
 
 func _init() -> void:
 	super._init("Developer Tools — testing only (F10)", 1500, 860, true)
+	name = "DevPanel"
 
 
 func _ready() -> void:
 	super._ready()
 	out = UIKit.rich("", 19, true)
+	content.add_child(_cheat_bar())
 	body = UIKit.vbox(8)
+	_scenarios()
 	# UX iteration: the developer catalogue — every item, spawned with quantity / rarity / craftsmanship, and money
 	var cat := UIKit.vbox(4)
 	var cb := UIKit.button("Open the developer catalogue (every item, money)", func():
@@ -78,8 +88,144 @@ func _ready() -> void:
 	_section("Relationships", [
 		["+20 affection: everyone in town", func(): _aff(20.0)],
 		["−20 affection: everyone in town", func(): _aff(-20.0)]])
-	content.add_child(UIKit.scroll(body, 600))
+	content.add_child(UIKit.scroll(body, 560))
 	content.add_child(out)
+	_lock()
+
+
+# ------------------------------------------------------------------ S2: the cheat switch, the bypass and scenarios
+## The bar above every tool: cheats are OFF until switched on here, for this session only (DevTools).
+func _cheat_bar() -> Control:
+	var bar := UIKit.hbox(12)
+	bar.name = "CheatBar"
+	cheat_state = UIKit.rich("", 20, true)
+	cheat_state.custom_minimum_size = Vector2(620, 0)
+	bar.add_child(cheat_state)
+	cheat_btn = UIKit.button("", func():
+		DevTools.set_enabled(not DevTools.enabled())
+		_lock()
+		_say("Cheats on" if DevTools.enabled() else "Cheats off"), 300)
+	cheat_btn.name = "CheatToggle"
+	bar.add_child(cheat_btn)
+	bypass_btn = UIKit.button("", func():
+		DevTools.set_bypass(not DevTools.bypass_checks())
+		_lock()
+		_say("Skill checks bypassed (%d%%)" % int(DevTools.BYPASS_QUALITY) if DevTools.bypass_checks() else "Skill checks played normally"), 300)
+	bypass_btn.name = "BypassToggle"
+	bar.add_child(bypass_btn)
+	return bar
+
+
+## Every tool below the bar works only while cheats are on; the bar says which state the session is in.
+func _lock() -> void:
+	var on := DevTools.enabled()
+	cheat_state.text = ("[color=#ff9a7a][b]CHEATS ON[/b][/color] for this session · a save made now is marked as tested with cheats" if on
+		else "[color=#c8b898][b]Cheats are OFF[/b] · switch them on to use these tools (this session only, never saved)[/color]")
+	cheat_btn.text = "Switch cheats off" if on else "Enable cheats for this session"
+	bypass_btn.text = ("Skill-check bypass: ON" if DevTools.bypass_checks() else "Skill-check bypass: off")
+	bypass_btn.disabled = not on
+	_lock_tree(body, on)
+	_skill_text()
+
+
+func _lock_tree(n: Node, on: bool) -> void:
+	for c in n.get_children():
+		if c is BaseButton:
+			(c as BaseButton).disabled = not on
+		elif c is LineEdit:
+			(c as LineEdit).editable = on
+		elif c is SpinBox:
+			(c as SpinBox).editable = on
+		_lock_tree(c, on)
+
+
+## Fast ways into the situations worth testing, built from the game's own setters.
+func _scenarios() -> void:
+	_section("Test scenarios", [
+		["Crafting: materials, then the forge", func(): _scenario_craft()],
+		["Workshop: hire an apprentice and fill the queue", func(): _scenario_workshop()],
+		["Commission request at the counter", func(): _scenario_counter()],
+		["Contract at the Project Bench", func(): _scenario_contract()]])
+
+
+func _scenario_craft() -> void:
+	var rid := "iron_longsword"
+	var r := DB.recipe(rid)
+	if r.is_empty() or not DevTools.enabled():
+		return
+	for d in r.get("inputs", {}):
+		var have := Game.count(str(d))
+		var need := int(r["inputs"][d]) * 2
+		if have < need:
+			DevTools.spawn(str(d), need - have)
+	var sid := str((r.get("steps", ["forge"]) as Array)[0])
+	_say("Materials for two %ss; the %s is open." % [str(r.get("name", rid)), str(DB.station(sid).get("name", sid))])
+	close()
+	Events.open_panel.emit.call_deferred("station", {"id": sid})
+
+
+func _scenario_workshop() -> void:
+	var msgs := [ApprenticeDev.unlock()]
+	if Apprentices.staff().is_empty():
+		msgs.append(ApprenticeDev.hire_one())
+	msgs.append(ApprenticeDev.give_materials())
+	_say(" ".join(PackedStringArray(msgs)))
+	close()
+	Events.open_panel.emit.call_deferred("workshop", {})
+
+
+## The richest adventurer in town sits down at the counter with a request — several things, some commissions.
+func _scenario_counter() -> void:
+	var best := {}
+	for a in Adv.in_town():
+		if Shop.customer(str(a["id"])).is_empty() and (best.is_empty() or int(a["gold"]) > int(best["gold"])):
+			best = a
+	if best.is_empty():
+		_say("Nobody is in town to come to the counter.")
+		return
+	if Shop.free_seat() < 0:
+		var first: Dictionary = Shop.customers()[0]
+		Shop.remove_customer(str(first["npc"]))
+	Shop._add_customer(str(best["id"]), "multi")
+	Shop.mark_arrived(str(best["id"]), false)
+	_say("%s is at the counter." % best["name"])
+	close()
+	Events.open_panel.emit.call_deferred("shop", {"tab": "customers", "npc": str(best["id"])})
+
+
+## A patron's contract accepted, its crate at the bench (the bench is set up first when the workshop lacks one).
+func _scenario_contract() -> void:
+	var rebuilt := false
+	if not Contracts.bench_installed():
+		if not Property.owns("cobbler"):
+			Property.dev_grant_unit("cobbler")
+		if not Property.is_owned_station(Contracts.BENCH):
+			(Property.st()["stored"] as Array).append(Contracts.BENCH)
+		var plan := Property.plan_copy()
+		var why := Property.auto_place(plan, Contracts.BENCH)
+		if why != "" or Property.commit(plan) != "":
+			_say("The Project Bench could not be placed: %s" % why)
+			return
+		rebuilt = true
+	var o := Contracts.make_offer("drovers_kit")
+	if o.has("error"):
+		_say(str(o["error"]))
+		return
+	var err := Contracts.accept(str(o["id"]))
+	_say(err if err != "" else "Contract accepted: %s." % str(o.get("title", "")))
+	close()
+	var main := get_tree().root.get_node_or_null("Main")
+	if rebuilt and main and main.has_method("rebuild_world"):
+		main.call_deferred("rebuild_world")
+	Events.open_panel.emit.call_deferred("contracts", {"id": str(o["id"])})
+
+
+func _skill_text() -> void:
+	for id in skill_labels:
+		var pair: Array = skill_labels[id]
+		var l := pair[0] as Label
+		if is_instance_valid(l):
+			l.text = "%s %d" % [str(pair[1]), Game.player_level(str(id))]
 
 
 func _section(title: String, btns: Array) -> void:
@@ -94,6 +240,7 @@ func _section(title: String, btns: Array) -> void:
 
 func _say(t: String) -> void:
 	out.text = "[color=#c8b898]%s — day %d, %02d:%02d, %d g[/color]" % [t, Game.day(), Game.hour(), int(Game.state["minute"]) % 60, Game.gold()]
+	_skill_text()
 
 
 func _adv(mins: int) -> void:
@@ -208,10 +355,12 @@ func _iter9_tools() -> void:
 	for sk in DB.skill_list:
 		var id: String = sk["id"]
 		var box := UIKit.hbox(2)
-		box.add_child(UIKit.label("%s" % sk.get("name", id), 16, "body_bold", UIKit.PAPER))
+		var sl := UIKit.label("%s" % sk.get("name", id), 16, "body_bold", UIKit.PAPER)
+		skill_labels[id] = [sl, str(sk.get("name", id))]   # S2: the current level beside each skill
+		box.add_child(sl)
 		box.add_child(UIKit.button("−", func(): _set_level(id, Game.player_level(id) - 1), 0))
 		box.add_child(UIKit.button("+", func(): _set_level(id, Game.player_level(id) + 1), 0))
-		box.add_child(UIKit.button("+XP", func(): Game.grant_player_xp(id, int(SkillSys.xp_needed(Game.player_level(id) + 1) / 2)); _say("%s %d" % [id, Game.player_level(id)]), 0))
+		box.add_child(UIKit.button("+XP", func(): Game.grant_player_xp(id, int(SkillSys.xp_needed(Game.player_level(id) + 1) / 2)); _skill_text(); _say("%s %d" % [id, Game.player_level(id)]), 0))
 		sk_flow.add_child(box)
 	body.add_child(sk_flow)
 	# progression, property and workstations

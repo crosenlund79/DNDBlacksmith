@@ -127,11 +127,12 @@ static func _maybe_order() -> void:
 ## what they paid the forge in the last 30 days, less earlier gifts). [] when nothing fits — no gift then.
 ## Milestone A2: before, every gift was an unbounded roll (118 g on average, up to 1,600 g) whatever the giver had
 ## spent — three in a few days could be worth several times the purchase that warmed them to the smith.
-static func gift_from(npc: String, bias := 5.0) -> Array:
+## `table`: the loot table the gift is rolled from (S2: the once-per-friend "gratitude" relic uses the same budget).
+static func gift_from(npc: String, bias := 5.0, table := "gift") -> Array:
 	var cap := Payments.gift_budget(npc)
 	if cap <= 0:
 		return []
-	var g := Payments.gift_within(Loot.roll_table("gift", bias), cap)
+	var g := Payments.gift_within(Loot.roll_table(table, bias), cap)
 	if not g.is_empty():
 		Payments.note_gift(npc, Payments.value_of(g))
 	return g
@@ -163,14 +164,19 @@ static func _social_events() -> void:
 				Regions.add_scouting(dest, 6.0, "told by " + a["name"])
 				Events.toast.emit("%s told you the safe paths through %s." % [a["name"], DB.destinations[dest]["name"]], "good")
 				break
-	# deep gratitude: a devoted friend brings something old and strange from the barrows
+	# deep gratitude: a devoted friend brings something old and strange from the barrows — S2 (BUG-045): bounded like
+	# every other gift (Sim.gift_from: at most half their business with the forge this month, less earlier gifts); when
+	# nothing fits there is no relic yet, and they may bring one later (before, the satchel bypassed the cap)
 	for npc in Game.state["social"]:
 		if Social.band(npc) == "devoted" and not Social.has_memory(npc, "gave_relic") and randf() < 0.35:
 			var c2 := DB.character(npc)
 			if c2.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
+			var relic := gift_from(str(npc), 0.0, "gratitude")
+			if relic.is_empty():
+				continue
 			Social.remember(npc, "gave_relic", "Gave the smith a relic out of gratitude", 4.0)
-			Game.state["returns"].append(Loot.make_container("satchel_relic", Loot.roll_table("gratitude"), c2["name"],
+			Game.state["returns"].append(Loot.make_container("satchel_relic", relic, c2["name"],
 				"%s left this with a note: \"Found it in the barrows. I trust you more than any collector.\"" % c2["name"]))
 			Events.toast.emit("%s left you a relic in gratitude." % c2["name"], "good")
 			Events.inventory_changed.emit()

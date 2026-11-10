@@ -5,7 +5,14 @@
 ##     and never counts for anything earned: Hall of Fame / Epic / names (Recognition, ItemStory), objectives,
 ##     the skill tree's "items seen" and knowledge flags, the encyclopedia, apprentices' fame.
 ##     Money is logged in the ledger as "Developer tools" (category "dev", left out of the accounts).
-## DA: Udviklerkatalog (F10): søg alle genstande, læg dem i lageret, tilføj penge — kun til test.
+##     S2 — cheats are a SESSION switch: OFF when the game starts, never written to a save, switched off again by a new
+##     game or a load (Game.new_game / Game.from_save call end_session). While they are off nothing here spawns, pays or
+##     bypasses anything, and the F10 tools are locked. Switching them on shows a "CHEATS ON" banner over the game and
+##     marks the running game (state "dev_used": {first_day, last_day, times}) so a save made since says so. The
+##     optional skill-check bypass (every check scores BYPASS_QUALITY without the minigame) works only while cheats are
+##     on and is caught where a check starts (UIRoot's "skillcheck" route calls run_check).
+## DA: Udviklerkatalog (F10): søg alle genstande, læg dem i lageret, tilføj penge — kun til test. Snyd er en
+##     sessionskontakt: slået fra ved start, gemmes aldrig, vises med et "CHEATS ON"-banner.
 class_name DevTools
 extends RefCounted
 
@@ -19,6 +26,143 @@ const FILTERS := [
 	["Alchemy", ["potion"]], ["Runestones", ["runestone"]], ["Relics & curios", ["relic", "curio", "container"]], ["Companions", ["companion"]],
 ]
 const RARITY_CHOICES := ["common", "magic", "rare", "legendary"]
+## What a bypassed skill check scores (a clean strike at the centre of the zone).
+const BYPASS_QUALITY := 100.0
+const INDICATOR_NAME := "DevCheatsIndicator"
+
+## The session switches (never saved).
+static var _on := false
+static var _bypass := false
+static var _indicator: CanvasLayer = null
+
+
+# ------------------------------------------------------------------ the cheat switch (S2)
+static func enabled() -> bool:
+	return _on
+
+
+## Switches developer cheats on or off for this session. On: the banner shows and the running game is marked.
+static func set_enabled(on: bool) -> void:
+	if on == _on:
+		_update_indicator()
+		return
+	_on = on
+	if not on:
+		_bypass = false
+	elif not Game.state.is_empty():
+		mark_game()
+	_update_indicator()
+	Events.toast.emit("Developer cheats ON for this session — a save made now is marked as tested with cheats." if on
+		else "Developer cheats OFF.", "info")
+
+
+## The optional skill-check bypass: only while cheats are on.
+static func bypass_checks() -> bool:
+	return _on and _bypass
+
+
+static func set_bypass(on: bool) -> void:
+	_bypass = on and _on
+	_update_indicator()
+
+
+## A new game or a loaded save starts with cheats off (Game.new_game / Game.from_save).
+static func end_session() -> void:
+	_on = false
+	_bypass = false
+	_update_indicator()
+
+
+## Marks the running game as touched by developer cheats (kept in its saves; created when first needed).
+static func mark_game() -> void:
+	var m: Dictionary = Game.state.get("dev_used", {})
+	if m.is_empty():
+		m = {"first_day": Game.day(), "times": 0}
+	m["last_day"] = Game.day()
+	m["times"] = int(m.get("times", 0)) + 1
+	Game.state["dev_used"] = m
+
+
+## Was this game (or a save's state) ever played with developer cheats on?
+static func used_in(state: Dictionary) -> bool:
+	return not (state.get("dev_used", {}) as Dictionary).is_empty()
+
+
+static func indicator_text() -> String:
+	return "CHEATS ON" + (" · skill checks bypassed" if _bypass else "") + " · F10"
+
+
+## Is the "CHEATS ON" banner showing?
+static func indicator_visible() -> bool:
+	return is_instance_valid(_indicator) and _indicator.visible
+
+
+static func _update_indicator() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return
+	if not is_instance_valid(_indicator):
+		if not _on:
+			return
+		_indicator = CanvasLayer.new()
+		_indicator.name = INDICATOR_NAME
+		_indicator.layer = 120
+		var box := PanelContainer.new()
+		box.name = "Box"
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.55, 0.08, 0.06, 0.92)
+		sb.border_color = Color("#ffd27a")
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(6)
+		sb.content_margin_left = 14
+		sb.content_margin_right = 14
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+		box.add_theme_stylebox_override("panel", sb)
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.anchor_left = 0.5
+		box.anchor_right = 0.5
+		box.offset_top = 6
+		box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		var l := Label.new()
+		l.name = "Text"
+		l.add_theme_font_size_override("font_size", 20)
+		l.add_theme_color_override("font_color", Color("#fff3d6"))
+		box.add_child(l)
+		_indicator.add_child(box)
+		tree.root.add_child.call_deferred(_indicator)
+	_indicator.visible = _on
+	var lab := _indicator.get_node_or_null("Box/Text") as Label
+	if lab:
+		lab.text = indicator_text()
+
+
+## Where a skill check starts (UIRoot, route "skillcheck"): with the bypass on, the check is not played — its callback
+## gets BYPASS_QUALITY for every round at once. Returns true when it bypassed the check.
+static func run_check(args: Dictionary) -> bool:
+	if not bypass_checks():
+		return false
+	var qs := bypass_scores(args)
+	var cb: Callable = args.get("on_done", Callable())
+	Events.toast.emit("Developer bypass: %s — %d%% without the check." % [str(args.get("title", "skill check")), int(BYPASS_QUALITY)], "info")
+	if cb.is_valid():
+		cb.call_deferred(qs)
+	return true
+
+
+## The results a bypassed check hands its callback: BYPASS_QUALITY for each of its rounds.
+static func bypass_scores(args: Dictionary) -> Array:
+	var qs := []
+	for i in maxi(1, int(args.get("count", 1))):
+		qs.append(BYPASS_QUALITY)
+	return qs
+
+
+static func _refuse() -> bool:
+	if _on:
+		return false
+	Events.toast.emit("Developer cheats are off — switch them on in the F10 tools first.", "bad")
+	return true
 
 
 static func is_dev(it: Dictionary) -> bool:
@@ -55,7 +199,7 @@ static func has_quality(def_id: String) -> bool:
 ## quality < 0 = 90%. Returns the spawned instances (one per piece; one stack for stackables).
 static func spawn(def_id: String, qty := 1, rarity := "", quality := -1.0) -> Array:
 	var d := DB.item(def_id)
-	if d.is_empty() or qty <= 0:
+	if d.is_empty() or qty <= 0 or _refuse():
 		return []
 	var q := quality if quality >= 0.0 else 90.0
 	var out := []
@@ -87,7 +231,7 @@ static func spawn(def_id: String, qty := 1, rarity := "", quality := -1.0) -> Ar
 
 ## Adds (or, negative, removes) money; logged in the ledger as "Developer tools".
 static func add_money(amount: int) -> void:
-	if amount == 0:
+	if amount == 0 or _refuse():
 		return
 	Game.add_gold(amount, "dev", MAKER_NAME, "dev")
 	Events.toast.emit("Developer tools: %+d gold (now %d g)." % [amount, Game.gold()], "info")

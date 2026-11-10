@@ -7,6 +7,8 @@ caravan.equipment / curiosities: [item, price multiplier, chance] — single pie
 caravan.wanted: [item, premium multiplier on value] — each visit picks `wanted_count` of them.
 pawn: payout / buyback / sale shares of an item's value; hold_days before an unredeemed pledge goes on sale.
 rival.stock: [item, price multiplier, chance]; rival.materials: [item, mult, [min, max], chance].
+rival.plain (S2): [item, price multiplier, chance, [min, max] craftsmanship] — her plain everyday work, always common, priced
+  within a starting adventurer's purse (PROP-015).
 creatures.ordinary / magical: [companion item, chance to be in the yard each week].
 """
 import json
@@ -83,6 +85,14 @@ RIVAL = {
     "materials": [
         ["ore_orichalcum", 1.5, [1, 2], 0.35], ["ingot_steel", 1.4, [3, 6], 0.7], ["wyvern_hide", 1.5, [1, 1], 0.2],
         ["ingot_orichalcum", 1.5, [1, 1], 0.2], ["reagent_salt", 1.3, [3, 6], 0.6],
+    ],
+    # S2: plain everyday work for beginners — iron mail and leather boots, gloves and belts (she already sells boots), the
+    # ordinary pieces a new Ironhand forge cannot make yet; ordinary craftsmanship at a small markup. Plain iron weapons,
+    # helmets and shields are left to the smith's own work (with them here, more of what adventurers ask the smith for
+    # was beyond his forge: 27 % → 30 % of requests over 8 seeds).
+    "plain": [
+        ["chainmail", 1.15, 0.45, [62, 78]],
+        ["boots_leather", 1.2, 0.6, [62, 78]], ["gloves_leather", 1.2, 0.5, [62, 78]], ["belt_leather", 1.2, 0.4, [62, 78]],
     ],
     "adv_chance": 0.5,       # chance an adventurer with gold to spare looks in at the Salt Anvil on a given day
     "lines": {
