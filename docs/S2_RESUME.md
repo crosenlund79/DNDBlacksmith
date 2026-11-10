@@ -1,7 +1,8 @@
 # S2 "The Living Smithy" — resume point
 
-**Written:** 10 November 2026, before a usage-limit pause. **Status: S2 IN PROGRESS — nothing from S2 is merged into the
-development branch, nothing is released.** This file and `docs/s2/` (plan and worker briefs) live only on the isolated branch
+**Written:** 10 November 2026, before a usage-limit pause. **Status: S2 IN PROGRESS — all four workers are merged into the isolated S2 branch and verified; final verification,
+registers and the Windows acceptance artifact are under way. Nothing from S2 is merged into the development branch,
+nothing is released.** This file and `docs/s2/` (plan and worker briefs) live only on the isolated branch
 `claude/s2-living-smithy`.
 
 ## 1. Where everything is (all verified on the remote)
@@ -10,7 +11,7 @@ development branch, nothing is released.** This file and `docs/s2/` (plan and wo
 |---|---|---|---|
 | Development branch (default) | `claude/kind-dijkstra-nqkxn1` | `2e854af` | A1, S1, A2, Run 0, Run 0.1 integrated (Run 0.1 merged at the start of S2, `[skip ci]`) |
 | Recovery point before S2 | `backup/pre-s2-20261110-1055` | `2e854af` | Branch. The matching tag `pre-s2-20261110-1055` could not be pushed (the session's git proxy refuses tag pushes, HTTP 403). |
-| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs + **CLARITY merged** (`4d887e3`; green: 225 scripts, suite 300/300, unit 384/384) + **ECONDEV merged** (`53fe7b5`; green: 227 scripts, suite 308/308, unit 384/384) + **EARLY merged** (`8d86dd0`; green: 229 scripts, suite 317/317, unit 385/385). |
+| S2 isolated branch | `claude/s2-living-smithy` | this commit | Base `2e854af` + this resume file + `docs/s2/` briefs + **CLARITY merged** (`4d887e3`; green: 225 scripts, suite 300/300, unit 384/384) + **ECONDEV merged** (`53fe7b5`; green: 227 scripts, suite 308/308, unit 384/384) + **EARLY merged** (`8d86dd0`; green: 229 scripts, suite 317/317, unit 385/385) + lead fix `29f9edd` (reward package capped by the giver's own payment) + **STEWARD merged** (`2309117`) + lead fixes `415f64f` (autopilot never completes the tutorial's move step) and `81ba92e` (steward test: anvil names only) + **canonical v1.3** (`8974092`). Full suite after STEWARD: 234 scripts, suite 333/333 (one assertion corrected), unit 385/385. `game/RELEASE_VERSION` 0.15 for the acceptance build. |
 | WIP checkpoint — STEWARD | `claude/s2-wip-steward` | `07263e0` (or later) | Unverified snapshot of the worker's worktree (17 files). |
 | WIP checkpoint — CLARITY | `claude/s2-wip-clarity` | `0af4e53` (or later) | 8 worker commits + snapshot (18 files). |
 | WIP checkpoint — EARLY | `claude/s2-wip-early` | `be317d5` (or later) | Unverified snapshot (29 files). |
@@ -38,7 +39,7 @@ items of NEW SCOPE explicitly approved by the S2 brief — the steward directing
   BUG-043); contracts panel keeps its width on closed orders (BUG-001); apprentices work from inside their station's room
   (OBS-21); floor drops kept clear of the Loft stair, contextual hint ring, night forge light (OBS-13/14); suite case
   `t_s2_clarity` and rendered phase `s2_clarity`. Front entrance: status in the worker report.
-- **STEWARD (§2–3)** — WIP: new `steward_smith.gd` (the working-smith duty) and `steward_smith_actor.gd` (the visible
+- **STEWARD (§2–3)** — FINISHED and MERGED (`2309117`, report `docs/s2/reports/steward.md`): new `steward_smith.gd` (the working-smith duty) and `steward_smith_actor.gd` (the visible
   autopilot), changes to `steward.gd`, `vitality.gd`, `crafting.gd`, `game.gd`, `smithy.gd`, `player.gd`, `player_nav.gd`,
   `world.gd`, the steward UI and welcome-back report, `t_s2_steward`, and `t_steward` (fatigue rule). Contains a throwaway
   `t_zz_probe.gd` to drop before merging.
@@ -52,7 +53,7 @@ Worker reports (status first) are written to the session scratchpad `…/scratch
 is lost, the worker commit messages and this file are the record.
 
 ## 4. Pending (in order)
-1. CLARITY, ECONDEV and EARLY: done and merged. STEWARD: finishes its brief, keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
+1. DONE — all four workers finished and merged (STEWARD last), keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
 2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (CLARITY, ECONDEV and EARLY merged;
    STEWARD last). Lead fix pending: a commission's reward package is capped by the commission's reward instead of
    what the giver paid (a penniless Mira can "give" one — D14); cap it at Payments.GIFT_SHARE of the giver's own payment. Expected conflict hot spots: `world.gd` (STEWARD/CLARITY/EARLY), `smithy.gd`
