@@ -374,7 +374,7 @@ func phase_full() -> void:
 	expect(panel() is ShopPanel, "shop counter opens the shop panel")
 	await shot("shop_counter")
 	var gold0 := Game.gold()
-	await click("Hand Axe")
+	await sell_at_counter("Hand Axe")   # A2: the offer grid selects; "Sell for N g" sells
 	await wait(0.4)
 	expect(Game.gold() > gold0 or Adv.get_a("varn")["equipment"].get("weapon", {}).get("uid", -1) == axe["uid"], "shop: Varn bought the hand axe (gold %d → %d)" % [gold0, Game.gold()])
 	await press("cancel")
@@ -1253,7 +1253,7 @@ func phase_slice() -> void:
 	await use("counter", "smithy")
 	await shot("slice_shop_garrick")
 	# the piece may have earned a name of its own at the anvil (a 120%+ masterwork): click it by its current name
-	await click(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
+	await sell_at_counter(str(Game.find_uid_anywhere(int(ember.get("uid", -1))).get("name", "Emberwarden")))
 	await wait(0.5)
 	expect(gar["equipment"].get("weapon", {}).get("uid", -1) == ember.get("uid", -2), "slice: Garrick bought and equipped the Emberwarden")
 	await close_panel()
@@ -3958,3 +3958,23 @@ func find_label_containing(root: Node, needle: String) -> Control:
 		if (n as RichTextLabel).visible and (n as RichTextLabel).get_parsed_text().contains(needle):
 			return n
 	return null
+
+
+## A2: sell a displayed piece at the counter the way a player does — choose it in the offer grid (OfferPicker), then
+## press the explicit "Sell for N g" button. `name` matches the piece's current name (first match on display).
+func sell_at_counter(name: String) -> bool:
+	var pickers := get_tree().root.find_children("*", "OfferPicker", true, false)
+	if pickers.is_empty():
+		note("no offer grid open")
+		return false
+	var uid := -1
+	for it in Game.inventory():
+		if bool(it.get("for_sale", false)) and str(it.get("name", "")).contains(name):
+			uid = int(it["uid"])
+			break
+	if uid < 0:
+		note("nothing on display called " + name)
+		return false
+	(pickers[0] as OfferPicker).select_uid(uid)
+	await wait(0.3)
+	return await click("Sell for", pickers[0])
