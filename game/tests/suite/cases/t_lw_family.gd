@@ -439,3 +439,27 @@ func test_sleep_pace_same_simulation_minute_by_minute() -> void:
 		sig.append("%d|%d|%d|%s|%s" % [Game.day(), int(Game.state["minute"]), Game.gold(), JSON.stringify(Game.state["ledger"]), "\n".join(lines)])
 		Steward.deactivate()
 	eq(sig[0] == sig[1], true, "the same days, ledger and steward decisions with and without the night pace")
+
+
+## A villager's walk covers its whole step each frame, past waypoints: the same game minutes at any pace or frame
+## rate (before, the rest of a step was lost at each waypoint — at 5× a walk took ~20 % more game minutes, measured
+## in the rendered phase).
+func test_npc_walk_same_game_minutes_at_any_step() -> void:
+	_game()
+	var res := {}
+	for frames in [40, 4]:   # the same game time in small steps (1×, 60 fps) or big ones (a faster pace / a slow frame)
+		var n := NPCActor.new()
+		n.setup("mira", "chars/mira", "Mira")
+		n.speed = 80.0
+		n.position = Vector2.ZERO
+		var pts := PackedVector2Array()
+		for i in range(1, 31):
+			pts.append(Vector2(10.0 * i, 0.0))   # 30 waypoints, 10 px apart (300 px)
+		n.go(pts)
+		var total := 2.5   # seconds of (scaled) frame time: 200 px at 80 px/s
+		for f in frames:
+			n._process(total / float(frames))
+		res[frames] = n.position.x
+		n.free()
+	check(absf(float(res[40]) - 200.0) < 0.5, "small steps walk 200 px (%.1f)" % float(res[40]))
+	check(absf(float(res[4]) - 200.0) < 0.5, "big steps walk the same 200 px (%.1f)" % float(res[4]))

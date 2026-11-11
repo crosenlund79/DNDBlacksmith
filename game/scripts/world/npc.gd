@@ -82,19 +82,27 @@ func _process(delta: float) -> void:
 		if bubble_t <= 0.0:
 			bubble.visible = false
 	if path.size() > 0 and Game.ui_blockers == 0:
-		var tgt := path[0]
-		var d := tgt - position
 		var step := speed * delta * (Game.MINUTES_PER_SECOND / 1.6)
-		# a stairway links floors that lie far apart on the map: take the stairs instead of walking there
-		if d.length() > 2500.0:
-			step = d.length()
-		if d.length() <= step:
-			position = tgt
-			path.remove_at(0)
-			if path.is_empty():
-				arrived.emit(npc_id)
-		else:
+		var d := Vector2.ZERO
+		# The whole step is walked, past waypoints too (Living Workshop #40): before, the rest of a step was lost at
+		# every waypoint, so a walk took more game minutes the bigger the frame's step — at a faster pace
+		# (Engine.time_scale) or a lower frame rate. Now a walk takes the same game minutes at any pace.
+		while path.size() > 0:
+			var tgt := path[0]
+			d = tgt - position
+			# a stairway links floors that lie far apart on the map: take the stairs instead of walking there
+			var stairs := d.length() > 2500.0
+			if stairs or d.length() <= step:
+				step -= 0.0 if stairs else d.length()
+				position = tgt
+				path.remove_at(0)
+				if path.is_empty():
+					arrived.emit(npc_id)
+				if stairs or path.is_empty():
+					break
+				continue
 			position += d.normalized() * step
+			break
 		_face(d)
 		_play("walk_" + facing)
 	else:

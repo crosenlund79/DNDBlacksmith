@@ -238,6 +238,7 @@ class DeltaProbe:
 	var walked := 0.0          # px the walker moved in frames it was walking
 	var walk_minutes := 0.0    # game minutes those frames covered (scaled delta × the clock's rate)
 	var _last := Vector2.INF
+	var _was_walking := false
 
 	func _ready() -> void:
 		process_mode = Node.PROCESS_MODE_ALWAYS
@@ -247,10 +248,13 @@ class DeltaProbe:
 		scaled += delta
 		unscaled += delta / maxf(0.001, Engine.time_scale)
 		if walker != null and is_instance_valid(walker):
-			if walker.path.size() > 0 and _last != Vector2.INF and Game.ui_blockers == 0:
-				walked += walker.position.distance_to(_last)
+			# a frame that began with the walker on its way: its distance and its game minutes (no stairway jumps)
+			var moved := walker.position.distance_to(_last) if _last != Vector2.INF else 0.0
+			if _was_walking and Game.ui_blockers == 0 and moved < 400.0:
+				walked += moved
 				walk_minutes += delta * Game.MINUTES_PER_SECOND
 			_last = walker.position
+			_was_walking = walker.path.size() > 0
 
 
 ## Over `secs` of unscaled engine time: game minutes per unscaled second, a walking villager's px per unscaled second
@@ -345,7 +349,8 @@ func _night_pace() -> void:
 	var night_scales := {}
 	while _asleep() and probe.unscaled < 240.0:
 		await pt.get_tree().process_frame
-		night_scales[snappedf(Engine.time_scale, 0.1)] = true
+		if _asleep():   # still asleep after the frame (the frame he wakes in already runs at the day pace)
+			night_scales[snappedf(Engine.time_scale, 0.1)] = true
 	var night_u := probe.unscaled
 	var night_m := Game.now() - m0
 	var night_h := probe.hours
