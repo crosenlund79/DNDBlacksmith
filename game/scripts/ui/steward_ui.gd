@@ -128,7 +128,8 @@ static func summary_bbcode(o: Dictionary) -> String:
 	lines.append("• [b]Your own work:[/b] %s, %02d:00–%02d:00 with the midday hour off; you rest and sleep as usual and gain no experience from it." % [
 		"routine forging, counter repairs and preparation at an ordinary, steady standard" if bool(o["duties"].get("smith", false)) else "none (you only rest)",
 		int(hrs[0]), int(hrs[1])])
-	lines.append("• [b]Pace:[/b] %s." % ("the whole village runs half again as fast (1.5×) while you are away" if float(o.get("pace", 1.5)) > 1.0 else "normal speed (1×)"))
+	lines.append("• [b]Pace:[/b] %s%s." % ["the whole village runs half again as fast (1.5×) while you are away" if float(o.get("pace", 1.5)) > 1.0 else "normal speed (1×)",
+		("; the nights pass at %d× while you sleep" % int(Steward.SLEEP_PACE)) if bool(o.get("sleep_pace", false)) else ""])
 	var prot := (o.get("protected", []) as Array).size()
 	var res: Dictionary = o.get("reserved", {})
 	var rl := PackedStringArray()
@@ -180,8 +181,10 @@ static func smith_line(s: Dictionary) -> String:
 	return "[b]You:[/b] %s [color=#6e5a40]· %s (fatigue %d)[/color]" % [str(s.get("activity", "")), str(s.get("band", "")), int(round(float(s.get("fatigue", 0.0))))]
 
 
-## S2: "1.5×" / "1×".
+## S2: "1.5×" / "1×" (Living Workshop #40: "5×" — the night pace while the smith sleeps).
 static func pace_text(p: float) -> String:
+	if p >= Steward.SLEEP_PACE - 0.01:
+		return "%d×" % int(Steward.SLEEP_PACE)
 	return "1.5×" if p > 1.0 else "1×"
 
 

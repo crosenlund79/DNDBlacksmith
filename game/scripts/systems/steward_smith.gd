@@ -259,6 +259,15 @@ static func tick(minutes: int) -> void:
 			_home("table" if Game.hour() < 12 else "armchair", "home", minutes)
 		_:
 			_work(minutes)
+	Steward.refresh_pace()   # Living Workshop #40: the optional night pace follows his sleep (asleep → 5×, up → day pace)
+
+
+## Living Workshop #40: is he asleep in his bed right now (reached it and lying down — not on his way)?
+static func asleep() -> bool:
+	if Game.state.is_empty() or not Steward.is_active() or not Steward.st().has("smith"):
+		return false
+	var m := sm()
+	return str(m["act"]) == "sleep" and str(m["place"]) == "bed" and not bool(m["walking"])
 
 
 static func _home(place: String, kind: String, minutes: int) -> void:

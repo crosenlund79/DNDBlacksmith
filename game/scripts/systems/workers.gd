@@ -59,8 +59,10 @@ const FIELD_ROLES := {"mining": "miner", "travelling": "trader", "relic_hunting"
 
 
 # ======================================================================= actors
-## {kind: "player" | "apprentice" | "hireling" | "", id, name, data}. `actor` is an id or the entity dictionary.
-## FAMILY (wave 2) adds "spouse" here.
+## {kind: "player" | "apprentice" | "hireling" | "spouse" | "", id, name, data}. `actor` is an id or the entity dictionary.
+## FAMILY (Living Workshop #50–51): "spouse" — the smith's spouse, by her own NPC id (one identity; "spouse" and
+## "spouse:<id>" are accepted too); `data` is the family record (Family, Game.state["family"]); no apprentice record, no
+## employee slot. She is not one of workshop_actors(): she helps at the counter, not at the stations.
 static func resolve(actor: Variant) -> Dictionary:
 	var none := {"kind": "", "id": "", "name": "", "data": {}}
 	if actor is Dictionary:
@@ -90,12 +92,23 @@ static func resolve(actor: Variant) -> Dictionary:
 	for h in Game.state.get("hirelings", []):
 		if str(h.get("id", "")) == s:
 			return {"kind": "hireling", "id": s, "name": str(h.get("name", "")), "data": h}
+	if s == "spouse" or s.begins_with("spouse:") or (not s.begins_with("app_") and Game.state.has("social") and s == Social.spouse()):
+		return _spouse(s.trim_prefix("spouse:"))
 	return none
 
 
 static func _player() -> Dictionary:
 	var p: Dictionary = Game.state.get("player", {}) if not Game.state.is_empty() else {}
 	return {"kind": "player", "id": "player", "name": str(p.get("name", "the smith")), "data": p}
+
+
+## The smith's spouse as a worker (none when `id` is not the current spouse).
+static func _spouse(id: String) -> Dictionary:
+	var sp := Social.spouse()
+	if sp == "" or (id != "spouse" and id != sp):
+		return {"kind": "", "id": "", "name": "", "data": {}}
+	var f: Variant = Game.state.get("family", {})
+	return {"kind": "spouse", "id": sp, "name": Talk.npc_name(sp), "data": f if f is Dictionary else {}}
 
 
 static func kind(actor: Variant) -> String:
@@ -201,6 +214,8 @@ static func title(actor: Variant) -> String:
 	var a := resolve(actor)
 	if str(a["kind"]) == "hireling":
 		return field_role(a).capitalize()
+	if str(a["kind"]) == "spouse":
+		return "The smith's wife — at the shop counter" if Family.helper() == str(a["id"]) else "The smith's wife"
 	var p := profession(a)
 	return profession_name(p) if p != "" else ""
 
@@ -225,7 +240,7 @@ static func level(actor: Variant, skill: String) -> int:
 	match str(a["kind"]):
 		"player":
 			return SkillSys.level((a["data"] as Dictionary).get("skills", {}), skill)
-		"apprentice", "hireling":
+		"apprentice", "hireling", "spouse":
 			return SkillSys.level((a["data"] as Dictionary).get("skills", {}), skill)
 	return 0
 
@@ -238,7 +253,7 @@ static func growth_cap(who: Variant, skill: String) -> int:
 	if not CRAFT_SKILLS.has(skill):
 		return mx
 	var a := resolve(who)
-	if not str(a["kind"]) in ["player", "apprentice"]:
+	if not str(a["kind"]) in ["player", "apprentice", "spouse"]:
 		return mx
 	return mx if deep_skills(a).has(skill) else BASIC_LEVEL
 
@@ -397,6 +412,8 @@ static func competence_reason(actor: Variant, rid: String, op := -1) -> String:
 			return "Unknown worker."
 		"hireling":
 			return "%s is a field hireling — workshop work needs a workshop worker." % a["name"]
+		"spouse":
+			return _spouse_competence(a, rid, op)
 		"apprentice":
 			if op < 0:
 				var rr := Apprentices.rank_reason(a["data"], rid)
@@ -434,6 +451,25 @@ static func competence_reason(actor: Variant, rid: String, op := -1) -> String:
 				continue
 			return specialist_text(a, q, rid if op < 0 else "")
 		return _needs(a, str(q["skill"]), int(q["difficulty"]))
+	return ""
+
+
+## The spouse helps at the counter; craft work only with her own competence: at least a first level in every
+## operation's skill (she was never taught a craft) and whatever the operation or Design asks of it.
+static func _spouse_competence(a: Dictionary, rid: String, op: int) -> String:
+	var idx := []
+	if op < 0:
+		idx = range(Crafting.operations(rid).size())
+	else:
+		idx = [op]
+	for i in idx:
+		var q := op_requirement(rid, int(i))
+		if q.is_empty():
+			return "No such operation."
+		var need := maxi(1, maxi(int(q["explicit"]), int(q["difficulty"]) if bool(q["main"]) else 0))
+		if level(a, str(q["skill"])) < need:
+			return "%s helps at the shop counter — she has no %s (%s %d needed)." % [str(a["name"]).split(" ")[0],
+				SkillSys.skill_name(str(q["skill"])).to_lower(), SkillSys.skill_name(str(q["skill"])), need]
 	return ""
 
 
@@ -605,6 +641,7 @@ static func grant_xp(actor: Variant, skill: String, amount: float) -> void:
 			Apprentices.add_xp(a["data"], skill, amount)
 		"hireling":
 			Hire.add_xp(a["data"], skill, int(round(amount)))
+		# "spouse": counter work is no craft — she gains no craft experience from it
 
 
 ## Called by SkillSys.add_xp when an actor's capped craft reaches BASIC_LEVEL: said once per actor and skill.
@@ -650,10 +687,10 @@ static func profile(actor: Variant) -> Dictionary:
 		comp[sk] = level(a, str(sk))
 		if k != "hireling" and is_basic(a, str(sk)):
 			basic.append(str(sk))
-	var out := {"id": str(a["id"]), "name": str(a["name"]), "kind": k, "family": "field" if k == "hireling" else "workshop",
+	var out := {"id": str(a["id"]), "name": str(a["name"]), "kind": k, "family": "field" if k == "hireling" else ("family" if k == "spouse" else "workshop"),
 		"profession": profession(a), "profession_name": profession_name(profession(a)) if profession(a) != "" else "",
 		"title": title(a), "rank": "", "deep": deep_skills(a), "basic_level": BASIC_LEVEL, "competence": comp, "basic": basic,
-		"field_role": field_role(a), "read_only": k == "hireling"}
+		"field_role": field_role(a), "read_only": k in ["hireling", "spouse"]}
 	if k == "apprentice":
 		out["rank"] = Apprentices.rank_name(a["data"])
 	if k == "player":

@@ -301,7 +301,9 @@ static func goods_refusal(c: Dictionary, it: Dictionary) -> String:
 	return ""
 
 
-static func sell_goods(npc: String, uid: int) -> String:
+## `price` / `seller` (Living Workshop #50–51): a unit price agreed at the counter by `seller` (the smith's spouse on
+## duty), at most her allowed discount below the display price (counter_price_reason); -1 = the display price.
+static func sell_goods(npc: String, uid: int, price := -1, seller := "") -> String:
 	var it := Game.find_uid(uid)
 	var c := {}
 	for x in customers():
@@ -309,19 +311,26 @@ static func sell_goods(npc: String, uid: int) -> String:
 			c = x
 	if it.is_empty() or c.is_empty():
 		return "Nothing to sell."
-	var price := price_of(it) / maxi(1, int(it.get("qty", 1)))
+	var listed := price_of(it) / maxi(1, int(it.get("qty", 1)))
+	var agreed := listed if price < 0 else price
+	var pr := counter_price_reason(listed, agreed, seller)
+	if pr != "":
+		return pr
 	# S2 (BUG-043): they buy what they asked for, within their budget
 	var refusal := goods_refusal(c, it)
+	if refusal == "budget" and agreed <= int(c.get("budget", 0)):
+		refusal = ""   # the unit price agreed at the counter is within their budget
 	if refusal == "wrong":
 		return "%s asked for %s, not %s." % [Talk.npc_name(npc), DB.item(str(c["looking_for"])).get("name", "something else"), str(DB.item(str(it["def"])).get("name", "that"))]
 	if refusal == "budget":
 		return "%s can't afford that." % Talk.npc_name(npc)
+	var by := _counter_note(listed, agreed, seller)
 	if int(it.get("qty", 1)) > 1:
 		it["qty"] = int(it["qty"]) - 1
 	else:
 		Game.inventory().erase(it)
-		ItemRegistry.leave(it, npc, Talk.npc_name(npc), "sold", "Sold to %s for %d g." % [Talk.npc_name(npc), price])
-	Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], Talk.npc_name(npc)], npc)
+		ItemRegistry.leave(it, npc, Talk.npc_name(npc), "sold", "Sold to %s for %d g%s." % [Talk.npc_name(npc), agreed, by])
+	Game.add_gold(agreed, "sales", "Sold %s to %s%s" % [it["name"], Talk.npc_name(npc), by], npc)
 	Social.change(npc, 3.0, 3.0)
 	rep_change(0.5)
 	remove_customer(npc)
@@ -720,6 +729,33 @@ static func beyond_forge(c: Dictionary) -> bool:
 	return not can_make_slot(str(c["slot"]), a, {"stat": str(c.get("stat", "")), "min": int(c.get("min", 0))}) and Adv.best_stock(a, str(c["slot"])).is_empty()
 
 
+## Living Workshop #50–51: may `seller` agree `price` at the counter for something displayed at `listed`? "" = yes.
+## The smith ("") and the steward sell at the display price; the smith's spouse on duty may give at most the discount
+## the player allows her (Family.discount_cap) — enforced here, in the sale path itself; nobody sells above the tag.
+static func counter_price_reason(listed: int, price: int, seller := "") -> String:
+	if price == listed:
+		return ""
+	if price > listed:
+		return "The counter sells at the display price (%d g), never above it." % listed
+	if seller == "" or seller != Family.helper():
+		return "Only the price on display (%d g) — nobody here may give a discount." % listed
+	if not Family.on_duty():
+		return "%s is not minding the counter now." % Talk.npc_name(seller)
+	if price < Family.floor_price(listed):
+		return "That is more than %s may take off: at most %d %% (%d g for %d g on display)." % [Talk.npc_name(seller).split(" ")[0],
+			Family.discount_cap(), Family.floor_price(listed), listed]
+	return ""
+
+
+## The ledger/history note of a counter sale made by the spouse: " — Róisín at the counter[, 10 % off 120 g]".
+static func _counter_note(listed: int, price: int, seller: String) -> String:
+	if seller == "":
+		return ""
+	var off := listed - price
+	return " — %s at the counter%s" % [Talk.npc_name(seller).split(" ")[0],
+		(", %d %% off %d g" % [int(round(100.0 * off / float(maxi(1, listed)))), listed]) if off > 0 else ""]
+
+
 static func remove_customer(npc: String) -> void:
 	for c in customers().duplicate():
 		if c["npc"] == npc:
@@ -727,22 +763,29 @@ static func remove_customer(npc: String) -> void:
 	Events.customers_changed.emit()
 
 
-static func sell_to(npc: String, uid: int) -> String:
+## `price` / `seller` (Living Workshop #50–51): a price agreed at the counter by `seller` (the smith's spouse on duty),
+## at most her allowed discount below the display price (counter_price_reason); -1 = the display price.
+static func sell_to(npc: String, uid: int, price := -1, seller := "") -> String:
 	var a := Adv.get_a(npc)
 	var it := Game.find_uid(uid)
 	if a.is_empty() or it.is_empty():
 		return "Nothing to sell."
-	var price := price_of(it)
-	var why := Adv.purchase_check(a, it, price)
+	var listed := price_of(it)
+	var agreed := listed if price < 0 else price
+	var pr := counter_price_reason(listed, agreed, seller)
+	if pr != "":
+		return pr
+	var why := Adv.purchase_check(a, it, agreed)
 	if why != "":
 		return "%s %s." % [a["name"], why]
 	it = Game.take_uid(uid)
 	it.erase("for_sale")
 	var married := Social.spouse() == npc
-	Items.add_history(it, "Sold to %s for %d g." % [a["name"], price] if not married else "Given to %s, the smith's wife." % a["name"])
-	Adv.give_item(a, it, price)
+	var by := _counter_note(listed, agreed, seller)
+	Items.add_history(it, "Sold to %s for %d g%s." % [a["name"], agreed, by] if not married else "Given to %s, the smith's wife." % a["name"])
+	Adv.give_item(a, it, agreed)
 	if not married:
-		Game.add_gold(price, "sales", "Sold %s to %s" % [it["name"], a["name"]], npc)
+		Game.add_gold(agreed, "sales", "Sold %s to %s%s" % [it["name"], a["name"], by], npc)
 	Game.state["stats"]["sold"] += 1
 	rep_change(1.0 if float(it.get("quality", 70)) >= 85.0 else 0.3)
 	# A2: a repair they are waiting for stays asked for — unless this purchase replaced the very piece to be mended
@@ -751,7 +794,7 @@ static func sell_to(npc: String, uid: int) -> String:
 		remove_customer(npc)
 	Objectives.on_sold(npc, it)
 	if npc == "mira":
-		Sim.on_mira_equipped(it, price)
+		Sim.on_mira_equipped(it, agreed)
 	return ""
 
 
