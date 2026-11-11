@@ -4042,3 +4042,11 @@ func phase_lw_ui() -> void:
 func phase_lw_reliability() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lw_reliability.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= The Living Workshop (FAMILY worker)
+## The spouse at the shop counter (asked, behind the counter, the discount cap, a sale within it), the smith's pet at
+## his heel, the steward's night pace (tests/playtest_lw_family.gd; LWFAM_TAG=before|after). Shots lwfam_<tag>_*.
+func phase_lw_family() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_family.gd").new()
+	await ph.run(self)

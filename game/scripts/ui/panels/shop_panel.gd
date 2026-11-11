@@ -72,13 +72,17 @@ func _family_row() -> void:
 	row.add_child(UIKit.portrait("portraits/" + str(fs["spouse"]), 64))
 	var v := UIKit.vbox(4)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.custom_minimum_size.x = 1000   # the row's text wraps inside this width (never one letter per line)
 	var head := UIKit.hbox(10)
 	var hrs: Array = fs["hours"]
+	var hl := UIKit.label(("%s, your wife, minds the counter %02d:00–%02d:00 (the midday hour off)" % [str(fs["name"]), int(hrs[0]), int(hrs[1])])
+		if bool(fs["helps"]) else ("%s, your wife, could help at the counter" % str(fs["name"])), UIKit.FS_SMALL, "body_bold")
+	hl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	head.add_child(hl)
 	if bool(fs["helps"]):
-		head.add_child(UIKit.label("%s, your wife, minds the counter %02d:00–%02d:00 (the midday hour off)" % [str(fs["name"]), int(hrs[0]), int(hrs[1])], UIKit.FS_SMALL, "body_bold"))
-		head.add_child(UIKit.chip("on duty now" if bool(fs["on_duty"]) else "off duty", UIKit.RUBRIC if bool(fs["on_duty"]) else UIKit.FADED))
-	else:
-		head.add_child(UIKit.label("%s, your wife, could help at the counter" % str(fs["name"]), UIKit.FS_SMALL, "body_bold"))
+		var ch := UIKit.chip("on duty now" if bool(fs["on_duty"]) else "off duty", UIKit.RUBRIC if bool(fs["on_duty"]) else UIKit.FADED)
+		ch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(ch)
 	v.add_child(head)
 	if bool(fs["helps"]):
 		var t: Dictionary = fs["today"]
@@ -90,7 +94,10 @@ func _family_row() -> void:
 		v.add_child(UIKit.note(line))
 		var cap := UIKit.hbox(6)
 		cap.name = "DiscountCap"
-		cap.add_child(UIKit.label("Most %s may take off a display price:" % first, UIKit.FS_SMALL))
+		var cl := UIKit.label("Most %s may take off a display price:" % first, UIKit.FS_SMALL)
+		cl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		cl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cap.add_child(cl)
 		for pct in fs["steps"]:
 			var pv := int(pct)
 			var b := UIKit.tab_button("%d %%" % pv, func():
