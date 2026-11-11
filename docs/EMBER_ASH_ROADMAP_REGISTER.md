@@ -1,7 +1,8 @@
 # Ember & Ash — Roadmap Register
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
-`fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`).
+`fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`) and **in the Living Workshop** (11 November 2026,
+branch `claude/living-workshop`).
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -27,6 +28,8 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | **Run 0.1** Canonical corrections & critical integrity | D13, D14, D18; Gate A (part) | Complete, integrated at the start of S2 | `2e854af` | No | `t_run01` (8 tests), `t_identity` Unique audit, `t_saves` (schema 4), Steward soaks | No |
 | Canonical v1.3 (Steward Mode: the working smith, the pace) | §4.5, D19, §14.1 | Done in S2 (approved in the S2 brief) | `8974092` (S2 branch) | — | DOCX and Markdown identical (6,340 words) | — |
 | **S2** The Living Smithy | v1.3 §4.5; OBS-11 … 16, 21, 22 … 36; Gate A (part) | Complete on its isolated branch; **not integrated** | branch `claude/s2-living-smithy` | No — Windows acceptance artifact (0.15) only | `t_s2_steward` (14), `t_s2_clarity` (9), `t_s2_early` (9), `t_s2_econdev` (8), `t_s2_lead` (2); rendered `s2_steward`, `s2_clarity`, `s2_early`, `s2_econdev`; soaks incl. a poor early game | No |
+| Canonical v1.4 (the Living Workshop) | §4.2–4.5, D19, §14.1, §15 | Done in the Living Workshop (approved in its brief) | `501f038` (LW branch) | — | DOCX and Markdown identical (6,925 words) | — |
+| **LW** The Living Workshop (B1 + B2 + C1 + playtest consolidation) | §4.2–4.5, §5, D1–D4, D6–D8, D19; OBS-37 … 61 | Complete on its isolated branch; **not integrated** (builds on S2) | branch `claude/living-workshop` | No — Windows acceptance artifact (0.16) only | see `docs/LIVING_WORKSHOP_PROGRESS.md` | No |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
@@ -47,7 +50,7 @@ contains A1, S1 or A2, and none of them has been accepted by a person playing on
 
 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 39 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 86 |
+| 39 | 4 | 0 | 1 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 103 |
 
 ---
 
@@ -183,15 +186,16 @@ All A-REM entries:
 | QST-015 | APPROVED | PARTIAL | Decided: "This Master Design / original phase numbering govern; |
 | QST-019 | UNDECIDED | NOT STARTED | Should all item lookups (`find_uid_anywhere`, `History.find_item`, `ItemStory.find`) search every holder? Affects Hall of Fame discovery … |
 | QST-027 | UNDECIDED | NOT STARTED | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 … |
-| OBS-13 | APPROVED | NOT STARTED | Loot bags appear beneath the stairs (observation register) |
-| OBS-14 | APPROVED | NOT STARTED | Processed materials appear beneath the stairs (observation register) |
-| OBS-21 | APPROVED | PARTIAL | Apprentices visible at their workplaces (observation register) |
 
 ### 4.2 B1 — worker capabilities and professions
 
 **Purpose (CV §4.2–4.3, D1, D2, D7):** specialists with a personal profession and real ability own their craft; a shared
 worker-profile foundation for apprentices and field hirelings without a wholesale merge; herbalism within the Alchemist.
-**Today (verified):** no `profession` field anywhere; apprentices may only make what the smith has learned (a test enforces
+**Delivered in the Living Workshop (not integrated):** `Workers` capability model; five professions on applicants, hires
+and migrated apprentices (save step 5); checks, quality, access and eligibility by the acting worker; the smith's other
+crafts stop at the basic level 5 (earned levels kept); specialists no longer limited by the smith; hirelings keep field
+work with a read-only role. Still open: hireling off-station production (STAFF-004, HA-025), steward hiring (STW-018),
+the basic threshold (QST-033), room tier by best hand (QST-032). **Before the Living Workshop:** no `profession` field anywhere; apprentices may only make what the smith has learned (a test enforces
 it); hirelings produce goods with no station and follow different staff rules; the smith's levels still decide 17
 cross-discipline behaviours. **Depends on:** the "Before B/C" gate (TECH-033); the professions decision (STAFF-012); a
 save-migration step for existing apprentices and hirelings (cross-cutting); the B2 capability layer. **Decisions:** exact
@@ -203,28 +207,33 @@ specialist route rather than silent edits; A2's request-feasibility checks (`Sho
 
 | ID | Scope | Delivery | Requirement |
 |---|---|---|---|
-| TECH-002 | APPROVED | NOT STARTED | Capability layer: workshop knowledge separated from actor competence; |
-| TECH-004 | APPROVED | NOT STARTED | Shared worker profile for apprentices and hirelings; |
-| TECH-028 | PROPOSED | NOT STARTED | Room tier derives from the room's specialists, stations and work, not the player's skill. |
-| WS-006 | PROPOSED | NOT STARTED | Room tier derives from the room's specialists, stations and work done, not from the player's level; |
-| STAFF-002 | APPROVED | PARTIAL | A shared worker-profile foundation (profession, skills, progression, basic employment logic) for both families. |
+| TECH-002 | APPROVED | VERIFIED | Capability layer: workshop knowledge separated from actor competence; |
+| TECH-004 | APPROVED | PARTIAL | Shared worker profile for apprentices and hirelings; |
+| TECH-028 | PROPOSED | PARTIAL | Room tier derives from the room's specialists, stations and work, not the player's skill. |
+| WS-006 | PROPOSED | PARTIAL | Room tier derives from the room's specialists, stations and work done, not from the player's level; |
+| STAFF-002 | APPROVED | VERIFIED | A shared worker-profile foundation (profession, skills, progression, basic employment logic) for both families. |
 | STAFF-004 | PROPOSED | NOT STARTED | Route hireling workshop production through apprentice-style station tasks, or retire it, leaving hirelings as field/expedition staff. |
-| STAFF-005 | APPROVED | PARTIAL | Workshop specialists perform suitable work at actual stations. |
-| STAFF-006 | APPROVED | NOT STARTED | Specialists own their craft: high-end rune work, arcana, leatherwork and alchemy require qualified people, and staff are not limited to … |
-| STAFF-007 | APPROVED | NOT STARTED | Each specialist has a personal profession with real ability (runesmith, arcanist, alchemist, leatherworker/tailor; |
-| STAFF-008 | APPROVED | NOT STARTED | Herbalism expertise sits within the Alchemist profession (D7). |
-| STAFF-012 | UNDECIDED | NOT STARTED | Exact professions, skill numbers, migration and compatibility, including which existing apprentices become which specialists. |
-| STAFF-016 | APPROVED | PARTIAL | Personal specialist progression: profession skills, experience and character progression (D3). |
-| PROD-009 | APPROVED | NOT STARTED | Per-stage qualification and skill checks: |
-| UX-004 | APPROVED | NOT STARTED | Crafting guidance names the missing qualified worker or specialist instead of telling the smith to raise his own non-smithing skill, once … |
-| QST-001 | APPROVED | NOT STARTED | Decided: "Keep distinct workshop and field staff entities with a shared worker-profile foundation." |
-| QST-002 | APPROVED | NOT STARTED | Decided: "Basic other-craft knowledge is allowed; |
-| QST-007 | APPROVED | NOT STARTED | Decided: "Herbalism sits within the Alchemist profession; |
+| STAFF-005 | APPROVED | VERIFIED | Workshop specialists perform suitable work at actual stations. |
+| STAFF-006 | APPROVED | VERIFIED | Specialists own their craft: high-end rune work, arcana, leatherwork and alchemy require qualified people, and staff are not limited to … |
+| STAFF-007 | APPROVED | VERIFIED | Each specialist has a personal profession with real ability (runesmith, arcanist, alchemist, leatherworker/tailor; |
+| STAFF-008 | APPROVED | VERIFIED | Herbalism expertise sits within the Alchemist profession (D7). |
+| STAFF-012 | APPROVED | VERIFIED | Exact professions, skill numbers, migration and compatibility, including which existing apprentices become which specialists. |
+| STAFF-016 | APPROVED | VERIFIED | Personal specialist progression: profession skills, experience and character progression (D3). |
+| STAFF-020 | APPROVED | VERIFIED | The basic level (`Workers.BASIC_LEVEL` 5) applies to every workshop worker's crafts outside their profession (a runesmith's smithing stops … |
+| PROD-009 | APPROVED | VERIFIED | Per-stage qualification and skill checks: |
+| UX-004 | APPROVED | VERIFIED | Crafting guidance names the missing qualified worker or specialist instead of telling the smith to raise his own non-smithing skill, once … |
+| QST-001 | APPROVED | VERIFIED | Decided: "Keep distinct workshop and field staff entities with a shared worker-profile foundation." |
+| QST-002 | APPROVED | VERIFIED | Decided: "Basic other-craft knowledge is allowed; |
+| QST-007 | APPROVED | VERIFIED | Decided: "Herbalism sits within the Alchemist profession; |
 
 ### 4.3 B2 — the smith's specialisation and workshop Designs
 
 **Purpose (CV §4.2, §5, D2, D3):** a deep personal smithing tree, a shared workshop catalogue of Designs, techniques and
-tools, and only basic non-smithing work for the smith. **Today:** one broad skill tree in which the smith can master every
+tools, and only basic non-smithing work for the smith. **Delivered in the Living Workshop (not integrated):**
+`WorkshopKnowledge` (save step 6); the smith's own path (smithing, mining) and the workshop's knowledge of the other five
+crafts brought in by competent workers; the one cross-profession gate removed; two deadlocks fixed (master ceiling 12,
+arcanist entry level); "Design" in every player-facing text, ids unchanged; the `???` discovery kept. **Before the Living
+Workshop:** one broad skill tree in which the smith can master every
 discipline — rejected by CV §1.3 and D2 but live in code (STAFF-014, GOV-026, HA-027, HB-019); "Design" exists only as
 player-facing wording in places and as the separate equipment-designer panel (HB-027). **Depends on:** the capability layer
 shared with B1; a save-safe migration for smiths who already hold high non-smithing levels. **Decisions:** the ceiling of
@@ -233,19 +242,27 @@ relates to canonical Designs. **Do not** rename recipe ids to "design" (626 iden
 
 | ID | Scope | Delivery | Requirement |
 |---|---|---|---|
-| STAFF-013 | APPROVED | NOT STARTED | Smith competence (D2): basic other-craft work is allowed for continuity, never equal to a true specialist; |
-| STAFF-015 | APPROVED | PARTIAL | The smith's progression becomes a deep smithing tree (personal techniques and mastery), evolved carefully from the broad tree with … |
-| STAFF-017 | APPROVED | NOT STARTED | Workshop knowledge: a shared catalog of known Designs, techniques, tools, stations, rooms and feasible combinations, distinct from the … |
-| STAFF-018 | PROPOSED | NOT STARTED | Capability layer: route every cross-discipline gate and scaling through workshop knowledge (what the forge knows) vs actor competence (who … |
-| PROD-018 | APPROVED | PARTIAL | Designs are the player-facing complete production plans (materials, stages, stations, tools, specialist requirements); |
-| PROD-019 | APPROVED | PARTIAL | Techniques belong to the individual actor's knowledge; |
-| QST-003 | APPROVED | NOT STARTED | Decided: "Deep smithing tree + workshop Designs/knowledge + personal specialist progression." |
+| STAFF-013 | APPROVED | VERIFIED | Smith competence (D2): basic other-craft work is allowed for continuity, never equal to a true specialist; |
+| STAFF-015 | APPROVED | VERIFIED | The smith's progression becomes a deep smithing tree (personal techniques and mastery), evolved carefully from the broad tree with … |
+| STAFF-017 | APPROVED | VERIFIED | Workshop knowledge: a shared catalog of known Designs, techniques, tools, stations, rooms and feasible combinations, distinct from the … |
+| STAFF-018 | APPROVED | VERIFIED | Capability layer: route every cross-discipline gate and scaling through workshop knowledge (what the forge knows) vs actor competence (who … |
+| STAFF-021 | APPROVED | VERIFIED | Applicants arrive at their craft's entry level (arcanists at Arcane Metalworking 3; |
+| STAFF-022 | APPROVED | VERIFIED | The Master rank's difficulty ceiling rises from 10 to 12 so Adamantine Warplate (difficulty 11) can be made by anyone at all. |
+| PROD-018 | APPROVED | VERIFIED | Designs are the player-facing complete production plans (materials, stages, stations, tools, specialist requirements); |
+| PROD-019 | APPROVED | VERIFIED | Techniques belong to the individual actor's knowledge; |
+| PROD-030 | APPROVED | VERIFIED | The cross-profession gate Smithing 6 on the arcane node `ar_energy` is removed; |
+| UX-033 | APPROVED | VERIFIED | The Skill Tree shows the smith's own path and a "Workshop knowledge" tab (what the workshop knows, through whom). |
+| QST-003 | APPROVED | VERIFIED | Decided: "Deep smithing tree + workshop Designs/knowledge + personal specialist progression." |
 
 ### 4.4 C1 — staged collaborative production
 
 **Purpose (CV §4.4, D4, D8):** several qualified workers perform the stages of one order on one item identity at visible
 stations; the player may claim a stage; optional, non-blocking help requests; contributors credited; one multi-discipline
-Design proved end to end. **Today (verified):** no multi-worker production — an apprentice task has one worker who becomes
+Design proved end to end. **Delivered in the Living Workshop (not integrated):** station instances (WS-014, save step 7);
+staged work orders on the apprentice task (uid reserved at creation, maker = forging-stage worker, contributors in
+provenance and Lore, the smith claims stages, D8 help requests, interruptions and save/load safe); the Workshop Ledger's
+stages; the steward plans with the workshop's staff; the Emberwarden Longsword end to end. Interim: assistance values
+(PROD-016), routing/queue UI (PROD-023). **Before the Living Workshop:** no multi-worker production — an apprentice task has one worker who becomes
 the maker; the only multi-hand case is abstract contract hours. Production already exists in four shapes (the smith's
 craft job, apprentice tasks, contract hours, the designer panel's staged plan); C1 should reconcile them rather than add a
 fifth. **Depends on:** B1 (profession ability, per-stage checks), the D6 decision on duplicate stations (station ids are
@@ -257,28 +274,32 @@ in staged work that would make the last specialist the maker (PROD-010).
 
 | ID | Scope | Delivery | Requirement |
 |---|---|---|---|
-| TECH-003 | APPROVED | NOT STARTED | Staged multi-worker work order: per-stage assignee/state/quality, reserved uid at start, player can claim a stage. |
-| WS-012 | APPROVED | PARTIAL | Staff visibly work at real stations and visibly travel between them, including stairs/lift to the Loft; |
-| PROD-001 | APPROVED | PARTIAL | Core loop: materials and opportunity → select a Design → smithing → specialists contribute at real stations → collect the finished item → … |
-| PROD-002 | APPROVED | PARTIAL | Ordinary work (a dagger, a repair) stays direct and readable; |
-| PROD-004 | APPROVED | NOT STARTED | Journey "the collaborative masterpiece": the smith forges, a runesmith, alchemist and leatherworker perform their stages at visible … |
-| PROD-005 | APPROVED | NOT STARTED | True multi-worker work orders: different workers perform different stages of one order and one item. |
-| PROD-006 | APPROVED | PARTIAL | The player chooses the Design and selects the relevant specialists for its stages. |
-| PROD-007 | APPROVED | NOT STARTED | Employees ordinarily coordinate and perform handoffs between stages; |
-| PROD-008 | APPROVED | NOT STARTED | The player can intervene in, or claim, a relevant stage of an order and personally perform it. |
-| PROD-010 | APPROVED | PARTIAL | One stable item identity through every stage; |
-| PROD-011 | PROPOSED | NOT STARTED | Reserve the uid when the order starts and keep the item un-materialised until completion. |
-| PROD-012 | APPROVED | PARTIAL | Contributor credit in production (D4): the original maker, the workshop and each specialist contributor receive separate, appropriate credit. |
-| PROD-013 | PROPOSED | NOT STARTED | Record `prov.contrib[]` {who, stage, station, day, quality} at completion; |
-| PROD-014 | APPROVED | NOT STARTED | Help requests (D8) arise naturally from real, difficult work, are nonintrusive and normally optional; |
-| PROD-016 | UNDECIDED | NOT STARTED | Quality formulas, assistance chance/frequency, exceptional-work thresholds and the effect of declining. |
-| PROD-022 | APPROVED | PARTIAL | The production ledger shows stages, who, where, progress and blockers from real state; |
-| PROD-023 | UNDECIDED | NOT STARTED | Individual worker routing and queue UI details. |
-| PROD-026 | PROPOSED | NOT STARTED | Use the Emberwarden Longsword (forge → anvil → rune_engraving_stand → cauldron → grinding_wheel → stitching_table) as the one … |
-| EQ-010 | APPROVED | NOT STARTED | Specialist contributors to one item (runesmith, alchemist, leatherworker stages) are recorded separately on the same item without changing … |
-| UX-009 | APPROVED | NOT STARTED | Equipment presentation shows fully truthful item credits (maker, workshop, specialist contributors), legacy and upgrades. |
-| QST-004 | APPROVED | NOT STARTED | Decided: "Original maker, workshop and specialist contributors can all receive appropriate, separate credit." |
-| QST-008 | APPROVED | NOT STARTED | Decided: "Real-work-driven, nonintrusive, normally optional; |
+| TECH-003 | APPROVED | VERIFIED | Staged multi-worker work order: per-stage assignee/state/quality, reserved uid at start, player can claim a stage. |
+| WS-012 | APPROVED | VERIFIED | Staff visibly work at real stations and visibly travel between them, including stairs/lift to the Loft; |
+| PROD-001 | APPROVED | VERIFIED | Core loop: materials and opportunity → select a Design → smithing → specialists contribute at real stations → collect the finished item → … |
+| PROD-002 | APPROVED | VERIFIED | Ordinary work (a dagger, a repair) stays direct and readable; |
+| PROD-004 | APPROVED | VERIFIED | Journey "the collaborative masterpiece": the smith forges, a runesmith, alchemist and leatherworker perform their stages at visible … |
+| PROD-005 | APPROVED | VERIFIED | True multi-worker work orders: different workers perform different stages of one order and one item. |
+| PROD-006 | APPROVED | VERIFIED | The player chooses the Design and selects the relevant specialists for its stages. |
+| PROD-007 | APPROVED | VERIFIED | Employees ordinarily coordinate and perform handoffs between stages; |
+| PROD-008 | APPROVED | VERIFIED | The player can intervene in, or claim, a relevant stage of an order and personally perform it. |
+| PROD-010 | APPROVED | VERIFIED | One stable item identity through every stage; |
+| PROD-011 | APPROVED | VERIFIED | Reserve the uid when the order starts and keep the item un-materialised until completion. |
+| PROD-012 | APPROVED | VERIFIED | Contributor credit in production (D4): the original maker, the workshop and each specialist contributor receive separate, appropriate credit. |
+| PROD-013 | APPROVED | VERIFIED | Record `prov.contrib[]` {who, stage, station, day, quality} at completion; |
+| PROD-014 | APPROVED | VERIFIED | Help requests (D8) arise naturally from real, difficult work, are nonintrusive and normally optional; |
+| PROD-016 | UNDECIDED | IMPLEMENTED | Quality formulas, assistance chance/frequency, exceptional-work thresholds and the effect of declining. |
+| PROD-022 | APPROVED | VERIFIED | The production ledger shows stages, who, where, progress and blockers from real state; |
+| PROD-023 | UNDECIDED | IMPLEMENTED | Individual worker routing and queue UI details. |
+| PROD-026 | APPROVED | VERIFIED | Use the Emberwarden Longsword (forge → anvil → rune_engraving_stand → cauldron → grinding_wheel → stitching_table) as the one … |
+| PROD-027 | APPROVED | VERIFIED | Stages are consecutive operations grouped by the station's discipline (one profession's work); |
+| PROD-028 | APPROVED | IMPLEMENTED | Work orders complete with the seeded digital dice even when the smith is the maker; |
+| PROD-029 | APPROVED | VERIFIED | Who may do a contributing stage follows the Design's own requirements (`Workers.can_do` per operation); |
+| STW-034 | APPROVED | VERIFIED | The steward plans staged work with the workshop's knowledge and staff; |
+| EQ-010 | APPROVED | VERIFIED | Specialist contributors to one item (runesmith, alchemist, leatherworker stages) are recorded separately on the same item without changing … |
+| UX-009 | APPROVED | PARTIAL | Equipment presentation shows fully truthful item credits (maker, workshop, specialist contributors), legacy and upgrades. |
+| QST-004 | APPROVED | VERIFIED | Decided: "Original maker, workshop and specialist contributors can all receive appropriate, separate credit." |
+| QST-008 | APPROVED | VERIFIED | Decided: "Real-work-driven, nonintrusive, normally optional; |
 
 ### 4.5 D — Commissions v2
 
@@ -427,7 +448,7 @@ converting pre-Iteration-011 Chronicle entries; a multi-year probe (TECH-026, pr
 
 ### 4.12 BACKLOG
 
-89 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 2, `WS` 3, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 23, `PROP` 21, `QST` 9, `HA` 5, `HB` 8.
+106 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 1, `WS` 2, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 23, `PROP` 40, `QST` 9, `HA` 5, `HB` 8.
 Items that need a placement decision rather than a scope decision: duplicate stations (WS-007, TECH-027), molds and
 patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), steward hiring (STW-018), apprentice economics
 (STAFF-019, TECH-032, HB-053). All `PROPOSED` entries are listed in the decision register §1.4.
@@ -513,8 +534,8 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
   STW-018); it made only 3 sales of its own in a 365-day soak (STW-019).
 - Lore: the pruning cliff above 4,000 events is untested; Chronicle-only records (including hireling deaths) vanish at 400
   entries; nothing runs beyond one in-game year (LORE-008, BUG-018).
-- Tests that encode rejected behaviour: `t_progression` and `t_apprentices` (universal mastery). (`t_smithy`'s gold-renown
-  assertion was replaced in Run 0.1.)
+- (Resolved in the Living Workshop: `t_progression` and `t_apprentices` no longer encode universal mastery; `t_smithy`'s
+  gold-renown assertion was replaced in Run 0.1.)
 - CI: the workflow runs only on release-file changes or manual dispatch, integration merges skip CI, rendered tests never
   run in CI, the default branch is unprotected (TECH-014, PROP-006).
 - Older open asks: caravan curiosities, compelling advanced requests, softer terrain edges (BUG-031, HB-060 … HB-062);
@@ -535,16 +556,21 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
    Y/Q bindings (QST-030); new proposals PROP-022 … PROP-026 (hunting/grocer, a dagger Design, cheap rings/amulets,
    more counter filters, hirelings on upper floors); integrate S2 (a merge into the default branch would publish
    build-0.15.x unless the merge commit carries [skip ci]).
+3c. Living Workshop: accept or not after the Windows 0.16 playtest; the basic threshold (QST-033) and room tier by the
+   best hand (QST-032); proposals PROP-027 … PROP-045 (balance follow-ups, steward stage claiming, the smith's dice on
+   work orders, per-type station caps, spouse support work, …); integrate S2 and the Living Workshop (the LW branch
+   contains S2; a merge into the default branch needs [skip ci] or it publishes).
 
 **Before the next implementation milestone:**
 4. Which Gate A items must close before B/C (QST-027), and whether to authorise an A-REM run (§4.1).
 5. Whether to publish a build containing A1+S1+A2 for a human Windows playtest (REL-003), which would also satisfy part of
    "Before B/C".
 
-**Before B1/B2:** professions and migration (STAFF-012); the smith's basic ceiling and existing high levels (STAFF-013);
-hireling off-station production (STAFF-004, HA-025); steward hiring (STW-018).
-**Before C1:** duplicate stations placement (WS-007); assistance and quality details (PROD-016); routing and queue UI
-(PROD-023); the reserved-uid approach (PROD-011).
+**B1/B2 (decided by the Living Workshop brief and built):** professions and migration (STAFF-012), the smith's basic
+ceiling with earned levels kept (STAFF-013; threshold QST-033). Still open: hireling off-station production (STAFF-004,
+HA-025); steward hiring (STW-018).
+**C1 (built):** duplicate stations (WS-007, WS-014), the reserved uid (PROD-011); interim: assistance and quality details
+(PROD-016), routing and queue UI (PROD-023).
 **Before D:** Honor Guard naming; the commission subsidy (PROP-013, QST-024); permanence of payment records (BUG-048).
 **Before E:** rarity change by socketing (BUG-042); Epic for other makers
 (QST-022); Reliquary and heir placement.
@@ -552,7 +578,7 @@ hireling off-station production (STAFF-004, HA-025); steward hiring (STW-018).
 **Before J:** the Lore retention policy (LORE-004).
 **Contradictory sources:** the wall and doorway editor (WS-010, HB-020, QST-023); multiplayer (HB-001); visible
 relationship meters (HA-029).
-**Proposals:** 65 `PROPOSED` entries, each needing a yes or no (decision register §1.4).
+**Proposals:** 80 `PROPOSED` entries, each needing a yes or no (decision register §1.4).
 
 ---
 
@@ -563,3 +589,4 @@ relationship meters (HA-029).
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation) at `fa7b5b7`. |
 | 10 November 2026 | Run 0.1: milestone rows for canonical v1.2 and Run 0.1; D13, D14 and D18 items marked done; conflicts, at-risk items and decisions updated. |
 | 10 November 2026 | S2: rows for canonical v1.3 and S2; S2 decisions added. |
+| 11 November 2026 | Living Workshop: rows for canonical v1.4 and LW; B1, B2 and C1 marked delivered on the LW branch; LW decisions added. |
