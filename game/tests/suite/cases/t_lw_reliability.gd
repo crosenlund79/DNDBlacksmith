@@ -365,6 +365,89 @@ func test_people_spread_around_their_destinations() -> void:
 	w.free()
 
 
+# ------------------------------------------------------------------ #45 early gear value against the purse (numbers)
+func _gear_value(a: Dictionary) -> int:
+	var v := 0
+	for s in a.get("equipment", {}):
+		v += Items.value(a["equipment"][s])
+	return v
+
+
+## Where a worn piece came from: the smith, another forge, found on an expedition, or what they started with.
+func _origin(it: Dictionary) -> String:
+	if str(it.get("crafted_by", "")).begins_with("Brannoc"):
+		return "your forge"
+	for h in it.get("history", []):
+		if str(h).contains("Found in"):
+			return "found"
+	if it.has("found"):
+		return "found"
+	return "start or bought"
+
+
+func test_early_gear_value_numbers() -> void:
+	for world_seed in [9001, 4242]:
+		fresh_game("journeyman", world_seed)
+		for day_mark in [17, 30]:
+			days(day_mark - Game.day())
+			var rows := []
+			var rich := 0
+			var rich_found := 0
+			for a in Adv.all().values():
+				if str(a.get("status", "")) in ["dead", "gone"]:
+					continue
+				var best := {}
+				for s in a.get("equipment", {}):
+					var it: Dictionary = a["equipment"][s]
+					if best.is_empty() or Items.value(it) > Items.value(best):
+						best = it
+				var gv := _gear_value(a)
+				if not best.is_empty() and Items.value(best) >= 1000:
+					rich += 1
+					if _origin(best) == "found":
+						rich_found += 1
+				rows.append("%s (%s %d) %d g, gear %d g, best %s %d g [%s]" % [a["name"], a["cls"], int(a["level"]), int(a["gold"]), gv,
+					Items.display_name(best) if not best.is_empty() else "-", Items.value(best) if not best.is_empty() else 0, _origin(best) if not best.is_empty() else "-"])
+			note("world %d, day %d: %d adventurers wear a piece worth 1,000 g or more (%d of them found on expeditions)" % [world_seed, Game.day(), rich, rich_found])
+			for r in rows:
+				note("   " + r)
+	# what the uniform equipment pick can hand out (Loot.random_equipment("any")), and boots at the counter for comparison
+	var defs := Loot._equip_defs("any")
+	var top := defs.filter(func(d): return Items.tier({"def": str(d)}) >= 3 or int(DB.item(str(d)).get("value", 0)) >= 300)
+	note("Loot.random_equipment(\"any\") draws evenly from %d equipment kinds; %d of them are mithril/adamantine/dragon-grade or worth 300 g+ base (e.g. %s)" % [defs.size(), top.size(), ", ".join(PackedStringArray(top.slice(0, 6)))])
+	var rare_plate := Items.make("warplate_adamantine", {"quality": 80.0})
+	rare_plate["rarity"] = "rare"
+	note("a rare Adamantine Warplate at 80 %% craftsmanship is valued %d g; leather boots list at %d g, wyrmleather boots at %d g" % [Items.value(rare_plate),
+		Shop.list_price(Items.make("boots_leather", {"quality": 80.0})), Shop.list_price(Items.make("boots_wyrmleather", {"quality": 80.0}))])
+	check(defs.size() > 0, "numbers recorded")
+
+
+func test_found_gear_follows_class_use() -> void:
+	fresh_game()
+	var wiz: Dictionary = {}
+	var pal: Dictionary = {}
+	for a in Adv.all().values():
+		Adv.ensure(a)
+		if str(a["cls"]) == "Wizard" and wiz.is_empty():
+			wiz = a
+		if str(a["cls"]) in ["Paladin", "Fighter"] and pal.is_empty():
+			pal = a
+	if not check(not wiz.is_empty() and not pal.is_empty(), "a wizard and a plate-wearer in the roster"):
+		return
+	var plate := Items.make("mithril_plated_cuirass", {"quality": 100.0})
+	var uid := int(plate["uid"])
+	var before_offers := Shop.offers().size()
+	var e := {"id": "exp_lwrel", "dest": str(DB.destinations.keys()[0]), "party": [wiz["id"]], "loot": [plate], "gold": 0}
+	Expeditions._share_loot(e, [str(wiz["id"])])
+	check(int(wiz["equipment"].get("armor", {}).get("uid", -1)) != uid, "a wizard does not put on found plate (affinity 0)")
+	eq(Shop.offers().size(), before_offers + 1, "the plate is offered to the forge instead")
+	var plate2 := Items.make("mithril_plated_cuirass", {"quality": 100.0})
+	var e2 := {"id": "exp_lwrel2", "dest": str(DB.destinations.keys()[0]), "party": [wiz["id"], pal["id"]], "loot": [plate2], "gold": 0}
+	Expeditions._share_loot(e2, [str(wiz["id"]), str(pal["id"])])
+	eq(int(pal["equipment"].get("armor", {}).get("uid", -1)), int(plate2["uid"]), "the plate-wearer in the party takes it")
+	_scan_clean("found gear")
+
+
 # ------------------------------------------------------------------ #56 asking an adventurer what they need forged
 func _in_town(cls := "") -> Dictionary:
 	for a in Adv.all().values():
