@@ -20,18 +20,21 @@ func _init(title_text := "", w := 900.0, h := 640.0, dark := false) -> void:
 	theme = Assets.theme
 	add_theme_stylebox_override("panel", Assets.panel_style("dark" if dark else "parchment"))
 	custom_minimum_size = Vector2(w, h)
-	var root := UIKit.vbox(8)
+	var root := UIKit.vbox(6)
 	add_child(root)
 	var head := UIKit.hbox()
-	title_label = UIKit.title(title_text, 38)
+	title_label = UIKit.title(title_text, UIKit.FS_TITLE)   # #47: 38 → 34
 	if dark:
 		title_label.add_theme_color_override("font_color", UIKit.PAPER)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title_label)
-	head.add_child(UIKit.button("✕", close, 46))
+	var x := UIKit.button("✕", close, UIKit.BUTTON_H)
+	x.name = "CloseButton"
+	x.tooltip_text = "Close (Esc)"
+	head.add_child(x)
 	root.add_child(head)
 	root.add_child(UIKit.divider())
-	content = UIKit.vbox(10)
+	content = UIKit.vbox(UIKit.GAP)
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(content)
 
