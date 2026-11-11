@@ -4032,3 +4032,13 @@ func sell_at_counter(name: String, who := "") -> bool:
 func phase_lw_ui() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lw_ui.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= The Living Workshop (RELIABILITY worker)
+## The smith's shield kept and shown, people spread in the village, the skill tree after moving a bought station, the
+## loom's sections and a rune binding at an ordinary skill, an honest commission card and the price in the stores
+## (tests/playtest_lw_reliability.gd). Shots lwrel_<tag>_* (LWREL_TAG=before|after). LWREL_FUZZ=<seed> runs the seeded
+## skill-tree fuzz of #59–60 instead (headless too).
+func phase_lw_reliability() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_reliability.gd").new()
+	await ph.run(self)

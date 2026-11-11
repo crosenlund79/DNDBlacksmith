@@ -1451,7 +1451,9 @@ static func _share_loot(e: Dictionary, alive: Array) -> void:
 			for id in alive:
 				var a := Adv.get_a(id)
 				var s := Items.slot(it)
-				if Items.score(it) > Items.score(a["equipment"].get(s, {})) + 1.0:
+				# LW #45: only a piece their class would use (Adv.affinity, the rule every purchase follows) — a wizard
+				# does not put on plate found in a barrow; it goes to a companion who would, or to the forge's counter
+				if Adv.affinity(a, it) > 0.0 and Items.score(it) > Items.score(a["equipment"].get(s, {})) + 1.0:
 					if a["equipment"].has(s):
 						a["loot"].append(a["equipment"][s])
 					a["equipment"][s] = it

@@ -224,65 +224,129 @@ const OPPORTUNITY_CHANCE := 0.25
 static func slot_capability(slot: String, a := {}, req := {}) -> Dictionary:
 	var best_rid := ""
 	var best_state := "none"
+	var best_rune := ""
 	var locked_rid := ""
 	var locked_diff := 1 << 20
+	var rr := rune_route(str(req.get("stat", "")))
 	for r in DB.recipes.values():
-		if not _recipe_for(r, slot, a, req):
+		var how := _route(r, slot, a, req)
+		if how == "":
 			continue
 		var rid := str(r["id"])
-		if Crafting.recipe_locked_reason(rid) != "":
+		var lock := Crafting.recipe_locked_reason(rid)
+		if how == "rune" and lock == "":
+			lock = _rune_lock(rr)
+		if lock != "":
 			if Guide.recipe_visible(rid) and int(r.get("difficulty", 1)) < locked_diff:
 				locked_diff = int(r.get("difficulty", 1))
-				locked_rid = rid
+				locked_rid = rid if how == "native" or Crafting.recipe_locked_reason(rid) != "" else str(rr["recipe"])
 			continue
-		var st := "now" if Crafting.missing_inputs(rid).is_empty() else "materials"
+		var miss := Crafting.missing_inputs(rid)
+		if how == "rune" and Game.count(str(rr["rune"])) < 1:
+			miss.merge(Crafting.missing_inputs(str(rr["recipe"])))
+		var st := "now" if miss.is_empty() else "materials"
 		if best_state != "now" and (st == "now" or best_state == "none"):
 			best_state = st
 			best_rid = rid
+			best_rune = str(rr["rune"]) if how == "rune" else ""
+	var rune_words := (" and set a %s into it" % str(DB.item(best_rune).get("name", best_rune))) if best_rune != "" else ""
 	if best_state == "now":
-		return {"state": "now", "recipe": best_rid, "why": "you can make %s now" % str(DB.recipe(best_rid).get("name", best_rid)), "next": ""}
+		return {"state": "now", "recipe": best_rid, "why": "you can make %s%s now" % [str(DB.recipe(best_rid).get("name", best_rid)), rune_words], "next": "", "rune": best_rune}
 	if best_state == "materials":
-		var miss := Crafting.missing_inputs(best_rid)
+		var miss2 := Crafting.missing_inputs(best_rid)
+		if best_rune != "" and Game.count(best_rune) < 1:
+			miss2.merge(Crafting.missing_inputs(str(rr["recipe"])))
 		var bits := PackedStringArray()
-		for k in miss:
-			bits.append("%d %s" % [int(miss[k]), DB.item(k).get("name", k)])
-		return {"state": "materials", "recipe": best_rid, "why": "you know how (%s) — still need %s" % [str(DB.recipe(best_rid).get("name", best_rid)), ", ".join(bits)],
-			"next": str(Guide.next_step("recipe:" + best_rid).get("text", ""))}
+		for k in miss2:
+			bits.append("%d %s" % [int(miss2[k]), DB.item(k).get("name", k)])
+		return {"state": "materials", "recipe": best_rid, "why": "you know how (%s%s) — still need %s" % [str(DB.recipe(best_rid).get("name", best_rid)), rune_words, ", ".join(bits)],
+			"next": str(Guide.next_step("recipe:" + best_rid).get("text", "")), "rune": best_rune}
 	if locked_rid != "":
 		# the one next step when the Guide knows it (it already names what is missing), else the lock itself
 		var step := str(Guide.next_step("recipe:" + locked_rid).get("text", ""))
-		var lock := Crafting.recipe_locked_reason(locked_rid).trim_suffix(".")
-		return {"state": "locked", "recipe": locked_rid, "why": "%s (for %s)" % [step if step != "" else lock, str(DB.recipe(locked_rid).get("name", locked_rid))], "next": step}
+		var lock2 := Crafting.recipe_locked_reason(locked_rid).trim_suffix(".")
+		if lock2 == "" and not rr.is_empty():
+			lock2 = _rune_lock(rr).trim_suffix(".")
+		return {"state": "locked", "recipe": locked_rid, "why": "%s (for %s)" % [step if step != "" else lock2, str(DB.recipe(locked_rid).get("name", locked_rid))], "next": step}
 	return {"state": "none", "recipe": "", "why": "no Design you know of makes that", "next": ""}
 
 
 ## Does the workshop really know how to make (and have the stations for) a piece for `slot`? Materials may be missing.
+## LW #61: an element the piece does not carry itself counts only when the workshop can also set the runestone for it.
 static func can_make_slot(slot: String, a := {}, req := {}) -> bool:
 	if slot == "" or slot == "companion":
 		return false
+	var rr := rune_route(str(req.get("stat", "")))
 	for r in DB.recipes.values():
-		if _recipe_for(r, slot, a, req) and Crafting.recipe_locked_reason(str(r["id"])) == "":
+		var how := _route(r, slot, a, req)
+		if how != "" and Crafting.recipe_locked_reason(str(r["id"])) == "" and (how == "native" or _rune_lock(rr) == ""):
 			return true
 	return false
 
 
 ## Does recipe `r` make a piece for `slot` that this adventurer would use and that can meet `req` ({tier, stat, min})?
 static func _recipe_for(r: Dictionary, slot: String, a: Dictionary, req: Dictionary) -> bool:
+	return _route(r, slot, a, req) != ""
+
+
+## LW #61: HOW recipe `r` can meet `req` for this adventurer: "native" (the piece itself reaches the stat), "rune" (only
+## with a runestone set into it — the stat is an element such as frost that the piece lacks) or "" (it cannot). Before,
+## only attack, protection and magic were checked: a weapon "with frost ≥ 3" counted any blade as makeable.
+static func _route(r: Dictionary, slot: String, a: Dictionary, req: Dictionary) -> String:
 	var out := str(r.get("output", ""))
 	var d := DB.item(out)
 	if str(d.get("slot", "")) != slot or str(d.get("type", "")) == "companion":
-		return false
+		return ""
 	if not a.is_empty() and Adv.affinity(a, {"def": out}) <= 0.0:
-		return false
+		return ""
 	if Items.tier({"def": out}) < int(req.get("tier", 1)):
-		return false
+		return ""
 	var stat := str(req.get("stat", ""))
-	if stat in ["attack", "protection", "magic"] and int(req.get("min", 0)) > 0:
-		var v: Variant = d.get("stats", {}).get(stat, 0)
-		var top := float(v[1]) if v is Array else float(v)
-		if int(floor(top * 1.2)) < int(req["min"]):
-			return false
-	return true
+	var need := int(req.get("min", 0))
+	if stat == "" or need <= 0 or design_reach(r, stat) >= need:
+		return "native"
+	if not (stat in ["attack", "protection", "magic"]) and int(rune_route(stat).get("reach", 0)) >= need:
+		return "rune"
+	return ""
+
+
+## The best `stat` a fresh piece of Design `r` reaches: the top of its range × 1.2 for craftsmanship (as slot_ceiling).
+static func design_reach(r: Dictionary, stat: String) -> int:
+	var v: Variant = DB.item(str(r.get("output", ""))).get("stats", {}).get(stat, 0)
+	var top := float(v[1]) if v is Array else float(v)
+	return int(floor(top * 1.2))
+
+
+## A runestone set at the Rune Engraving Stand at 120 % craftsmanship gives its stats × (0.6 + 1.2 × 0.6) (Crafting.socket).
+const RUNE_TOP := 1.32
+
+
+## LW #61: the strongest runestone Design that carries `stat` (fire, frost, ward …): {rune, recipe, reach}; {} when none.
+static func rune_route(stat: String) -> Dictionary:
+	if stat == "" or stat in ["attack", "protection"]:
+		return {}
+	var best := {}
+	for r in DB.recipes.values():
+		var out := str(r.get("output", ""))
+		var d := DB.item(out)
+		if str(d.get("type", "")) != "runestone":
+			continue
+		var reach := int(floor(float(d.get("stats", {}).get(stat, 0)) * RUNE_TOP))
+		if reach > int(best.get("reach", 0)):
+			best = {"rune": out, "recipe": str(r["id"]), "reach": reach}
+	return best
+
+
+## Why the workshop cannot set that runestone today ("" = it can: its Design is known and the engraving stand usable).
+static func _rune_lock(rr: Dictionary) -> String:
+	if rr.is_empty():
+		return "no runestone gives that"
+	var why := Crafting.station_locked_reason("rune_engraving_stand")
+	if why != "":
+		return why
+	if Game.count(str(rr["rune"])) > 0:
+		return ""
+	return Crafting.recipe_locked_reason(str(rr["recipe"]))
 
 
 ## Would this person deal with the smith at all?
@@ -852,18 +916,38 @@ static func open_orders() -> Array:
 ## What a commission from this adventurer for `slot` will ask for: {stat, min, tier} (the rules create_order has always
 ## used: two better than what they wear or their level's due, a damage type their next trip's threats fear, steel or
 ## better for veterans' weapons, armour and shields — never more than any piece for that slot can give).
+## LW #61: every part of the request comes from Designs that exist (known or still to learn) and make a piece THIS
+## adventurer would use: "steel or better" only when such a piece exists for them (a wizard wears no plate), the element
+## a weapon should carry only when a Design or a runestone gives it, and the minimum no higher than those pieces reach.
+## Before, the ceiling was the best piece of ANY kind for the slot, so e.g. a wizard was asked for steel armour.
+## "none": true when no Design in the game makes such a piece at all (create_order then makes no commission).
 static func order_need(a: Dictionary, slot: String) -> Dictionary:
 	var stat := "attack" if slot == "weapon" else ("magic" if slot in ["ring", "amulet"] else "protection")
 	var current := Items.stat(a.get("equipment", {}).get(slot, {}), stat)
 	var need: int = maxi(current + 2, int(a.get("level", 1)) * 2 + 4)
 	var prop := str(a.get("wants_prop", ""))
 	var tier := 2 if int(a.get("level", 1)) >= 5 and slot in ["weapon", "armor", "shield"] else 1
-	if prop != "" and slot == "weapon":
+	if tier >= 2 and _reach(a, slot, stat, tier) <= 0 and _reach(a, slot, stat, 1) > 0:
+		tier = 1   # nothing of steel or better that they would use: ask for the best they would wear
+	if prop != "" and slot == "weapon" and _reach(a, slot, prop, tier) > 0:
 		stat = prop
 		need = 3 + int(a.get("level", 1)) / 3
-	# never ask for more than any craftable piece for that slot can give (found by the integrity suite)
-	need = mini(need, slot_ceiling(slot, stat))
-	return {"stat": stat, "min": need, "tier": tier}
+	# never ask for more than a piece they would use can give (found by the integrity suite; LW #61: per adventurer)
+	var top := _reach(a, slot, stat, tier)
+	need = mini(need, top)
+	return {"stat": stat, "min": need, "tier": tier, "none": top <= 0}
+
+
+## The best `stat` a piece for `slot` that this adventurer would use (any Design in the game, of tier ≥ `tier`) reaches —
+## by itself, or with a runestone set into it for an element. 0 = no such piece.
+static func _reach(a: Dictionary, slot: String, stat: String, tier: int) -> int:
+	var best := 0
+	var rune := int(rune_route(stat).get("reach", 0)) if not (stat in ["attack", "protection", "magic"]) else 0
+	for r in DB.recipes.values():
+		if _route(r, slot, a, {"tier": tier}) == "":
+			continue
+		best = maxi(best, maxi(design_reach(r, stat), rune))
+	return best
 
 
 ## Creates a commission from an adventurer for their weakest slot.
@@ -873,7 +957,11 @@ static func create_order(npc: String, slot := "", note := "") -> Dictionary:
 		return {}
 	if slot == "":
 		slot = Adv.request_slot(a, Adv._weakest_slot(a))   # A2: weighted toward what the workshop can make
+	if slot == "" or slot == "companion":
+		return {}   # LW #61: no Design makes companions (they come from the creature merchants)
 	var req := order_need(a, slot)
+	if bool(req.get("none", false)):
+		return {}   # LW #61: nothing in the game makes such a piece for them — no impossible commission
 	var stat := str(req["stat"])
 	var need := int(req["min"])
 	var tier := int(req["tier"])
@@ -1096,6 +1184,11 @@ static func multi_parts_for(a: Dictionary) -> Array:
 		return []
 	var parts := []
 	var er := _equipment_recipes()
+	# LW #61: only pieces this adventurer would actually use (a wizard asks for no tower shield or plate), and only
+	# Designs the smith can know of (a secret recipe is not named by a customer before its notes are found)
+	var usable := func(r: Dictionary) -> bool: return Adv.affinity(a, {"def": str(r["output"])}) > 0.0
+	er["open"] = (er["open"] as Array).filter(usable)
+	er["locked"] = (er["locked"] as Array).filter(func(r): return usable.call(r) and Guide.recipe_visible(str(r["id"])))
 	var slot := str(a.get("needs", ""))
 	# 1. an advanced piece: the nearest thing the smith cannot make yet
 	var locked: Array = er["locked"]

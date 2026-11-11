@@ -356,7 +356,9 @@ func _on_repair_done(qs: Array, npc: String) -> void:
 
 
 func _stock() -> void:
-	body.add_child(UIKit.label("Click an item to toggle whether it is on display. Displayed items show a coin.", 20, "body_italic"))
+	var hint := UIKit.label("Click an item to toggle whether it is on display. Displayed items show a coin. You set each piece's asking price in your Stores [%s] — select it, then \"Your price\"." % Settings.key_label("inventory"), 20, "body_italic")
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # LW #48: manual prices made discoverable
+	body.add_child(hint)
 	var grid := GridContainer.new()
 	grid.columns = 14
 	for it in Game.inventory():

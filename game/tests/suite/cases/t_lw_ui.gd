@@ -357,7 +357,10 @@ func test_who_is_who() -> void:
 	var opp: Dictionary = {}
 	for a in Adv.all().values():
 		if str(a["status"]) == "in_town":
-			a["needs"] = "helmet"
+			var core := str((Adv.CLASS_WANTS.get(str(a["cls"]), ["weapon"]) as Array)[0])
+			a["equipment"].erase(core)   # LW #56: a real want, and the coin for a commission
+			a["needs"] = core
+			a["gold"] = Adv.commission_cost(a) + 50
 			if WhoIsWho.is_opportunity(a):
 				opp = a
 				break
