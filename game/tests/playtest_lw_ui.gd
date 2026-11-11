@@ -56,7 +56,7 @@ func run(p: Node) -> void:
 	if o != "":
 		only = o.split(",")
 	# this phase's own save folder (the shared play-test folder holds other phases' saves, some mid-run)
-	Saves.use_test_dir("lw_ui")
+	Saves.use_test_dir("lw_ui_" + tag)
 	for sl in Saves.SLOTS:
 		Saves.delete(sl)
 	await pt.click("New Game")
@@ -222,6 +222,17 @@ func _counter() -> void:
 	_fits(op, "the commissions book")
 	pt.expect(op != null and (pt.find_label_containing(op, "opportunit") != null or tag == "before"), "lw_ui: the commissions book lists opportunities")
 	await _shot("commissions")
+	# further down the book: the opportunities (before: the end of the list)
+	var sec: Control = (op.find_child("Section_opportunity", true, false) as Control) if op != null else null
+	if sec != null:
+		for sc in op.find_children("*", "ScrollContainer", true, false):
+			(sc as ScrollContainer).ensure_control_visible(sec)
+	else:
+		_scroll_all(op, 100000)
+	await pt.wait(0.4)
+	await _shot("commissions_lower")
+	if op != null and pt.find_label_containing(op, "Ask what they need forged") != null:
+		pt.expect(true, "lw_ui: the book says how to ask")
 	var ap := await _open("adventurers")
 	_fits(ap, "the adventurers' roster")
 	await _shot("adventurers")

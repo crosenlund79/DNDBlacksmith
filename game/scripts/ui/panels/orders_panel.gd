@@ -39,6 +39,12 @@ func _section(title: String, kind: String, n: int) -> void:
 func _build() -> void:
 	UIKit.clear(body)
 	var orders := Shop.open_orders()
+	var n_opp := WhoIsWho.opportunities().size()
+	if not orders.is_empty() and n_opp > 0:   # with many open orders the opportunities are far down: say so first
+		var sm := UIKit.note("%d open commission%s · %d commission opportunit%s in town, listed below the open ones." % [
+			orders.size(), "" if orders.size() == 1 else "s", n_opp, "y" if n_opp == 1 else "ies"])
+		sm.name = "BookSummary"
+		body.add_child(sm)
 	_section("Open commissions", "commission", orders.size())
 	if orders.is_empty():
 		body.add_child(UIKit.note("No open commissions. Adventurers place orders when their gear falls behind their ambitions — the opportunities below are the ones in town now."))
