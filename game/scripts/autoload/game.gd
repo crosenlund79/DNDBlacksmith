@@ -304,19 +304,47 @@ func take_uid(uid: int) -> Dictionary:
 	return {}
 
 
-func equip_player(uid: int) -> void:
-	var it := take_uid(uid)
-	if it.is_empty():
-		return
-	var slot: String = DB.item(it["def"]).get("slot", "")
-	if slot == "":
-		add_item(it, false)
-		return
+## The smith's own equipment slots, in the order the stores window shows them (LW #57: before, it showed six of them,
+## so a shield, cloak, belt or amulet put on vanished from sight with no way to take it off again).
+const PLAYER_SLOTS := ["weapon", "shield", "armor", "helmet", "gloves", "boots", "cloak", "belt", "ring", "amulet"]
+
+
+## Puts a piece from the stores on the smith (the same dict: uid, maker and history unchanged; he already holds it, so no
+## owner changes). A piece already worn in that slot goes back to the stores. Returns the slot, "" when nothing happened.
+func equip_player(uid: int) -> String:
+	var it := find_uid(uid)
+	if it.is_empty() or Items.slot(it) == "":
+		return ""
+	var slot := Items.slot(it)
+	take_uid(uid)
 	var eq: Dictionary = state["player"]["equipment"]
-	if eq.has(slot):
-		add_item(eq[slot], false)
+	var old: Variant = eq.get(slot, {})
 	eq[slot] = it
+	if old is Dictionary and not (old as Dictionary).is_empty():
+		add_item(old, false)
 	Events.inventory_changed.emit()
+	return slot
+
+
+## Takes the piece the smith wears in `slot` off and back into the stores (same dict). False when nothing is worn there.
+func unequip_player(slot: String) -> bool:
+	var eq: Dictionary = state["player"]["equipment"]
+	var it: Variant = eq.get(slot, {})
+	eq.erase(slot)
+	if not (it is Dictionary) or (it as Dictionary).is_empty():
+		return false
+	add_item(it, false)
+	Events.inventory_changed.emit()
+	return true
+
+
+## The slot in which the smith wears the piece with this uid ("" when he does not wear it).
+func player_worn_slot(uid: int) -> String:
+	var eq: Dictionary = state["player"]["equipment"]
+	for s in eq:
+		if eq[s] is Dictionary and int((eq[s] as Dictionary).get("uid", -1)) == uid:
+			return str(s)
+	return ""
 
 
 # ------------------------------------------------------------------ flags, journal, upgrades
