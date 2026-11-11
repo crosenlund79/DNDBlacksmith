@@ -194,6 +194,7 @@ func add_gold(amount: int, category: String, note: String, party := "") -> void:
 	if party != "":
 		line["party"] = party
 	state["ledger"].append(line)
+	MaterialLedger.note_gold(line)   # Living Workshop #46: a purchase names the seller of what arrives with it
 	if Steward.is_active():
 		Steward.note_ledger(amount, category, note)   # the report reconciles every coin of the time away
 	if state["ledger"].size() > 400:
@@ -220,6 +221,7 @@ func inventory() -> Array:
 func add_item(item: Dictionary, notify := true) -> void:
 	if item.is_empty():
 		return
+	MaterialLedger.on_add(item)   # Living Workshop #46: materials in, with their source (no-op for other items)
 	if not bool(item.get("dev", false)):
 		SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material" (not by dev tools)
 	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov"):
@@ -261,6 +263,7 @@ func count(def_id: String) -> int:
 func remove_def(def_id: String, qty: int) -> bool:
 	if count(def_id) < qty:
 		return false
+	MaterialLedger.on_remove(def_id, qty)   # Living Workshop #46: materials used
 	var inv := inventory()
 	for i in range(inv.size() - 1, -1, -1):
 		if qty <= 0:

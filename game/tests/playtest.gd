@@ -4017,3 +4017,11 @@ func sell_at_counter(name: String, who := "") -> bool:
 	(pickers[0] as OfferPicker).select_uid(uid)
 	await wait(0.3)
 	return await click("Sell for", pickers[0])
+
+
+# ======================================================================= The Living Workshop: interface (UI worker)
+## The HUD counters, ten save slots, the caravan's arrival, health over time, the material ledger, who is who at the
+## counter and the inn, and the tighter panels (tests/playtest_lw_ui.gd; LWUI_TAG=before|after). Shots lwui_*.
+func phase_lw_ui() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_ui.gd").new()
+	await ph.run(self)

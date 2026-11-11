@@ -19,7 +19,7 @@ const MAX_OFF := 2
 
 ## Short verbs for dialogue options (first mention wins; options without a verb stay in the dialogue only).
 const VERBS := {"delivery": "Take delivery", "serve": "Sell", "serve_repair": "Repair", "refund": "Settle dispute",
-	"refuse": "Settle dispute", "talk": "Talk", "manage": "Work orders", "equip": "Offer gear", "order": "Order",
+	"refuse": "Settle dispute", "talk": "Talk", "manage": "Work orders", "equip": "Offer gear", "order": "Commission?",
 	"shop_counter": "Buy", "c_rival_shop": "Buy", "c_pawn": "Pawn", "c_caravan": "Buy", "c_creatures": "Creatures",
 	"ironfront_play": "Ironfront", "ironfront_teach": "Ironfront", "ironfront_intro": "Ironfront", "meal": "Meal",
 	"ale": "Buy a round", "drink": "Drink", "dice": "Knucklebones", "rumour": "Rumours", "evening": "Evening"}

@@ -77,9 +77,13 @@ func _draw() -> void:
 	if item.get("star", false):
 		draw_texture_rect(Assets.get_tex("icons/star", Vector2i(32, 32)), Rect2(size_px - 26, 2, 24, 24), false)
 	if int(item.get("qty", 1)) > 1:
+		# #43: the count always fits the slot — grouped digits, shortened (9.9k) only when it would not fit, sized to the
+		# slot; the exact number is in the tooltip
 		var f2 := Assets.font("body_bold")
-		draw_string_outline(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color("#efe4cc"))
-		draw_string(f2, Vector2(4, size_px - 6), str(item["qty"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#20140c"))
+		var fs := qty_font_size(size_px)
+		var qt := qty_text(int(item["qty"]), size_px)
+		draw_string_outline(f2, Vector2(4, size_px - 6), qt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 4, Color("#efe4cc"))
+		draw_string(f2, Vector2(4, size_px - 6), qt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("#20140c"))
 	if size_px >= 48.0 and int(item.get("qty", 1)) <= 1 and Provenance.is_mine(item):
 		# the smith's own work: the Ironhand mark, struck small in the corner
 		var ms := clampf(size_px * 0.3, 18.0, 30.0)
@@ -109,6 +113,30 @@ func _draw_condition() -> void:
 		var c := Color("#7e2418")
 		draw_line(Vector2(6, 6), Vector2(size_px - 6, size_px - 6), c, 3.0, true)
 		draw_line(Vector2(size_px - 6, 6), Vector2(6, size_px - 6), Color(c, 0.6), 2.0, true)
+
+
+## The quantity count's font size for a slot of `px` (18 on the usual 72 px slot, never below 14).
+static func qty_font_size(px: float) -> int:
+	return int(clampf(px * 0.28, 14.0, 18.0))
+
+
+## The quantity as drawn on a slot of `px`: "9,898" when it fits inside the slot (4 px each side), else "9.9k", "12k"
+## or "1.2M" — whichever first fits.
+static func qty_text(n: int, px: float) -> String:
+	var f := Assets.font("body_bold")
+	var fs := qty_font_size(px)
+	var room := px - 8.0
+	var tries: Array[String] = [UIKit.num(n)]
+	if n >= 1000:
+		tries.append(("%.1fk" % (n / 1000.0)).replace(".0k", "k"))
+		tries.append("%dk" % int(n / 1000))
+	if n >= 1000000:
+		tries.append(("%.1fM" % (n / 1000000.0)).replace(".0M", "M"))
+		tries.append("%dM" % int(n / 1000000))
+	for t in tries:
+		if f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= room:
+			return t
+	return tries[-1]
 
 
 func refresh() -> void:

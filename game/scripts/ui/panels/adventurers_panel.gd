@@ -11,17 +11,24 @@ var grid: GridContainer
 
 
 func _init() -> void:
-	super._init("Adventurers of the Tipsy Wyvern", 1640, 900)
+	super._init("Adventurers of the Tipsy Wyvern", 1620, 830)   # #47: was 1640×900
 
 
 func _ready() -> void:
 	super._ready()
-	content.add_child(UIKit.label("Click a card for the full character sheet. What you know depends on how well you know them — talk, share a drink, equip them, or pay for rumours at the Velvet Lantern.", 19, "body_italic"))
+	content.add_child(UIKit.note("Click a card for the full character sheet. What you know depends on how well you know them — talk, share a drink, equip them, or pay for rumours at the Velvet Lantern."))
+	# Living Workshop #54–55: who is a customer now, who has an order, who would order if asked (WhoIsWho)
+	var legend := UIKit.hbox(10)
+	legend.name = "KindLegend"
+	for kd in ["waiting", "commission", "opportunity"]:
+		legend.add_child(WhoIsWho.chip(kd, false))
+	legend.add_child(UIKit.note("— everyone else in town is simply visiting.", UIKit.FS_MIN))
+	content.add_child(legend)
 	grid = GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 14)
-	content.add_child(UIKit.scroll(grid, 740))
+	content.add_child(UIKit.scroll(grid, 660))
 	_build()
 
 
@@ -88,6 +95,13 @@ func card(a: Dictionary) -> Control:
 		st.position = Vector2(5, 20)
 		st.size = Vector2(110, 110)
 		pc.add_child(st)
+	# Living Workshop #54–55: a customer now, an open commission, or someone who would order if asked — a tag on the
+	# portrait's corner (the card keeps its width)
+	var kind := WhoIsWho.kind_of(id)
+	if kind in ["waiting", "commission", "opportunity"]:
+		var tag := WhoIsWho.chip(kind, true)
+		tag.position = Vector2(0, 0)
+		pc.add_child(tag)
 	h.add_child(pc)
 	var v := UIKit.vbox(3)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL

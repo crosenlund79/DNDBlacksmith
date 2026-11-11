@@ -11,7 +11,7 @@ var body: VBoxContainer
 func _init(t := "customers", npc := "") -> void:
 	tab = t
 	npc_focus = npc
-	super._init("The Shop Counter", 1320, 780)
+	super._init("The Shop Counter", 1260, 720)   # #47: was 1320×780
 
 
 func _ready() -> void:
@@ -19,10 +19,10 @@ func _ready() -> void:
 	var tabs := UIKit.hbox(8)
 	for t in [["customers", "Customers & Offers"], ["stock", "Stock on Display"], ["ledger", "Ledger & Upgrades"]]:
 		var key: String = t[0]
-		tabs.add_child(UIKit.button(t[1], func(): tab = key; _build(), 0))
+		tabs.add_child(UIKit.small_button(t[1], func(): tab = key; _build(), 0))
 	content.add_child(tabs)
 	body = UIKit.vbox(10)
-	content.add_child(UIKit.scroll(body, 600))
+	content.add_child(UIKit.scroll(body, 560))
 	Events.inventory_changed.connect(_build)
 	Events.gold_changed.connect(func(_g): _build())
 	_build()
@@ -36,70 +36,107 @@ func _build() -> void:
 		"ledger": _ledger()
 
 
+## Living Workshop #54–55: who is who at the counter, in this order — the customers waiting at your counter (they give
+## up after a few hours), the finds returning adventurers offer for sale (not customers), and a line for the
+## commission opportunities in town (adventurers who need something forged and have not been asked; the Commissions
+## book lists them). Each section has its own word and colour (WhoIsWho).
 func _customers() -> void:
-	_offers()
 	var people := []
 	for c in Shop.waiting():
 		people.append(c["npc"])
 	if npc_focus != "" and not people.has(npc_focus):
 		people.push_front(npc_focus)
+	var sh := UIKit.hbox(10)
+	sh.name = "Section_waiting"
+	sh.add_child(UIKit.heading("Waiting at your counter (%d of %d seats)" % [Shop.waiting().size(), Shop.SEATS]))
+	sh.add_child(WhoIsWho.chip("waiting", true))
+	body.add_child(sh)
 	if people.is_empty():
-		body.add_child(UIKit.label("Nobody is waiting outside. Customers come during opening hours (9:00–18:00) and take a seat by the door; adventurers in town often drop by.", 22, "body_italic"))
-		return
-	body.add_child(UIKit.label("Waiting at the shop (%d of %d seats)" % [Shop.waiting().size(), Shop.SEATS], 26, "heading"))
+		body.add_child(UIKit.note("Nobody is waiting outside. Customers come during opening hours (9:00–18:00) and take a seat by the door; adventurers in town often drop by."))
 	for npc in people:
-		var row := UIKit.hbox(16)
-		row.add_child(UIKit.portrait("portraits/" + npc, 112))
-		var v := UIKit.vbox(8)
-		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var a := Adv.get_a(npc)
-		var cu := Shop.customer(npc)
-		var waiting: bool = not cu.is_empty() and cu.get("present", true)
-		# the explicit request card: what they want, attributes, materials, budget and reward
-		var req := Shop.request(cu if not cu.is_empty() else {"npc": npc, "want": "browse"})
-		var who := UIKit.rich("[b]%s[/b]%s" % [Talk.npc_name(npc), (" · %s %s, level %d · %d gold" % [Adv.rating_text(a), a["cls"], a["level"], a["gold"]]) if not a.is_empty() else ""], 21)
-		v.add_child(who)
-		v.add_child(CustomerCard.build(req))
-		var actions := HFlowContainer.new()
-		actions.add_theme_constant_override("h_separation", 8)
-		actions.add_theme_constant_override("v_separation", 6)
-		if cu.get("want", "") == "multi":
-			_multi_parts(v, cu, npc)
-		elif cu.get("want", "") == "repair":
-			actions.add_child(UIKit.button("Take the job — to the grinding wheel", func(): _repair(npc), 360))
-			var rit: Dictionary = cu.get("item", {})
-			if cu.has("own_slot"):
-				rit = a.get("equipment", {}).get(str(cu["own_slot"]), rit)
-			if Items.is_equipment(rit):
-				var ruid := int(rit.get("uid", -1))
-				actions.add_child(UIKit.button("Inspect the piece", func(): Events.open_panel.emit("item", {"uid": ruid}), 0))
-				if waiting:
-					(func(): ItemStory.at_counter(npc)).call_deferred()   # "A Familiar Creation" — once per reunion
-		elif cu.get("want", "") == "goods":
-			v.add_child(_goods_offers(npc, cu))   # S2 (OBS-15, BUG-043): what they asked for, the rest greyed with why
-		elif cu.get("want", "") == "dispute":
-			actions.add_child(UIKit.label("Talk to them outside to settle it.", 20, "body_italic"))
-		elif cu.get("want", "") == "advice":   # The Living Realm 3b (Consult)
-			actions.add_child(UIKit.button("Hear them out — advise on their gear", func(): Events.open_panel.emit("consult", {"id": npc}), 0))
-		elif not a.is_empty():
-			# A2: a compact grid of the pieces on display with a details view and an explicit "Sell for N g" (OfferPicker)
-			if OfferPicker.candidates(npc, req).is_empty():
-				actions.add_child(UIKit.label("Nothing on display suits them. Put equipment on display from your stores [I].", 20, "body_italic"))
-			else:
-				v.add_child(OfferPicker.new(npc, req, func(): _build.call_deferred()))
-		if waiting and cu.get("want", "") != "dispute":
-			var dis := UIKit.button("Ask them to come back another time", func():
-				Shop.dismiss_customer(npc)
-				Events.toast.emit("%s gets up from the bench and heads off." % Talk.npc_name(npc), "info")
-				if npc_focus == npc:
-					npc_focus = ""
-				_build(), 0)
-			dis.tooltip_text = "Frees their seat; they don't mind much."
-			actions.add_child(dis)
-		v.add_child(actions)
-		row.add_child(v)
-		body.add_child(row)
-		body.add_child(UIKit.divider())
+		_customer_row(npc)
+	_offers()
+	_opportunities_line()
+
+
+## A summary line under the counter: who in town would order something if asked (the Commissions book has the list).
+func _opportunities_line() -> void:
+	var opp := WhoIsWho.opportunities()
+	if opp.is_empty():
+		return
+	var h := UIKit.hbox(10)
+	h.name = "Section_opportunity"
+	h.add_child(WhoIsWho.chip("opportunity", true))
+	var names := PackedStringArray()
+	for a in opp.slice(0, 4):
+		names.append("%s (%s)" % [a["name"], WhoIsWho.need_text(a)])
+	var l := UIKit.label("Commission opportunities in town: %s%s — ask them what they need forged." % [", ".join(names), (" and %d more" % (opp.size() - 4)) if opp.size() > 4 else ""], UIKit.FS_SMALL)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(l)
+	h.add_child(UIKit.small_button("Commissions book", func(): Events.open_panel.emit("orders", {}), 0))
+	body.add_child(h)
+
+
+func _customer_row(npc: String) -> void:
+	var row := UIKit.hbox(12)
+	row.name = "Customer_" + npc
+	row.add_child(UIKit.portrait("portraits/" + npc, 80))
+	var v := UIKit.vbox(6)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var a := Adv.get_a(npc)
+	var cu := Shop.customer(npc)
+	var waiting: bool = not cu.is_empty() and cu.get("present", true)
+	# the explicit request card: what they want, attributes, materials, budget and reward
+	var req := Shop.request(cu if not cu.is_empty() else {"npc": npc, "want": "browse"})
+	var wh := UIKit.hbox(10)
+	var who := UIKit.rich("[b]%s[/b]%s" % [Talk.npc_name(npc), (" · adventurer · %s %s, level %d · %d gold" % [Adv.rating_text(a), a["cls"], a["level"], a["gold"]]) if not a.is_empty() else " · villager"], UIKit.FS_SMALL)
+	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wh.add_child(who)
+	if waiting:
+		wh.add_child(WhoIsWho.chip("waiting", true))
+	v.add_child(wh)
+	v.add_child(CustomerCard.build(req))
+	var actions := HFlowContainer.new()
+	actions.add_theme_constant_override("h_separation", 8)
+	actions.add_theme_constant_override("v_separation", 6)
+	if cu.get("want", "") == "multi":
+		_multi_parts(v, cu, npc)
+	elif cu.get("want", "") == "repair":
+		actions.add_child(UIKit.small_button("Take the job — to the grinding wheel", func(): _repair(npc), 0))
+		var rit: Dictionary = cu.get("item", {})
+		if cu.has("own_slot"):
+			rit = a.get("equipment", {}).get(str(cu["own_slot"]), rit)
+		if Items.is_equipment(rit):
+			var ruid := int(rit.get("uid", -1))
+			actions.add_child(UIKit.small_button("Inspect the piece", func(): Events.open_panel.emit("item", {"uid": ruid}), 0))
+			if waiting:
+				(func(): ItemStory.at_counter(npc)).call_deferred()   # "A Familiar Creation" — once per reunion
+	elif cu.get("want", "") == "goods":
+		v.add_child(_goods_offers(npc, cu))   # S2 (OBS-15, BUG-043): what they asked for, the rest greyed with why
+	elif cu.get("want", "") == "dispute":
+		actions.add_child(UIKit.note("Talk to them outside to settle it."))
+	elif cu.get("want", "") == "advice":   # The Living Realm 3b (Consult)
+		actions.add_child(UIKit.small_button("Hear them out — advise on their gear", func(): Events.open_panel.emit("consult", {"id": npc}), 0))
+	elif not a.is_empty():
+		# A2: a compact grid of the pieces on display with a details view and an explicit "Sell for N g" (OfferPicker)
+		if OfferPicker.candidates(npc, req).is_empty():
+			actions.add_child(UIKit.note("Nothing on display suits them. Put equipment on display from your stores [I]."))
+		else:
+			v.add_child(OfferPicker.new(npc, req, func(): _build.call_deferred()))
+	if waiting and cu.get("want", "") != "dispute":
+		var dis := UIKit.small_button("Ask them to come back another time", func():
+			Shop.dismiss_customer(npc)
+			Events.toast.emit("%s gets up from the bench and heads off." % Talk.npc_name(npc), "info")
+			if npc_focus == npc:
+				npc_focus = ""
+			_build(), 0)
+		dis.tooltip_text = "Frees their seat; they don't mind much."
+		actions.add_child(dis)
+	v.add_child(actions)
+	row.add_child(v)
+	body.add_child(row)
+	body.add_child(UIKit.divider())
 
 
 ## The draughts and oils in the stores a "goods" customer could be offered: [{item, price (one unit), why ("" = they
@@ -177,30 +214,39 @@ func _offers() -> void:
 	var offs := Shop.offers()
 	if offs.is_empty():
 		return
-	body.add_child(UIKit.label("Offered by returning adventurers", 26, "heading"))
+	body.add_child(UIKit.divider())
+	var oh := UIKit.hbox(10)
+	oh.name = "Section_offers"
+	oh.add_child(UIKit.heading("Finds offered by returning adventurers (%d)" % offs.size()))
+	oh.add_child(UIKit.note("for sale to you — not customers", UIKit.FS_MIN))
+	body.add_child(oh)
 	var grid := HFlowContainer.new()
 	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 8)
 	for o in offs:
 		var it: Dictionary = o["item"]
 		var a := Adv.get_a(str(o["from"]))
-		var col := UIKit.vbox(3)
-		col.custom_minimum_size = Vector2(250, 0)
-		col.add_child(ItemSlot.new(it, 64.0))
-		col.add_child(UIKit.rich("[b]%s[/b]\nfrom %s · %s · %d day%s left" % [Items.display_name(it), a.get("name", "?"), "free" if int(o["price"]) == 0 else "%d g" % int(o["price"]),
-			3 - (Game.day() - int(o["day"])), "" if 3 - (Game.day() - int(o["day"])) == 1 else "s"], 17))
-		var h := UIKit.hbox(6)
+		# #47: a compact tile — the piece beside its words, small buttons
+		var col := UIKit.hbox(8)
+		col.custom_minimum_size = Vector2(290, 0)
+		col.add_child(ItemSlot.new(it, 56.0))
+		var cv := UIKit.vbox(2)
+		cv.add_child(UIKit.rich("[b]%s[/b]\nfrom %s · %s · %d day%s left" % [Items.display_name(it), a.get("name", "?"), "free" if int(o["price"]) == 0 else "%d g" % int(o["price"]),
+			3 - (Game.day() - int(o["day"])), "" if 3 - (Game.day() - int(o["day"])) == 1 else "s"], UIKit.FS_MIN))
+		col.add_child(cv)
+		var h := UIKit.hbox(4)
 		var oid: String = o["id"]
-		h.add_child(UIKit.button("Buy", func():
+		h.add_child(UIKit.small_button("Buy", func():
 			var err := Shop.accept_offer(oid)
 			Events.toast.emit(err if err != "" else "Bought — it is in your stores.", "bad" if err != "" else "good")
-			_build(), 110))
-		h.add_child(UIKit.button("Decline", func(): Shop.decline_offer(oid); _build(), 110))
+			_build(), 64))
+		h.add_child(UIKit.small_button("Decline", func(): Shop.decline_offer(oid); _build(), 0))
 		if Items.is_equipment(it):
 			var ouid := int(it["uid"])
-			h.add_child(UIKit.button("Inspect", func(): Events.open_panel.emit("item", {"uid": ouid}), 110))
+			h.add_child(UIKit.small_button("Inspect", func(): Events.open_panel.emit("item", {"uid": ouid}), 0))
 			var ofrom := str(o["from"])
 			(func(): ItemStory.present(it, "offer", ofrom)).call_deferred()   # your own work among the finds
-		col.add_child(h)
+		cv.add_child(h)
 		grid.add_child(col)
 	body.add_child(grid)
 	body.add_child(UIKit.divider())
@@ -208,7 +254,7 @@ func _offers() -> void:
 
 ## A multi-order: every part on its own card with availability and its own Accept / Decline / Repair.
 func _multi_parts(v: VBoxContainer, cu: Dictionary, npc: String) -> void:
-	v.add_child(UIKit.label("Take on what you can — each part can be accepted or declined on its own.", 19, "body_italic"))
+	v.add_child(UIKit.note("Take on what you can — each part can be accepted or declined on its own."))
 	for pt in cu.get("parts", []):
 		var pid := str(pt.get("pid", ""))
 		var r := Shop.part_request(cu, pt)
@@ -220,20 +266,20 @@ func _multi_parts(v: VBoxContainer, cu: Dictionary, npc: String) -> void:
 		bx.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		if str(pt.get("status", "pending")) == "pending":
 			if str(pt.get("kind", "")) == "repair":
-				var rb := UIKit.button("Repair it", func(): _repair_part(npc, pid), 200)
+				var rb := UIKit.small_button("Repair it", func(): _repair_part(npc, pid), 150)
 				rb.disabled = not bool(r.get("available", true))
 				bx.add_child(rb)
 			else:
-				var ab := UIKit.button("Accept", func():
+				var ab := UIKit.small_button("Accept", func():
 					var err := Shop.accept_part(npc, pid)
 					if err != "":
 						Events.toast.emit(err, "bad")
-					_build(), 200)
+					_build(), 150)
 				ab.tooltip_text = "Becomes a commission: deliver it by the deadline." + ("" if bool(r.get("available", true)) else "\nYou cannot make it yet — %s." % r.get("why", ""))
 				bx.add_child(ab)
-			bx.add_child(UIKit.button("Decline", func():
+			bx.add_child(UIKit.small_button("Decline", func():
 				Shop.decline_part(npc, pid)
-				_build(), 200))
+				_build(), 150))
 		row.add_child(bx)
 		v.add_child(row)
 

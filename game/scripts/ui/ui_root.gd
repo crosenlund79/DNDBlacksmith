@@ -29,6 +29,8 @@ var minimap: VillageMapView
 var minimap_caption: Label
 var toolbar: HudToolbar
 var tutorial_card: TutorialCard
+var hud_plate: PanelContainer   # top-left: date, energy, purse, caravan chip, objective (#43: sizes to its content)
+var caravan_chip: Button        # Living Workshop #44: shown while the Brask caravan is camped
 var steward_plate: StewardPlate
 var _last_player_pos := Vector2.INF
 var _poll := 0.0
@@ -79,12 +81,16 @@ func _build_hud() -> void:
 	add_child(hud)
 	# top-left: date, time, gold, objective
 	var tl := PanelContainer.new()
+	tl.name = "HudPlate"
 	tl.add_theme_stylebox_override("panel", Assets.panel_style("parchment"))
 	tl.position = Vector2(20, 18)
 	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_plate = tl
 	var v := UIKit.vbox(2)
 	clock_label = UIKit.label("", 26, "heading")
+	clock_label.name = "HudClock"
 	gold_label = UIKit.label("", 24, "body_bold", UIKit.RUBRIC)
+	gold_label.name = "HudGold"
 	objective_label = UIKit.rich("", 20)
 	objective_label.custom_minimum_size = Vector2(430, 0)
 	v.add_child(clock_label)
@@ -105,6 +111,14 @@ func _build_hud() -> void:
 	er.add_child(energy_label)
 	v.add_child(er)
 	v.add_child(gold_label)
+	# Living Workshop #44: while the caravan is camped, a quiet chip says so (and how long); click: where it is
+	caravan_chip = UIKit.small_button("", func(): Events.open_panel.emit("map", {"venue": "caravan"}))
+	caravan_chip.name = "CaravanChip"
+	caravan_chip.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	caravan_chip.add_theme_color_override("font_color", UIKit.RUBRIC)
+	caravan_chip.tooltip_text = "The Brask caravan is camped on the east road: curios, exotic goods and fine arms, and it buys a few wanted goods at a premium. Click for where it is."
+	caravan_chip.visible = false
+	v.add_child(caravan_chip)
 	v.add_child(objective_label)
 	tl.add_child(v)
 	hud.add_child(tl)
@@ -229,7 +243,16 @@ func _refresh_hud() -> void:
 		return
 	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name(), Game.time_string(),
 		"  ‖ paused" if Game.paused else ("  ▸×%d" % Game.speed if Game.speed > 1 else "")]
-	gold_label.text = "%d gold" % Game.gold()
+	gold_label.text = "%s gold" % UIKit.num(Game.gold())   # #43: grouped digits; the plate sizes itself to the text
+	var cm: Variant = Game.state.get("commerce", {})   # read without creating state (Commerce.st() fills keys in)
+	var cv: Dictionary = (cm as Dictionary).get("caravan", {}) if cm is Dictionary else {}
+	caravan_chip.visible = not cv.is_empty()
+	if caravan_chip.visible:
+		var left_min := maxi(0, int(cv.get("leaves", 0)) - Game.now())
+		var hrs := maxi(1, int(ceil(float(left_min) / 60.0)))
+		var dys := int(ceil(float(left_min) / 1440.0))
+		caravan_chip.text = "Caravan at the camp — leaves in %s" % (("%d hour%s" % [hrs, "" if hrs == 1 else "s"]) if left_min < 1440
+			else ("%d day%s" % [dys, "" if dys == 1 else "s"]))
 	energy_bar.value = Vitality.energy()
 	var fb := Vitality.band()
 	energy_label.text = fb
@@ -240,6 +263,17 @@ func _refresh_hud() -> void:
 	var obj := Objectives.text()
 	objective_label.visible = obj != "" and Settings.get_value("gameplay/show_hints", true)
 	objective_label.text = "[color=#7e2418]❧[/color] [i]%s[/i]" % obj
+	_layout_left.call_deferred()
+
+
+## #43: the top-left plate takes exactly the size of what it shows (it grew but never shrank), and the tutorial card
+## sits below it — a long objective or the caravan chip can never push the plate under the card.
+func _layout_left() -> void:
+	if not is_instance_valid(hud_plate):
+		return
+	hud_plate.reset_size()
+	if is_instance_valid(tutorial_card):
+		tutorial_card.position.y = maxf(250.0, hud_plate.position.y + hud_plate.size.y + 14.0)
 
 
 func _process(delta: float) -> void:
@@ -506,6 +540,8 @@ func _route(id: String, args: Dictionary) -> void:
 			open(DossierPanel.new(str(args["id"]), str(args.get("tab", "Overview")), int(args.get("compare", -1))))
 		"observe":
 			open(ObserverPanel.new(str(args["id"])))
+		"materials":   # Living Workshop #46: the material ledger (acquired by source, used, remaining)
+			open(MaterialLedgerPanel.new(args))
 		"workshop":   # iteration 012: the workshop ledger (apprentices, stations, work queue)
 			open(WorkshopPanel.new())
 		"refine":   # UX iteration: improving existing equipment (Refinement)

@@ -21,7 +21,7 @@ var _pending := false
 
 
 func _init(args := {}) -> void:
-	super._init("The Steward", 1560, 930)
+	super._init("The Steward", 1560, 800)   # #47: was 930
 	tab = str(args.get("tab", "forge"))
 
 
@@ -364,7 +364,7 @@ func _orders() -> void:
 	var c2 := UIKit.vbox(10)
 	cols.add_child(c1)
 	cols.add_child(c2)
-	body.add_child(UIKit.scroll(cols, 700))
+	body.add_child(UIKit.scroll(cols, 640))
 	# spending
 	var sp := _card("Spending", "tb_ledger")
 	_num(sp, "Most it may spend in one day", int(o["daily_limit"]), 0, 100000, 10, func(v): _apply({"daily_limit": v}), " g")
@@ -572,7 +572,7 @@ func _matters() -> void:
 			var r := UIKit.rich("[color=#6e5a40]day %d[/color] %s — [i]%s[/i]" % [int(x.get("resolved_day", x.get("day", 0))), _visible_text(x), str(x.get("outcome", ""))], 16)
 			r.custom_minimum_size = Vector2(1400, 0)
 			list.add_child(r)
-	body.add_child(UIKit.scroll(list, 760))
+	body.add_child(UIKit.scroll(list, 660))
 
 
 ## The text of a matter as the smith may see it: an unopened sealed letter shows only its envelope.

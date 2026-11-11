@@ -7,6 +7,22 @@ const INK := Color("#20140c")
 const RUBRIC := Color("#7e2418")
 const GILT := Color("#b8923e")
 const PAPER := Color("#efe4cc")
+## Quieter ink for secondary lines (hints, "unknown before day N").
+const FADED := Color("#6a5a44")
+
+## Living Workshop #47 — one set of sizes for the whole interface (on the 1920×1080 canvas; 1600×900 is the same canvas
+## scaled by 0.83, so FS_MIN 16 still reads as ~13 px there). Panels built after #47 use these instead of literal numbers;
+## the older builders keep their signatures and defaults (only the default button height went down, 46 → BUTTON_H).
+const FS_TITLE := 34      # window titles (UIWindow; was 38)
+const FS_HEADING := 24    # section headings
+const FS_BODY := 20       # ordinary text
+const FS_SMALL := 18      # secondary text, list rows
+const FS_MIN := 16        # never smaller: the readability floor
+const BUTTON_H := 38      # default button height (was 46)
+const BUTTON_FS := 21     # default button text (the theme's 24 made every button oversized)
+const BUTTON_SMALL_H := 32
+const BUTTON_SMALL_FS := 18
+const GAP := 8            # default spacing inside a panel
 
 
 static func label(text: String, size := 22, font := "body", color := INK) -> Label:
@@ -42,16 +58,96 @@ static func rich(bbcode: String, size := 22, dark := false) -> RichTextLabel:
 	return r
 
 
+## A parchment button. #47: BUTTON_H high with BUTTON_FS text by default (a caller's own font-size override still
+## wins); `min_w` as before. Keyboard focus and the click/hover sounds are unchanged.
 static func button(text: String, cb: Callable, min_w := 0.0) -> Button:
 	var b := Button.new()
 	b.text = text
-	if min_w > 0:
-		b.custom_minimum_size = Vector2(min_w, 46)
-	else:
-		b.custom_minimum_size = Vector2(0, 46)
+	b.custom_minimum_size = Vector2(maxf(min_w, 0.0), BUTTON_H)
+	b.add_theme_font_override("font", Assets.font("heading"))   # the theme's button face, also outside a themed window
+	b.add_theme_font_size_override("font_size", BUTTON_FS)
 	b.pressed.connect(func(): Audio.play("sfx/ui_click", -4.0); cb.call())
 	b.mouse_entered.connect(func(): Audio.play("sfx/ui_hover", -10.0))
 	return b
+
+
+## A small button for rows and secondary actions (list rows, filters, "Inspect").
+static func small_button(text: String, cb: Callable, min_w := 0.0) -> Button:
+	var b := button(text, cb, min_w)
+	b.custom_minimum_size = Vector2(maxf(min_w, 0.0), BUTTON_SMALL_H)
+	b.add_theme_font_size_override("font_size", BUTTON_SMALL_FS)
+	return b
+
+
+## A tab button for a row of tabs (toggle mode; `on` marks the open one in rubric ink).
+static func tab_button(text: String, cb: Callable, on := false) -> Button:
+	var b := small_button(text, cb)
+	b.toggle_mode = true
+	b.set_pressed_no_signal(on)
+	b.add_theme_color_override("font_color", RUBRIC if on else INK)
+	return b
+
+
+## A section heading (FS_HEADING, the heading face).
+static func heading(text: String, size := FS_HEADING) -> Label:
+	return label(text, size, "heading", INK)
+
+
+## A quiet secondary line (hints, honest gaps such as "no record before day 12"). A long note wraps; it then fills
+## the row it is in and never narrows below 360 px (a wrapping label given no width would stack one letter per line
+## in a row or a flow).
+static func note(text: String, size := FS_SMALL) -> Label:
+	var l := label(text, maxi(size, FS_MIN), "body_italic", FADED)
+	if text.length() > 48:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.custom_minimum_size.x = 360
+	else:
+		l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	return l
+
+
+## A faint row background for lists (save slots, ledger rows). `filled` false = an empty slot (only a hairline).
+static func row_style(filled := true) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.13, 0.08, 0.05, 0.07 if filled else 0.0)
+	sb.border_color = Color(0.13, 0.08, 0.05, 0.22)
+	sb.border_width_bottom = 1
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 10
+	sb.content_margin_right = 8
+	sb.content_margin_top = 3
+	sb.content_margin_bottom = 3
+	return sb
+
+
+## A small coloured chip (a status word on a card: "Waiting at the counter", "Commission").
+static func chip(text: String, col: Color, size := FS_MIN) -> PanelContainer:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(col, 0.16)
+	sb.border_color = col
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(9)
+	sb.content_margin_left = 8
+	sb.content_margin_right = 8
+	sb.content_margin_top = 1
+	sb.content_margin_bottom = 1
+	p.add_theme_stylebox_override("panel", sb)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := label(text, size, "body_bold", col.darkened(0.25))
+	p.add_child(l)
+	return p
+
+
+## A whole number with grouped thousands: 1234567 → "1,234,567" (#43: purses and stock counts stay readable).
+static func num(n: int) -> String:
+	var digits := str(absi(n))
+	var out := ""
+	while digits.length() > 3:
+		out = "," + digits.right(3) + out
+		digits = digits.left(digits.length() - 3)
+	return ("-" if n < 0 else "") + digits + out
 
 
 static func hbox(sep := 12) -> HBoxContainer:

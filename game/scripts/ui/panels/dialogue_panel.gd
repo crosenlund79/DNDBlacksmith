@@ -15,7 +15,7 @@ var opts: VBoxContainer
 func _init(id: String, a: String) -> void:
 	npc = id
 	area = a
-	super._init(Talk.npc_name(id), 1420, 640)
+	super._init(Talk.npc_name(id), 1340, 600)   # #47: was 1420×640
 
 
 func _ready() -> void:
@@ -234,11 +234,16 @@ func _options() -> void:
 		var oid: String = o["id"]
 		var why := str(o.get("disabled", ""))
 		# an expected option that is not possible right now stays visible, greyed, with its reason
-		var b := UIKit.button("❧ " + o["label"] + (("  — " + why) if why != "" else ""), func(): _choose(oid), 0)
+		var b := UIKit.small_button("❧ " + o["label"] + (("  — " + why) if why != "" else ""), func(): _choose(oid), 0)
+		b.add_theme_font_size_override("font_size", UIKit.FS_BODY)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		if why != "":
 			b.disabled = true
 			b.tooltip_text = why[0].to_upper() + why.substr(1) + "."
+		elif oid == "order":   # Living Workshop #54–55: the commission opportunity stands out
+			b.name = "OpportunityOption"
+			b.add_theme_color_override("font_color", WhoIsWho.KINDS["opportunity"]["col"].darkened(0.2))
+			b.tooltip_text = "They need something forged and have not ordered it yet — ask, and they place a commission (it appears in the Commissions book, O)."
 		opts.add_child(b)
 
 
