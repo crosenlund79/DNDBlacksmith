@@ -27,7 +27,7 @@ func _ready() -> void:
 	for slot in slots:
 		rows.add_child(_row(str(slot)))
 	# 12 rows of ~44 px fit the canvas without a scroll; the scroll stays for safety on unusual setups
-	content.add_child(UIKit.scroll(rows, mini(slots.size() * 46, 600)))
+	content.add_child(UIKit.scroll(rows, mini(slots.size() * 52, 640)))
 
 
 ## One slot: its name, what is in it and the action. Named "SlotRow_<slot>" (tests, play-tests).

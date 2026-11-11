@@ -24,7 +24,7 @@ var _pending := false
 
 
 func _init() -> void:
-	super._init("The Workshop Ledger — apprentices & work", 1840, 980)
+	super._init("The Workshop Ledger — apprentices & work", 1780, 900)   # #47: was 1840×980 (it covered the HUD)
 
 
 func _ready() -> void:
@@ -32,8 +32,8 @@ func _ready() -> void:
 	var h := UIKit.hbox(18)
 	h.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left = UIKit.vbox(8)
-	var ls := UIKit.scroll(left, 840)
-	ls.custom_minimum_size = Vector2(640, 840)
+	var ls := UIKit.scroll(left, 760)
+	ls.custom_minimum_size = Vector2(600, 760)
 	h.add_child(ls)
 	var right := UIKit.vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL

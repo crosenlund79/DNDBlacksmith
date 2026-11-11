@@ -26,7 +26,7 @@ var count_label: Label
 func _init(id: String) -> void:
 	station_id = id
 	var st := DB.station(id)
-	super._init(st.get("name", id), 1220, 860)
+	super._init(st.get("name", id), 1180, 800)   # #47: was 1220×860
 
 
 func _ready() -> void:
@@ -117,7 +117,7 @@ func _build() -> void:
 	if why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(UIKit.button("Practise a check — %s (no materials, a little experience)" % check_name(station_id), _practice, 460))
-	content.add_child(UIKit.scroll(body, 560 if job.is_empty() else 600))
+	content.add_child(UIKit.scroll(body, 520 if job.is_empty() else 560))
 
 
 # ------------------------------------------------------------------ recipe search and filters
@@ -127,7 +127,7 @@ func _filter_bar() -> Control:
 	var le := LineEdit.new()
 	le.placeholder_text = "Search recipes by name or type…"
 	le.text = query
-	le.custom_minimum_size = Vector2(380, 44)
+	le.custom_minimum_size = Vector2(380, UIKit.BUTTON_H)
 	le.add_theme_font_override("font", Assets.font("body"))
 	le.add_theme_font_size_override("font_size", 20)
 	le.clear_button_enabled = true
@@ -239,8 +239,7 @@ func _fill_list() -> void:
 		for c in CATS:
 			var key: String = c[0]
 			var n := scoped.filter(func(r): return key == "all" or recipe_cats(r).has(key)).size()
-			var b := UIKit.button("%s (%d)" % [c[1], n], func(): cat = key; _fill_list(), 0)
-			b.custom_minimum_size = Vector2(0, 38)
+			var b := UIKit.small_button("%s (%d)" % [c[1], n], func(): cat = key; _fill_list(), 0)
 			b.add_theme_font_size_override("font_size", 17)
 			b.disabled = cat == key
 			b.tooltip_text = "Show only %s" % str(c[1]).to_lower() if key != "all" else "Show every category"
@@ -298,14 +297,14 @@ func _recipe_row(rec: Dictionary) -> Control:
 	var side := UIKit.vbox(4)
 	side.custom_minimum_size = Vector2(170, 0)
 	side.add_child(GuideUI.badge(str(rs["state"]), GuideUI.recipe_badge_text(rs), 30))
-	var how := UIKit.button("Close ▲" if selected == rid else ("How?" if str(rs["state"]) != "ready" else "Details"), func():
+	var how := UIKit.small_button("Close ▲" if selected == rid else ("How?" if str(rs["state"]) != "ready" else "Details"), func():
 		selected = "" if selected == rid else rid
 		_fill_list(), 150)
 	how.name = "How_" + rid
 	how.tooltip_text = "Show me how: the next step, every source and the full dependency tree"
 	side.add_child(how)
 	row.add_child(side)
-	var b := UIKit.button("Begin", func(): _start(rid), 120)
+	var b := UIKit.small_button("Begin", func(): _start(rid), 110)
 	b.disabled = lock != "" or not Crafting.missing_inputs(rid).is_empty()
 	b.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(b)

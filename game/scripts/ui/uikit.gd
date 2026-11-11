@@ -93,10 +93,17 @@ static func heading(text: String, size := FS_HEADING) -> Label:
 	return label(text, size, "heading", INK)
 
 
-## A quiet secondary line (hints, honest gaps such as "no record before day 12"); wraps when long.
+## A quiet secondary line (hints, honest gaps such as "no record before day 12"). A long note wraps; it then fills
+## the row it is in and never narrows below 360 px (a wrapping label given no width would stack one letter per line
+## in a row or a flow).
 static func note(text: String, size := FS_SMALL) -> Label:
 	var l := label(text, maxi(size, FS_MIN), "body_italic", FADED)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if text.length() > 48:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.custom_minimum_size.x = 360
+	else:
+		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return l
 
 

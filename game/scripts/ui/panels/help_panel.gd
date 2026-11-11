@@ -22,7 +22,7 @@ var tut_button: Button
 
 
 func _init(args: Dictionary = {}) -> void:
-	super._init("Help & Reference", 1500, 860)
+	super._init("Help & Reference", 1440, 800)   # #47: was 1500×860
 	back_action = args.get("back", {})
 	var t := str(args.get("topic", ""))
 	if t == "":
@@ -59,7 +59,7 @@ func _ready() -> void:
 	top.add_child(UIKit.label("Search", 24, "heading"))
 	search = LineEdit.new()
 	search.placeholder_text = "Type to search every section — e.g. anvil, rarity, raw hide"
-	search.custom_minimum_size = Vector2(620, 46)
+	search.custom_minimum_size = Vector2(620, UIKit.BUTTON_H)
 	search.add_theme_font_override("font", Assets.font("body"))
 	search.add_theme_font_size_override("font_size", 22)
 	search.text = query
