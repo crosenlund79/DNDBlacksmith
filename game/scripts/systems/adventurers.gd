@@ -700,6 +700,38 @@ static func can_commission(a: Dictionary, slot: String) -> bool:
 	return Shop.can_make_slot(slot, a, Shop.order_need(a, slot))   # what the commission would ask for (steel for veterans …)
 
 
+## LW #56: the answer when the smith asks an adventurer what they need forged. The same rule as their own plans
+## (decide): a commission only for a real want — something missing or broken, or too weak for their level when they
+## have twice the coin — that they can pay for (commission_cost + 10 g, as decide asks), with no commission already open.
+## Before, asking always produced a commission for their weakest slot, whatever their gear and purse (a penniless
+## adventurer with good kit still ordered, the village subsidy paying their unpaid share).
+## {"slot": s} when they commission (the most pressing want, A2-weighted toward what the forge can make), else
+## {"why": "refuses" | "content" | "purse" | "open", "slot": the want, "cost": about what a commission costs them}.
+static func commission_ask(a: Dictionary) -> Dictionary:
+	ensure(a)
+	if Shop.refuses(str(a["id"])):
+		return {"why": "refuses"}
+	if Shop.open_orders().any(func(o): return o["npc"] == a["id"]):
+		return {"why": "open"}
+	var gold := int(a.get("gold", 0))
+	var cc := commission_cost(a)
+	var want := ""
+	var need_gold := cc + 10
+	for n in gear_needs(a):
+		var why := str(n["why"])
+		if str(n["slot"]) == "companion" or not (why in ["broken", "missing", "inferior"]):
+			continue
+		want = str(n["slot"])
+		if why == "inferior":
+			need_gold = maxi(need_gold, cc * 2)   # a mere upgrade only with coin to spare
+		break
+	if want == "":
+		return {"why": "content", "cost": cc}
+	if gold < need_gold:
+		return {"why": "purse", "slot": want, "cost": cc}
+	return {"slot": request_slot(a, want)}
+
+
 ## The slot an adventurer brings to the smith for `wanted` (Milestone A2): what they want when the workshop can make
 ## it (or has a piece on display); otherwise, now and then (Shop.OPPORTUNITY_CHANCE), still that — a visible
 ## opportunity with the next step shown — and usually the most pressing want the workshop CAN make.

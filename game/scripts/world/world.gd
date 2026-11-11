@@ -1867,12 +1867,15 @@ func spot_for(id: String) -> String:
 
 
 func _update_schedules(instant := false) -> void:
+	if PlayerNav.of(self) == null and player != null and player.has_method("_attach_nav"):
+		player._attach_nav()   # LW #39: standing places are checked on the walk grid, needed from the very first placement
 	for id in npcs:
 		var n: NPCActor = npcs[id]
 		if n.get_meta("travelling", false) or n.get_meta("apprentice", false):
 			continue   # apprentices follow their shift (ApprenticeActors)
 		var spot := spot_for(id)
 		if spot == "":
+			release_stand(id)
 			if n.visible and not instant:
 				# walk off to bed / out of sight
 				var home := _home_spot(id)
@@ -1884,17 +1887,84 @@ func _update_schedules(instant := false) -> void:
 			n.target_spot = ""
 			continue
 		if not n.visible:
-			n.position = spots.get(_home_spot(id), spots.get(spot, Vector2.ZERO)) if not instant else spots.get(spot, Vector2.ZERO)
+			n.position = spots.get(_home_spot(id), spots.get(spot, Vector2.ZERO)) if not instant else stand_point(id, spot)
 			n.visible = true
 		if n.target_spot != spot:
 			n.target_spot = spot
 			n.hidden_after_arrival = false
 			if instant:
-				n.position = spots.get(spot, n.position)
+				n.position = stand_point(id, spot) if spots.has(spot) else n.position
 				if spot.begins_with("wait_seat_"):
 					Shop.mark_arrived(id, false)
 			else:
-				n.go(path_to(n.position, spot))
+				var path := path_to(n.position, spot)
+				if path.size() > 0 and spots.has(spot):
+					path[path.size() - 1] = stand_point(id, spot)   # the last step: their own place at the spot
+				n.go(path)
+
+
+# ======================================================================= standing places (LW #39)
+## Several people sent to the same named spot — the square, the notice board, the well, the bar — used to stand on
+## one point, so adventurers walking the village bunched into a single figure. The schedule (which spot, when) is
+## unchanged; each person now has their own standing place there: the first keeps the exact spot (a seat stays a
+## seat), the others the nearest free place on rings around it, on open ground in plain view of the spot.
+var _stand := {}          # spot -> {npc id: offset from the spot}
+const STAND_RINGS := [[1.0, 6], [1.75, 10], [2.5, 14]]   # [radius in tiles, places on the ring]
+## Spots whose exact point matters (the counter's waiting seats, the exits out of the village).
+const STAND_EXACT := ["wait_seat_", "exit_"]
+
+
+func _stand_offsets() -> Array:
+	var out := [Vector2.ZERO]
+	for ring in STAND_RINGS:
+		var n := int(ring[1])
+		for i in n:
+			var ang := TAU * float(i) / float(n) + float(ring[0]) * 0.7   # rings staggered so places do not line up
+			out.append(Vector2(cos(ang), sin(ang) * 0.75) * float(ring[0]) * T)
+	return out
+
+
+## Open ground in plain view of the spot. A seat (inside a table's footprint) is seen from the open floor beside it.
+func _stand_ok(base: Vector2, p: Vector2) -> bool:
+	var nav := PlayerNav.of(self)
+	if nav == null or not nav.walkable(p) or not nav.clear_at(p):
+		return false
+	var anchor := base
+	if not nav.clear_at(base):
+		var c := nav.nearest_cell(base, 96.0)
+		if c.x == -99999:
+			return false
+		anchor = Vector2(c) * PlayerNav.CELL
+	return nav.los(anchor, p)
+
+
+## The place `id` stands at `spot` (claims it; a person holds one place at a time).
+func stand_point(id: String, spot: String) -> Vector2:
+	var base: Vector2 = spots.get(spot, Vector2.ZERO)
+	for pre in STAND_EXACT:
+		if spot.begins_with(pre):
+			release_stand(id)
+			return base
+	var here: Dictionary = _stand.get(spot, {})
+	if here.has(id):
+		return base + (here[id] as Vector2)
+	release_stand(id)
+	var used: Array = here.values()
+	for off: Vector2 in _stand_offsets():
+		if used.has(off) or (off != Vector2.ZERO and not _stand_ok(base, base + off)):
+			continue
+		here[id] = off
+		_stand[spot] = here
+		return base + off
+	return base
+
+
+## Gives up the place `id` holds (they left for another spot, went home or out of the village).
+func release_stand(id: String) -> void:
+	for s in _stand.keys():
+		var here: Dictionary = _stand[s]
+		if here.erase(id) and here.is_empty():
+			_stand.erase(s)
 
 
 func _home_spot(id: String) -> String:
@@ -1943,6 +2013,7 @@ func _on_departed(id: String, exit_id: String) -> void:
 	if not npcs.has(id):
 		return
 	var n: NPCActor = npcs[id]
+	release_stand(id)   # LW #39: their standing place in the village is free again
 	if not n.visible:
 		n.position = spots.get("inn_door_out", n.position) if Hire.get_h(id).is_empty() else spots.get("smithy_door_out", n.position)
 		n.visible = true

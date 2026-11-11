@@ -27,7 +27,9 @@ static func is_opportunity(a: Dictionary) -> bool:
 	var id := str(a.get("id", ""))
 	if Shop.refuses(id) or not Shop.customer(id).is_empty():
 		return false
-	return not Shop.open_orders().any(func(o): return str(o["npc"]) == id)
+	if Shop.open_orders().any(func(o): return str(o["npc"]) == id):
+		return false
+	return not Adv.commission_ask(a).has("why")   # LW #56: they would really commission it if asked
 
 
 ## Adventurers in town with a commission opportunity, by name.
