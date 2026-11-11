@@ -133,6 +133,12 @@ static func cancel() -> void:
 	var j := job()
 	if j.is_empty():
 		return
+	if j.has("order"):
+		# C1: his stage of a work order — the materials belong to the order and stay with it; the stage waits again
+		WorkOrders.smith_abandon(j)
+		Events.crafting_changed.emit()
+		Events.toast.emit("You set the work down — the order keeps its materials and the stage waits for you.", "info")
+		return
 	var r := DB.recipe(j["recipe"])
 	for id in r["inputs"]:
 		Game.add_item(Items.make(id, {"qty": int(r["inputs"][id])}), false)
@@ -333,6 +339,10 @@ static func record_step(station_id: String, qualities: Array) -> void:
 	Game.grant_player_xp(skill_for_station(station_id), 3 + qualities.size() * 2)
 	Steward.end_marked(sw)
 	Vitality.on_craft_step(qualities.size())
+	if j.has("order"):
+		WorkOrders.smith_op_done(j, rec)   # C1: his stage of a work order — the operation goes into the order
+		Events.crafting_changed.emit()
+		return
 	if int(j["step"]) >= operations(j["recipe"]).size():
 		j["awaiting_dice"] = true
 	Events.crafting_changed.emit()
@@ -600,9 +610,13 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 ## Fame and events. `maker` empty = the smith (his active job is closed, he gains the experience and any knowledge);
 ## otherwise an apprentice: {id, name, mark, level, supervised, rank} — the item carries their name and mark, made at
 ## the Ironhand forge; experience is the caller's business (Apprentices). `base` = quality before the skill bonus.
+##   Living Workshop C1: `maker` {"smith": true, "xp_skills", "steward"} = a work order whose forging stage the smith
+##   worked (his mark; experience only in the crafts he worked; his own craft job is left alone); `maker.uid` = the uid
+##   the order reserved when it was created (the piece keeps it).
 static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "digital", maker := {}, base := -1.0) -> Dictionary:
-	var player := maker.is_empty()
-	var marked := player and Steward.marked(job())   # S2: a piece begun under the steward (no experience, no knowledge)
+	var order_smith := bool(maker.get("smith", false))
+	var player := maker.is_empty() or order_smith
+	var marked := (player and Steward.marked(job())) if not order_smith else bool(maker.get("steward", false))   # S2: a piece begun under the steward (no experience, no knowledge)
 	var r := DB.recipe(rid)
 	var spec: Dictionary = r.get("dice", {})
 	var totals := {}
@@ -641,6 +655,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	var lvl := Game.player_level(skill_id) if player else int(maker.get("level", 0))
 	var mat := material(rid)
 	var it := Items.make(out_def, {"quality": q, "qty": int(r.get("qty", 1)), "crafted_by": "Brannoc Ironhand" if player else str(maker.get("name", ""))})
+	if int(maker.get("uid", 0)) > 0:
+		it["uid"] = int(maker["uid"])   # C1: one identity from the order's creation to the finished piece
 	var explain := {}
 	it["stats"] = compute_stats(d, q, totals, spec, mat, lvl, explain)
 	var breakdown := []
@@ -692,6 +708,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	if player:
 		Steward.begin_marked(marked)
 		for skill in r.get("xp", {}):
+			if order_smith and not (maker.get("xp_skills", []) as Array).has(str(skill)):
+				continue   # C1: a specialist's stage teaches the smith nothing of their craft
 			var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
 			# an expert smith may still be a novice miner: damp only a skill he is also expert in (Mining XP hotfix)
 			if expert and Game.player_level(str(skill)) - difficulty(rid) >= int(sk.get("xp_expert_gap", 5)):
@@ -714,6 +732,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	}
 	if not yield_rec.is_empty():
 		it["craft"]["yield"] = yield_rec   # S2: what made the batch (shown on the result screen)
+	if order_smith:
+		it["craft"]["order"] = true
 	if not player:
 		it["craft"]["maker"] = str(maker.get("id", ""))
 		it["craft"]["maker_name"] = str(maker.get("name", ""))
@@ -721,10 +741,12 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		it["craft"]["supervised"] = bool(maker.get("supervised", false))
 	it["owner"] = "smith"
 	# the maker's mark, origin and the "forged" event — the start of the piece's story
-	Provenance.forged(it, maker)
+	Provenance.forged(it, {} if player else maker)
 	History.log_crafted(it)   # workstation logs (Interface)
-	if player:
+	if player and not order_smith:
 		Game.state["craft"] = {}
+		Game.state["stats"]["crafted"] += 1
+	elif order_smith:
 		Game.state["stats"]["crafted"] += 1
 	else:
 		Game.state["stats"]["apprentice_crafted"] = int(Game.state["stats"].get("apprentice_crafted", 0)) + 1

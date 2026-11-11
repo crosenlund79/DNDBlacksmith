@@ -137,6 +137,38 @@ static func _forged_by(it: Dictionary, by: Dictionary) -> void:
 		{"items": [it], "actors": [aid], "place": "brindlewick", "importance": 2 if rich else 0, "data": {"apprentice": aid}})
 
 
+## Living Workshop C1 (D4): the specialists who worked stages of this piece, recorded beside its maker — never
+## replacing him — as prov.contrib[] {who, name, profession, stage, title, work, stations, at, quality, day}, with
+## one Lore event naming them.
+static func add_contributions(it: Dictionary, entries: Array, maker_name := "") -> void:
+	if not applies(it) or entries.is_empty():
+		return
+	var p := st(it)
+	var c: Array = p.get("contrib", [])
+	for e in entries:
+		c.append((e as Dictionary).duplicate(true))
+	p["contrib"] = c
+	var parts := PackedStringArray()
+	var actors := []
+	for e2 in entries:
+		parts.append("%s (%s) — %s, %d%%" % [str(e2.get("name", "")), str(e2.get("profession", "")), str(e2.get("work", e2.get("title", ""))).to_lower(),
+			int(round(float(e2.get("quality", 0.0))))])
+		var w := str(e2.get("who", ""))
+		if w != "" and w != SMITH_ID:
+			actors.append(w)
+	Lore.record("contributed", "At the Ironhand forge, %s worked %s stage%s of %s%s: %s." % ["specialists" if entries.size() > 1 else "a specialist",
+		"their" if entries.size() > 1 else "a", "s" if entries.size() > 1 else "", Items.display_name(it),
+		(" (made by %s)" % maker_name) if maker_name != "" else "", "; ".join(parts)],
+		{"items": [it], "actors": actors, "place": "brindlewick", "importance": 1, "data": {"contrib": entries.size()}})
+
+
+## The contributors recorded on a piece (prov.contrib), [] for most pieces.
+static func contributors(it: Dictionary) -> Array:
+	if not applies(it):
+		return []
+	return st(it).get("contrib", [])
+
+
 ## Made at the Ironhand forge: the smith's own work OR an apprentice's work at his forge. Used where the world asks
 ## "is it ours" for fame (Epic, Hall of Fame, names, reunions). is_mine still means the smith made it himself.
 static func is_workshop(it: Dictionary) -> bool:
