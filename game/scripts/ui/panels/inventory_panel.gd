@@ -180,18 +180,38 @@ func _detail() -> void:
 	if Items.is_equipment(it):
 		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])), 0))   # stays selected: shown as worn
 		var sale: bool = it.get("for_sale", false)
-		detail.add_child(UIKit.button("Remove from display" if sale else "Display for sale (%d g)" % Shop.price_of(it), func():
-			Shop.set_for_sale(int(it["uid"]), not sale), 0))
-		if sale:
-			var ph := UIKit.hbox()
-			ph.add_child(UIKit.label("Price:", 20))
-			var sb := SpinBox.new()
-			sb.min_value = 1
-			sb.max_value = 99999
-			sb.value = Shop.price_of(it)
-			sb.value_changed.connect(func(v): Shop.set_price(int(it["uid"]), int(v)))
-			ph.add_child(sb)
-			detail.add_child(ph)
+		var disp := UIKit.button("Remove from display" if sale else "Display for sale (%d g)" % Shop.price_of(it), func():
+			Shop.set_for_sale(int(it["uid"]), not sale), 0)
+		detail.add_child(disp)
+		# LW #48: the asking price is the smith's to set — shown for every piece (before it goes on display too), with
+		# the usual price beside it and a way back to it (the manual price itself is unchanged: Shop.set_price)
+		var ph := UIKit.hbox(8)
+		ph.name = "PriceRow"
+		var pl := UIKit.label("Your price:", 20, "body_bold")
+		pl.tooltip_text = "You set the asking price. Buyers pay it if they think it fair; the usual price follows the piece's value."
+		ph.add_child(pl)
+		var sb := SpinBox.new()
+		sb.name = "PriceBox"
+		sb.min_value = 1
+		sb.max_value = 99999
+		sb.suffix = "g"
+		sb.value = Shop.price_of(it)
+		sb.tooltip_text = pl.tooltip_text
+		var puid := int(it["uid"])
+		sb.value_changed.connect(func(v):
+			Shop.set_price(puid, int(v))
+			if not sale:
+				disp.text = "Display for sale (%d g)" % int(v))
+		ph.add_child(sb)
+		var usual := Shop.list_price(it)
+		ph.add_child(UIKit.label("usual %d g" % usual, 18, "body_italic"))
+		if it.has("price") and int(it["price"]) != usual:
+			var rb := UIKit.button("Usual price", func():
+				Shop.set_price(puid, usual)
+				Events.inventory_changed.emit(), 0)
+			rb.tooltip_text = "Back to the usual price for this piece (%d g)." % usual
+			ph.add_child(rb)
+		detail.add_child(ph)
 	if it["def"] == "potion_healing":
 		detail.add_child(UIKit.label("Healing draughts make thoughtful gifts.", 18, "body_italic"))
 

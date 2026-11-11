@@ -448,6 +448,65 @@ func test_found_gear_follows_class_use() -> void:
 	_scan_clean("found gear")
 
 
+# ------------------------------------------------------------------ #48 manual prices, #49 the ??? beyond Alloy Production
+func test_manual_price_is_discoverable() -> void:
+	fresh_game()
+	var sw := Items.make("sword_iron", {"quality": 85.0})
+	Game.add_item(sw, false)
+	var p := _mount(InventoryPanel.new()) as InventoryPanel
+	p._select(sw)
+	var box := _live(p, "PriceBox") as SpinBox
+	check(box != null, "the price is offered before the piece goes on display")
+	if box != null:
+		eq(int(box.value), Shop.list_price(sw), "it starts at the usual price")
+		box.value = 333
+		eq(Shop.price_of(sw), 333, "the smith's own price is kept (Shop.set_price)")
+	var shown := _live_button(p, "Display for sale (333 g)")
+	check(shown != null, "the display button shows the smith's price")
+	if shown != null:
+		shown.pressed.emit()
+	check(bool(sw.get("for_sale", false)) and Shop.price_of(sw) == 333, "on display at the smith's price")
+	check(save_load("lwrel_price") and Shop.price_of(Game.find_uid(int(sw["uid"]))) == 333, "the price survives save/load")
+	_unmount(p)
+
+
+func test_starsteel_secret_kept() -> void:
+	fresh_game()
+	check(not SkillTree.is_unlocked("s_alloy") and SkillTree.node_state("s_starsteel") == "hidden", "a new smith does not know the secret")
+	var tp := SkillTreePanel.new()
+	_mount(tp)
+	check(not tp.canvas.visible_node(SkillTree.node("s_starsteel")), "not even drawn before Alloy Production")
+	SkillTree.unlock_node_force("s_heat")
+	SkillTree.unlock_node_force("s_alloy")
+	tp.canvas.states.clear()
+	check(tp.canvas.visible_node(SkillTree.node("s_starsteel")), "drawn as ??? once Alloy Production is known")
+	eq(SkillTree.node_state("s_starsteel"), "hidden", "still a secret")
+	tp._show("s_starsteel", true)
+	var txt := ""
+	for c in tp.side.get_children():
+		if c.is_queued_for_deletion():
+			continue
+		if c is Label:
+			txt += (c as Label).text + " "
+		elif c is RichTextLabel:
+			txt += (c as RichTextLabel).get_parsed_text() + " "
+	check(txt.contains("???") and not txt.contains("Starsteel"), "the side page keeps its mystery (%s)" % txt.strip_edges().left(80))
+	check(not SkillTree.recipe_visible("starsteel_blade") and not SkillTree.unlock_summary("s_alloy").contains("Starsteel"), "no list names the recipe")
+	_unmount(tp)
+	# the discovery path: a weathered tablet studied can hold the notes; reading them teaches the secret
+	var found := false
+	for i in 30:
+		var tab := Items.make("relic_unknown_tablet")
+		Game.add_item(tab, false)
+		var res := Regions.identify(int(tab["uid"]), 90.0)
+		if str(res.get("def", "")) == "recipe_scroll":
+			Regions.read_recipe(int(res["uid"]))
+			found = true
+			break
+	check(found, "a studied tablet yields the starsteel notes (60 % a tablet)")
+	check(Game.has_flag("recipe_starsteel") and SkillTree.node_state("s_starsteel") != "hidden", "reading them names the node — the discovery path works")
+
+
 # ------------------------------------------------------------------ #56 asking an adventurer what they need forged
 func _in_town(cls := "") -> Dictionary:
 	for a in Adv.all().values():
