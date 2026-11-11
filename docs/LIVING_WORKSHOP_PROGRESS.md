@@ -58,6 +58,13 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 - [x] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on a9a08ca (WIP → `claude/lw-wip-knowledge|production|family`);
   all workers were paused by the 5-hour usage limit at ~12:5x UTC and resumed at 13:22 UTC from their own transcripts; PRODUCTION's schema step is renumbered to 7 at merge (each worker appends after 5 in its branch).
 - [x] Merge wave 2 (a64e144).
+- [x] Lead full run on the integrated head c01caba (code unchanged since): compile 258/0, suite 399/399, unit 390/390.
+- [x] Canonical v1.4 (501f038; DOCX + MD 6,925 words identical; CLAUDE.md → v1.4). Registers (830dc17): OBS-37 … 61,
+  decision register +52 / 55 updated, roadmap B1/B2/C1 delivered on this branch. Evidence cells completed at the end.
+- [x] RELEASE_VERSION 0.16 (6ccae6b); pre-acceptance Windows packaging run #16
+  https://github.com/crosenlund79/DNDBlacksmith/actions/runs/43046977142 (final artifact rebuilt after acceptance).
+- [ ] All 59 rendered phases on the integrated head (running: `$S/allLW.sh`, log `$S/lw/accept_run.sh` output).
+- [ ] ACCEPTANCE worker (e2e `t_lw_acceptance`, 30/365-day soaks, conservation, zero XP, old saves) → merge.
 - [ ] Consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
   idempotence, 30/365-day soaks, conservation, zero steward XP; real saves unchanged.
 - [ ] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap).
