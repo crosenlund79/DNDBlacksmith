@@ -1124,6 +1124,10 @@ func phase_iter2() -> void:
 	# --- a real craft that runs through specialised checks (bellows, mortar, cauldron, infusion)
 	var steel := await craft_ui("smelt_steel", 0.2, "auto", {}, "steel_ingot")
 	expect(not steel.is_empty() and steel.get("craft", {}).get("ops", []).size() == 3, "crafting: steel ingot made through the bellows minigame (%s)" % str(steel.get("craft", {}).get("ops", []).map(func(x): return int(x["q"]))))
+	# the hirelings' working hours may brew a Healing Draught from stored moonwort (Hire: 50 % per alchemy hour with two in
+	# the stores) — real play, not a defect; the demonstration needs its own two (S2: the random sequence shifted)
+	if Game.count("herb_moonwort") < 2:
+		Game.add_item(Items.make("herb_moonwort", {"qty": 2 - Game.count("herb_moonwort")}), false)
 	var draught := await craft_ui("healing_draught", 0.2, "auto", {}, "draught")
 	expect(not draught.is_empty(), "crafting: healing draught through ring and multi-hit checks (q %.0f%%)" % float(draught.get("quality", 0)))
 	# --- save for the reload phase
