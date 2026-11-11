@@ -196,7 +196,7 @@ func _fill() -> void:
 		if tab in ["materials", "recipes", "stations"]:
 			list.add_child(UIKit.label("Click a name for its page: where to get it, how to make it, and what to do next.", 19, "body_italic"))
 	if es.is_empty():
-		list.add_child(UIKit.label("Nothing found. Try another word — undiscovered recipes and secrets are not listed.", 22, "body_italic"))
+		list.add_child(UIKit.label("Nothing found. Try another word — undiscovered Designs and secrets are not listed.", 22, "body_italic"))
 		return
 	var last_tab := ""
 	for e in es:
@@ -396,5 +396,5 @@ func _station_page(sid: String) -> void:
 	for r in Crafting.recipes_for_station(sid):
 		if Reference.recipe_visible(str(r["id"])):
 			rl.append("%s %s" % [GuideUI.glyph(str(Guide.recipe_status(str(r["id"]))["state"])), GuideUI.recipe_link(str(r["id"]))])
-	list.add_child(_heading("Recipes you know that use it (%d)" % rl.size()))
-	list.add_child(GuideUI.rich_links("   ".join(rl) if not rl.is_empty() else "[i]None yet — the skill tree teaches new recipes.[/i]", 19, _on_meta))
+	list.add_child(_heading("Designs the workshop knows that use it (%d)" % rl.size()))
+	list.add_child(GuideUI.rich_links("   ".join(rl) if not rl.is_empty() else "[i]None yet — the Skill Tree teaches the workshop new Designs.[/i]", 19, _on_meta))

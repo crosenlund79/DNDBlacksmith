@@ -934,14 +934,14 @@
  },
  {
   "id": "recipe_scroll",
-  "name": "Forgotten Recipe",
+  "name": "Forgotten Design",
   "type": "relic",
   "slot": null,
   "value": 80,
   "stats": {},
   "icon": "recipe_scroll",
   "stack": false,
-  "desc": "A smith's working notes from another age. Read it to learn the recipe.",
+  "desc": "A smith's working notes from another age. Read it to learn the Design.",
   "tags": [
    "recipe"
   ]
@@ -1027,7 +1027,7 @@
   },
   "icon": "sword_starsteel",
   "stack": false,
-  "desc": "Forged to a recipe older than the village.",
+  "desc": "Forged to a Design older than the village.",
   "tags": []
  },
  {

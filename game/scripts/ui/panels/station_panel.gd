@@ -8,7 +8,7 @@ extends UIWindow
 ## Recipe categories shown as chips (a recipe can belong to several: a leather boot is armour and leather).
 const CATS := [["all", "All"], ["weapons", "Weapons"], ["armour", "Armour"], ["jewellery", "Jewellery"], ["materials", "Materials"],
 	["alchemy", "Alchemy"], ["runes", "Runes"], ["leather", "Leather"], ["arcane", "Arcane"]]
-const AVAIL := [["all", "All recipes"], ["craftable", "Craftable now"], ["missing", "Known — missing materials"], ["locked", "Locked"]]
+const AVAIL := [["all", "All Designs"], ["craftable", "Craftable now"], ["missing", "Known — missing materials"], ["locked", "Locked"]]
 
 var station_id := ""
 ## Remembered between openings of any station panel.
@@ -125,7 +125,7 @@ func _filter_bar() -> Control:
 	var v := UIKit.vbox(6)
 	var top := UIKit.hbox(10)
 	var le := LineEdit.new()
-	le.placeholder_text = "Search recipes by name or type…"
+	le.placeholder_text = "Search Designs by name or type…"
 	le.text = query
 	le.custom_minimum_size = Vector2(380, UIKit.BUTTON_H)
 	le.add_theme_font_override("font", Assets.font("body"))
@@ -146,7 +146,7 @@ func _filter_bar() -> Control:
 	ob.name = "RecipeAvailability"
 	top.add_child(ob)
 	var cb := CheckBox.new()
-	cb.text = "All workshop recipes"
+	cb.text = "All workshop Designs"
 	cb.button_pressed = everywhere
 	cb.add_theme_font_override("font", Assets.font("body"))
 	cb.add_theme_font_size_override("font_size", 18)
@@ -249,9 +249,9 @@ func _fill_list() -> void:
 	var rank := {"craftable": 0, "missing": 1, "locked": 2}
 	shown.sort_custom(func(a, b): return int(rank[recipe_status(str(a["id"]))]) < int(rank[recipe_status(str(b["id"]))]))
 	var scope_txt := "in the whole workshop" if everywhere else "using this station"
-	list_box.add_child(UIKit.label("Recipes %s — %d shown%s" % [scope_txt, shown.size(), (" for “%s”" % query) if query.strip_edges() != "" else ""], 24, "heading"))
+	list_box.add_child(UIKit.label("Designs %s — %d shown%s" % [scope_txt, shown.size(), (" for “%s”" % query) if query.strip_edges() != "" else ""], 24, "heading"))
 	if shown.is_empty():
-		list_box.add_child(UIKit.label("No recipe matches. Clear the search or choose another filter — or learn more in the skill tree.", 20, "body_italic"))
+		list_box.add_child(UIKit.label("No Design matches. Clear the search or choose another filter — or learn more in the Skill Tree.", 20, "body_italic"))
 	for rec in shown:
 		list_box.add_child(_recipe_row(rec))
 

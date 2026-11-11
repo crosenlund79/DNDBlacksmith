@@ -271,7 +271,7 @@ recipes = [
      op("anvil", "Fold the star-steel", 3, 1.5), op("quench_trough", "Quench in still water", 1, 1.1),
      op("grinding_wheel", "Grind the pale edge", 1)],
     {"ingot_steel": 2, "starmetal_fragment": 1}, "sword_starsteel", 1, DW, {"smithing": 70}, requires={"smithing": 4},
-    desc="From a forgotten recipe found among the barrow-relics.", flag="recipe_starsteel"),
+    desc="From a forgotten Design found among the barrow-relics.", flag="recipe_starsteel"),
  rc("charge_adamantine", "Charge Adamantine", "arcane", "material", "ore", 5,
     [op("arcane_crucible", "Melt adamantine in warded fire", 2), op("leyline_conductor", "Draw the leyline", 1),
      op("aetheric_stabilizer", "Stabilise the bound ward", 1, 1.2)],

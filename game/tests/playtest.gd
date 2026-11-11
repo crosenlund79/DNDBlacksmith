@@ -4044,6 +4044,15 @@ func phase_lw_reliability() -> void:
 	await ph.run(self)
 
 
+# ======================================================================= The Living Workshop (KNOWLEDGE worker)
+## B2: the Skill Tree as your own path and the workshop's knowledge, the ??? kept, a specialist bringing in what the
+## smith could not, the Workshop knowledge catalogue, Designs at a station, Help (tests/playtest_lw_knowledge.gd).
+## Shots lwk_<after|before>_* (before = a build without WorkshopKnowledge).
+func phase_lw_knowledge() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_knowledge.gd").new()
+	await ph.run(self)
+
+
 # ======================================================================= The Living Workshop (FAMILY worker)
 ## The spouse at the shop counter (asked, behind the counter, the discount cap, a sale within it), the smith's pet at
 ## his heel, the steward's night pace (tests/playtest_lw_family.gd; LWFAM_TAG=before|after). Shots lwfam_<tag>_*.

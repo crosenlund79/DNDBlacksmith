@@ -163,7 +163,7 @@ static func checklist(rid: String, rune_def := "", coat_def := "") -> Array:
 	if ni != "":
 		var n := SkillTree.node(ni)
 		out.append({"group": "Knowledge", "ok": SkillTree.is_unlocked(ni), "text": "Skill tree: %s (%s)" % [n.get("name", ni), SkillTree.branch(str(n.get("branch", ""))).get("name", "")]})
-	out.append({"group": "Knowledge", "ok": SkillTree.recipe_known(rid), "text": "Recipe known: " + str(r.get("name", rid))})
+	out.append({"group": "Knowledge", "ok": SkillTree.recipe_known(rid), "text": "Design known: " + str(r.get("name", rid))})
 	var seen := {}
 	for s in r.get("steps", []):
 		if seen.has(s):
@@ -303,7 +303,7 @@ func _build_mid() -> void:
 	if recipe_id == "" or not rs.any(func(r): return r["id"] == recipe_id):
 		var known := rs.filter(func(r): return SkillTree.recipe_known(str(r["id"])))
 		recipe_id = str((known[0] if not known.is_empty() else rs[0])["id"])
-	mid.add_child(UIKit.label("2. Material & recipe", 24, "heading", UIKit.RUBRIC))
+	mid.add_child(UIKit.label("2. Material & Design", 24, "heading", UIKit.RUBRIC))
 	for r in rs:
 		var rid := str(r["id"])
 		var row := UIKit.hbox(10)
