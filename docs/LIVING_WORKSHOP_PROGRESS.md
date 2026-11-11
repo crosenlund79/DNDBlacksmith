@@ -44,7 +44,7 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 | Worker | Wave | Scope | Status | Branch / commits |
 |---|---|---|---|---|
 | FOUNDATION | 1 | B1 capability/profession model, per-actor checks, migration 5 | **merged** 61bf1f2 (`Workers` API: `game/scripts/systems/workers.gd`; schema 5; smith's other crafts capped at BASIC_LEVEL 5, earned levels kept); worker: full 238/343/390 green, `lw_foundation` 0 fail | `claude/lw-foundation` 07b576b |
-| RELIABILITY | 1 | #57, #59–61, #53, #58, #39, #45, #56; verify #41, #48, #49 | spawned (229a1af) | WIP `claude/lw-wip-reliability` |
+| RELIABILITY | 1 | #57, #59–61, #53, #58, #39, #45, #56; verify #41, #48, #49 | **merged** 5fea6d3 (#59–60 root cause: skill-tree panel left old content in layout during rebuilds → message-queue overflow → SIGSEGV; fixed + seeded fuzz test); worker: full 237/346/385, `lw_reliability` 0 fail | `claude/lw-reliability` 46253af |
 | UI | 1 | #38, #42, #43, #44, #46, #47, #54–55 | **merged** 653631d, `claude/lw-ui` 9c0bfd8 (#43 not reproduced → hardened); worker: full 242 scripts, suite 342/342, unit 385/385, `lw_ui` 0 fail @1920/1600; lead: compile 242/0, t_lw_ui + t_saves green | `worktree-agent-a99d9abbf2c078959` 9c0bfd8 |
 | KNOWLEDGE | 2 | B2 trees, workshop knowledge, Designs naming, migration 6 | brief `docs/lw/lw_w_knowledge.md` (031101b); after FOUNDATION | |
 | PRODUCTION | 2 | #37 station instances + C1 work orders + ledger + Emberwarden chain, migration 7 | brief `docs/lw/lw_w_production.md` (031101b); after FOUNDATION | |
@@ -53,7 +53,8 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 ## Lead pending
 - [x] UI + FOUNDATION merged (61bf1f2): lead full run ALL GREEN — compile 245/0, suite 351/351, unit 390/390; rendered
   `lw_foundation` and `lw_ui` 0 failures on the merged head.
-- [ ] Merge RELIABILITY (still running; #59–60 crash reproduced, root cause in progress).
+- [x] RELIABILITY merged (5fea6d3; `WhoIsWho.is_opportunity` follows the #56 ask rule): lead full run ALL GREEN — compile
+  247/0, suite 363/363, unit 390/390; rendered `lw_reliability` 0 failures. Wave-2 workers told to merge this head.
 - [ ] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on a9a08ca (WIP → `claude/lw-wip-knowledge|production|family`);
   all workers were paused by the 5-hour usage limit at ~12:5x UTC and resumed at 13:22 UTC from their own transcripts; PRODUCTION's schema step is renumbered to 7 at merge (each worker appends after 5 in its branch).
 - [ ] Merge wave 2; consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
