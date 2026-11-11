@@ -132,6 +132,8 @@ func advance_minutes(m: int) -> void:
 				Events.day_started.emit(state["day"])
 			Sim.on_hour(state["day"], hour())
 			Events.hour_passed.emit(state["day"], hour())
+		if state["minute"] % 15 == 0:
+			Family.tick()   # Living Workshop #50–51: the smith's spouse at the shop counter in her hours (before the steward)
 		if state["minute"] % Steward.TICK_MINUTES == 0 and Steward.is_active():
 			Steward.tick()   # Steward Mode: the routine business, only while the player has handed it over
 	Events.time_changed.emit(state["day"], state["minute"])

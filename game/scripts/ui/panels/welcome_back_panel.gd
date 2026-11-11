@@ -326,7 +326,8 @@ func _trade(r: Dictionary) -> Variant:
 	if not rec.is_empty():
 		var rl: Array = []
 		for x in rec:
-			rl.append("%s to %s for %d g (day %d)" % [str(x.get("name", "")), Talk.npc_name(str(x.get("npc", ""))), int(x.get("price", 0)), int(x.get("day", 0))])
+			rl.append("%s to %s for %d g (day %d%s)" % [str(x.get("name", "")), Talk.npc_name(str(x.get("npc", ""))), int(x.get("price", 0)), int(x.get("day", 0)),
+				(", %s at the counter" % str(x["by"])) if x.has("by") else ""])
 		rl.reverse()
 		_text(v, _list(rl, 4), 16)
 		w += 2

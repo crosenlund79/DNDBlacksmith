@@ -41,6 +41,7 @@ func _build() -> void:
 ## commission opportunities in town (adventurers who need something forged and have not been asked; the Commissions
 ## book lists them). Each section has its own word and colour (WhoIsWho).
 func _customers() -> void:
+	_family_row()
 	var people := []
 	for c in Shop.waiting():
 		people.append(c["npc"])
@@ -57,6 +58,63 @@ func _customers() -> void:
 		_customer_row(npc)
 	_offers()
 	_opportunities_line()
+
+
+## Living Workshop #50–51: the smith's spouse at the counter — whether she helps, where she is now, today's sales and
+## the most she may take off a display price (the player's setting; 0 % = she sells at your prices). Only when married.
+func _family_row() -> void:
+	var fs := Family.status()
+	if fs.is_empty():
+		return
+	var first := str(fs["name"]).split(" ")[0]
+	var row := UIKit.hbox(12)
+	row.name = "Section_family"
+	row.add_child(UIKit.portrait("portraits/" + str(fs["spouse"]), 64))
+	var v := UIKit.vbox(4)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.custom_minimum_size.x = 1000   # the row's text wraps inside this width (never one letter per line)
+	var head := UIKit.hbox(10)
+	var hrs: Array = fs["hours"]
+	var hl := UIKit.label(("%s, your wife, minds the counter %02d:00–%02d:00 (the midday hour off)" % [str(fs["name"]), int(hrs[0]), int(hrs[1])])
+		if bool(fs["helps"]) else ("%s, your wife, could help at the counter" % str(fs["name"])), UIKit.FS_SMALL, "body_bold")
+	hl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	head.add_child(hl)
+	if bool(fs["helps"]):
+		var ch := UIKit.chip(("at the counter now" if bool(fs.get("at_counter", true)) else "on her way to the counter") if bool(fs["on_duty"]) else "off duty",
+			UIKit.RUBRIC if bool(fs["on_duty"]) else UIKit.FADED)
+		ch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(ch)
+	v.add_child(head)
+	if bool(fs["helps"]):
+		var t: Dictionary = fs["today"]
+		var line := ("She serves customers browsing your display and villagers wanting goods, at your display price%s; repairs, commissions and disputes wait for you. " % (
+			" or up to %d %% less to close a sale" % int(fs["cap"]) if int(fs["cap"]) > 0 else "")) + (
+			"Today: %d sale%s, %d g%s." % [int(t["n"]), "" if int(t["n"]) == 1 else "s", int(t["gold"]), (" (%d g off)" % int(t["off"])) if int(t["off"]) > 0 else ""] if int(t["n"]) > 0 else "No sales by her today yet.")
+		if not bool(fs["on_duty"]):
+			line += " Now: %s." % str(fs["why"])
+		v.add_child(UIKit.note(line))
+		var cap := UIKit.hbox(6)
+		cap.name = "DiscountCap"
+		var cl := UIKit.label("Most %s may take off a display price:" % first, UIKit.FS_SMALL)
+		cl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		cl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cap.add_child(cl)
+		for pct in fs["steps"]:
+			var pv := int(pct)
+			var b := UIKit.tab_button("%d %%" % pv, func():
+				var why := Family.set_discount_cap(pv)
+				if why != "":
+					Events.toast.emit(why, "bad")
+				_build.call_deferred(), pv == int(fs["cap"]))
+			b.name = "Cap_%d" % pv
+			cap.add_child(b)
+		v.add_child(cap)
+	else:
+		v.add_child(UIKit.note("Ask her when you next talk — she decides for herself. She would sell what you put on display, never more than the discount you allow her, and keep her own life and family."
+			if not bool(fs["asked_today"]) else "You asked her today; she gave you her answer."))
+	row.add_child(v)
+	body.add_child(row)
+	body.add_child(UIKit.divider())
 
 
 ## A summary line under the counter: who in town would order something if asked (the Commissions book has the list).
