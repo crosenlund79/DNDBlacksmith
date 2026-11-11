@@ -181,7 +181,7 @@ func _start_motion(sid: String) -> void:
 	_stop_motion()
 	var s := w.player.sprite
 	var tw := s.create_tween().set_loops()
-	if ApprenticeActors.STRIKE.has(sid):
+	if ApprenticeActors.STRIKE.has(Property.type_of(sid)):   # #37: the motion is the station type's
 		tw.tween_property(s, "offset:y", -38.0, 0.18).set_trans(Tween.TRANS_SINE)
 		tw.tween_property(s, "offset:y", -30.0, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.tween_property(s, "offset:y", -32.0, 0.12)
@@ -213,7 +213,7 @@ func _sounds(delta: float) -> void:
 	if _snd_t > 0.0 or _motion_sid == "" or Game.ui_blockers > 0:
 		return
 	_snd_t = randf_range(2.2, 3.8)
-	var arr: Array = ApprenticeActors.SOUNDS.get(_motion_sid, [])
+	var arr: Array = ApprenticeActors.SOUNDS.get(Property.type_of(_motion_sid), [])
 	if not arr.is_empty():
 		Audio.play(str(arr.pick_random()), -14.0, randf_range(0.94, 1.04))
 

@@ -40,6 +40,15 @@ func _golden_data(name: String) -> Dictionary:
 	return Saves._restore_ints(doc["data"])
 
 
+## The task queue without the fields a later save step adds (Living Workshop C1: stages and the reserved uid).
+func _queue_text(q: Array) -> String:
+	var c := q.duplicate(true)
+	for t in c:
+		for k in ["stages", "stages_for", "uid"]:
+			(t as Dictionary).erase(k)
+	return JSON.stringify(c, "", true)
+
+
 ## Everything about a worker except the profession (what migration 5 must leave untouched).
 func _without_profession(a: Dictionary) -> String:
 	var c := a.duplicate(true)
@@ -368,7 +377,7 @@ func test_migration_5_schema4_save_with_apprentices() -> void:
 	var keep := {}
 	for x in [a, b, c]:
 		keep[str(x["id"])] = _without_profession(x)
-	var tasks := JSON.stringify(Apprentices.tasks(), "", true)
+	var tasks := _queue_text(Apprentices.tasks())
 	check(save_as_version("suite_lwf_v4", 4), "written as a schema-4 save")
 	check(Saves.load_slot("suite_lwf_v4"), "it loads")
 	var rep: Dictionary = Saves.last_load.get("migration", {})
@@ -380,7 +389,7 @@ func test_migration_5_schema4_save_with_apprentices() -> void:
 	eq(str(Apprentices.get_a(str(c["id"])).get("profession", "")), "blacksmith", "a smithing apprentice becomes a blacksmith")
 	for id in keep:
 		eq(_without_profession(Apprentices.get_a(str(id))), keep[id], "%s keeps every level, experience point, trait, wage, memory and log" % Apprentices.get_a(str(id)).get("name", id))
-	eq(JSON.stringify(Apprentices.tasks(), "", true), tasks, "the queue is unchanged")
+	eq(_queue_text(Apprentices.tasks()), tasks, "the queue is unchanged (beyond the work-order fields a later step adds)")
 	eq(Game.player_level("runecraft"), 8, "the smith keeps runecraft 8")
 	# idempotent: saving and loading again changes nothing
 	var snap := JSON.stringify(Apprentices.st(), "", true)

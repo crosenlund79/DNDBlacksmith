@@ -346,7 +346,7 @@ static func workshop_station_reason(sid: String) -> String:
 	var pr := Property.station_reason(sid)
 	if pr != "":
 		return pr
-	var tr := WorkshopKnowledge.station_reason(sid)
+	var tr := WorkshopKnowledge.station_reason(Property.type_of(sid))   # #37: knowledge is per station TYPE, not per instance
 	if tr != "":
 		return tr
 	var u: Dictionary = DB.station(sid).get("unlock", {})

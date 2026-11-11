@@ -100,8 +100,11 @@ func item(id: String) -> Dictionary:
 	return items.get(id, {})
 
 
+## A station's type data. Living Workshop (#37): a station INSTANCE id ("anvil#2", Property.type_of) resolves to its
+## type's data, so every caller that holds an instance reads the right name, size, check and discipline.
 func station(id: String) -> Dictionary:
-	return stations.get(id, {})
+	var i := id.find("#")
+	return stations.get(id if i < 0 else id.substr(0, i), {})
 
 
 func recipe(id: String) -> Dictionary:

@@ -101,7 +101,7 @@ static func station_prompt(sid: String, base_label: String) -> String:
 	var a := Apprentices.get_a(u)
 	if a.is_empty():
 		return base_label
-	var sname := str(DB.station(sid).get("name", sid)).to_lower()
+	var sname := Property.instance_label(sid).to_lower().trim_prefix("the ")
 	var he := "she" if bool(a.get("female", false)) else "he"
 	return "%s — %s is working at the %s; %s will step aside for you" % [base_label, str(a["name"]).split(" ")[0], sname, he]
 
@@ -354,7 +354,7 @@ func _start_motion(id: String, n: NPCActor, sid: String) -> void:
 	_stop_motion(id)
 	var s := n.sprite
 	var tw := s.create_tween().set_loops()
-	if STRIKE.has(sid):
+	if STRIKE.has(Property.type_of(sid)):   # #37: the motion is the station type's, the place the instance
 		# a short strike: up, down hard, a beat
 		tw.tween_property(s, "offset:y", -38.0, 0.18).set_trans(Tween.TRANS_SINE)
 		tw.tween_property(s, "offset:y", -30.0, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -463,11 +463,11 @@ func _sounds(delta: float) -> void:
 		return
 	if _snd_t <= 0.0:
 		_snd_t = randf_range(2.4, 4.2)
-		var arr: Array = SOUNDS.get(best, ["sfx/hammer_1"])
+		var arr: Array = SOUNDS.get(Property.type_of(best), ["sfx/hammer_1"])
 		Audio.play(str(arr.pick_random()), -18.0 - best_d / SOUND_NEAR * 8.0, randf_range(0.92, 1.06))
 	if _spark_t <= 0.0:
 		_spark_t = randf_range(1.6, 2.8)
-		if best in ["anvil", "arcane_anvil", "grinding_wheel"]:
+		if Property.type_of(best) in ["anvil", "arcane_anvil", "grinding_wheel"]:
 			var sp := FX.sparks()
 			sp.amount = 10
 			sp.position = w.station_pos(best) + Vector2(0, -6)

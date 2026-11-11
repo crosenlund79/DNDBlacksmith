@@ -105,8 +105,9 @@ static func missing_inputs(recipe_id: String) -> Dictionary:
 
 static func recipes_for_station(station_id: String) -> Array:
 	var out := []
+	var t := Property.type_of(station_id)   # #37: any instance of a station offers its type's Designs
 	for r in DB.recipes.values():
-		if r["steps"].has(station_id):
+		if r["steps"].has(t):
 			out.append(r)
 	return out
 
@@ -132,6 +133,12 @@ static func cancel() -> void:
 	var j := job()
 	if j.is_empty():
 		return
+	if j.has("order"):
+		# C1: his stage of a work order — the materials belong to the order and stay with it; the stage waits again
+		WorkOrders.smith_abandon(j)
+		Events.crafting_changed.emit()
+		Events.toast.emit("You set the work down — the order keeps its materials and the stage waits for you.", "info")
+		return
 	var r := DB.recipe(j["recipe"])
 	for id in r["inputs"]:
 		Game.add_item(Items.make(id, {"qty": int(r["inputs"][id])}), false)
@@ -150,6 +157,33 @@ static func current_op() -> Dictionary:
 
 static func current_station() -> String:
 	return str(current_op().get("station", ""))
+
+
+## Living Workshop (#37): the station INSTANCE the smith works the current operation at — the one he chose (walked up
+## to or worked at: job["at"]) while it is of the operation's type and set up; otherwise the first set-up instance of
+## that type no apprentice is using (else the first). "" without a current operation.
+static func smith_instance() -> String:
+	var t := current_station()
+	if t == "":
+		return ""
+	var at := str(job().get("at", ""))
+	if at != "" and Property.type_of(at) == t and Property.is_installed(at):
+		return at
+	var inst := Property.instances(t)
+	if Game.state.has("apprentices"):
+		for sid in inst:
+			if Apprentices.instance_user(str(sid), false) == "":
+				return str(sid)
+	return str(inst[0]) if not inst.is_empty() else t
+
+
+## The smith settles at this instance for his current operation (he walked up to it, or works there). An apprentice
+## using it steps aside to another free one of its kind (the smith has priority).
+static func choose_instance(sid: String) -> void:
+	var j := job()
+	if j.is_empty() or Property.type_of(sid) != current_station() or not Property.is_installed(sid):
+		return
+	j["at"] = sid
 
 
 static func skill_for_station(station_id: String) -> String:
@@ -210,7 +244,7 @@ static func check_params(station_id: String, recipe_id := "", checks := -1, opts
 	f["complexity"] = clampf(1.0 + COMPLEXITY_PER_OP * (n_ops - 3), COMPLEXITY_RANGE.x, COMPLEXITY_RANGE.y)
 	# 3. workstation tier and hand tuning
 	f["tier"] = float(STATION_TIER.get(str(DB.station(station_id).get("discipline", "classic")), 1.0))
-	var tune: Dictionary = STATION_TUNING.get(station_id, {})
+	var tune: Dictionary = STATION_TUNING.get(Property.type_of(station_id), {})
 	f["tune_zone"] = float(tune.get("zone", 1.0))
 	f["tune_speed"] = float(tune.get("speed", 1.0))
 	# 4. the smith's condition (his fatigue; other workers' tiredness is not modelled)
@@ -283,24 +317,32 @@ static func grade(q: float) -> String:
 
 static func record_step(station_id: String, qualities: Array) -> void:
 	var j := job()
-	if j.is_empty() or current_station() != station_id:
+	var t := Property.type_of(station_id)   # #37: any instance of the operation's station type
+	if j.is_empty() or current_station() != t:
 		return
 	var o := current_op()
 	var w := float(o.get("weight", 1.0))
 	var sum := 0.0
 	for q in qualities:
-		j["samples"].append({"station": station_id, "q": float(q), "w": w})
+		j["samples"].append({"station": t, "q": float(q), "w": w})
 		sum += float(q)
 	if not j.has("ops"):
 		j["ops"] = []
-	j["ops"].append({"op": str(o.get("op", "")), "station": station_id, "q": sum / maxf(1.0, qualities.size()),
-		"checks": qualities.duplicate(), "w": w})
+	var rec := {"op": str(o.get("op", "")), "station": t, "q": sum / maxf(1.0, qualities.size()), "checks": qualities.duplicate(), "w": w}
+	if station_id != t or Property.instance_count(t) > 1:
+		rec["at"] = station_id   # the instance he worked at
+	j["ops"].append(rec)
 	j["step"] = int(j["step"]) + 1
+	j.erase("at")
 	var sw := Steward.marked(j)   # S2: work begun under the steward teaches the smith nothing (also when he finishes it later)
 	Steward.begin_marked(sw)
 	Game.grant_player_xp(skill_for_station(station_id), 3 + qualities.size() * 2)
 	Steward.end_marked(sw)
 	Vitality.on_craft_step(qualities.size())
+	if j.has("order"):
+		WorkOrders.smith_op_done(j, rec)   # C1: his stage of a work order — the operation goes into the order
+		Events.crafting_changed.emit()
+		return
 	if int(j["step"]) >= operations(j["recipe"]).size():
 		j["awaiting_dice"] = true
 	Events.crafting_changed.emit()
@@ -568,9 +610,13 @@ static func finish(dice: Dictionary, mode := "digital") -> Dictionary:
 ## Fame and events. `maker` empty = the smith (his active job is closed, he gains the experience and any knowledge);
 ## otherwise an apprentice: {id, name, mark, level, supervised, rank} — the item carries their name and mark, made at
 ## the Ironhand forge; experience is the caller's business (Apprentices). `base` = quality before the skill bonus.
+##   Living Workshop C1: `maker` {"smith": true, "xp_skills", "steward"} = a work order whose forging stage the smith
+##   worked (his mark; experience only in the crafts he worked; his own craft job is left alone); `maker.uid` = the uid
+##   the order reserved when it was created (the piece keeps it).
 static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "digital", maker := {}, base := -1.0) -> Dictionary:
-	var player := maker.is_empty()
-	var marked := player and Steward.marked(job())   # S2: a piece begun under the steward (no experience, no knowledge)
+	var order_smith := bool(maker.get("smith", false))
+	var player := maker.is_empty() or order_smith
+	var marked := (player and Steward.marked(job())) if not order_smith else bool(maker.get("steward", false))   # S2: a piece begun under the steward (no experience, no knowledge)
 	var r := DB.recipe(rid)
 	var spec: Dictionary = r.get("dice", {})
 	var totals := {}
@@ -609,6 +655,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	var lvl := Game.player_level(skill_id) if player else int(maker.get("level", 0))
 	var mat := material(rid)
 	var it := Items.make(out_def, {"quality": q, "qty": int(r.get("qty", 1)), "crafted_by": "Brannoc Ironhand" if player else str(maker.get("name", ""))})
+	if int(maker.get("uid", 0)) > 0:
+		it["uid"] = int(maker["uid"])   # C1: one identity from the order's creation to the finished piece
 	var explain := {}
 	it["stats"] = compute_stats(d, q, totals, spec, mat, lvl, explain)
 	var breakdown := []
@@ -660,6 +708,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	if player:
 		Steward.begin_marked(marked)
 		for skill in r.get("xp", {}):
+			if order_smith and not (maker.get("xp_skills", []) as Array).has(str(skill)):
+				continue   # C1: a specialist's stage teaches the smith nothing of their craft
 			var amt := float(r["xp"][skill]) * (0.6 + q / 200.0)
 			# an expert smith may still be a novice miner: damp only a skill he is also expert in (Mining XP hotfix)
 			if expert and Game.player_level(str(skill)) - difficulty(rid) >= int(sk.get("xp_expert_gap", 5)):
@@ -682,6 +732,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	}
 	if not yield_rec.is_empty():
 		it["craft"]["yield"] = yield_rec   # S2: what made the batch (shown on the result screen)
+	if order_smith:
+		it["craft"]["order"] = true
 	if not player:
 		it["craft"]["maker"] = str(maker.get("id", ""))
 		it["craft"]["maker_name"] = str(maker.get("name", ""))
@@ -689,10 +741,12 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		it["craft"]["supervised"] = bool(maker.get("supervised", false))
 	it["owner"] = "smith"
 	# the maker's mark, origin and the "forged" event — the start of the piece's story
-	Provenance.forged(it, maker)
+	Provenance.forged(it, {} if player else maker)
 	History.log_crafted(it)   # workstation logs (Interface)
-	if player:
+	if player and not order_smith:
 		Game.state["craft"] = {}
+		Game.state["stats"]["crafted"] += 1
+	elif order_smith:
 		Game.state["stats"]["crafted"] += 1
 	else:
 		Game.state["stats"]["apprentice_crafted"] = int(Game.state["stats"].get("apprentice_crafted", 0)) + 1

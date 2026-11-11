@@ -117,8 +117,9 @@ static func capacity_report(plan := {}) -> Array:
 		for st in DB.stations.values():
 			if str(st.get("discipline", "")) == disc:
 				total += 1
-				if (plan["stations"] as Dictionary).has(str(st["id"])) and Property.is_installed(str(st["id"])):
-					inst += 1
+				for psid in plan["stations"]:   # #37: every instance set up counts (three anvils are three stations)
+					if Property.type_of(str(psid)) == str(st["id"]) and Property.is_installed(str(psid)):
+						inst += 1
 		var places := 0
 		var rooms := []
 		var used := 0
@@ -184,6 +185,7 @@ static func walk_to_station(sid: String, w: VillageWorld = null, use := true) ->
 	var nav := PlayerNav.of(w)
 	if nav == null:
 		return "Nowhere to walk."
+	sid = instance_for_smith(sid, w)   # #37: a type → the instance he will use (his job's, else the nearest free one)
 	for e in w.interactables:
 		if str(e.get("kind", "")) == "station" and str(e.get("id", "")) == sid:
 			if not use:
@@ -195,6 +197,31 @@ static func walk_to_station(sid: String, w: VillageWorld = null, use := true) ->
 						return ""
 			return "" if nav.walk_to_entity(e, use) else "There is no way to the %s from here." % DB.station(sid).get("name", sid)
 	return "The %s is not set up in the workshop." % DB.station(sid).get("name", sid)
+
+
+## Living Workshop (#37): the instance of a station the smith walks to. An instance id stays itself; a type → the
+## instance his current operation will use (Crafting.smith_instance) when it is that type, else the free instance
+## nearest to him (no apprentice at it), else the first.
+static func instance_for_smith(sid: String, w: VillageWorld = null) -> String:
+	if Game.state.is_empty() or sid.contains(Property.INSTANCE_SEP):
+		return sid
+	if Crafting.active() and Crafting.current_station() == sid:
+		return Crafting.smith_instance()
+	var inst := Property.instances(sid)
+	if inst.size() <= 1:
+		return str(inst[0]) if not inst.is_empty() else sid
+	var best := str(inst[0])
+	var best_d := INF
+	var from := Vector2.INF
+	if w != null and w.player != null:
+		from = w.player.position
+	for x in inst:
+		var busy := Game.state.has("apprentices") and Apprentices.instance_user(str(x), false) != ""
+		var d := (w.station_pos(str(x)).distance_to(from) if from != Vector2.INF else 0.0) + (100000.0 if busy else 0.0)
+		if d < best_d:
+			best_d = d
+			best = str(x)
+	return best
 
 
 ## S2: the optional auto-walk (Settings "gameplay/auto_walk", off unless the player turns it on). Called when a skill
@@ -211,7 +238,7 @@ static func auto_walk_target(done_sid: String, force := false) -> String:
 	if not Crafting.active() or bool(Crafting.job().get("awaiting_dice", false)) or Steward.is_active():
 		return ""
 	var nsid := Crafting.current_station()
-	if nsid == "" or nsid == done_sid or not Property.is_installed(nsid):
+	if nsid == "" or nsid == Property.type_of(done_sid) or not Property.is_installed(nsid):
 		return ""
 	return nsid
 

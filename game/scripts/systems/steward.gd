@@ -815,7 +815,7 @@ static func _prep_recipe_now(def_id: String) -> String:
 		var r := DB.recipe(rid)
 		if str(r.get("output", "")) != def_id or Items.is_equipment({"def": def_id}):
 			continue
-		if Crafting.recipe_locked_reason(rid) != "" or not _stations_ok(rid):
+		if Workers.workshop_reason(rid) != "":   # Living Workshop: the WORKSHOP knows it and has its stations; who makes it is checked at use
 			continue
 		if Crafting.difficulty(rid) < best_d:
 			best = rid
@@ -830,7 +830,8 @@ static func _stations_ok(rid: String) -> bool:
 	return true
 
 
-## The first apprentice (by id) who can make this recipe, or {}.
+## The first apprentice (by id) who can make this recipe — alone, or (Living Workshop C1) as the maker of a work order
+## whose other crafts' stages someone on the staff may do — or {}.
 static func _maker_for(rid: String) -> Dictionary:
 	var ids: Array = []
 	for a in Apprentices.staff():
@@ -838,7 +839,7 @@ static func _maker_for(rid: String) -> Dictionary:
 	ids.sort()
 	for id in ids:
 		var a := Apprentices.get_a(str(id))
-		if Apprentices.can_make(a, rid) == "":
+		if Apprentices.order_reason(a, rid) == "":
 			return a
 	return {}
 
@@ -1009,10 +1010,10 @@ static func _order_plan_apprentices(o: Dictionary, need: Dictionary, why: String
 	for id in ids:
 		var a := Apprentices.get_a(str(id))
 		var rid := str(o.get("recipe", "")) if str(o.get("recipe", "")) != "" else Apprentices.commission_recipe(o, a)
-		if rid == "" or Apprentices.can_make(a, rid) != "":
+		if rid == "" or Apprentices.order_reason(a, rid) != "":   # C1: alone, or as a work order's maker with the staff's specialists
 			continue
-		if Crafting.recipe_locked_reason(rid) != "":
-			why = "You have not learned %s yourself." % str(DB.recipe(rid).get("name", rid))
+		if Workers.knowledge_reason(rid) != "":   # Living Workshop: the workshop's knowledge, not the smith's own hand
+			why = "The workshop does not know %s yet." % str(DB.recipe(rid).get("name", rid))
 			continue
 		if Crafting.difficulty(rid) > int(rules["max_difficulty"]):
 			why = "Harder than your rule allows (difficulty %d > %d)." % [Crafting.difficulty(rid), int(rules["max_difficulty"])]
@@ -1398,7 +1399,7 @@ static func _restock() -> void:
 			continue
 		if Crafting.difficulty(rid) > int(st()["orders"]["order_rules"]["max_difficulty"]):
 			continue
-		if Crafting.recipe_locked_reason(rid) != "" or not _stations_ok(rid):
+		if Workers.workshop_reason(rid) != "":   # Living Workshop: the workshop's knowledge and stations; the maker below
 			continue
 		var a := _maker_for(rid)
 		if a.is_empty():

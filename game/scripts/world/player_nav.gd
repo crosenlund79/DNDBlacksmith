@@ -384,7 +384,7 @@ func pick(p: Vector2) -> Dictionary:
 	for e in world.interactables:
 		var hit := false
 		var d := p.distance_to(e["pos"])
-		if e["kind"] == "station" and DB.stations.has(str(e["id"])):
+		if e["kind"] == "station" and not DB.station(str(e["id"])).is_empty():   # #37: an instance id ("anvil#2") too
 			var sz: Array = DB.station(str(e["id"]))["size"]
 			hit = Rect2((e["pos"] as Vector2) - Vector2(float(sz[0]), float(sz[1])) * 0.5, Vector2(float(sz[0]), float(sz[1]))).has_point(p)
 		else:

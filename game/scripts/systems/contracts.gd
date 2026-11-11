@@ -645,11 +645,12 @@ static func work_station(id: String, worker := "") -> String:
 			continue
 		if s == BENCH and smith_working:
 			continue
-		if first == "":
-			first = s
-		var u := Apprentices.station_user(s)
-		if u == "" or (worker != "" and u == worker):
-			return s
+		for inst in Property.instances(s):   # Living Workshop #37: every instance of the order's stations
+			if first == "":
+				first = str(inst)
+			var u := Apprentices.station_user(str(inst))
+			if u == "" or (worker != "" and u == worker):
+				return str(inst)
 	return first if first != "" else BENCH
 
 

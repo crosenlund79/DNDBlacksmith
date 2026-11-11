@@ -48,7 +48,7 @@ static func _c(section: String, key: String, fallback: Variant) -> Variant:
 
 static func _fresh() -> Dictionary:
 	return {"staff": [], "applicants": [], "alumni": [], "tasks": [], "next_task": 1, "auto": true, "stations": {},
-		"log": [], "notices": [], "applicants_day": -1}
+		"log": [], "notices": [], "applicants_day": -1, "help": [], "help_day": -1, "next_help": 1}
 
 
 ## The state, created on first touch (old saves gain it lazily).
@@ -97,6 +97,11 @@ static func open_tasks() -> Array:
 
 static func _changed() -> void:
 	Events.apprentices_changed.emit()
+
+
+## For WorkOrders (C1): the queue changed.
+static func note_changed() -> void:
+	_changed()
 
 
 static func _rng(key: String) -> RandomNumberGenerator:
@@ -304,7 +309,7 @@ static func dismiss(id: String) -> String:
 		return "No such apprentice."
 	var t := task(int(a.get("task", -1)))
 	if not t.is_empty() and str(t.get("station", "")) != "" and float(t.get("progress", 0.0)) > 0.0:
-		return "%s is in the middle of work at the %s — let them finish the step or cancel the task first." % [a["name"], _station_name(str(t["station"]))]
+		return "%s is in the middle of work at the %s — let them finish the step or cancel the task first." % [a["name"], _place_name(str(t["station"]))]
 	_release(a)
 	for t2 in open_tasks():
 		if str(t2.get("assignee", "")) == id:
@@ -335,9 +340,19 @@ static func _release(a: Dictionary) -> void:
 	if str(t.get("worker", "")) == str(a["id"]):
 		t["worker"] = ""
 		t["station"] = ""
+		t["at"] = ""
 		if not str(t["state"]) in FINISHED:
-			_return_taken(t)
-			_reset_iteration(t)
+			if (t.get("ops_done", []) as Array).is_empty():
+				_return_taken(t)   # nothing worked into the piece yet: the materials go back, the order waits
+				_reset_iteration(t)
+			else:
+				# C1: work is already in the piece — it stays with the order (materials included) for the next hand
+				t["progress"] = 0.0
+				t["need"] = 0.0
+				t["walk"] = WALK_MIN
+				var cs := WorkOrders.current(t)
+				if not cs.is_empty() and str(cs.get("state", "")) == "working":
+					cs["state"] = "ready"
 			t["state"] = "queued"
 
 
@@ -513,6 +528,29 @@ static func can_make(app: Dictionary, recipe_id: String) -> String:
 	return Workers.competence_reason(app, recipe_id)
 
 
+## Living Workshop C1: can this apprentice make the Design as a work order — alone (can_make), or as its maker (the
+## forging stage) with every other stage open to someone on the staff? "" = yes, else why not (the first gap).
+## The steward plans with this (its decisions stay within what the workshop's people can really do).
+static func order_reason(app: Dictionary, recipe_id: String) -> String:
+	var whole := can_make(app, recipe_id)
+	if whole == "":
+		return ""
+	var probe := {"kind": "craft", "recipe": recipe_id, "op": 0, "ops_done": [], "started": false, "worker": ""}
+	if not WorkOrders.staged(probe):
+		return whole
+	var ms := WorkOrders.maker_stage(probe)
+	var why := WorkOrders.stage_reason(app, probe, ms)
+	if why != "":
+		return why
+	for s in WorkOrders.stages(probe):
+		var si := int(s["i"])
+		if si == ms:
+			continue
+		if not staff().any(func(b): return WorkOrders.stage_reason(b, probe, si) == ""):
+			return WorkOrders.staff_gap(probe, si)
+	return ""
+
+
 ## The rank's rules for a whole Design: the disciplines the rank may work in (their own profession's always), training
 ## in another discipline, equipment from the apprentice rank on, the rank's hardest work, legendary-grade work for
 ## masters. "" = within the rank.
@@ -571,6 +609,8 @@ static func eligible(app: Dictionary, t: Dictionary) -> String:
 		"contract":
 			if Contracts.finished_for_apprentices(str(t.get("target", ""))):
 				return "Every piece of that order is made."
+	if WorkOrders.staged(t):
+		return WorkOrders.stage_reason(app, t, WorkOrders.stage_index(t))   # C1: the stage at hand, not the whole Design
 	return can_make(app, str(t.get("recipe", "")))
 
 
@@ -720,7 +760,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 			for x in open_tasks():
 				if str(x["kind"]) == "maintain" and str(x["target"]) == sid:
 					return {"error": "That station is already on the upkeep list."}
-			t["label"] = "Tend the %s" % _station_name(sid)
+			t["label"] = "Tend the %s" % _place_name(sid)
 		"contract":
 			# The Living Realm: hours of work on a major contract at the Project Bench (or its stations); the
 			# hardest recipe of the order decides who is qualified; each repeat is one hour of the order.
@@ -736,9 +776,11 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 			if short.length() > 30:
 				short = short.left(29).strip_edges() + "…"   # short: long labels wrap and vanish in the ledger rows
 			t["label"] = "Contract: %s (%d h)" % [short, int(t["repeat"])]
+	WorkOrders.ensure(t)        # C1: a Design's work order — its stages
+	WorkOrders.reserve_uid(t)   # …and the uid its piece will carry (equipment)
 	if t["manual"]:
 		var a := get_a(str(t["assignee"]))
-		var why2 := eligible(a, t)
+		var why2 := _pin_reason(a, t)
 		if why2 != "":
 			return {"error": why2}
 	s["next_task"] = int(s["next_task"]) + 1
@@ -775,6 +817,7 @@ static func cancel_task(id: int) -> String:
 		a["activity"] = ""
 	t["worker"] = ""
 	t["station"] = ""
+	t["at"] = ""
 	t["state"] = "cancelled"
 	t["blocker"] = ""
 	_changed()
@@ -788,14 +831,26 @@ static func set_priority(id: int, p: int) -> void:
 		_changed()
 
 
+## May this apprentice be pinned to the task? A staged work order pins its MAKER: they must be able to do the forging
+## stage (the other stages go to whoever may do them); any other task: eligible as before.
+static func _pin_reason(a: Dictionary, t: Dictionary) -> String:
+	if a.is_empty():
+		return "No such apprentice."
+	if WorkOrders.staged(t):
+		return WorkOrders.stage_reason(a, t, WorkOrders.maker_stage(t))
+	return eligible(a, t)
+
+
 ## Pins a task to an apprentice ("" = automatic assignment). "" or why not.
 static func assign(task_id: int, app_id: String) -> String:
 	var t := task(task_id)
 	if t.is_empty() or str(t["state"]) in FINISHED:
 		return "No such open task."
+	if str(t.get("worker", "")) == "player":
+		return "You are working this order's stage — finish or abandon it at the station first."
 	if app_id != "":
 		var a := get_a(app_id)
-		var why := eligible(a, t)
+		var why := _pin_reason(a, t)
 		if why != "":
 			return why
 	var w := str(t.get("worker", ""))
@@ -838,11 +893,16 @@ static func _reset_iteration(t: Dictionary) -> void:
 	t["fetch"] = 0.0
 	t["walk"] = 0.0
 	t["carry"] = ""
+	t["at"] = ""
 	t.erase("redo")
+	t.erase("handoff")
+	t.erase("helped_op")
+	WorkOrders.reset(t)
 
 
 static func _station_name(sid: String) -> String:
-	return str(DB.station(sid).get("name", sid.replace("_", " ").capitalize())).to_lower()
+	var n := str(DB.station(sid).get("name", sid.replace("_", " ").capitalize())).to_lower()
+	return n.substr(4) if n.begins_with("the ") else n   # "at the anvil", never "at the the anvil"
 
 
 static func _first_station(rid: String) -> String:
@@ -857,7 +917,7 @@ static func task_ops(t: Dictionary, app := {}) -> Array:
 			var it := repair_item(t)
 			return [{"station": str(_c("time", "repair_station", "grinding_wheel")), "op": "Mend the %s" % str(it.get("name", "piece")).to_lower(), "checks": 1, "weight": 1.0}]
 		"maintain":
-			return [{"station": str(t.get("target", "")), "op": "Clean, oil and true the %s" % _station_name(str(t.get("target", ""))), "checks": 1, "weight": 1.0}]
+			return [{"station": str(t.get("target", "")), "op": "Clean, oil and true the %s" % _place_name(str(t.get("target", ""))), "checks": 1, "weight": 1.0}]
 		"contract":
 			var sid := str(t.get("station", ""))
 			if sid == "":
@@ -893,14 +953,72 @@ static func is_worn(sid: String) -> bool:
 
 
 ## Who is at a station right now: "smith" (his current craft operation is there — he always has priority; an
-## apprentice steps aside and waits), an apprentice id, or "".
+## apprentice steps aside and waits), an apprentice id, or "". Living Workshop (#37): a station INSTANCE id — an
+## apprentice holds the instance they work at or are walking to (t["at"]), the smith the instance of his current
+## operation (Crafting.smith_instance).
 static func station_user(sid: String) -> String:
-	if Crafting.active() and Crafting.current_station() == sid:
+	return instance_user(sid)
+
+
+## station_user for one instance; `include_smith` false leaves the smith out (used to choose his instance).
+static func instance_user(sid: String, include_smith := true) -> String:
+	if include_smith and Crafting.active() and Crafting.current_station() == Property.type_of(sid) and Crafting.smith_instance() == sid:
 		return "smith"
 	for t in tasks():
-		if str(t.get("state", "")) == "working" and str(t.get("station", "")) == sid and str(t.get("worker", "")) != "":
+		if str(t.get("state", "")) == "working" and str(t.get("worker", "")) != "" and (str(t.get("station", "")) == sid or str(t.get("at", "")) == sid):
 			return str(t["worker"])
 	return ""
+
+
+## The instance of station type `stype` a worker should use now: the one they already hold when it is still free for
+## them, else the free instance nearest to where they last worked (same floor first), else "" (every one is in use).
+## `fixed` = exactly that instance (upkeep of one particular station).
+static func pick_instance(stype: String, who: String, prefer := "", fixed := "") -> String:
+	var cands: Array = [fixed] if fixed != "" else Property.instances(stype)
+	var free := []
+	for sid_v in cands:
+		var sid := str(sid_v)
+		if not Property.is_installed(sid):
+			continue
+		var u := instance_user(sid)
+		if u == "" or u == who:
+			free.append(sid)
+	if free.is_empty():
+		return ""
+	if prefer != "" and free.has(prefer):
+		return prefer
+	if free.size() == 1 or prefer == "" or not Property.is_installed(prefer):
+		return str(free[0])
+	var from := Property.pos_of(prefer)
+	var fl := Property.station_floor(prefer)
+	var best := str(free[0])
+	var best_d := INF
+	for sid2 in free:
+		var d := Property.pos_of(str(sid2)).distance_to(from) + (0.0 if Property.station_floor(str(sid2)) == fl else 60.0)
+		if d < best_d:
+			best_d = d
+			best = str(sid2)
+	return best
+
+
+## Who holds every instance of a type ("the smith, Wren, Tobin") — for a "waiting" line.
+static func _holders(stype: String) -> String:
+	var names := PackedStringArray()
+	for sid in Property.instances(stype):
+		var u := instance_user(str(sid))
+		if u == "smith":
+			names.append("the smith")
+		elif u != "":
+			names.append(str(get_a(u).get("name", "someone")).split(" ")[0])
+	return ", ".join(names)
+
+
+## A particular station in words: "anvil" for the only one, "anvil #2" when the workshop has several.
+static func _place_name(sid: String) -> String:
+	if Game.state.is_empty():
+		return _station_name(sid)
+	var n := Property.instance_label(sid).to_lower()
+	return n.substr(4) if n.begins_with("the ") else n
 
 
 ## "not_installed", "locked", "busy", "worn" or "free".
@@ -950,6 +1068,9 @@ static func tick(minutes: int) -> void:
 			var t := task(int(a.get("task", -1)))
 			if not t.is_empty():
 				t["station"] = ""
+				if str(t.get("at", "")) != "":
+					t["last_at"] = str(t["at"])   # #37: the instance is free while they are away; they return to it if they can
+					t["at"] = ""
 			a["activity"] = "On the midday break" if ph == "break" else "Gone home for the day"
 		if changed:
 			_changed()
@@ -1041,9 +1162,9 @@ static func task_problem(t: Dictionary) -> String:
 				return "The piece is no longer here."
 		"maintain":
 			if not Property.is_installed(str(t["target"])):
-				return "The %s is not installed." % _station_name(str(t["target"]))
+				return "The %s is not installed." % _place_name(str(t["target"]))
 			if station_condition(str(t["target"])) >= 99.5 and not bool(t.get("started", false)):
-				return "The %s is in good order." % _station_name(str(t["target"]))
+				return "The %s is in good order." % _place_name(str(t["target"]))
 		"commission":
 			var o := _order(str(t["order_id"]))
 			if not bool(t.get("started", false)) and (o.is_empty() or str(o.get("status", "")) != "open"):
@@ -1081,6 +1202,16 @@ static func _defs_text(m: Dictionary) -> String:
 static func _score(app: Dictionary, t: Dictionary) -> float:
 	var rid := _recipe_of(t, app)
 	var sk := Crafting.recipe_skill(rid) if rid != "" else "smithing"
+	if WorkOrders.staged(t):
+		# C1: the stage's own craft decides; its profession first; the hand who just did the previous stage is nearby
+		var cs := WorkOrders.current(t)
+		sk = str(cs.get("skill", sk))
+		var v2 := float(level(app, sk)) * 10.0 + float(rank_index(app)) * 2.0
+		if Workers.profession(app) == str(cs.get("profession", "")):
+			v2 += 20.0
+		if str(t.get("handoff", {}).get("from", "")) == str(app["id"]):
+			v2 += 8.0
+		return v2
 	var v := float(level(app, sk)) * 10.0 + float(rank_index(app)) * 2.0
 	if _specialty_match(app, category(str(t["kind"]), rid)):
 		v += 15.0
@@ -1110,20 +1241,38 @@ static func _assign() -> void:
 			t["state"] = "blocked"
 			t["blocker"] = prob
 			continue
+		# C1: a staged work order is given stage by stage — a stage the smith claimed waits for him; a stage pinned to an
+		# apprentice goes to them; the hand pinned to the order (its maker) takes the stages they may do, others go to
+		# whoever may (automatic assignment)
+		var stg := WorkOrders.staged(t)
+		var cs := WorkOrders.current(t) if stg else {}
+		var stage_pin := str(cs.get("assignee", ""))
+		if stage_pin == "player":
+			t["blocker"] = WorkOrders._smith_blocker(t)
+			if str(t["state"]) != "working":
+				t["state"] = "queued"
+			continue
+		var pin_id := stage_pin if stage_pin != "" else (str(t["assignee"]) if bool(t.get("manual", false)) else "")
+		if stg and stage_pin == "" and pin_id != "" and not get_a(pin_id).is_empty() and eligible(get_a(pin_id), t) != "":
+			pin_id = ""   # the order's maker cannot do this stage's craft: it goes to whoever can
 		var pick := {}
 		var why_not := ""
-		if bool(t.get("manual", false)):
-			var a := get_a(str(t["assignee"]))
+		if pin_id != "":
+			var a := get_a(pin_id)
 			if a.is_empty():
-				t["manual"] = false
-				t["assignee"] = ""
+				if stage_pin != "":
+					cs["assignee"] = ""
+				else:
+					t["manual"] = false
+					t["assignee"] = ""
+				pin_id = ""
 			elif int(a.get("task", -1)) == -1 and on_shift(a):
 				why_not = eligible(a, t)
 				if why_not == "":
 					pick = a
 			else:
 				why_not = "Waiting for %s." % a["name"]
-		if pick.is_empty() and not bool(t.get("manual", false)):
+		if pick.is_empty() and pin_id == "":
 			if not bool(st()["auto"]):
 				why_not = "Automatic assignment is off — pick an apprentice."
 			else:
@@ -1146,6 +1295,10 @@ static func _assign() -> void:
 						pick = a2
 				if pick.is_empty() and why_not == "":
 					why_not = "Everyone is busy." if not staff().is_empty() else "No apprentices."
+				if pick.is_empty() and stg:
+					var gap := WorkOrders.staff_gap(t, int(cs.get("i", 0)))
+					if gap != "":
+						why_not = gap   # nobody on the staff can do this stage at all: say who is needed
 		if pick.is_empty():
 			t["blocker"] = why_not
 			if str(t["state"]) != "working":
@@ -1156,6 +1309,12 @@ static func _assign() -> void:
 		t["blocker"] = ""
 		if str(t["recipe"]) == "" and str(t["kind"]) == "commission":
 			t["recipe"] = commission_recipe(_order(str(t["order_id"])), pick)
+			WorkOrders.ensure(t)
+			WorkOrders.reserve_uid(t)
+		if stg:
+			cs["state"] = "working"
+			if int(cs.get("started", -1)) < 0:
+				cs["started"] = Game.now()
 		pick["task"] = int(t["id"])
 		if str(t["state"]) != "working":
 			t["state"] = "queued"
@@ -1196,21 +1355,37 @@ static func _work(a: Dictionary, minutes: float) -> bool:
 		if left <= 0.0:
 			return changed
 	var op: Dictionary = ops[mini(int(t["op"]), ops.size() - 1)]
-	var sid := str(op.get("station", ""))
-	# 3. the station: installed, usable by THIS worker (B1: their own station skill), and free (the smith has priority)
-	var st_why := Workers.station_reason(a, sid)
-	if not Property.is_installed(sid) or st_why != "":
+	var stype := Property.type_of(str(op.get("station", "")))
+	# 3. the station: installed, usable by THIS worker (B1: their own station skill), and free (the smith has priority).
+	#    #37: any free instance of the type — the one already held, else the nearest free one; all busy = wait.
+	var st_why := Workers.station_reason(a, stype)
+	if not Property.is_installed(stype) or st_why != "":
 		t["state"] = "blocked"
 		t["station"] = ""
-		t["blocker"] = "The %s is not available — %s" % [_station_name(sid), Property.station_reason(sid) if Property.station_reason(sid) != "" else st_why]
-		a["activity"] = "Waiting: the %s is not available" % _station_name(sid)
+		t["at"] = ""
+		t["blocker"] = "The %s is not available — %s" % [_station_name(stype), Property.station_reason(stype) if Property.station_reason(stype) != "" else st_why]
+		a["activity"] = "Waiting: the %s is not available" % _station_name(stype)
 		return true
-	var user := station_user(sid)
-	if user != "" and user != str(a["id"]):
+	var held := str(t.get("at", ""))
+	var prefer := held if held != "" and Property.type_of(held) == stype else str(t.get("last_at", ""))
+	var sid := pick_instance(stype, str(a["id"]), prefer, str(t["target"]) if str(t["kind"]) == "maintain" else "")
+	if sid == "":
 		t["station"] = ""
-		t["blocker"] = "Waiting for the %s (%s is using it)." % [_station_name(sid), "the smith" if user == "smith" else str(get_a(user).get("name", "someone"))]
-		a["activity"] = "Waiting for the %s" % _station_name(sid)
+		t["at"] = ""
+		var n_inst := Property.instances(stype).size()
+		if n_inst <= 1:
+			var user := instance_user(str(Property.instances(stype)[0]) if n_inst == 1 else stype)
+			t["blocker"] = "Waiting for the %s (%s is using it)." % [_station_name(stype), "the smith" if user == "smith" else str(get_a(user).get("name", "someone"))]
+		else:
+			t["blocker"] = "Waiting for the %s (all %d in use: %s)." % [_station_name(stype), n_inst, _holders(stype)]
+		a["activity"] = "Waiting for the %s" % _station_name(stype)
 		return changed
+	if sid != held:
+		if held != "" and Property.type_of(held) == stype and float(t["walk"]) <= 0.0:
+			t["walk"] = WALK_MIN   # another of its kind: they carry the work over
+		t["at"] = sid
+		t["station"] = ""
+		changed = true
 	if t["blocker"] != "" or str(t["state"]) != "working":
 		changed = true
 	t["state"] = "working"
@@ -1220,18 +1395,32 @@ static func _work(a: Dictionary, minutes: float) -> bool:
 		var w := minf(left, float(t["walk"]))
 		t["walk"] = float(t["walk"]) - w
 		left -= w
-		a["activity"] = "Going to the %s" % _station_name(sid)
+		a["activity"] = "Going to the %s" % _place_name(sid)
 		if left <= 0.0:
 			return changed
 	t["station"] = sid
 	if float(t["need"]) <= 0.0:
-		t["need"] = op_minutes(a, t, op)
+		t["need"] = op_minutes(a, t, op, sid)
+		if WorkOrders.is_order(t):
+			WorkOrders.ask_help(t, a, op)   # D8: genuinely hard work may bring an (optional) request for a hand
 	t["progress"] = float(t["progress"]) + left
-	a["activity"] = "%s at the %s" % [str(op.get("op", "Working")), _station_name(sid)]
+	a["activity"] = "%s at the %s" % [str(op.get("op", "Working")), _place_name(sid)]
 	if float(t["progress"]) >= float(t["need"]):
 		_finish_op(t, a, op)
 		changed = true
 	return changed
+
+
+## For WorkOrders (C1): the smith begins a new piece of an order whose first stage he claimed — the materials are
+## taken now, once (who = "player").
+static func begin_piece(t: Dictionary, _who: String) -> void:
+	_start_iteration(t, {})
+
+
+## For WorkOrders (C1): the last stage was the smith's — the order finishes (`a` = {} for the smith).
+static func complete_order(t: Dictionary, a: Dictionary) -> void:
+	_complete(t, a)
+	_changed()
 
 
 static func _start_iteration(t: Dictionary, a: Dictionary) -> void:
@@ -1257,7 +1446,7 @@ static func _start_iteration(t: Dictionary, a: Dictionary) -> void:
 	t["state"] = "working"
 	t["fetch"] = FETCH_MIN if not str(t["kind"]) in ["maintain", "contract"] else 0.0   # the order's crate stands at the bench
 	t["walk"] = WALK_MIN
-	log_line(str(a["id"]), "%s started: %s." % [a["name"], _task_title(t)])
+	log_line(str(a.get("id", "player")), "%s started: %s." % [str(a.get("name", "The smith")), _task_title(t)])
 
 
 static func _task_title(t: Dictionary) -> String:
@@ -1268,7 +1457,7 @@ static func _task_title(t: Dictionary) -> String:
 
 
 ## Minutes for one operation by this apprentice (data: time, ranks, traits, specialty, station wear).
-static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
+static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary, at := "") -> float:
 	var tm: Dictionary = cfg("time")
 	var base := float(tm.get("op_base", 30.0)) + float(tm.get("per_check", 12.0)) * int(op.get("checks", 1))
 	var kind := str(t.get("kind", ""))
@@ -1286,7 +1475,7 @@ static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
 	f *= _trait_mult(a, "speed")
 	if _specialty_match(a, category(kind, rid)):
 		f *= float(_c("specialty", "speed", 1.15))
-	if kind != "maintain" and is_worn(str(op.get("station", ""))):
+	if kind != "maintain" and is_worn(at if at != "" else str(op.get("station", ""))):
 		f *= float(_c("wear", "slow", 0.8))
 	return maxf(float(tm.get("min_op", 10.0)), base / maxf(0.25, f))
 
@@ -1354,15 +1543,18 @@ static func _ceiling(a: Dictionary, rid: String, kind: String) -> float:
 
 
 static func _finish_op(t: Dictionary, a: Dictionary, op: Dictionary) -> void:
-	var sid := str(op.get("station", ""))
+	var sid := Property.type_of(str(op.get("station", "")))
+	var at := str(t.get("station", ""))   # #37: the instance it was worked at
+	if at == "" or Property.type_of(at) != sid:
+		at = str(op.get("station", ""))
 	var rid := _recipe_of(t, a)
 	var kind := str(t["kind"])
 	var key := "%d|%s|%d|%d" % [int(t["id"]), str(a["id"]), Game.now(), int(t["op"])]
 	var rng := _rng(key)
 	var qc: Dictionary = cfg("quality")
 	var mc: Dictionary = cfg("mistakes")
-	var sup := _supervised(t, sid)
-	var q := expected_op_quality(a, rid, sid, sup, kind) + rng.randfn(0.0, float(qc.get("sd", 8.0)) * _trait_mult(a, "sd"))
+	var sup := _supervised(t, at)
+	var q := expected_op_quality(a, rid, at, sup, kind) + rng.randfn(0.0, float(qc.get("sd", 8.0)) * _trait_mult(a, "sd"))
 	var skill := op_skill(rid, sid)   # B1: the worker's own competence in this station's discipline (checks, mistakes, experience)
 	var diff := Crafting.difficulty(rid) if rid != "" else 1
 	var chance := (float(mc.get("chance", 0.07)) + float(mc.get("per_gap", 0.02)) * maxi(0, diff - level(a, skill))) * _trait_mult(a, "mistake")
@@ -1406,20 +1598,35 @@ static func _finish_op(t: Dictionary, a: Dictionary, op: Dictionary) -> void:
 		t["surprise"] = true
 		var line2 := _pick_line("surprise", key) % [a["name"], str(DB.item(str(DB.recipe(rid).get("output", ""))).get("name", "work")).to_lower() if rid != "" else "work"]
 		log_line(str(a["id"]), line2)
+	if int(t.get("helped_op", -1)) == int(t["op"]):
+		q += WorkOrders.HELP_BONUS   # the smith lent a hand (D8)
+		t.erase("helped_op")
 	q = clampf(q, float(qc.get("floor", 10.0)), float(qc.get("op_cap", 118.0)))
-	(t["ops_done"] as Array).append({"op": str(op.get("op", "")), "station": sid, "q": q, "checks": [q], "w": float(op.get("weight", 1.0)),
-		"by": str(a["id"]), "supervised": sup})
+	var rec := {"op": str(op.get("op", "")), "station": sid, "q": q, "checks": [q], "w": float(op.get("weight", 1.0)),
+		"by": str(a["id"]), "supervised": sup}
+	if at != sid or Property.instance_count(sid) > 1:
+		rec["at"] = at
+	(t["ops_done"] as Array).append(rec)
 	if sup:
 		t["was_supervised"] = true
 	if kind != "maintain":
-		_wear(sid, float(_c("wear", "per_op", 2.5)))
+		_wear(at, float(_c("wear", "per_op", 2.5)))
 	add_xp(a, skill, float(_c("xp", "per_op", 2)))
 	t["op"] = int(t["op"]) + 1
 	t["progress"] = 0.0
 	t["need"] = 0.0
 	t["station"] = ""
+	t["last_at"] = at
+	t["at"] = ""
 	t["walk"] = WALK_MIN
 	t.erase("redo")
+	if WorkOrders.on_op_finished(t, str(a["id"])):
+		# C1: their stage is done — the piece goes on to the next stage's hand
+		t["worker"] = ""
+		t["state"] = "queued"
+		a["task"] = -1
+		a["activity"] = "Handed the piece on"
+		return
 	if int(t["op"]) >= task_ops(t, a).size():
 		_complete(t, a)
 
@@ -1439,15 +1646,65 @@ static func _cheap_input(t: Dictionary) -> String:
 
 
 static func _piece_quality(t: Dictionary, a: Dictionary, rid: String) -> float:
+	var q := _ops_quality(t)
+	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
+	q += float(_c("quality", "skill_bonus", 0.4)) * level(a, skill)
+	return clampf(q, 1.0, _ceiling(a, rid, str(t["kind"])))
+
+
+## The operations' craftsmanship, weighted as the piece is.
+static func _ops_quality(t: Dictionary) -> float:
 	var tot := 0.0
 	var w := 0.0
 	for o in t["ops_done"]:
 		tot += float(o["q"]) * float(o["w"])
 		w += float(o["w"])
-	var q := tot / w if w > 0.0 else 50.0
-	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
-	q += float(_c("quality", "skill_bonus", 0.4)) * level(a, skill)
-	return clampf(q, 1.0, _ceiling(a, rid, str(t["kind"])))
+	return tot / w if w > 0.0 else 50.0
+
+
+## A work order's craftsmanship (C1): every stage's operations as worked, plus the MAKER's skill bonus — the smith's
+## own (Crafting.skill_bonus; under the steward his average, capped work, as StewardSmith), an apprentice's by rank.
+static func _order_quality(t: Dictionary, mk: Dictionary, rid: String) -> float:
+	if str(mk.get("kind", "")) == "player":
+		var b := _ops_quality(t)
+		if bool(mk.get("steward", false)):
+			return clampf(minf(b, StewardSmith.QUALITY_CAP), 1.0, 130.0)
+		return clampf(b + Crafting.skill_bonus(rid), 1.0, 130.0)
+	var app: Dictionary = mk.get("app", {})
+	if not app.is_empty():
+		return _piece_quality(t, app, rid)
+	return clampf(_ops_quality(t) + float(_c("quality", "skill_bonus", 0.4)) * int(mk.get("level", 0)), 1.0, 95.0)
+
+
+## The crafts the smith worked in an order (its experience goes to these, never to a specialist's craft): his
+## stages' professions' skills (a blacksmith's smithing — and mining, the Mining XP rule).
+static func _smith_skills(t: Dictionary) -> Array:
+	var out := []
+	for s2 in WorkOrders.stages(t):
+		if str(s2.get("by", "")) == "player":
+			for sk in Workers.PROFESSION.get(str(s2.get("profession", "")), {}).get("skills", [str(s2.get("skill", ""))]):
+				if not out.has(str(sk)):
+					out.append(str(sk))
+	return out
+
+
+## Each contributor's experience for their stage, in their stage's craft (the smith's through Game.grant_player_xp —
+## the steward's zero-experience rule holds for a stage worked under it).
+static func _contributor_xp(t: Dictionary, contrib: Array, r: Dictionary, q: float) -> void:
+	var xpc: Dictionary = cfg("xp")
+	for e in contrib:
+		var st2: Dictionary = WorkOrders.stages(t)[int(e["stage"])]
+		var sk := str(st2.get("skill", "smithing"))
+		var amt := maxf(float(r.get("xp", {}).get(sk, 8.0)), 8.0) * float(xpc.get("mult", 1.0)) * (0.6 + minf(q, float(e["quality"])) / 200.0)
+		if str(e["who"]) == "smith":
+			var marked := bool(st2.get("steward", false))
+			Steward.begin_marked(marked)
+			Game.grant_player_xp(sk, int(round(amt)))
+			Steward.end_marked(marked)
+			continue
+		var app := get_a(str(e["who"]))
+		if not app.is_empty():
+			add_xp(app, sk, amt)
 
 
 ## Rolls a recipe's dice for an apprentice's piece, weighted by craftsmanship exactly like Crafting.roll_weighted
@@ -1483,10 +1740,15 @@ static func roll_dice(spec: Dictionary, q: float, rng: RandomNumberGenerator) ->
 static func _complete(t: Dictionary, a: Dictionary) -> void:
 	var kind := str(t["kind"])
 	var rid := _recipe_of(t, a)
-	var q := _piece_quality(t, a, rid)
+	# C1: a Design's maker is the worker of its forging stage (WorkOrders.maker_of) — the finishing hand only when it
+	# is the same one; `a` = {} when the smith finished the last stage himself
+	var design := WorkOrders.is_order(t)
+	var mk := WorkOrders.maker_of(t, a) if design else {}
+	var maker_app: Dictionary = mk.get("app", {}) if design else a
+	var q := _order_quality(t, mk, rid) if design else _piece_quality(t, a, rid)
 	t["last_quality"] = q
 	var sup := bool(t.get("was_supervised", false))
-	var rng := _rng("%d|%s|%d|dice" % [int(t["id"]), str(a["id"]), Game.now()])
+	var rng := _rng("%d|%s|%d|dice" % [int(t["id"]), str(mk.get("id", a.get("id", "player"))) if design else str(a["id"]), Game.now()])
 	var cat := category(kind, rid)
 	var xpc: Dictionary = cfg("xp")
 	match kind:
@@ -1515,7 +1777,7 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 				s[sid] = {"condition": 100.0, "uses": 0}
 			s[sid]["condition"] = clampf(maxf(float(s[sid]["condition"]), 60.0 + q * 0.4), 0.0, 100.0)
 			add_xp(a, "smithing", float(xpc.get("maintain", 4)))
-			log_line(str(a["id"]), "%s tended the %s (now %d%%)." % [a["name"], _station_name(sid), int(round(float(s[sid]["condition"])))])
+			log_line(str(a["id"]), "%s tended the %s (now %d%%)." % [a["name"], _place_name(sid), int(round(float(s[sid]["condition"])))])
 		"contract":
 			var cid := str(t["target"])
 			var used := Contracts.apprentice_hour(cid, a, q)
@@ -1526,52 +1788,82 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 				t["repeat"] = int(t["done"]) + 1   # the order is complete: this hand stops here
 		_:
 			var r := DB.recipe(rid)
-			var maker := {"id": str(a["id"]), "name": str(a["name"]), "mark": str(a["mark"]["id"]), "level": level(a, Crafting.recipe_skill(rid)),
-				"supervised": sup, "rank": str(a["rank"]), "rank_name": rank_name(a)}
+			var maker := {}
+			if str(mk.get("kind", "")) == "player":
+				# the smith forged it: his mark, his experience for the crafts he worked (never the specialists' stages)
+				maker = {"smith": true, "steward": bool(mk.get("steward", false)), "xp_skills": _smith_skills(t)}
+			else:
+				maker = {"id": str(mk["id"]), "name": str(mk["name"]), "mark": str(mk["mark"]), "level": int(mk.get("level", 0)),
+					"supervised": sup, "rank": str(mk.get("rank", "")), "rank_name": str(mk.get("rank_name", ""))}
+			if int(t.get("uid", 0)) > 0:
+				maker["uid"] = int(t["uid"])   # C1: the uid reserved when the order was created
 			var dice := roll_dice(r.get("dice", {}), q, rng)
 			t["taken"] = {}   # the materials became the piece
 			var it2 := Crafting.build(rid, t["ops_done"], q, dice, "digital", maker)
 			if it2.is_empty():
 				_fail(t, a, "The work could not be finished.")
 				return
+			var contrib := WorkOrders.record_contributions(it2, t, mk)
 			(t["made"] as Array).append(int(it2["uid"]))
-			if Items.is_equipment(it2):
-				(a["creations"] as Array).append(int(it2["uid"]))
+			t.erase("uid")   # spent: a further piece of the order reserves its own
+			if not maker_app.is_empty() and Items.is_equipment(it2):
+				(maker_app["creations"] as Array).append(int(it2["uid"]))
 			var skill := Crafting.recipe_skill(rid)
-			var gap := level(a, skill) - Crafting.difficulty(rid)
-			var amt := 0.0
-			for sk in r.get("xp", {}):
-				if _skill_ids().has(str(sk)):
-					amt = maxf(amt, float(r["xp"][sk]))
-			amt = maxf(amt, 8.0) * float(xpc.get("mult", 1.0)) * (0.6 + q / 200.0)
-			if gap >= int(xpc.get("routine_gap", 4)):
-				amt *= float(xpc.get("routine_mult", 0.35))
-			elif gap < 0:
-				amt *= float(xpc.get("hard_mult", 1.4))
-			if _specialty_match(a, cat):
-				amt *= float(_c("specialty", "xp", 1.1))
-			add_xp(a, skill, amt)
+			if not maker_app.is_empty():
+				var gap := level(maker_app, skill) - Crafting.difficulty(rid)
+				var amt := 0.0
+				for sk in r.get("xp", {}):
+					if _skill_ids().has(str(sk)) and (contrib.is_empty() or str(sk) == skill):
+						amt = maxf(amt, float(r["xp"][sk]))
+				amt = maxf(amt, 8.0) * float(xpc.get("mult", 1.0)) * (0.6 + q / 200.0)
+				if gap >= int(xpc.get("routine_gap", 4)):
+					amt *= float(xpc.get("routine_mult", 0.35))
+				elif gap < 0:
+					amt *= float(xpc.get("hard_mult", 1.4))
+				if _specialty_match(maker_app, cat):
+					amt *= float(_c("specialty", "xp", 1.1))
+				add_xp(maker_app, skill, amt)
+			_contributor_xp(t, contrib, r, q)
 			var nm := Items.display_name(it2)
-			log_line(str(a["id"]), "%s finished %s (%d%%%s)." % [a["name"], nm, int(round(q)), (", " + str(it2.get("rarity", ""))) if str(it2.get("rarity", "common")) != "common" else ""])
-			if q >= 100.0 or str(it2.get("rarity", "common")) != "common" or bool(t.get("surprise", false)):
-				remember(a, "Made %s on day %d — %d%% craftsmanship%s." % [nm, Game.day(), int(round(q)), (", " + str(it2.get("rarity", ""))) if str(it2.get("rarity", "common")) != "common" else ""], int(it2["uid"]))
+			var mname := "The smith" if str(mk.get("kind", "")) == "player" else str(mk.get("name", a.get("name", "")))
+			log_line(str(mk.get("id", a.get("id", "player"))), "%s finished %s (%d%%%s)%s." % [mname, nm, int(round(q)),
+				(", " + str(it2.get("rarity", ""))) if str(it2.get("rarity", "common")) != "common" else "",
+				(" with " + ", ".join(PackedStringArray(contrib.map(func(e): return "%s (%s)" % [str(e["name"]).split(" ")[0], str(e["profession"])])))) if not contrib.is_empty() else ""])
+			if not maker_app.is_empty() and (q >= 100.0 or str(it2.get("rarity", "common")) != "common" or bool(t.get("surprise", false))):
+				remember(maker_app, "Made %s on day %d — %d%% craftsmanship%s." % [nm, Game.day(), int(round(q)), (", " + str(it2.get("rarity", ""))) if str(it2.get("rarity", "common")) != "common" else ""], int(it2["uid"]))
+			if not contrib.is_empty():
+				Events.toast.emit("%s is finished — %s made it, %s worked %s." % [nm, mname, ", ".join(PackedStringArray(contrib.map(func(e): return str(e["name"]).split(" ")[0]))),
+					"a stage" if contrib.size() == 1 else "their stages"], "good")
 			if kind == "commission":
 				var o := _order(str(t["order_id"]))
 				if not o.is_empty() and str(o.get("status", "")) == "open" and Shop.item_meets(o, it2):
 					it2["for_order"] = str(o["id"])
-					remember(a, "Made %s for %s's commission." % [nm, Talk.npc_name(str(o.get("npc", "")))], int(it2["uid"]))
-					Events.toast.emit("%s finished %s for %s's commission — deliver it at the counter." % [a["name"], nm, Talk.npc_name(str(o.get("npc", "")))], "good")
+					if not maker_app.is_empty():
+						remember(maker_app, "Made %s for %s's commission." % [nm, Talk.npc_name(str(o.get("npc", "")))], int(it2["uid"]))
+					Events.toast.emit("%s finished %s for %s's commission — deliver it at the counter." % [mname, nm, Talk.npc_name(str(o.get("npc", "")))], "good")
 				elif not o.is_empty():
 					t["blocker"] = "The piece did not meet the commission (%s); it went to the stores." % Shop.order_text(o)
-					log_line(str(a["id"]), "%s's %s did not meet %s's commission — it went to the stores." % [a["name"], nm, Talk.npc_name(str(o.get("npc", "")))])
-	if kind != "contract":   # an hour on a major order is not a finished work of their own
-		a["works"] = int(a["works"]) + 1
-		var cc: Dictionary = a["cat_counts"]
+					log_line(str(mk.get("id", a.get("id", "player"))), "%s's %s did not meet %s's commission — it went to the stores." % [mname, nm, Talk.npc_name(str(o.get("npc", "")))])
+	# works and specialties go to the maker; every hand on the piece earns a little loyalty and may rise in rank
+	var credit: Dictionary = maker_app if design else a
+	if kind != "contract" and not credit.is_empty():   # an hour on a major order is not a finished work of their own
+		credit["works"] = int(credit["works"]) + 1
+		var cc: Dictionary = credit["cat_counts"]
 		if cat != "":
 			cc[cat] = int(cc.get(cat, 0)) + 1
-	a["loyalty"] = clampf(float(a["loyalty"]) + float(_c("loyalty", "work_day", 0.2)), 0.0, 100.0)
-	_check_rank(a)
-	_check_specialty(a)
+	var hands := []
+	for x in [credit, a]:
+		if not (x as Dictionary).is_empty() and not hands.has(x):
+			hands.append(x)
+	if design:
+		for s2 in WorkOrders.stages(t):
+			var ha := get_a(str(s2.get("by", "")))
+			if not ha.is_empty() and not hands.has(ha):
+				hands.append(ha)
+	for h in hands:
+		h["loyalty"] = clampf(float(h["loyalty"]) + float(_c("loyalty", "work_day", 0.2)), 0.0, 100.0)
+		_check_rank(h)
+		_check_specialty(h)
 	t["done"] = int(t["done"]) + 1
 	_reset_iteration(t)
 	t["taken"] = {}
@@ -1582,9 +1874,15 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 		if str(t["state"]) == "done":
 			t["blocker"] = ""
 		t["worker"] = ""
-		a["task"] = -1
+		if not a.is_empty():
+			a["task"] = -1
 	else:
 		t["state"] = "queued"   # the same hand carries on with the next piece (materials permitting)
+		WorkOrders.reserve_uid(t)
+		if a.is_empty() or WorkOrders.staged(t):
+			t["worker"] = ""   # C1: a staged order starts again from its first stage, given to whoever may do it
+			if not a.is_empty():
+				a["task"] = -1
 
 
 static func _fail(t: Dictionary, a: Dictionary, why: String) -> void:
@@ -1593,8 +1891,9 @@ static func _fail(t: Dictionary, a: Dictionary, why: String) -> void:
 	t["state"] = "failed"
 	t["blocker"] = why
 	t["worker"] = ""
-	a["task"] = -1
-	log_line(str(a["id"]), "%s: %s" % [a["name"], why])
+	if not a.is_empty():
+		a["task"] = -1
+	log_line(str(a.get("id", "player")), "%s: %s" % [str(a.get("name", "The smith")), why])
 
 
 # ======================================================================= what the world shows
@@ -1615,6 +1914,9 @@ static func current(app: Dictionary) -> Dictionary:
 	if t.is_empty():
 		return out
 	out["task"] = int(t["id"])
+	var ho: Dictionary = t.get("handoff", {})
+	if not ho.is_empty() and float(t.get("walk", 0.0)) > 0.0 and str(t.get("station", "")) == "":
+		out["carrying"] = str(ho.get("piece", ""))   # C1: carrying the half-made piece on to their stage's station
 	if float(t.get("fetch", 0.0)) > 0.0:
 		out["phase"] = "carrying"
 		out["carrying"] = str(t.get("carry", ""))
@@ -1623,6 +1925,9 @@ static func current(app: Dictionary) -> Dictionary:
 	var ops := task_ops(t, app)
 	if not ops.is_empty():
 		out["station"] = str(ops[mini(int(t.get("op", 0)), ops.size() - 1)].get("station", ""))
+		var at := str(t.get("at", ""))
+		if at != "" and Property.type_of(at) == Property.type_of(str(out["station"])):
+			out["station"] = at   # #37: the instance they hold
 	if str(t.get("station", "")) != "" and float(t.get("walk", 0.0)) <= 0.0:
 		out["phase"] = "working"
 	return out
@@ -1708,7 +2013,7 @@ static func bottlenecks() -> Array[String]:
 	ks.sort()
 	for sid in ks:
 		if is_worn(str(sid)) and Property.is_installed(str(sid)):
-			out.append("The %s is worn (%d%%) — apprentices work slower and rougher there." % [_station_name(str(sid)), int(round(station_condition(str(sid))))])
+			out.append("The %s is worn (%d%%) — apprentices work slower and rougher there." % [_place_name(str(sid)), int(round(station_condition(str(sid))))])
 	var idle := staff().filter(func(a): return on_shift(a) and int(a.get("task", -1)) == -1)
 	if not idle.is_empty() and open_tasks().filter(func(t): return str(t.get("worker", "")) == "").is_empty():
 		out.append("%s %s nothing to do — queue some work." % [", ".join(PackedStringArray(idle.map(func(a): return str(a["name"])))), "has" if idle.size() == 1 else "have"])
@@ -1940,6 +2245,13 @@ static func alumni_buy_for(a: Dictionary, want := {}) -> bool:
 	Chronicle.add("trade", line, {"adv": str(a.get("id", "")), "app": str(alum["id"])})
 	Events.adventurers_changed.emit()
 	return true
+
+
+# ======================================================================= save step (work orders)
+## Save step "station instances and work orders" (Living Workshop C1) on raw save data. Idempotent; returns the number
+## of tasks converted. (Filled in with the staged work orders.)
+static func migrate_work_orders(data: Dictionary) -> int:
+	return WorkOrders.migrate(data)
 
 
 # ======================================================================= developer / test helper

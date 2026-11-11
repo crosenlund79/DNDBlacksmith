@@ -194,7 +194,7 @@ func _stations() -> Control:
 	for sid_v in installed + others:
 		var sid := str(sid_v)
 		var state := Apprentices.station_state(sid)
-		g.add_child(UIKit.label(str(DB.station(sid).get("name", sid)), 16, "body_bold"))
+		g.add_child(UIKit.label(Property.instance_label(sid), 16, "body_bold"))   # #37: "Anvil #2"
 		var col: Color = ApprenticeUI.STATION_COLS.get(state, UIKit.INK)
 		var word := str(ApprenticeUI.STATION_WORDS.get(state, state))
 		var u := Apprentices.station_user(sid)
@@ -272,7 +272,30 @@ func _build_top() -> void:
 	pv.add_child(UIKit.rich(txt, 16, true))
 	plate.add_child(pv)
 	right_top.add_child(plate)
+	_help_requests()
 	_contracts_line()
+
+
+## C1 (D8): a worker's request for a hand — optional: answer it, or let them carry on alone.
+func _help_requests() -> void:
+	for h in WorkOrders.open_help():
+		var row := UIKit.hbox(8)
+		row.name = "HelpRequest_%d" % int(h["id"])
+		var left_min := int(h.get("expires", 0)) - Game.now()
+		var r := UIKit.rich("[color=#7e2418]✋[/color] %s [i](optional — %s left)[/i]" % [str(h["text"]), ApprenticeUI.minutes_text(left_min)], 16)
+		r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(r)
+		var hid := int(h["id"])
+		var yes := UIKit.small_button("Lend a hand (%d min)" % WorkOrders.HELP_MINUTES, func():
+			var err := WorkOrders.answer_help(hid, "help")
+			Events.toast.emit(err if err != "" else "You spend half an hour at their side.", "bad" if err != "" else "good"), 0)
+		yes.name = "HelpYes_%d" % hid
+		row.add_child(yes)
+		var no := UIKit.small_button("Not now", func(): WorkOrders.answer_help(hid, "decline"), 0)
+		no.name = "HelpNo_%d" % hid
+		no.tooltip_text = "They carry on alone — the work is not held up, it just goes without your hand."
+		row.add_child(no)
+		right_top.add_child(row)
 
 
 ## The Living Realm: major contracts in hand and letters waiting (the contract view opens at the Project Bench).
@@ -339,7 +362,10 @@ func _task_row(t: Dictionary) -> Control:
 	c.add_child(v)
 	# line 1: title, state, priority, assignee, cancel
 	var r1 := UIKit.hbox(8)
-	var title := UIKit.label(str(t.get("label", "")), 18, "body_bold")
+	var staged := WorkOrders.staged(t)
+	var title := UIKit.label(str(t.get("label", "")) + ("  · work order, %d stages" % WorkOrders.stages(t).size() if staged else ""), 18, "body_bold")
+	if int(t.get("uid", 0)) > 0:
+		title.tooltip_text = "The piece's identity (uid %d) was reserved when the order was made; it keeps it from the first stage to the stores." % int(t["uid"])
 	title.clip_text = true
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.custom_minimum_size = Vector2(300, 0)
@@ -375,7 +401,7 @@ func _task_row(t: Dictionary) -> Control:
 		if err != "":
 			Events.toast.emit(err, "bad")
 			_queue_build())
-	ob.tooltip_text = "Who does it: automatic, or pin it to one apprentice."
+	ob.tooltip_text = "Who makes it: automatic, or pin the piece to one apprentice (a work order's other crafts go to those who may do them)." if staged else "Who does it: automatic, or pin it to one apprentice."
 	r1.add_child(ob)
 	var x := UIKit.button("✕", func():
 		var err := Apprentices.cancel_task(tid)
@@ -429,7 +455,152 @@ func _task_row(t: Dictionary) -> Control:
 		line3.append("[color=#9e3a0c]⚠ %s[/color]" % str(t["blocker"]))
 	if not line3.is_empty():
 		v.add_child(UIKit.rich("  ·  ".join(line3), 15))
+	if staged:
+		v.add_child(_stage_rows(t))
 	return c
+
+
+# ======================================================================= C1: a work order's stages
+## Living Workshop C1 (PROD-022): each stage of a work order — what it is, who does it (or did it, how well), where and
+## how far, the materials it puts into the piece, and who it is given to (automatic, an apprentice, or "you").
+func _stage_rows(t: Dictionary) -> Control:
+	var tid := int(t["id"])
+	var g := GridContainer.new()
+	g.name = "Stages_%d" % tid
+	g.columns = 5
+	g.add_theme_constant_override("h_separation", 12)
+	g.add_theme_constant_override("v_separation", 2)
+	var cur := WorkOrders.stage_index(t)
+	for s in WorkOrders.stages(t):
+		var si := int(s["i"])
+		var state := str(s["state"])
+		var here := si == cur and not str(t.get("state", "")) in Apprentices.FINISHED
+		var glyph: String = {"done": "✓", "working": "▶", "ready": "●", "waiting": "·"}.get(state, "·")
+		var col: String = {"done": "#26622f", "working": "#24409a", "ready": "#7e2418", "waiting": "#6e5a40"}.get(state, "#6e5a40")
+		var title := UIKit.rich("[color=%s]%s[/color] [b]%d.[/b] %s" % [col, glyph, si + 1, WorkOrders.stage_title(t, si)], 15)
+		title.custom_minimum_size = Vector2(330, 0)
+		title.name = "StageTitle_%d_%d" % [tid, si]
+		g.add_child(title)
+		g.add_child(_stage_who(t, s, here))
+		var wh := UIKit.rich(_stage_where(t, s, here), 15)
+		wh.custom_minimum_size = Vector2(220, 0)
+		g.add_child(wh)
+		var mt := UIKit.rich(_stage_mats(t, si), 14)
+		mt.custom_minimum_size = Vector2(200, 0)
+		g.add_child(mt)
+		g.add_child(_stage_assign(t, si, state))
+	return g
+
+
+func _first(name: String) -> String:
+	return name.split(" ")[0] if name != "" else "?"
+
+
+func _stage_who(t: Dictionary, s: Dictionary, here: bool) -> Control:
+	var tid := int(t["id"])
+	var si := int(s["i"])
+	var box := UIKit.hbox(6)
+	box.custom_minimum_size = Vector2(250, 0)
+	var txt := ""
+	var by := str(s.get("by", ""))
+	var pin := str(s.get("assignee", ""))
+	if str(s["state"]) == "done":
+		txt = "by [b]%s[/b] %d%%" % ["you" if by == "player" else _first(str(s.get("by_name", by))), int(round(float(s.get("q", 0.0))))]
+	elif here and str(t.get("worker", "")) == "player":
+		txt = "[b]you[/b] — at work"
+	elif here and str(t.get("worker", "")) != "":
+		var a := Apprentices.get_a(str(t["worker"]))
+		txt = "[b]%s[/b] (%s) at work" % [_first(str(a.get("name", ""))), Workers.profession_name(Workers.profession(a)).to_lower()]
+	elif pin == "player":
+		txt = "[color=#7e2418][b]yours[/b][/color]"
+	elif pin != "":
+		txt = "pinned: [b]%s[/b]" % _first(str(Apprentices.get_a(pin).get("name", pin)))
+	else:
+		var who := WorkOrders.who_can_stage(t, si).filter(func(x): return str(x) != "player")
+		if who.is_empty():
+			txt = "[color=#9e3a0c]needs %s[/color]" % Workers.a_noun(str(s.get("profession", "")))
+		else:
+			txt = "[i]%s[/i]" % ", ".join(PackedStringArray(who.map(func(x): return _first(str(Apprentices.get_a(str(x)).get("name", x))))))
+	var l := UIKit.rich(txt, 15)
+	l.custom_minimum_size = Vector2(150, 0)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(l)
+	if here and pin == "player" and str(t.get("worker", "")) == "" and not str(t.get("state", "")) in Apprentices.FINISHED:
+		var op: Dictionary = Crafting.operations(str(t["recipe"]))[int(t.get("op", 0))]
+		var go := UIKit.small_button("Go", func():
+			close()
+			var why := Smithy.walk_to_station(str(op.get("station", "")))
+			if why != "":
+				Events.toast.emit(why, "bad"), 56)
+		go.name = "GoStage_%d" % tid
+		go.tooltip_text = "Walk to %s — your stage begins there (%s)." % [Smithy.station_ref(str(op.get("station", ""))), str(op.get("op", "")).to_lower()]
+		box.add_child(go)
+	return box
+
+
+func _stage_where(t: Dictionary, s: Dictionary, here: bool) -> String:
+	if str(s["state"]) == "done":
+		return "[i]at the %s[/i]" % Property.instance_label(str(s.get("at", ""))).to_lower() if str(s.get("at", "")) != "" else ""
+	var ops: Array = s["ops"]
+	if here and bool(t.get("started", false)):
+		var k := ops.find(int(t.get("op", 0))) + 1
+		var at := str(t.get("station", ""))
+		if at == "":
+			at = str(t.get("at", ""))
+		var pct := 0
+		if float(t.get("need", 0.0)) > 0.0:
+			pct = int(clampf(float(t.get("progress", 0.0)) / float(t["need"]), 0.0, 1.0) * 100.0)
+		var where := ("at the " + Property.instance_label(at).to_lower()) if at != "" else ("going to " + Smithy.station_ref(str(Crafting.operations(str(t["recipe"]))[int(t.get("op", 0))].get("station", ""))))
+		return "step %d/%d · %d%% · %s" % [k, ops.size(), pct, where]
+	return "[i]%d step%s[/i]" % [ops.size(), "" if ops.size() == 1 else "s"]
+
+
+func _stage_mats(t: Dictionary, si: int) -> String:
+	var m := WorkOrders.stage_materials(t, si)
+	if m.is_empty():
+		return ""
+	var tk: Dictionary = t.get("taken", {})
+	var parts := PackedStringArray()
+	for d in m:
+		var nm := str(DB.item(str(d)).get("name", d))
+		if int(tk.get(str(d), 0)) > 0:
+			parts.append("[color=#26622f]%d %s (in hand)[/color]" % [int(m[d]), nm])
+		else:
+			var have := Game.count(str(d))
+			parts.append("[color=%s]%d/%d %s[/color]" % ["#26622f" if have >= int(m[d]) else "#9e3a0c", mini(have, 999), int(m[d]), nm])
+	return ", ".join(parts)
+
+
+func _stage_assign(t: Dictionary, si: int, state: String) -> Control:
+	var tid := int(t["id"])
+	var ob := OptionButton.new()
+	ob.name = "StageAssign_%d_%d" % [tid, si]
+	ob.custom_minimum_size = Vector2(150, 32)
+	ob.add_theme_font_size_override("font_size", 15)
+	ob.add_item("Auto")
+	ob.set_item_metadata(0, "")
+	var pin := str(WorkOrders.stages(t)[si].get("assignee", ""))
+	var sel := 0
+	if WorkOrders.stage_reason("player", t, si) == "":
+		ob.add_item("You")
+		ob.set_item_metadata(ob.item_count - 1, "player")
+		if pin == "player":
+			sel = ob.item_count - 1
+	for a in Apprentices.staff():
+		if WorkOrders.stage_reason(a, t, si) == "":
+			ob.add_item(_first(str(a["name"])))
+			ob.set_item_metadata(ob.item_count - 1, str(a["id"]))
+			if pin == str(a["id"]):
+				sel = ob.item_count - 1
+	ob.selected = sel
+	ob.disabled = state == "done" or (si == WorkOrders.stage_index(t) and str(t.get("worker", "")) == "player")
+	ob.tooltip_text = "Who does this stage: automatic (the best free hand who may), a chosen apprentice, or you — you then work it yourself at the station with your own checks."
+	ob.item_selected.connect(func(i):
+		var err := WorkOrders.assign_stage(tid, si, str(ob.get_item_metadata(i)))
+		if err != "":
+			Events.toast.emit(err, "bad")
+			_queue_build())
+	return ob
 
 
 func _finished_row(t: Dictionary) -> Control:

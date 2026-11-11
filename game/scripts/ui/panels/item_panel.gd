@@ -193,6 +193,11 @@ func _overview(it: Dictionary) -> void:
 	var q1 := float(it.get("quality", 0.0))
 	lines.append("[b]Craftsmanship:[/b] %d%%%s" % [int(round(q0)), ("  →  %d%% after work at the forge" % int(round(q1))) if absf(q1 - q0) >= 0.5 else ""])
 	lines.append("[b]Rarity at the anvil:[/b] %s" % Items.RARITY_LABEL.get(str(og.get("rarity", it.get("rarity", "common"))), "Common"))
+	# Living Workshop C1 (D4, UX-009): the specialists who worked stages of it, beside — never instead of — its maker
+	var contrib := Provenance.contributors(it)
+	if not contrib.is_empty():
+		lines.append("[b]Stages worked by:[/b] %s" % "; ".join(PackedStringArray(contrib.map(func(e): return "%s (%s) — %s, %d%%" % [str(e.get("name", "")),
+			str(e.get("profession", "")), str(e.get("work", e.get("title", ""))).to_lower(), int(round(float(e.get("quality", 0.0))))]))))
 	ov.add_child(UIKit.rich("\n".join(PackedStringArray(lines)), 19))
 	oc.add_child(ov)
 	right.add_child(oc)
