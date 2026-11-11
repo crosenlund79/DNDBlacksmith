@@ -28,7 +28,9 @@ const STEPS := [
 		"what": "Run 0.1 (decision D13): every piece or record of a Unique artifact in the save is registered; the lowest uid is the authentic piece and any others are kept whole as recorded legacy copies, so the campaign never mints that Unique again (Uniques.scan_state)."},
 	{"to": 5, "name": "worker professions",
 		"what": "The Living Workshop B1: the smith is the blacksmith; every workshop apprentice (on the staff or gone), and every waiting applicant, gains a profession from their strongest workshop skill (ties: their preferred discipline, then smithing). Every level, experience point, trait, wage, rank, log, memory, creation, task and contract hour is kept; the smith keeps every level (other crafts simply stop growing past the basic level from now on); field hirelings are unchanged (Workers.migrate_professions)."},
-	{"to": 6, "name": "station instances and work orders",
+	{"to": 6, "name": "workshop knowledge",
+		"what": "The Living Workshop B2: every Skill Tree node the save has learned — secret nodes and their discoveries included — becomes the workshop's knowledge: its Designs, stations and techniques, recorded as learned through the smith on the day the tree noted. The tree, every flag and discovery, every level and every item stay exactly as they were; nothing is removed (WorkshopKnowledge.migrate_state)."},
+	{"to": 7, "name": "station instances and work orders",
 		"what": "The Living Workshop #37 and C1: every station already in the workshop becomes instance #1 of its type under the same id (layouts, storage, wear and the stations' history unchanged; a station both set up and listed in storage is kept set up once); every open apprentice task that makes a Design becomes a staged work order — its operations grouped into stages by station discipline, the stages already worked marked done by whoever worked them, the current stage with its worker — and an open order for equipment reserves the uid its piece will carry. Materials in hand, progress, workers and finished pieces are kept (Property.migrate_instances, Apprentices.migrate_work_orders)."},
 ]
 
@@ -86,6 +88,8 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 		5:
 			_v4_to_v5(data)
 		6:
+			migrate_workshop_knowledge(data)
+		7:
 			_migrate_station_instances_and_work_orders(data)
 		_:
 			return false
@@ -157,7 +161,21 @@ static func _v4_to_v5(data: Dictionary) -> void:
 		Log.info("  %d workshop worker(s) given a profession" % n)
 
 
-## v5 → v6 (The Living Workshop #37 + C1): station instances and staged work orders. Idempotent: a second pass finds
+## v5 → v6 (The Living Workshop B2): the workshop's knowledge, taken from the tree's learned nodes. Idempotent; nothing
+## is removed, no level, flag, node or item changes. (Named for its content so the lead can renumber it at merge.)
+static func migrate_workshop_knowledge(data: Dictionary) -> void:
+	if not data.get("player") is Dictionary:
+		return
+	_with_state(data, func() -> void:
+		var n := WorkshopKnowledge.migrate_state()
+		if n > 0:
+			var k: Dictionary = data["workshop_knowledge"]
+			Log.info("  workshop knowledge: %d Design(s), %d station(s), %d technique(s) from %d learned node(s)" % [(k["designs"] as Dictionary).size(),
+				(k["stations"] as Dictionary).size(), (k["techniques"] as Dictionary).size(), (k["nodes"] as Dictionary).size()])
+	)
+
+
+## v6 → v7 (The Living Workshop #37 + C1): station instances and staged work orders. Idempotent: a second pass finds
 ## nothing to change. Instance #1 keeps the type id, so no layout key moves; open Design tasks gain their stages.
 static func _migrate_station_instances_and_work_orders(data: Dictionary) -> void:
 	var n := Property.migrate_instances(data)

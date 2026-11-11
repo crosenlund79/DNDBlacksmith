@@ -253,7 +253,7 @@ static func auto_walk_next(done_sid: String, w: VillageWorld = null) -> String:
 
 static func craft_again_reason(rid: String) -> String:
 	if rid == "" or DB.recipe(rid).is_empty():
-		return "No recipe."
+		return "No Design."
 	if Crafting.active():
 		return "Finish the current work first."
 	var why := Crafting.recipe_locked_reason(rid)

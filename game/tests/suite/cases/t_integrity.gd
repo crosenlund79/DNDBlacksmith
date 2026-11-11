@@ -87,13 +87,19 @@ func test_tree_shape() -> void:
 	for id in by:
 		visit.call(str(id), visit)
 	check(cyc.is_empty(), "no circular prerequisites %s" % str(cyc))
-	# every recipe and station is unlocked by exactly one node; recipes are visible once their flag is known
+	# every Design and station enters the workshop's knowledge from exactly one node (B2: the WorkshopKnowledge catalogue
+	# records it from that node); Designs are visible once their flag is known
+	fresh_game()
+	SkillTree.unlock_all()
 	for rid in DB.recipes:
 		var n2 := 0
+		var from := ""
 		for n in SkillTree.nodes():
 			if (n.get("unlocks", {}).get("recipes", []) as Array).has(rid):
 				n2 += 1
-		eq(n2, 1, "recipe %s is learned from exactly one node" % rid)
+				from = str(n["id"])
+		eq(n2, 1, "Design %s enters the workshop's knowledge from exactly one node" % rid)
+		eq(str(WorkshopKnowledge.entry("designs", str(rid)).get("node", "")), from, "the catalogue records Design %s from that node" % rid)
 	for sid in DB.stations:
 		var n3 := 0
 		for n in SkillTree.nodes():

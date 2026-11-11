@@ -131,7 +131,7 @@ static func item_entries(it: Dictionary) -> Array:
 		for o in cr.get("ops", []):
 			steps.append("%s at %s %d%%" % [str(o.get("op", "")), DB.station(str(o.get("station", ""))).get("name", str(o.get("station", ""))), int(round(float(o.get("q", 0))))])
 		out.append({"day": int(cr.get("day", 1)), "time": "", "kind": "craft",
-			"text": "Crafted from the %s recipe%s: %s. Final craftsmanship %d%%." % [str(cr.get("recipe_name", "")),
+			"text": "Crafted to the %s Design%s: %s. Final craftsmanship %d%%." % [str(cr.get("recipe_name", "")),
 				(" in " + str(cr["material"])) if str(cr.get("material", "")) != "" else "", "; ".join(steps) if not steps.is_empty() else "worked by hand",
 				int(round(float(cr.get("quality", it.get("quality", 0)))))], "q": float(cr.get("quality", 0))})
 	for h in it.get("history", []):

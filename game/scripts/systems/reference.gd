@@ -8,7 +8,7 @@ class_name Reference
 extends RefCounted
 
 const TABS := [
-	["basics", "Basics & Controls"], ["recipes", "Recipes"], ["stations", "Crafting Stations"], ["materials", "Materials"],
+	["basics", "Basics & Controls"], ["recipes", "Designs"], ["stations", "Crafting Stations"], ["materials", "Materials"],
 	["skilltree", "Skill-Tree Progression"], ["hirelings", "Hirelings"], ["careers", "Adventurer Careers"],
 	["dice", "Dice & Rarity"], ["workshop", "Workshop Ownership & Editing"], ["ironfront", "Ironfront Rules"],
 	["knowledge", "Knowledge & Notes"],
@@ -163,7 +163,7 @@ static func _basics(out: Array) -> void:
 	_e(out, "basics", "Interacting", "Walk up to a person, a workstation, a bed or a notice: its name appears at the bottom of the screen. Press [b]%s[/b] (or Space) to talk or use it." % _key("interact"), "ui/tb_help", "talk use interact")
 	# S2: the list comes from Settings.HOTKEY_HELP and the real bindings, so it cannot drift from them
 	_e(out, "basics", "The toolbar and hotkeys", ("The illustrated toolbar at the bottom opens every ledger. Each button's key is on its lower right; a smaller key on its upper left opens what a right-click opens (the Skill Tree's [b]%s[/b] for your skill levels, the Workshop's [b]%s[/b] for the Workshop Ledger). Hover a button for its name; a glowing button needs your attention.\n%s.\nLeft-click the ground, an object or a person to walk there (Settings can turn this off).") % [_key("panel_skill_levels"), _key("panel_workshop"), Settings.controls_text()], "ui/tb_inventory", "hotkeys shortcuts toolbar keys controls skill tree skills levels workshop ledger")
-	_e(out, "basics", "Walking to the next station", "Settings › [b]Auto-walk to the next station[/b] (off unless you turn it on): when a skill check finishes a step whose recipe continues at another station, the smith walks there by himself. It only walks — it opens nothing, starts no work and never chooses a recipe; press [b]%s[/b] at the station to carry on. Without it, the station's [b]Walk to …[/b] button takes you there (and opens the station) when you ask." % _key("interact"), "ui/tb_map", "auto walk next station automatic walking setting")
+	_e(out, "basics", "Walking to the next station", "Settings › [b]Auto-walk to the next station[/b] (off unless you turn it on): when a skill check finishes a step whose Design continues at another station, the smith walks there by himself. It only walks — it opens nothing, starts no work and never chooses a Design; press [b]%s[/b] at the station to carry on. Without it, the station's [b]Walk to …[/b] button takes you there (and opens the station) when you ask." % _key("interact"), "ui/tb_map", "auto walk next station automatic walking setting")
 	_e(out, "basics", "Time", "A day lasts about fifteen minutes. [b]P[/b] pauses, [b]+[/b] and [b]−[/b] change the speed. Open ledgers stop the clock. Sleep in your bed to skip the night.", "", "clock pause speed sleep day")
 	_e(out, "basics", "The minimap and the map", "The minimap in the top-right corner shows you (the arrow), buildings, roads, the stream and the people around. A speech mark means someone wants a word with you. Click it, or press [b]M[/b], for the full village map with names and exits.", "ui/tb_map", "minimap map markers")
 	_e(out, "basics", "Steward Mode", "Hand the running forge to your steward with the toolbar's signpost, [b]%s[/b] or the Workshop Ledger. While you are away the steward runs the routine business through the same actions you would take — ordinary commissions for your apprentices, materials at the open village counters, the display and waiting customers — within your [b]standing instructions[/b] (spending limits, purchases, duties, protected pieces, reserved supplies, order and selling rules). It never crafts (you gain no crafting experience while away) and leaves consequential matters for you; the genuinely significant ones arrive as [b]sealed letters[/b]. Time keeps running while you look around; you cannot act in the world until you take the workshop back, which shows [b]While You Were Away[/b]. It works only while the game runs: nothing happens while the game is closed, and a loaded save finds you back at the forge." % _key("panel_steward"), "ui/act_road", "steward away manage automatic letters sealed report")
@@ -196,7 +196,7 @@ static func _recipes(out: Array) -> void:
 			"%s[b]Discipline:[/b] %s · [b]Difficulty:[/b] %d\n[b]Needs:[/b] %s\n[b]Stations:[/b] %s\n[b]Dice:[/b] %s%s" % [("[i]%s[/i]\n" % str(r["desc"])) if str(r.get("desc", "")) != "" else "",
 				Crafting.DISCIPLINE_NAME.get(str(r.get("discipline", "")), str(r.get("discipline", ""))), int(r.get("difficulty", 0)),
 				", ".join(ins), " → ".join(st), ", ".join(dice) if not dice.is_empty() else "none", ("\n" + req.strip_edges()) if req != "" else ""],
-			"icons/" + str(DB.item(out_def).get("icon", out_def)), "recipe " + str(r.get("category", "")) + " " + ", ".join(ins), "recipe:" + rid)
+			"icons/" + str(DB.item(out_def).get("icon", out_def)), "design recipe " + str(r.get("category", "")) + " " + ", ".join(ins), "recipe:" + rid)
 
 
 # ----------------------------------------------------------------------- stations
@@ -209,7 +209,7 @@ static func _stations(out: Array) -> void:
 			if recipe_visible(str(r["id"])):
 				known += 1
 		_e(out, "stations", str(st.get("name", sid)),
-			"%s\n[b]Discipline:[/b] %s · [b]Checks per step:[/b] %d · [b]Recipes you know that use it:[/b] %d\nYour %s level widens the precision zone and slows the needle." % [str(st.get("purpose", "")),
+			"%s\n[b]Discipline:[/b] %s · [b]Checks per step:[/b] %d · [b]Designs the workshop knows that use it:[/b] %d\nYour %s level widens the precision zone and slows the needle." % [str(st.get("purpose", "")),
 				Crafting.DISCIPLINE_NAME.get(str(st.get("discipline", "")), ""), int(c.get("count", 1)), known, SkillSys.skill_name(Crafting.skill_for_station(sid))],
 			"stations/" + sid, "station workstation " + str(st.get("discipline", "")), "station:" + sid)
 
@@ -249,9 +249,9 @@ static func _skilltree(out: Array) -> void:
 		+ "The smith is the blacksmith: smithing and mining grow without limit; his other crafts grow to level %d (levels he earned before are kept). Basic work in another craft stays open to him at his own level; master-grade work (a Design whose difficulty asks more than level %d) needs a specialist of that craft — locked Designs say who. "
 		+ "What the workshop KNOWS (the Designs and stations it has learned in the skill tree) is separate from anyone's competence: a specialist can only make a Design the workshop knows, and a node in another craft's branch can be met by a specialist on the staff. Field hirelings keep their own trade (mining, trading, relic hunting) and do not work the stations.") % [Workers.BASIC_LEVEL, Workers.BASIC_LEVEL],
 		"", "profession specialist competence basic runesmith alchemist arcanist leatherworker blacksmith eligible who can")
-	_e(out, "skilltree", "How skills grow", "Every check, finished piece, repair and expedition earns experience in the skill it uses. Experts learn little from routine work — take on harder recipes to keep growing.", "", "experience xp level")
-	_e(out, "skilltree", "The skill tree", "Beyond plain levels, the smith's skill tree holds new techniques, stations and recipes. Points are earned as you level; each branch opens deeper nodes. Locked nodes tell you what they need. Open it from the toolbar.", "ui/tb_skilltree", "skill tree points unlock nodes branch")
-	_e(out, "skilltree", "Recipes and stations unlocked", "Some recipes need a skill level, a skill-tree node or a discovery (a recipe scroll, a relic studied). A locked recipe or station always says why in its tooltip.", "", "unlock locked requires")
+	_e(out, "skilltree", "How skills grow", "Every check, finished piece, repair and expedition earns experience in the skill it uses. Experts learn little from routine work — take on harder Designs to keep growing. Your own craft (Smithing, Mining) grows without limit; other crafts stop at a basic level — their mastery belongs to specialists, who grow by their own work.", "", "experience xp level")
+	_e(out, "skilltree", "The Skill Tree", "Two kinds of seals. [b]Your own path[/b] — Traditional Smithing and Mining & Metallurgy — needs your own levels; its techniques are your personal mastery. [b]The workshop's knowledge[/b] — the other five crafts — is learned through a competent hand: you at your basic level of that craft, or a specialist on your staff (the master seals need one). Every seal adds Designs, stations and techniques to what the workshop knows; a technique of another craft helps whoever works it at its level. Knowing a Design never makes anyone able to make it — that is each worker's own competence. Locked seals say what they need; the [b]Workshop knowledge[/b] tab lists everything the workshop knows and who may make each Design. Open it from the toolbar.", "ui/tb_skilltree", "skill tree points unlock nodes branch workshop knowledge path specialist")
+	_e(out, "skilltree", "Designs and stations unlocked", "A Design (the complete plan for a piece: materials, stages, stations) is known to the workshop once its Skill Tree seal is learned — some only after a discovery (a Forgotten Design scroll, a relic studied). Who may then make it depends on each worker's own competence. A locked Design or station always says why in its tooltip.", "", "unlock locked requires")
 
 
 static func _hirelings(out: Array) -> void:
@@ -274,12 +274,12 @@ static func _careers(out: Array) -> void:
 
 
 static func _dice(out: Array) -> void:
-	_e(out, "dice", "Precision checks", "Each recipe step is played at a station: a needle sweeps a ring and you press [b]E[/b] inside the gilt zone. The centre is best. Craftsmanship is the weighted mean of every check plus your skill bonus.", "ui/tb_designer", "check needle ring quality craftsmanship")
+	_e(out, "dice", "Precision checks", "Each step of a Design is played at a station: a needle sweeps a ring and you press [b]E[/b] inside the gilt zone. The centre is best. Craftsmanship is the weighted mean of every check plus your skill bonus.", "ui/tb_designer", "check needle ring quality craftsmanship")
 	var dice: Dictionary = DB.crafting.get("dice", {})
 	var lines := []
 	for k in dice:
 		lines.append("[b]%s[/b] — %s" % [str(dice[k].get("label", k)), str(dice[k].get("desc", ""))])
-	_e(out, "dice", "The dice", "After the last step you roll the recipe's dice (digitally or with your own).\n" + "\n".join(lines), "ui/dice_d20", "dice roll d20 d100 physical")
+	_e(out, "dice", "The dice", "After the last step you roll the Design's dice (digitally or with your own).\n" + "\n".join(lines), "ui/dice_d20", "dice roll d20 d100 physical")
 	var rar: Dictionary = DB.crafting.get("rarity", {})
 	var th: Dictionary = rar.get("thresholds", {})
 	_e(out, "dice", "Rarity", "Craftsmanship and the fortune die combine into a rarity score: Magic from %s, Rare from %s, Legendary from %s. Runestones, fine materials and masterwork (%s%% craftsmanship) add to it. Common · Magic · Rare · Legendary." % [

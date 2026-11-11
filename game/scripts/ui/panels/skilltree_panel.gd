@@ -1,11 +1,19 @@
-## SkillTreePanel — the Blacksmith's Skill Tree drawn as an inked parchment chart.
-## EN: Branches as labelled columns; nodes are inked medallions joined by prerequisite lines
-##     (gilt once learned). States: learned (gilt), available (glowing, "Learn"), locked (grey, padlock),
-##     secret ("???" once a predecessor is known, otherwise not drawn). Mouse wheel zooms, dragging pans,
-##     hovering or clicking a node shows its description, exact requirements (✓/✗) and what it unlocks.
-##     Prerequisites from a distant branch are shown as small branch seals instead of long lines.
-##     Opened with Events.open_panel.emit("skilltree", {}) (optional args: {"select": node_id}).
-## DA: Smedens færdighedstræ tegnet som et blækkort med zoom, panorering og en detaljeside.
+## SkillTreePanel — the Skill Tree (the smith's own path and the workshop's knowledge) and the workshop's catalogue.
+## EN: Two views. "The Skill Tree": an inked parchment chart; branches as labelled columns under two bands — YOUR OWN
+##     PATH (Traditional Smithing, Mining & Metallurgy: the smith's own levels and personal techniques) and THE
+##     WORKSHOP'S KNOWLEDGE (the other crafts: learned through a competent hand, the smith at his basic level or a
+##     specialist on the staff). Nodes are inked medallions joined by prerequisite lines (gilt once learned). States:
+##     learned (gilt), available (glowing, "Learn"), locked (grey, padlock), secret ("???" once a predecessor is known,
+##     otherwise not drawn). Mouse wheel zooms, dragging pans, hovering or clicking a node shows its description, exact
+##     requirements (✓/✗), through whom it was or would be learned and what it unlocks (Designs, stations, techniques —
+##     whose a technique is). Prerequisites from a distant branch are shown as small branch seals instead of long lines.
+##     "Workshop knowledge": the catalogue (WorkshopKnowledge) — the Designs the workshop knows by craft and who may make
+##     each (personal competence), its techniques and whom they help, the materials it works, its discoveries and what
+##     each specialist brought in. Knowing a Design never makes anyone able to make it.
+##     Opened with Events.open_panel.emit("skilltree", {}) (optional args: {"select": node_id, "view": "knowledge"}).
+##     Rebuilds are gathered once per frame and replaced content leaves the layout at once (LW #59–60: _clear).
+## DA: Færdighedstræet (smedens egen sti og værkstedets viden) og værkstedets katalog over kendte Designs, teknikker,
+##     materialer og opdagelser — og hvem der kan lave hvad.
 class_name SkillTreePanel
 extends UIWindow
 
@@ -13,22 +21,48 @@ var canvas: TreeCanvas
 var side: VBoxContainer
 var skill_row: HBoxContainer
 var shown := "-"
+## B2: "tree" (the chart) or "knowledge" (the workshop's catalogue).
+var view := "tree"
+var body: HBoxContainer
+var kscroll: ScrollContainer
+var kview: VBoxContainer
+var tab_tree: Button
+var tab_know: Button
 
 
 func _init(args := {}) -> void:
-	super._init("The Blacksmith's Skill Tree", 1800, 980)
+	super._init("The Skill Tree", 1800, 980)
 	canvas = TreeCanvas.new()
 	canvas.selected = str(args.get("select", ""))
+	view = "knowledge" if str(args.get("view", "")) == "knowledge" else "tree"
 
 
 func _ready() -> void:
 	super._ready()
-	title_label.text = "✦ The Blacksmith's Skill Tree ✦"
+	title_label.text = "✦ The Skill Tree — Your Path & the Workshop's Knowledge ✦"
+	var tabs := UIKit.hbox(8)
+	tab_tree = UIKit.tab_button("The Skill Tree", func(): _set_view("tree"), view == "tree")
+	tab_tree.name = "TabTree"
+	tabs.add_child(tab_tree)
+	tab_know = UIKit.tab_button("Workshop knowledge", func(): _set_view("knowledge"), view == "knowledge")
+	tab_know.name = "TabKnowledge"
+	tabs.add_child(tab_know)
+	var tnote := UIKit.note("Your own path: Smithing and Mining, by your own levels. The other crafts are the workshop's knowledge, learned through a competent hand. Knowing a Design is not being able to make it.", 17)
+	tnote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tabs.add_child(tnote)
+	content.add_child(tabs)
 	skill_row = UIKit.hbox(10)
 	content.add_child(skill_row)
-	var body := UIKit.hbox(14)
+	body = UIKit.hbox(14)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(body)
+	kview = UIKit.vbox(8)
+	kview.name = "KnowledgeView"
+	kview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kscroll = UIKit.scroll(kview, 760)
+	kscroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	kscroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(kscroll)
 	var left := UIKit.vbox(4)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -71,6 +105,20 @@ func _ready() -> void:
 	Events.skill_level_up.connect(func(_w, _s, _l): _refresh())
 	_build_skills()
 	_on_focus(canvas.selected)
+	_set_view(view)
+
+
+## Shows the chart or the catalogue (the catalogue is built when shown, once — never per frame).
+func _set_view(v: String) -> void:
+	view = v
+	var tree := v == "tree"
+	skill_row.visible = tree
+	body.visible = tree
+	kscroll.visible = not tree
+	tab_tree.set_pressed_no_signal(tree)
+	tab_know.set_pressed_no_signal(not tree)
+	if not tree:
+		_build_knowledge()
 
 
 func _legend_chip(text: String, state: String) -> Control:
@@ -100,6 +148,8 @@ func _do_refresh() -> void:
 	_build_skills()
 	canvas.queue_redraw()
 	_show(shown, true)
+	if view == "knowledge":
+		_build_knowledge()
 
 
 ## LW #59–60: empties a row or page before it is rebuilt. UIKit.clear only queues the old children for deletion, so
@@ -138,12 +188,27 @@ func _build_skills() -> void:
 		head.clip_text = true
 		v.add_child(head)
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label("%s %d" % [SkillSys.skill_name(sk), Game.player_level(sk)], 17, "body_bold"))
-		var bar := UIKit.bar(SkillSys.progress(Game.player_skills(), sk), 1.0, 90)
-		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bar.tooltip_text = "%d / %d experience to the next level" % [int(Game.player_skills().get(sk, {}).get("xp", 0)), SkillSys.xp_needed(Game.player_level(sk) + 1)]
-		row.add_child(bar)
+		var own := WorkshopKnowledge.branch_owner(str(b["id"])) == "smith"
+		var best := Workers.best_level(sk)
+		if own or str(best["actor"]) == "player":
+			var mine := UIKit.label("You %d" % Game.player_level(sk), 17, "body_bold")
+			mine.clip_text = true
+			mine.custom_minimum_size = Vector2(60, 0)
+			mine.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			mine.tooltip_text = ("Your own path: your %s level." if own else "Your %s level — the workshop's best hand in it.") % SkillSys.skill_name(sk)
+			row.add_child(mine)
+			var bar := UIKit.bar(SkillSys.progress(Game.player_skills(), sk), 1.0, 40)
+			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			bar.tooltip_text = "%d / %d experience to the next level" % [int(Game.player_skills().get(sk, {}).get("xp", 0)), SkillSys.xp_needed(Game.player_level(sk) + 1)]
+			row.add_child(bar)
+		else:
+			var who := UIKit.label("%s %d · you %d" % [str(best["name"]).split(" ")[0], int(best["level"]), Game.player_level(sk)], 17, "body_bold")
+			who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			who.clip_text = true
+			who.custom_minimum_size = Vector2(60, 0)
+			who.tooltip_text = "The workshop's best hand in %s: %s (%d). Yours: %d." % [SkillSys.skill_name(sk).to_lower(), best["name"], int(best["level"]), Game.player_level(sk)]
+			row.add_child(who)
 		row.add_child(UIKit.label("%d/%d" % [SkillTree.count_learned(str(b["id"])), nb.size()], 16, "body_italic"))
 		v.add_child(row)
 		card.add_child(v)
@@ -161,8 +226,8 @@ func _show(id: String, force: bool) -> void:
 	shown = id
 	_clear(side)
 	if id == "" or SkillTree.node(id).is_empty():
-		side.add_child(UIKit.label("The Smith's Path", 28, "title"))
-		side.add_child(UIKit.rich("Every craft in the forge is learned here. Gilt seals are known to you; a seal that [color=#9e3a0c][b]glows[/b][/color] can be learned now; grey seals still wait for skill, knowledge, materials or a teacher's fee.\n\nSkills rise through the work itself: every operation at a station and every finished piece trains the craft it belongs to.\n\n[i]Hover over a seal to read it; click it to keep it open here.[/i]", 19))
+		side.add_child(UIKit.label("Your Path & the Workshop", 28, "title"))
+		side.add_child(UIKit.rich("[b]Your own path[/b] — Traditional Smithing and Mining & Metallurgy — is the blacksmith's craft: its seals need your own levels and their techniques are yours.\n\n[b]The workshop's knowledge[/b] — the other five crafts — is learned through a competent hand: you, at your basic level of that craft, or a specialist on your staff. Each seal adds Designs, stations and techniques to what the workshop knows.\n\nKnowing a Design is not being able to make it: who may make it is each worker's own competence. Gilt seals are known; a seal that [color=#9e3a0c][b]glows[/b][/color] can be learned now.\n\n[i]Hover over a seal to read it; click it to keep it open here.[/i]", 19))
 		var ready := SkillTree.nodes().filter(func(n): return SkillTree.node_state(n["id"]) == "available")
 		if not ready.is_empty():
 			side.add_child(UIKit.divider())
@@ -183,6 +248,8 @@ func _show(id: String, force: bool) -> void:
 	side.add_child(tl)
 	var badge := {"unlocked": "[color=#5e421c]✦ Learned[/color]", "available": "[color=#9e3a0c][b]✦ Ready to learn[/b][/color]", "locked": "[color=#6a5e50]Locked[/color]"}
 	side.add_child(UIKit.rich("[i]%s[/i] · %s%s" % [b.get("name", ""), badge.get(st, st), "  · [color=#5a3e8a]secret[/color]" if n.get("secret", false) else ""], 18))
+	var own := WorkshopKnowledge.node_owner(id) == "smith"
+	side.add_child(UIKit.rich("[color=%s][b]%s[/b][/color]" % ["#7e2418" if own else "#2e4e6e", "Your own path — your levels, your techniques" if own else "The workshop's knowledge — learned through a competent hand"], 17))
 	side.add_child(UIKit.rich(str(n.get("desc", "")), 19))
 	# requirements
 	var reqs := SkillTree.requirements(id)
@@ -195,12 +262,29 @@ func _show(id: String, force: bool) -> void:
 	# learn
 	if st == "unlocked":
 		var day := int(Game.state.get("skilltree", {}).get("day", {}).get(id, 0))
-		side.add_child(UIKit.label("Known to you%s." % ((" since day %d" % day) if day > 0 else ""), 18, "body_italic"))
+		var by := WorkshopKnowledge.brought_by(id)
+		var since := (" since day %d" % day) if day > 0 else ""
+		var txt := "Known to you%s." % since
+		if not own:
+			txt = "Known to the workshop%s — learned through %s." % [since, WorkshopKnowledge.who_text(by)]
+		var kl := UIKit.label(txt, 18, "body_italic")
+		kl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		side.add_child(kl)
 	elif st == "available":
-		var lb := UIKit.button("✦ Learn %s" % n["name"], _learn.bind(id), 0)
+		var bearer := WorkshopKnowledge.bearer(id)
+		var via := not own and bearer != "player" and bearer != ""
+		var lb := UIKit.button(("✦ Learn through %s" % str(Workers.resolve(bearer)["name"])) if via else ("✦ Learn %s" % n["name"]), _learn.bind(id), 0)
+		lb.name = "LearnButton"
+		lb.clip_text = true   # a long name never widens the side page (and the window)
+		lb.tooltip_text = lb.text
 		side.add_child(lb)
+		if not own and bearer != "":
+			var wl := UIKit.note("The workshop learns it through %s. Nobody's skills change." % WorkshopKnowledge.who_text(bearer), 17)
+			side.add_child(wl)
 	else:
-		side.add_child(UIKit.label(SkillTree.can_unlock(id), 18, "body_italic", Color("#9e3a0c")))
+		var why := UIKit.label(SkillTree.can_unlock(id), 18, "body_italic", Color("#9e3a0c"))
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		side.add_child(why)
 	# unlocks
 	var u: Dictionary = n.get("unlocks", {})
 	side.add_child(UIKit.divider())
@@ -210,15 +294,34 @@ func _show(id: String, force: bool) -> void:
 	for r in u.get("recipes", []):
 		var rid := str(r)
 		if not SkillTree.recipe_visible(rid):
-			side.add_child(_unlock_row("", "A forgotten recipe (???)", "[i]Its notes are still lost among the relics.[/i]"))
+			side.add_child(_unlock_row("", "A forgotten Design (???)", "[i]Its notes are still lost among the relics.[/i]"))
 			continue
 		var rec := DB.recipe(rid)
-		side.add_child(_unlock_row("icons/" + str(DB.item(str(rec.get("output", ""))).get("icon", rec.get("output", ""))), str(rec.get("name", rid)), _recipe_tip(rid)))
+		side.add_child(_unlock_row("icons/" + str(DB.item(str(rec.get("output", ""))).get("icon", rec.get("output", ""))), "Design: " + str(rec.get("name", rid)), _recipe_tip(rid)))
 	for t in u.get("techniques", []):
-		side.add_child(UIKit.rich("[b]Technique — %s[/b]\n[i]%s[/i]" % [t.get("name", ""), t.get("desc", "")], 18))
+		side.add_child(UIKit.rich(_technique_text(t, id), 18))
 	var kids := SkillTree.children(id).filter(func(c): return SkillTree.node_state(c["id"]) != "hidden")
 	if not kids.is_empty():
 		side.add_child(UIKit.rich("[color=#5e421c][i]Leads on to: %s[/i][/color]" % ", ".join(kids.map(func(c): return str(c["name"]))), 17))
+
+
+## A technique's lines on a node page: whose it is (B2) — the smith's own (his path), the workshop's method, or a craft
+## technique that helps whoever works at the node's level by their own skill (and who that is now).
+func _technique_text(t: Dictionary, nid: String) -> String:
+	var head := "[b]Technique — %s[/b]\n[i]%s[/i]" % [t.get("name", ""), t.get("desc", "")]
+	if float(t.get("quality", 0)) <= 0.0:
+		return "[b]Method — %s[/b]\n[i]%s[/i]\n[color=#5e421c]Known to the workshop once learned; anyone working it may use it.[/color]" % [t.get("name", ""), t.get("desc", "")]
+	if WorkshopKnowledge.node_owner(nid) == "smith":
+		return head + "\n[color=#7e2418]Your personal technique — it helps your own work only.[/color]"
+	var sk: Array = SkillTree.node(nid)["requires"].get("skill", [])
+	if sk.is_empty():
+		return head
+	var who := []
+	for aid in Workers.workshop_actors():
+		if WorkshopKnowledge.technique_applies(str(aid), nid):
+			who.append("you" if str(aid) == "player" else str(Workers.resolve(str(aid))["name"]))
+	return head + "\n[color=#2e4e6e]Helps whoever works it with %s %d of their own%s.[/color]" % [SkillSys.skill_name(str(sk[0])), int(sk[1]),
+		(" — now: " + ", ".join(who)) if not who.is_empty() else " — nobody on your staff yet"]
 
 
 func _pre_names(n: Dictionary) -> String:
@@ -267,13 +370,138 @@ func _recipe_tip(rid: String) -> String:
 		ins.append("%d× %s (have %d)" % [int(r["inputs"][i]), DB.item(str(i)).get("name", i), Game.count(str(i))])
 	var t := "[b]%s[/b]\n[i]%s[/i]\n%s · difficulty %d\nNeeds: %s" % [r.get("name", rid), r.get("desc", ""), Crafting.DISCIPLINE_NAME.get(r.get("discipline", ""), ""), Crafting.difficulty(rid), ", ".join(ins)]
 	var why := Crafting.recipe_locked_reason(rid)
+	var known := Workers.knowledge_reason(rid) == ""
+	if known:
+		var who := _who_names(rid)
+		t += "\n[color=#cfe0ff]Known to the workshop · may make it: %s[/color]" % (", ".join(who) if not who.is_empty() else "nobody yet")
 	if why != "":
-		t += "\n[color=#ff9a7a]Unavailable: %s[/color]" % why
+		t += "\n[color=#ff9a7a]%s: %s[/color]" % ["You cannot make it yourself" if known else "Unavailable", why]
 	elif not Crafting.missing_inputs(rid).is_empty():
 		t += "\n[color=#ffcf7a]Known — some materials are missing.[/color]"
 	else:
 		t += "\n[color=#9adf9a]Can be made now.[/color]"
 	return t
+
+
+## Who on the workshop's staff may make a Design (each worker's own competence): ["you", "Edda Vell"].
+static func _who_names(rid: String) -> Array:
+	var out := []
+	for aid in Workers.who_can(rid):
+		out.append("you" if str(aid) == "player" else str(Workers.resolve(str(aid))["name"]))
+	return out
+
+
+# ======================================================================= the workshop's knowledge (B2)
+const DISC_ORDER := ["classic", "stitching", "runecraft", "alchemy", "arcane"]
+
+
+## The catalogue view: built when shown (and on a gathered refresh while shown) — a handful of rich-text blocks, never
+## one control per Design, so a rebuild stays light.
+func _build_knowledge() -> void:
+	if kview == null:
+		return
+	_clear(kview)
+	var c := WorkshopKnowledge.counts()
+	kview.add_child(UIKit.label("What the workshop knows", 28, "title"))
+	var intro := UIKit.rich("The workshop's knowledge belongs to the forge, not to anyone in it: the [b]Designs[/b] it can plan, the stations it knows how to set up, the techniques and materials it has learned — through you on your own path, or through a competent hand in another craft. [b]It never makes anyone more skilled.[/b] Who may make a Design is each worker's own competence, shown beside it.", 19)
+	intro.fit_content = true
+	kview.add_child(intro)
+	var sum := UIKit.label("%d of %d Designs · %d stations · %d techniques and methods" % [int(c["designs"]), int(c["designs_total"]), int(c["stations"]), int(c["techniques"])], 21, "body_bold", UIKit.RUBRIC)
+	sum.name = "KnowledgeSummary"
+	kview.add_child(sum)
+	var by := WorkshopKnowledge.designs_by_discipline()
+	for disc in DISC_ORDER:
+		var ids: Array = by.get(disc, [])
+		if ids.is_empty():
+			continue
+		kview.add_child(UIKit.label("%s — %d Design%s" % [str(Crafting.DISCIPLINE_NAME.get(disc, disc)), ids.size(), "" if ids.size() == 1 else "s"], 22, "heading", UIKit.RUBRIC))
+		var lines := []
+		for rid in ids:
+			var e := WorkshopKnowledge.entry("designs", str(rid))
+			var nid := str(e.get("node", SkillTree.recipe_node(str(rid))))
+			var who := _who_names(str(rid))
+			var make := "[color=#26622f]%s[/color]" % ", ".join(who) if not who.is_empty() else "[color=#9e3a0c]%s[/color]" % _nobody_text(str(rid))
+			var from := str(SkillTree.node(nid).get("name", "")) if nid != "" else "common knowledge"
+			var through := ""
+			if str(e.get("by", "player")) != "player":
+				through = " through %s" % str(WorkshopKnowledge.who_text(str(e["by"])))
+			lines.append("[b]%s[/b]  [color=#6a5e50][i]%s%s[/i][/color] — %s" % [DB.recipe(str(rid)).get("name", rid), from, through, make])
+		var blk := UIKit.rich("\n".join(lines), 18)
+		blk.fit_content = true
+		blk.name = "Designs_" + disc
+		kview.add_child(blk)
+	# techniques and methods
+	var known_t: Dictionary = WorkshopKnowledge.st()["techniques"]
+	if not known_t.is_empty():
+		kview.add_child(UIKit.label("Techniques and methods — %d" % known_t.size(), 22, "heading", UIKit.RUBRIC))
+		var tl := []
+		for tid in known_t:
+			var nid2 := str((known_t[tid] as Dictionary).get("node", ""))
+			for t in SkillTree.node(nid2).get("unlocks", {}).get("techniques", []):
+				if str(t.get("id", "")) != str(tid):
+					continue
+				var whose := "a method the workshop knows"
+				if float(t.get("quality", 0)) > 0.0:
+					if WorkshopKnowledge.node_owner(nid2) == "smith":
+						whose = "[color=#7e2418]yours — your own path[/color]"
+					else:
+						var sk: Array = SkillTree.node(nid2)["requires"].get("skill", ["", 0])
+						var users := []
+						for aid in Workers.workshop_actors():
+							if WorkshopKnowledge.technique_applies(str(aid), nid2):
+								users.append("you" if str(aid) == "player" else str(Workers.resolve(str(aid))["name"]))
+						whose = "[color=#2e4e6e]helps whoever has %s %d — %s[/color]" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), ", ".join(users) if not users.is_empty() else "nobody on the staff yet"]
+				tl.append("[b]%s[/b] — %s\n   [i][color=#6a5e50]%s[/color][/i]" % [t.get("name", tid), whose, t.get("desc", "")])
+		var tb := UIKit.rich("\n".join(tl), 18)
+		tb.fit_content = true
+		tb.name = "Techniques"
+		kview.add_child(tb)
+	# materials, discoveries, credit
+	var mats := WorkshopKnowledge.materials()
+	if not mats.is_empty():
+		kview.add_child(UIKit.label("Materials the workshop works", 22, "heading", UIKit.RUBRIC))
+		var mb := UIKit.rich(" · ".join(mats.values()), 18)
+		mb.fit_content = true
+		kview.add_child(mb)
+	var disc_l := WorkshopKnowledge.discoveries()
+	kview.add_child(UIKit.label("Discoveries", 22, "heading", UIKit.RUBRIC))
+	var dl := []
+	for d in disc_l:
+		dl.append("[b]%s[/b] — [i]%s[/i]" % [d["name"], d["hint"]])
+	var db := UIKit.rich("\n".join(dl) if not dl.is_empty() else "[i]None yet. Some knowledge cannot be bought or taught — it is found in the world.[/i]", 18)
+	db.fit_content = true
+	kview.add_child(db)
+	var cl := []
+	var seen := {}
+	for nid3 in (WorkshopKnowledge.st()["nodes"] as Dictionary):
+		var who3 := WorkshopKnowledge.brought_by(str(nid3))
+		if who3 == "player" or seen.has(who3):
+			continue
+		seen[who3] = true
+		var names := WorkshopKnowledge.credit(who3).map(func(x): return str(SkillTree.node(str(x)).get("name", x)))
+		cl.append("[b]%s[/b]: %s" % [WorkshopKnowledge.who_text(who3), ", ".join(names)])
+	kview.add_child(UIKit.label("Brought in through your staff", 22, "heading", UIKit.RUBRIC))
+	var cb := UIKit.rich("\n".join(cl) if not cl.is_empty() else "[i]Nothing yet — a specialist on your staff can bring in their craft's knowledge beyond your own basic level.[/i]", 18)
+	cb.fit_content = true
+	cb.name = "Credit"
+	kview.add_child(cb)
+	var rest := int(c["designs_total"]) - int(c["designs"])
+	if rest > 0:
+		kview.add_child(UIKit.note("Not known yet: %d Design%s — the Skill Tree shows where each is learned." % [rest, "" if rest == 1 else "s"], 18))
+
+
+## Why nobody on the staff may make a known Design, in a few words.
+static func _nobody_text(rid: String) -> String:
+	var q := Workers.specialist_need("player", rid)
+	if not q.is_empty():
+		for aid in Workers.workshop_actors():
+			if str(aid) != "player" and Workers.profession(str(aid)) == str(q["profession"]):
+				var r := Workers.can_do(str(aid), rid)
+				return "%s, your %s: %s" % [str(Workers.resolve(str(aid))["name"]), str(q["profession"]) if Workers.PROFESSION.has(str(q["profession"])) else "specialist",
+					(r.left(1).to_lower() + r.substr(1)).trim_suffix(".")]
+		return "needs %s (%s %d)" % [Workers.a_noun(str(q["profession"])), SkillSys.skill_name(str(q["skill"])), int(q["level"])]
+	var why := Crafting.recipe_locked_reason(rid)
+	return "not yet: " + (why.left(70) + ("…" if why.length() > 70 else ""))
 
 
 func _learn(id: String) -> void:
@@ -477,6 +705,7 @@ class TreeCanvas extends Control:
 			_banner(b, cx, fh, fi)
 			if str(b["id"]) == "arcane" and not SkillTree.is_unlocked("ar_energy"):
 				_sealed_note(cx, fi)
+		_bands(fi)
 		# prerequisite lines
 		for n in SkillTree.nodes():
 			if not visible_node(n):
@@ -495,6 +724,29 @@ class TreeCanvas extends Control:
 				continue
 			_node(n, fb)
 
+	## B2: the two kinds of branch, named above their columns — YOUR OWN PATH and THE WORKSHOP'S KNOWLEDGE.
+	func _bands(fi: Font) -> void:
+		var groups := {"smith": [], "workshop": []}
+		for b in SkillTree.branches():
+			(groups[WorkshopKnowledge.branch_owner(str(b["id"]))] as Array).append(float(b["x"]))
+		var fs := int(maxf(9.0, 18.0 * zoom))
+		var fbold := Assets.font("body_bold")
+		for g in groups:
+			var xs: Array = groups[g]
+			if xs.is_empty():
+				continue
+			var x0 := ORIGIN.x + float(xs.min()) * COL_W - COL_W * 0.5 + 14
+			var x1 := ORIGIN.x + float(xs.max()) * COL_W + COL_W * 0.5 - 14
+			var col := Color("#7e2418") if g == "smith" else Color("#2e4e6e")
+			var txt := "YOUR OWN PATH — your own levels" if g == "smith" else "THE WORKSHOP'S KNOWLEDGE — through a competent hand: you at your basic level, or a specialist"
+			var a := scr(Vector2(x0, 14))
+			var bpt := scr(Vector2(x1, 14))
+			var sz := fbold.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			var mid := (a.x + bpt.x) * 0.5
+			draw_line(a, Vector2(mid - sz.x * 0.5 - 8, a.y), Color(col, 0.6), maxf(1.0, 1.6 * zoom))
+			draw_line(Vector2(mid + sz.x * 0.5 + 8, a.y), bpt, Color(col, 0.6), maxf(1.0, 1.6 * zoom))
+			draw_string(fbold, Vector2(mid - sz.x * 0.5, a.y + fs * 0.35), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col.darkened(0.15))
+
 	## The arcane branch starts sealed: a large faint padlock and a line of explanation in its empty column.
 	func _sealed_note(cx: float, fi: Font) -> void:
 		var c := scr(Vector2(cx, ORIGIN.y + ROW_H * 1.6))
@@ -505,7 +757,7 @@ class TreeCanvas extends Control:
 		draw_circle(c + Vector2(0, k * 0.1), k * 0.25, Color("#e9dcc0"))
 		var fs := int(maxf(8.0, 17.0 * zoom))
 		var w := (COL_W - 50) * zoom
-		draw_multiline_string(fi, c + Vector2(-w * 0.5, k * 1.6 + fs), "Sealed. Arcane metalwork opens once a smith has mastered heat treatment, can engrave runes and has handled mithril.",
+		draw_multiline_string(fi, c + Vector2(-w * 0.5, k * 1.6 + fs), "Sealed. Arcane metalwork opens once the workshop knows advanced heat treatment and rune engraving and has handled mithril.",
 			HORIZONTAL_ALIGNMENT_CENTER, w, fs, 5, Color("#3e2a5a", 0.8))
 
 	func _banner(b: Dictionary, cx: float, fh: Font, fi: Font) -> void:
@@ -532,7 +784,10 @@ class TreeCanvas extends Control:
 		draw_arc(Vector2(top.x - hw - 5 * zoom, y), 5 * zoom, PI * 0.5, PI * 2.0, 10, Color(UIKit.INK, 0.7), maxf(1.0, 1.4 * zoom))
 		draw_arc(Vector2(top.x + hw + 5 * zoom, y), 5 * zoom, -PI, PI * 0.5, 10, Color(UIKit.INK, 0.7), maxf(1.0, 1.4 * zoom))
 		var sk := str(b["skill"])
-		var sub := "%s %d" % [SkillSys.skill_name(sk), Game.player_level(sk)]
+		var sub := "%s %d · yours" % [SkillSys.skill_name(sk), Game.player_level(sk)]
+		if WorkshopKnowledge.branch_owner(str(b["id"])) != "smith":
+			var best := Workers.best_level(sk)
+			sub = "%s %d · %s" % [SkillSys.skill_name(sk), int(best["level"]), "you" if str(best["actor"]) == "player" else str(best["name"])]
 		var fs2 := int(maxf(8.0, 16.0 * zoom))
 		var s2 := fi.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2)
 		draw_string(fi, Vector2(top.x - s2.x * 0.5, y + fs2 * 1.3), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, Color(UIKit.INK, 0.75))

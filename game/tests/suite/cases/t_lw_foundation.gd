@@ -313,19 +313,28 @@ func test_tree_seam_specialist_meets_another_crafts_node() -> void:
 
 
 # ------------------------------------------------------------------ save step 5
+## The schema version save step "worker professions" produces (5; looked up so later steps do not move this test).
+func _step_professions() -> int:
+	for st in SaveMigrations.STEPS:
+		if str(st["name"]) == "worker professions":
+			return int(st["to"])
+	return -1
+
+
 func test_migration_5_golden_saves() -> void:
+	var five := _step_professions()
 	for g in GOLDEN:
 		var data := _golden_data(g)
 		if not check(not data.is_empty(), "%s parses" % g):
 			continue
-		SaveMigrations.run(data, 4)
+		SaveMigrations.run(data, five - 1)
 		var staff: Array = data.get("apprentices", {}).get("staff", [])
 		var before := staff.map(func(a): return _without_profession(a))
 		var player_before := JSON.stringify(data["player"]["skills"], "", true)
 		var hire_before := JSON.stringify(data.get("hirelings", []), "", true)
-		var rep := SaveMigrations.run(data, 5)   # step 5 itself (later steps have their own tests)
+		var rep := SaveMigrations.run(data, five)
 		eq(rep["steps"], ["worker professions"], "%s: step 5 runs" % g)
-		eq(int(data["version"]), 5, "%s: now schema 5" % g)
+		eq(int(data["version"]), five, "%s: now schema 5" % g)
 		eq(str(data["player"].get("profession", "")), "blacksmith", "%s: the smith is the blacksmith" % g)
 		eq(JSON.stringify(data["player"]["skills"], "", true), player_before, "%s: the smith keeps every level" % g)
 		eq(JSON.stringify(data.get("hirelings", []), "", true), hire_before, "%s: field hirelings are untouched" % g)
@@ -335,7 +344,7 @@ func test_migration_5_golden_saves() -> void:
 		for c in data.get("apprentices", {}).get("applicants", []):
 			check(Workers.PROFESSIONS.has(str(c.get("profession", ""))), "%s: a waiting applicant has a profession" % g)
 		var once := JSON.stringify(data, "", true)
-		SaveMigrations.apply_step(5, data)
+		SaveMigrations.apply_step(five, data)
 		eq(JSON.stringify(data, "", true), once, "%s: step 5 again changes nothing" % g)
 
 
@@ -372,7 +381,9 @@ func test_migration_5_schema4_save_with_apprentices() -> void:
 	check(save_as_version("suite_lwf_v4", 4), "written as a schema-4 save")
 	check(Saves.load_slot("suite_lwf_v4"), "it loads")
 	var rep: Dictionary = Saves.last_load.get("migration", {})
-	eq((rep.get("steps", []) as Array).slice(0, 1), ["worker professions"], "step 5 runs first (later steps follow)")
+	var steps: Array = rep.get("steps", [])
+	check(not steps.is_empty() and str(steps[0]) == "worker professions" and steps.count("worker professions") == 1,
+		"step 5 runs first and once (then any later steps: %s)" % str(steps))
 	eq(str(Apprentices.get_a(str(a["id"])).get("profession", "")), "runesmith", "the strongest skill decides (runecraft 6 over smithing 3)")
 	eq(str(Apprentices.get_a(str(b["id"])).get("profession", "")), "alchemist", "a tie goes to the preferred discipline (alchemy 5 = stitching 5)")
 	eq(str(Apprentices.get_a(str(c["id"])).get("profession", "")), "blacksmith", "a smithing apprentice becomes a blacksmith")

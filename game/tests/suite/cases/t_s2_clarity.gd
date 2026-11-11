@@ -102,7 +102,7 @@ func test_leather_batch_explained() -> void:
 	var old := pure.duplicate(true)
 	(old["craft"] as Dictionary).erase("yield")
 	var t4 := "\n".join(PackedStringArray(CraftResultPanel.yield_lines(old)))
-	check(t4.contains("+1 bonus unit") and t4.contains("the recipe makes 2"), "an older record is reconstructed (%s)" % t4)
+	check(t4.contains("+1 bonus unit") and t4.contains("the Design makes 2"), "an older record is reconstructed (%s)" % t4)
 	# equipment has no batch
 	give("ingot_iron", 2)
 	give("leather_cured", 1)

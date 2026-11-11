@@ -598,7 +598,7 @@ func _build_stations() -> void:
 			node = fs
 		var is_main := mains.has(sid)
 		# Living Workshop (#37): every INSTANCE is its own interactable ("anvil#2"); the sprite and base are its type's
-		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", sid, Property.instance_label(sid) + (" — choose recipes here" if is_main else ""))
+		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", sid, Property.instance_label(sid) + (" — choose Designs here" if is_main else ""))
 		if is_main:
 			_main_station_mark(pos, size)
 		for fx in st.get("fx", []):

@@ -11,7 +11,7 @@ const SOCKET := 68.0
 ## id, title, icon, hotkey action ("" = none), panel, args, right-click panel, right args, description
 const BUTTONS := [
 	["inventory", "Inventory", "ui/tb_inventory", "inventory", "inventory", {}, "", {}, "Your stores, equipment and pieces for sale."],
-	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth: the techniques, stations and recipes you can learn."],
+	["skills", "Skill Tree", "ui/tb_skilltree", "panel_skills", "skilltree", {}, "skills", {}, "Plan your growth: your own path and the workshop's knowledge: the techniques, stations and Designs it can learn."],
 	["hirelings", "Hirelings", "ui/tb_hirelings", "panel_hirelings", "hirelings", {}, "", {}, "Hire, assign work and send people on expeditions."],
 	["adventurers", "Adventurers", "ui/tb_adventurers", "panel_adventurers", "adventurers", {}, "wanted", {}, "Who is in town and how they fare."],
 	["orders", "Commissions", "ui/tb_orders", "panel_orders", "orders", {}, "", {}, "Special orders placed by adventurers."],

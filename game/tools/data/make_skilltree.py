@@ -1,18 +1,28 @@
-"""Generates game/data/skilltree.json — the Blacksmith's Skill Tree.
+"""Generates game/data/skilltree.json — the Skill Tree: the smith's own path and the workshop's knowledge.
 Run: python3 tools/data/make_skilltree.py   (make_data.py also runs it)
 
-Seven branches of nodes (Textiles & Tailoring shares the Enchanted Stitching skill with Leatherworking). A node is learned once its requirements are met:
-  requires.skill            [skill_id, level]       a player skill level
+Seven branches of nodes (Textiles & Tailoring shares the Enchanted Stitching skill with Leatherworking), of two kinds
+(The Living Workshop B2; canonical §4.2, §5, D2, D3):
+  owner "smith"     the smith's own path — Traditional Smithing and Mining & Metallurgy, the blacksmith's craft: his
+                    personal techniques and mastery. A node's skill requirement is HIS level; its techniques are his.
+  owner "workshop"  the workshop's knowledge of the other crafts — Arcane Metalworking, Runecrafting, Alchemy,
+                    Leatherworking, Textiles & Tailoring. Learned through a competent worker: the smith at his basic
+                    level of that craft, or a specialist of the branch's profession on the staff. A technique there
+                    helps whoever performs the work at the node's skill level (knowledge never grants mastery).
+Learning any node adds its Designs (internal key: recipes), stations and techniques to the workshop's knowledge
+(WorkshopKnowledge). A node's skill requirement is always its own branch's craft (validated: no cross-profession gates).
+A node is learned once its requirements are met:
+  requires.skill            [skill_id, level]       a level in the branch's own craft (see owner above)
   requires.nodes            [node ids]              prerequisite nodes (drawn as lines)
   requires.flags            [flag ids]              knowledge / world discoveries (see FLAGS for hints)
   requires.stations_installed [station ids]         installed in the workshop (Property.is_installed)
-  requires.items_seen       [item ids]              the smith has held the material at least once
+  requires.items_seen       [item ids]              the workshop has held the material at least once
   requires.items            {item id: n}            consumed when learning
   requires.gold             n                       tuition, paid when learning
 and unlocks:
-  unlocks.recipes / unlocks.stations (eligible for purchase and installation) / unlocks.techniques
+  unlocks.recipes (Designs) / unlocks.stations (eligible for purchase and installation) / unlocks.techniques
   secret: true   hidden ("???") until its flags are known.
-Every recipe and every station is unlocked by exactly one node (validated below).
+Every Design and every station is taught by exactly one node (validated below).
 Nodes listed in START are known from a new game.
 """
 import json
@@ -24,19 +34,19 @@ D = os.path.join(HERE, "..", "..", "data")
 sys.path.insert(0, HERE)
 
 BRANCHES = [
-    dict(id="mining", name="Mining & Metallurgy", skill="mining", x=0, colour="#8a6a3a",
+    dict(id="mining", name="Mining & Metallurgy", skill="mining", x=0, owner="smith", profession="blacksmith", colour="#8a6a3a",
          desc="Ores, refining and alloys — from honest iron to orichalcum."),
-    dict(id="smithing", name="Traditional Smithing", skill="smithing", x=1, colour="#7e2418",
+    dict(id="smithing", name="Traditional Smithing", skill="smithing", x=1, owner="smith", profession="blacksmith", colour="#7e2418",
          desc="The forge and the anvil: blades, armour and the master's eye."),
-    dict(id="arcane", name="Arcane Metalworking", skill="arcane_metalwork", x=2, colour="#5a3e8a",
-         desc="Magic bound into the metal itself. Opens once a smith can handle leyline energy."),
-    dict(id="runecraft", name="Runecrafting", skill="runecraft", x=3, colour="#2e4e6e",
+    dict(id="arcane", name="Arcane Metalworking", skill="arcane_metalwork", x=2, owner="workshop", profession="arcanist", colour="#5a3e8a",
+         desc="Magic bound into the metal itself. Opens once the workshop can handle leyline energy."),
+    dict(id="runecraft", name="Runecrafting", skill="runecraft", x=3, owner="workshop", profession="runesmith", colour="#2e4e6e",
          desc="Reading, restoring, engraving and finally inventing runes."),
-    dict(id="alchemy", name="Alchemy", skill="alchemy", x=4, colour="#3e6a2e",
+    dict(id="alchemy", name="Alchemy", skill="alchemy", x=4, owner="workshop", profession="alchemist", colour="#3e6a2e",
          desc="Oils, distillations, reagents, infusions and exotic compounds."),
-    dict(id="leather", name="Leatherworking & Enchanted Stitching", skill="enchanted_stitching", x=5, colour="#6a4422",
+    dict(id="leather", name="Leatherworking & Enchanted Stitching", skill="enchanted_stitching", x=5, owner="workshop", profession="leatherworker", colour="#6a4422",
          desc="Hides to monster leather, linen to ethereal thread — and dragon scale."),
-    dict(id="tailoring", name="Textiles & Tailoring", skill="enchanted_stitching", x=6, colour="#6e3a5e",
+    dict(id="tailoring", name="Textiles & Tailoring", skill="enchanted_stitching", x=6, owner="workshop", profession="leatherworker", colour="#6e3a5e",
          desc="Flax, wool and silk spun, woven and cut into garments — up to moonweave and the archmage's robe."),
 ]
 
@@ -44,7 +54,7 @@ BRANCHES = [
 FLAGS = {
     "rune_knowledge": dict(name="Rune lore", hint="learned by restoring an old runestone from a weathered tablet"),
     "dragon_lore": dict(name="Dragon lore", hint="rumoured in the harbour taverns — or learned by studying a dragon's scale or bone"),
-    "recipe_starsteel": dict(name="The starsteel notes", hint="a Forgotten Recipe found among the relics"),
+    "recipe_starsteel": dict(name="The starsteel notes", hint="a Forgotten Design found among the relics"),
     "found_mithril": dict(name="Mithril found", hint="hold mithril ore for the first time"),
 }
 
@@ -140,7 +150,7 @@ NODES = [
       techniques=[T("t_rare_minerals", "Rare minerals", "Gems and rare ores in expedition loot are recognised at a glance.")], icon="icons/gem_garnet"),
     N("m_adv", "mining", "Advanced Processing", "Double refining, fluxes and slow cooling for flawless stock.", 0, 3.2,
       skill=("mining", 3), nodes=["m_rare"],
-      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material recipe.", 2, category=["material"])], icon="icons/ingot_steel"),
+      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material Design.", 2, category=["material"])], icon="icons/ingot_steel"),
     N("m_mithril", "mining", "Mithril", "The pale metal that drinks magic. It must be charged before it can be worked.", 0, 4.2,
       skill=("mining", 3), nodes=["m_adv"], seen=["ore_mithril"],
       techniques=[T("t_mithril", "Mithril lore", "Mithril can be charged at the Arcane Crucible.")], icon="icons/ore_mithril"),
@@ -152,8 +162,8 @@ NODES = [
       recipes=["smelt_orichalcum"]),
 
     # ------------------------------------------------------------ Arcane Metalworking (initially locked)
-    N("ar_energy", "arcane", "Magical Energy Handling", "Feeling the leyline in the metal — and surviving it. You sacrifice a nugget of mithril to learn how it drinks magic.", 2, 4.4,
-      skill=("smithing", 6), nodes=["s_heat", "r_engrave", "m_mithril"], items={"ore_mithril": 1},
+    N("ar_energy", "arcane", "Magical Energy Handling", "Feeling the leyline in the metal — and surviving it. The workshop sacrifices a nugget of mithril to learn how it drinks magic.", 2, 4.4,
+      nodes=["s_heat", "r_engrave", "m_mithril"], items={"ore_mithril": 1},
       techniques=[T("t_leyline", "Leyline sense", "You can tell a charged ingot from a dead one by touch.")], icon="icons/ingot_mithril"),
     N("ar_crucible", "arcane", "The Arcane Crucible", "Warded fire that melts mithril while binding magic into it.", 2, 5.4,
       skill=("arcane_metalwork", 0), nodes=["ar_energy"], gold=150,
@@ -284,8 +294,18 @@ def validate(nodes, recipes, stations):
     ids = {n["id"] for n in nodes}
     assert len(ids) == len(nodes), "duplicate node id"
     by = {n["id"]: n for n in nodes}
+    craft = {"blacksmith": ["smithing", "mining"], "leatherworker": ["enchanted_stitching"], "runesmith": ["runecraft"],
+             "alchemist": ["alchemy"], "arcanist": ["arcane_metalwork"]}
+    bys = {b["id"]: b for b in BRANCHES}
+    for b in BRANCHES:
+        assert b["owner"] in ("smith", "workshop") and b["profession"] in craft, b["id"]
+        assert b["skill"] in craft[b["profession"]], ("branch skill outside its profession", b["id"])
+        assert (b["owner"] == "smith") == (b["profession"] == "blacksmith"), ("the smith's own path is the blacksmith's", b["id"])
     for n in nodes:
-        assert n["branch"] in {b["id"] for b in BRANCHES}, n["id"]
+        assert n["branch"] in bys, n["id"]
+        sk = n["requires"].get("skill")
+        # B2: a node asks a level only in its own branch's craft — never another profession's (no cross-profession gates)
+        assert not sk or sk[0] in craft[bys[n["branch"]]["profession"]], ("cross-profession skill gate", n["id"], sk)
         for p in n["requires"].get("nodes", []):
             assert p in ids, (n["id"], p)
         for f in n["requires"].get("flags", []):

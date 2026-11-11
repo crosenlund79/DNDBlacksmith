@@ -188,7 +188,7 @@ func _overview(it: Dictionary) -> void:
 	if not mats.is_empty():
 		lines.append("[b]Materials:[/b] %s" % ", ".join(PackedStringArray(mats)))
 	if str(cr.get("recipe_name", "")) != "":
-		lines.append("[b]Recipe:[/b] %s (%d operations%s)" % [cr["recipe_name"], (cr.get("ops", []) as Array).size(), ", masterwork" if bool(cr.get("masterwork", false)) else ""])
+		lines.append("[b]Design:[/b] %s (%d operations%s)" % [cr["recipe_name"], (cr.get("ops", []) as Array).size(), ", masterwork" if bool(cr.get("masterwork", false)) else ""])
 	var q0 := float(og.get("quality", it.get("quality", 0.0)))
 	var q1 := float(it.get("quality", 0.0))
 	lines.append("[b]Craftsmanship:[/b] %d%%%s" % [int(round(q0)), ("  →  %d%% after work at the forge" % int(round(q1))) if absf(q1 - q0) >= 0.5 else ""])

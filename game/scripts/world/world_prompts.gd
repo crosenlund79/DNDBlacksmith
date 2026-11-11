@@ -122,7 +122,7 @@ static func _station(sid: String) -> Dictionary:
 	if ready > 0:
 		acts.append("Craft (%d ready)" % ready)
 	else:
-		acts.append("Recipes")
+		acts.append("Designs")
 		p["off"].append("Nothing ready — materials missing")
 	match Property.type_of(sid):
 		"grinding_wheel":

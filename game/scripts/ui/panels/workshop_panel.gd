@@ -733,7 +733,7 @@ func _add_commission() -> void:
 		b.add_theme_font_size_override("font_size", 16)
 		b.disabled = queued
 		var rid := Apprentices.commission_recipe(o, {})
-		b.tooltip_text = "Already in the queue." if queued else ("Recipe: %s. You deliver the finished piece yourself." % str(DB.recipe(rid).get("name", "—")) if rid != "" else "No recipe you know meets it yet.")
+		b.tooltip_text = "Already in the queue." if queued else ("Design: %s. You deliver the finished piece yourself." % str(DB.recipe(rid).get("name", "—")) if rid != "" else "No Design you know meets it yet.")
 		f.add_child(b)
 		n += 1
 	if n == 0:
