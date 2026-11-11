@@ -51,9 +51,11 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 | FAMILY | 2 | #50–52 spouse/pet, #40 steward sleep pace | brief `docs/lw/lw_w_family.md` (031101b); after FOUNDATION | |
 
 ## Lead pending
-- [x] UI + FOUNDATION merged (61bf1f2): lead full run ALL GREEN — compile 245/0, suite 351/351, unit 390/390.
+- [x] UI + FOUNDATION merged (61bf1f2): lead full run ALL GREEN — compile 245/0, suite 351/351, unit 390/390; rendered
+  `lw_foundation` and `lw_ui` 0 failures on the merged head.
 - [ ] Merge RELIABILITY (still running; #59–60 crash reproduced, root cause in progress).
-- [ ] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on the merged head; PRODUCTION's schema step is renumbered to 7 at merge (each worker appends after 5 in its branch).
+- [ ] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on a9a08ca (WIP → `claude/lw-wip-knowledge|production|family`);
+  all workers were paused by the 5-hour usage limit at ~12:5x UTC and resumed at 13:22 UTC from their own transcripts; PRODUCTION's schema step is renumbered to 7 at merge (each worker appends after 5 in its branch).
 - [ ] Merge wave 2; consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
   idempotence, 30/365-day soaks, conservation, zero steward XP; real saves unchanged.
 - [ ] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap).
