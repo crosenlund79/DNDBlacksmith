@@ -134,7 +134,9 @@ func _apprentices() -> void:
 		var pref := ""
 		for d in p.get("prefs", []):
 			pref = str(Crafting.DISCIPLINE_NAME.get(str(d), str(d)))
-		var lab := UIKit.rich("[font_size=26][b]%s[/b][/font_size] · %s\n[i]%s[/i] — leans to [b]%s[/b]\n%s\n%s\nWage [b]%d g/day[/b] · signing fee [b]%d g[/b]" % [str(p["name"]), str(p.get("race", "")),
+		var prof := str(p.get("profession", ""))   # Living Workshop B1: every applicant comes with a profession
+		var lab := UIKit.rich("[font_size=26][b]%s[/b][/font_size] · %s · [color=#7e2418][b]%s[/b][/color]\n[i]%s[/i] — leans to [b]%s[/b]\n%s\n%s\nWage [b]%d g/day[/b] · signing fee [b]%d g[/b]" % [str(p["name"]), str(p.get("race", "")),
+			Workers.profession_name(prof) if prof != "" else "apprentice",
 			str(p.get("personality", "")), pref.to_lower() if pref != "" else "any craft", ApprenticeUI.traits_bbcode(p.get("traits", []), true),
 			ApprenticeUI.levels_text(p.get("levels", {})), int(p.get("wage", 0)), int(p.get("fee", 0))], 19)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL

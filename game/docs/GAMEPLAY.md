@@ -180,7 +180,7 @@ You can employ up to 3 hirelings alongside Brannoc. You start with **Borin Flint
 - Everyone, Brannoc included, shares the same trainable skills: Mining, Smithing, Alchemy, Runecraft, Travelling (scouting, trading, transport) and Relic Hunting.
 - Skills rise with the work that uses them.
 - **Traits:** each employee has a strength and often a weakness, such as Forge-born, Nimble fingers, Silver tongue, Keen eye, Quick learner or Hardy, against Bad back, Fearful, Frail, Restless or Heavy-handed. Traits change their output, their expedition risk and how fast they learn.
-- Nobody is locked to a profession. Anyone can do any work; skill and traits decide how well.
+- Hirelings are field hands, not workshop specialists: they split their day between their work skills freely; skill and traits decide how well. (Workshop apprentices have professions — see The Living Workshop below.)
 
 **Work in the Ledger of Hands [H]:**
 
@@ -562,3 +562,12 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 | **Major contracts** | Patrons from a wool merchant to the Crown, opened by real accomplishments (a royal letter needs a great lord's order delivered well, an Epic piece or plaques and a renowned forge); work at the Project Bench in blocks of 1–4 hours, apprentices add contract hours; patron crates, rare materials, an optional masterpiece; outcomes from excellent to late — never a game over | `contracts.gd`, `contracts_panel.gd`, `data/contracts.json` |
 
 **Screenshots:** `docs/screenshots/living_realm/`.
+
+## The Living Workshop — B1 professional foundations (in progress on `claude/living-workshop`)
+
+| What | How it works | Where |
+|---|---|---|
+| **Professions** | Every workshop worker has one: blacksmith (the smith), leatherworker & tailor, runesmith, alchemist & herbalist, arcanist. Applicants come with one (arcanists once the Arcane Foundry stands); existing apprentices got theirs from their strongest workshop skill (save step 5). Field hirelings keep their own trade and a read-only field role | `workers.gd`, `apprentices.gd` |
+| **Competence is personal** | Checks (zone and pace), quality, station access and eligibility follow the person doing the operation — their own level in the station's discipline — never the smith's on their behalf | `Workers.can_do`, `Crafting.check_params(..., {"actor"})` |
+| **The smith's other crafts stay basic** | Smithing and mining grow without limit; his other crafts grow to level 5 (levels earned earlier are kept). Basic work in another craft stays open to him; master-grade work needs a specialist — the Design says who, and who on the staff can | `Workers.growth_cap`, `Workers.specialist_text` |
+| **Workshop knowledge** | What the forge knows (the skill tree's Designs and stations) gates everyone; a specialist is no longer limited to what the smith can do himself, and a node in another craft's branch is met by a specialist's level | `Workers.knowledge_reason`, `SkillTree.requirements` |

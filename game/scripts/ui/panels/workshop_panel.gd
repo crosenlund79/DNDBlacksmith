@@ -121,7 +121,7 @@ func _app_card(a: Dictionary) -> Control:
 	var v := UIKit.vbox(2)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sp := str(a.get("specialty", ""))
-	v.add_child(UIKit.rich("[font_size=22][b]%s[/b][/font_size]  [color=#7e2418]%s%s[/color]" % [str(a["name"]), Apprentices.rank_name(a), (" · " + Apprentices.category_name(sp)) if sp != "" else ""], 17))
+	v.add_child(UIKit.rich("[font_size=22][b]%s[/b][/font_size]  [color=#7e2418]%s · %s%s[/color]" % [str(a["name"]), Workers.title(a), Apprentices.rank_name(a), (" · " + Apprentices.category_name(sp)) if sp != "" else ""], 17))
 	var stw := ApprenticeUI.status_word(a)
 	var stc := "#24409a" if str(a.get("status", "")) == "working" else "#6e5a40"
 	if not (a.get("notice", {}) as Dictionary).is_empty():
@@ -593,7 +593,7 @@ static func pickable_recipes(kind: String) -> Array:
 func _add_recipe(kind: String) -> void:
 	var recs := pickable_recipes(kind)
 	if recs.is_empty():
-		adder.add_child(_line("No apprentice can make any %s yet (their rank, their skill, or recipes you have not learned)." % ("equipment" if kind == "craft" else "materials, potions or runes"), 17, "body_italic"))
+		adder.add_child(_line("No apprentice can make any %s yet (their rank, their own skill, or Designs the workshop has not learned)." % ("equipment" if kind == "craft" else "materials, potions or runes"), 17, "body_italic"))
 		return
 	var row := UIKit.hbox(8)
 	var ob := OptionButton.new()

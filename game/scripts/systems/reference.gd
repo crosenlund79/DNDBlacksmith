@@ -240,8 +240,15 @@ static func _skilltree(out: Array) -> void:
 		var sd: Dictionary = s if s is Dictionary else DB.skills.get(str(s), {})
 		if sd.is_empty():
 			continue
-		_e(out, "skilltree", "%s (you: level %d)" % [str(sd.get("name", "")), Game.player_level(str(sd.get("id", "")))] if not Game.state.is_empty() else str(sd.get("name", "")),
-			str(sd.get("desc", "")), "", "skill level xp")
+		var sid := str(sd.get("id", ""))
+		var basic := not Game.state.is_empty() and Workers.is_basic("player", sid)
+		_e(out, "skilltree", ("%s (you: level %d%s)" % [str(sd.get("name", "")), Game.player_level(sid), " — basic" if basic else ""]) if not Game.state.is_empty() else str(sd.get("name", "")),
+			str(sd.get("desc", "")) + ((" The smith's %s grows to level %d; mastery belongs to %s." % [str(sd.get("name", "")).to_lower(), Workers.BASIC_LEVEL,
+			Workers.a_noun(Workers.skill_profession(sid))]) if basic else ""), "", "skill level xp")
+	_e(out, "skilltree", "Professions and competence", ("Everyone in the workshop has a profession — blacksmith, leatherworker & tailor, runesmith, alchemist & herbalist (herb lore belongs to the alchemist) or arcanist — and works at their OWN level: a check's zone and pace, the quality of their work, the stations they may use and the work they may take all follow the person at the station, not the smith. "
+		+ "The smith is the blacksmith: smithing and mining grow without limit; his other crafts grow to level %d (levels he earned before are kept). Basic work in another craft stays open to him at his own level; master-grade work (a Design whose difficulty asks more than level %d) needs a specialist of that craft — locked Designs say who. "
+		+ "What the workshop KNOWS (the Designs and stations it has learned in the skill tree) is separate from anyone's competence: a specialist can only make a Design the workshop knows, and a node in another craft's branch can be met by a specialist on the staff. Field hirelings keep their own trade (mining, trading, relic hunting) and do not work the stations.") % [Workers.BASIC_LEVEL, Workers.BASIC_LEVEL],
+		"", "profession specialist competence basic runesmith alchemist arcanist leatherworker blacksmith eligible who can")
 	_e(out, "skilltree", "How skills grow", "Every check, finished piece, repair and expedition earns experience in the skill it uses. Experts learn little from routine work — take on harder recipes to keep growing.", "", "experience xp level")
 	_e(out, "skilltree", "The skill tree", "Beyond plain levels, the smith's skill tree holds new techniques, stations and recipes. Points are earned as you level; each branch opens deeper nodes. Locked nodes tell you what they need. Open it from the toolbar.", "ui/tb_skilltree", "skill tree points unlock nodes branch")
 	_e(out, "skilltree", "Recipes and stations unlocked", "Some recipes need a skill level, a skill-tree node or a discovery (a recipe scroll, a relic studied). A locked recipe or station always says why in its tooltip.", "", "unlock locked requires")
