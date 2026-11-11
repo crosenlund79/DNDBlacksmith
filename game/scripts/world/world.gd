@@ -1909,7 +1909,7 @@ func _update_schedules(instant := false) -> void:
 ## unchanged; each person now has their own standing place there: the first keeps the exact spot (a seat stays a
 ## seat), the others the nearest free place on rings around it, on open ground in plain view of the spot.
 var _stand := {}          # spot -> {npc id: offset from the spot}
-const STAND_RINGS := [[0.85, 6], [1.5, 10], [2.2, 14]]   # [radius in tiles, places on the ring]
+const STAND_RINGS := [[1.0, 6], [1.75, 10], [2.5, 14]]   # [radius in tiles, places on the ring]
 ## Spots whose exact point matters (the counter's waiting seats, the exits out of the village).
 const STAND_EXACT := ["wait_seat_", "exit_"]
 

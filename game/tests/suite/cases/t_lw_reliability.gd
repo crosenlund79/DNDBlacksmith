@@ -340,7 +340,7 @@ func test_people_spread_around_their_destinations() -> void:
 				var sp := w.spot_for(str(id))
 				eq(str(n.target_spot), sp, "%s keeps their real schedule (%s)" % [id, sp])
 				if w.spots.has(sp):
-					check(n.position.distance_to(w.spots[sp]) <= 2.3 * VillageWorld.T, "%s stands at %s (%.0f px from it)" % [id, sp, n.position.distance_to(w.spots[sp])])
+					check(n.position.distance_to(w.spots[sp]) <= 2.6 * VillageWorld.T, "%s stands at %s (%.0f px from it)" % [id, sp, n.position.distance_to(w.spots[sp])])
 				at[sp] = int(at.get(sp, 0)) + 1
 			for sp in at:
 				if int(at[sp]) > 1 and not str(sp).begins_with("wait_seat_"):
