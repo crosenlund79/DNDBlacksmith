@@ -135,7 +135,7 @@ func test_dressing_never_blocks() -> void:
 	eq(_full_building(), "", "the full building is accepted")
 	train("smithing", 12)
 	for sk in ["runecraft", "alchemy", "enchanted_stitching", "arcane_metalwork"]:
-		train(sk, 12)
+		legacy_level(sk, 12)   # B1: other crafts stop at the basic level — an old save's earned levels (room tiers need 12)
 	Game.state["gold"] = 4000
 	(Game.state["world"] as Dictionary)["rep"] = 30.0   # a renowned name (D18: renown is earned, not bought)
 	var w := _world()

@@ -1,4 +1,4 @@
-## SkillSys — one progression framework for the player and hirelings.
+## SkillSys — one progression framework for the player, apprentices and hirelings.
 ## EN: A skill set is {skill_id: {"lvl": int, "xp": int}}. XP needed for the next level follows
 ##     base * level^exp (data/skills.json). Level-ups emit Events.skill_level_up.
 ## DA: Et færdighedssæt er {færdighed: {"lvl", "xp"}}. Erfaring til næste niveau følger
@@ -28,19 +28,27 @@ static func progress(sset: Dictionary, skill: String) -> float:
 	return float(e["xp"]) / float(xp_needed(int(e["lvl"]) + 1))
 
 
-## Adds XP; returns number of levels gained.
+## Adds XP; returns number of levels gained. `who` owns the experience ("player", an apprentice or hireling id): a
+## workshop worker's craft outside their profession grows only to Workers.BASIC_LEVEL (The Living Workshop B1, D2) —
+## at that level new experience is not banked; a level earned above it before B1 is kept, never reduced.
 static func add_xp(sset: Dictionary, skill: String, amount: int, who: String) -> int:
 	if not sset.has(skill):
 		sset[skill] = {"lvl": 0, "xp": 0}
 	var e: Dictionary = sset[skill]
 	var max_lvl := int(DB.skill_curve.get("max_level", 20))
+	var cap := mini(max_lvl, Workers.growth_cap(who, skill))
+	if cap < max_lvl and int(e["lvl"]) >= cap:
+		return 0   # beyond their profession: no new growth (what they earned stays)
 	e["xp"] = int(e["xp"]) + amount
 	var gained := 0
-	while int(e["lvl"]) < max_lvl and int(e["xp"]) >= xp_needed(int(e["lvl"]) + 1):
+	while int(e["lvl"]) < cap and int(e["xp"]) >= xp_needed(int(e["lvl"]) + 1):
 		e["xp"] = int(e["xp"]) - xp_needed(int(e["lvl"]) + 1)
 		e["lvl"] = int(e["lvl"]) + 1
 		gained += 1
 		Events.skill_level_up.emit(who, skill, int(e["lvl"]))
+	if cap < max_lvl and int(e["lvl"]) >= cap:
+		e["xp"] = 0
+		Workers.note_basic_reached(who, skill)
 	return gained
 
 

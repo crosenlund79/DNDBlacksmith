@@ -93,6 +93,15 @@ func train(skill: String, level: int) -> void:
 		guard += 1
 
 
+## An old save's earned level: experience first (train), then — for a craft outside the smith's profession, which since
+## The Living Workshop B1 stops growing at Workers.BASIC_LEVEL — the level an old save keeps (save step 5 never lowers
+## it). For content checks that need an all-round master smith; progression tests use train() and specialists.
+func legacy_level(skill: String, level: int) -> void:
+	train(skill, level)
+	if Game.player_level(skill) < level:
+		Game.player_skills()[skill] = {"lvl": level, "xp": 0}
+
+
 func days(n: int) -> void:
 	for i in n:
 		Game.advance_minutes(1440)

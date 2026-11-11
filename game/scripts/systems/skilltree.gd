@@ -156,9 +156,19 @@ static func requirements(id: String) -> Array:
 	var r: Dictionary = n["requires"]
 	if r.has("skill"):
 		var sk: Array = r["skill"]
-		var have := Game.player_level(str(sk[0]))
-		out.append({"ok": have >= int(sk[1]), "kind": "skill", "text": "%s %d (you: %d)" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), have],
-			"hint": "Raise it by crafting work that trains %s." % SkillSys.skill_name(str(sk[0]))})
+		# Living Workshop B1 (seam for KNOWLEDGE, wave 2): the smith's own craft needs HIS level; another craft is workshop
+		# knowledge a competent specialist on the staff can bring (Workers.tree_level) — no grind past his basic level
+		var you := Game.player_level(str(sk[0]))
+		var have := Workers.tree_level(str(sk[0]))
+		var best := Workers.best_level(str(sk[0]))
+		var txt := "%s %d (you: %d)" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), you]
+		if have > you:
+			txt = "%s %d (you: %d · %s: %d)" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), you, str(best["name"]), have]
+		var hint := "Raise it by crafting work that trains %s." % SkillSys.skill_name(str(sk[0]))
+		if Workers.is_basic("player", str(sk[0])) and int(sk[1]) > Workers.BASIC_LEVEL:
+			hint = "Beyond the smith's basic %s — %s on your staff with %s %d meets it." % [SkillSys.skill_name(str(sk[0])).to_lower(),
+				Workers.a_noun(Workers.skill_profession(str(sk[0]))), SkillSys.skill_name(str(sk[0])), int(sk[1])]
+		out.append({"ok": have >= int(sk[1]), "kind": "skill", "text": txt, "hint": hint})
 	for p in r.get("nodes", []):
 		var pn := node(str(p))
 		out.append({"ok": is_unlocked(str(p)), "kind": "node", "text": "Learned: %s (%s)" % [pn.get("name", p), branch(str(pn.get("branch", ""))).get("name", "")], "hint": ""})

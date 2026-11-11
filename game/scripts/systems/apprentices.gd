@@ -201,13 +201,18 @@ static func _skill_ids() -> Array:
 	return sk if sk is Array and not (sk as Array).is_empty() else ["smithing", "runecraft", "alchemy", "enchanted_stitching", "arcane_metalwork"]
 
 
-## A new week's applicants for the workshop (1–3). Low starting skills, 1–2 traits, a preferred discipline.
+## A new week's applicants for the workshop (1–3). Low starting skills, 1–2 traits, a profession (Living Workshop B1:
+## blacksmith, leatherworker/tailor, alchemist/herbalist, runesmith — and arcanists once the workshop has its Arcane
+## Foundry) whose discipline is their preferred one and whose skill they bring a little of.
 static func refresh_applicants() -> void:
 	var s := st()
 	var out := []
 	var looks: Array = DB.names.get("applicant_looks", [])
 	var ap: Dictionary = cfg("applicants")
 	var n := randi_range(int(ap.get("min", 1)), int(ap.get("max", 3)))
+	var prefs_pool: Array = PREF_DISCIPLINES.duplicate()
+	if not Game.state.is_empty() and Game.has_upgrade("arcane_foundry"):
+		prefs_pool.append("arcane")
 	for i in n:
 		if looks.is_empty():
 			break
@@ -216,7 +221,7 @@ static func refresh_applicants() -> void:
 		var pool: Dictionary = DB.names["first"].get(race, DB.names["first"]["Human"])
 		var first: String = str((pool["f"] if bool(lk.get("female", false)) else pool["m"]).pick_random())
 		var last: String = str(DB.names["last"].pick_random())
-		var pref: String = str(PREF_DISCIPLINES.pick_random())
+		var pref: String = str(prefs_pool.pick_random())
 		var levels := {}
 		for sk: String in _skill_ids():
 			levels[sk] = 0
@@ -238,7 +243,8 @@ static func refresh_applicants() -> void:
 		var wage := int(ap.get("base_wage", 3)) + int(total / 3)
 		out.append({"name": "%s %s" % [first, last], "look": str(lk.get("look", "applicant_0")), "race": race,
 			"female": bool(lk.get("female", false)), "personality": str(DB.names["personality"].pick_random()),
-			"traits": traits, "prefs": [pref], "levels": levels, "wage": wage, "fee": wage * int(ap.get("fee_days", 5))})
+			"traits": traits, "prefs": [pref], "levels": levels, "wage": wage, "fee": wage * int(ap.get("fee_days", 5)),
+			"profession": Workers.discipline_profession(pref)})
 	s["applicants"] = out
 	s["applicants_day"] = Game.day()
 	_changed()
@@ -271,6 +277,7 @@ static func hire(index: int) -> String:
 	var a := {"id": id, "name": str(p["name"]), "look": str(p["look"]), "race": str(p["race"]), "female": bool(p["female"]),
 		"personality": str(p["personality"]), "traits": (p["traits"] as Array).duplicate(), "wage": int(p["wage"]),
 		"hired_day": Game.day(), "rank": "novice", "skills": skills, "prefs": (p.get("prefs", []) as Array).duplicate(),
+		"profession": str(p["profession"]) if Workers.PROFESSION.has(str(p.get("profession", ""))) else Workers.derive_profession(p.get("levels", {}), p.get("prefs", [])),
 		"cat_counts": {}, "specialty": "", "works": 0, "mistakes": 0, "surprises": 0, "creations": [], "memories": [],
 		"mark": {"id": id, "name": "%s's mark (%s)" % [str(p["name"]).split(" ")[0], ini],
 			"desc": "the initials %s punched small beside a tiny anvil — %s's own mark" % [ini, p["name"]], "initials": ini},
@@ -281,7 +288,7 @@ static func hire(index: int) -> String:
 	remember(a, "Came to the Ironhand forge as a novice on day %d." % Game.day())
 	var line := _pick_line("hired", id) % a["name"]
 	log_line(id, line)
-	Game.journal("Took on %s as a workshop apprentice." % a["name"])
+	Game.journal("Took on %s, %s, as a workshop apprentice." % [a["name"], Workers.a_noun(str(a["profession"]))])
 	Chronicle.add("apprentice", "%s joined the Ironhand forge as an apprentice." % a["name"], {"app": id})
 	Audio.play("sfx/hire")
 	_changed()
@@ -495,9 +502,20 @@ static func _specialty_match(app: Dictionary, cat: String) -> bool:
 
 
 # ======================================================================= eligibility
-## Can this apprentice make this recipe at all (rank, discipline training, skill vs difficulty)? "" = yes.
-## Whether the SMITH has unlocked it is checked separately (a task only starts when he has).
+## Can this apprentice make this Design at all — their rank's rules, then THEIR competence for every operation (each
+## in its station's discipline, Workers.competence_reason)? "" = yes. Living Workshop B1: not limited by what the smith
+## can do himself; whether the WORKSHOP knows the Design and has its stations is checked separately (task_problem,
+## Workers.can_do).
 static func can_make(app: Dictionary, recipe_id: String) -> String:
+	if DB.recipe(recipe_id).is_empty():
+		return "Unknown recipe."
+	return Workers.competence_reason(app, recipe_id)
+
+
+## The rank's rules for a whole Design: the disciplines the rank may work in (their own profession's always), training
+## in another discipline, equipment from the apprentice rank on, the rank's hardest work, legendary-grade work for
+## masters. "" = within the rank.
+static func rank_reason(app: Dictionary, recipe_id: String) -> String:
 	var r := DB.recipe(recipe_id)
 	if r.is_empty():
 		return "Unknown recipe."
@@ -505,31 +523,29 @@ static func can_make(app: Dictionary, recipe_id: String) -> String:
 	var rn := str(rd.get("name", "Novice")).to_lower()
 	var disc := str(r.get("discipline", "classic"))
 	var dname := str(Crafting.DISCIPLINE_NAME.get(disc, disc))
-	if not (rd.get("disciplines", []) as Array).has(disc):
+	var own := Workers.discipline_of(Workers.profession(app)) == disc   # a specialist works in their own craft from the start
+	if not own and not (rd.get("disciplines", []) as Array).has(disc):
 		return "%s is beyond a %s." % [dname, rn]
-	var skill := Crafting.recipe_skill(recipe_id)
-	var lvl := level(app, skill)
-	if bool(rd.get("trained_only", false)) and not disc in ["classic", "stitching"] and lvl < int(_num("trained_level", 2.0)):
+	var lvl := level(app, Crafting.recipe_skill(recipe_id))
+	if not own and bool(rd.get("trained_only", false)) and not disc in ["classic", "stitching"] and lvl < int(_num("trained_level", 2.0)):
 		return "Not trained in %s yet." % dname
 	if Items.is_equipment({"def": str(r.get("output", ""))}) and not bool(rd.get("equipment", false)):
 		return "A novice only repairs, prepares materials and tends the stations."
 	var diff := Crafting.difficulty(recipe_id)
 	if diff > int(rd.get("max_difficulty", 2)):
 		return "Too hard for a %s (difficulty %d)." % [rn, diff]
-	var reach := int(_num("reach", 1.0))
-	if lvl + reach < diff:
-		return "Needs %s %d (has %d)." % [SkillSys.skill_name(skill), diff - reach, lvl]
 	if str(r.get("min_rarity", "")) != "" and not bool(rd.get("min_rarity", false)):
-		return "Legendary-grade work stays with the smith or a master."
+		return "Legendary-grade work stays with a master."
 	return ""
 
 
-## Recipes this apprentice may make now (and the smith has unlocked), by name.
+## Designs this apprentice may make now — the workshop knows them, their stations are there and the apprentice is
+## competent (Workers.can_do) — by name.
 static func recipes_for(app: Dictionary) -> Array:
 	var out := []
 	for r in DB.recipes.values():
 		var rid := str(r["id"])
-		if can_make(app, rid) == "" and Crafting.recipe_locked_reason(rid) == "":
+		if Workers.can_do(app, rid) == "":
 			out.append(r)
 	out.sort_custom(func(x, y): return str(x.get("name", "")) < str(y.get("name", "")))
 	return out
@@ -600,8 +616,8 @@ static func repair_customers() -> Array:
 	return Shop.waiting().filter(func(c): return str(c.get("want", "")) == "repair")
 
 
-## The recipe an apprentice would use for a commission: the easiest recipe they can make (and the smith has
-## unlocked) whose piece should meet the order at their expected craftsmanship. "" = none.
+## The recipe an apprentice would use for a commission: the easiest recipe they can make (and the workshop knows, with
+## its stations) whose piece should meet the order at their expected craftsmanship. "" = none.
 static func commission_recipe(o: Dictionary, app: Dictionary) -> String:
 	if o.is_empty():
 		return ""
@@ -621,7 +637,7 @@ static func commission_recipe(o: Dictionary, app: Dictionary) -> String:
 			continue
 		if not app.is_empty() and can_make(app, rid) != "":
 			continue
-		if Crafting.recipe_locked_reason(rid) != "":
+		if Workers.workshop_reason(rid) != "":   # the workshop must know the Design and have its stations
 			continue
 		var margin := 0.0
 		if not o.has("def"):
@@ -662,9 +678,16 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 				return {"error": "Choose a recipe."}
 			if kind == "prep" and Items.is_equipment({"def": str(DB.recipe(rid).get("output", ""))}):
 				return {"error": "Preparation is for materials, potions and runes — queue equipment as crafting."}
-			var why := Crafting.recipe_locked_reason(rid)
-			if why != "" and Property.station_reason(_first_station(rid)) == "":
-				return {"error": "You have not learned this yourself: " + why}
+			# B1: the WORKSHOP must know the Design (and its stations); who is competent to make it is the worker's
+			# business (eligible) — no longer limited to what the smith can do himself. Stations not yet installed may wait.
+			var why := Workers.knowledge_reason(rid)
+			if why == "":
+				for o in Crafting.operations(rid):
+					why = SkillTree.station_reason(str(o.get("station", "")))
+					if why != "":
+						break
+			if why != "":
+				return {"error": "The workshop does not know this Design yet: " + why}
 			t["label"] = "%s%s" % [DB.recipe(rid).get("name", rid), (" ×%d" % int(t["repeat"])) if int(t["repeat"]) > 1 else ""]
 		"commission":
 			var o := _order(str(t["order_id"]))
@@ -883,7 +906,7 @@ static func station_user(sid: String) -> String:
 static func station_state(sid: String) -> String:
 	if not Property.is_installed(sid):
 		return "not_installed"
-	if Crafting.station_locked_reason(sid) != "":
+	if Workers.workshop_station_reason(sid) != "":   # the workshop's part; who may work there is per worker
 		return "locked"
 	if station_user(sid) != "":
 		return "busy"
@@ -1031,7 +1054,7 @@ static func task_problem(t: Dictionary) -> String:
 					return cp
 	if str(t["kind"]) in ["craft", "prep", "commission"] and str(t.get("recipe", "")) != "":
 		var rid := str(t["recipe"])
-		var why := Crafting.recipe_locked_reason(rid)
+		var why := Workers.workshop_reason(rid)   # the workshop's knowledge and stations; competence is per worker
 		if why != "":
 			return why
 		if not bool(t.get("started", false)):
@@ -1173,11 +1196,12 @@ static func _work(a: Dictionary, minutes: float) -> bool:
 			return changed
 	var op: Dictionary = ops[mini(int(t["op"]), ops.size() - 1)]
 	var sid := str(op.get("station", ""))
-	# 3. the station: installed, not locked, and free (the smith always has priority)
-	if not Property.is_installed(sid) or Crafting.station_locked_reason(sid) != "":
+	# 3. the station: installed, usable by THIS worker (B1: their own station skill), and free (the smith has priority)
+	var st_why := Workers.station_reason(a, sid)
+	if not Property.is_installed(sid) or st_why != "":
 		t["state"] = "blocked"
 		t["station"] = ""
-		t["blocker"] = "The %s is not available — %s" % [_station_name(sid), Property.station_reason(sid) if Property.station_reason(sid) != "" else Crafting.station_locked_reason(sid)]
+		t["blocker"] = "The %s is not available — %s" % [_station_name(sid), Property.station_reason(sid) if Property.station_reason(sid) != "" else st_why]
 		a["activity"] = "Waiting: the %s is not available" % _station_name(sid)
 		return true
 	var user := station_user(sid)
@@ -1275,10 +1299,20 @@ static func _supervised(t: Dictionary, sid: String) -> bool:
 	return not r.is_empty() and str(r.get("id", "")) == smith_room
 
 
-## Expected craftsmanship of one operation for this apprentice and recipe (no variance).
+## The skill an operation is worked with (Living Workshop B1, PROD-009): for a Design's operation the skill of the
+## STATION's discipline (a grip wrapped at the stitching table is stitching), without a station the Design's skill;
+## repairs and upkeep are smithing.
+static func op_skill(rid: String, sid := "") -> String:
+	if rid == "":
+		return "smithing"
+	return Crafting.skill_for_station(sid) if sid != "" else Crafting.recipe_skill(rid)
+
+
+## Expected craftsmanship of one operation for this apprentice and recipe (no variance): their level in the station's
+## skill (op_skill) against the Design's difficulty.
 static func expected_op_quality(a: Dictionary, rid: String, sid := "", supervised := false, kind := "craft") -> float:
 	var qc: Dictionary = cfg("quality")
-	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
+	var skill := op_skill(rid, sid)
 	var diff := Crafting.difficulty(rid) if rid != "" else 1
 	var gap := clampi(level(a, skill) - diff, int(qc.get("gap_floor", -6)), int(qc.get("gap_ceiling", 6)))
 	var q := float(qc.get("base", 76.0)) + float(qc.get("per_level", 3.5)) * gap
@@ -1293,9 +1327,17 @@ static func expected_op_quality(a: Dictionary, rid: String, sid := "", supervise
 	return q
 
 
-## Expected final craftsmanship of a piece (ops at their expected value, the skill bonus, the rank ceiling).
+## Expected final craftsmanship of a piece (each operation at its expected value in its station's skill, weighted as
+## the piece is; the skill bonus; the rank ceiling).
 static func expected_quality(a: Dictionary, rid: String, kind := "craft") -> float:
-	var q := expected_op_quality(a, rid, "", false, kind)
+	var q := 0.0
+	var wsum := 0.0
+	var ops := Crafting.operations(rid) if rid != "" and kind in ["craft", "prep", "commission"] else []
+	for o in ops:
+		var w := float(o.get("weight", 1.0))
+		q += expected_op_quality(a, rid, str(o.get("station", "")), false, kind) * w
+		wsum += w
+	q = q / wsum if wsum > 0.0 else expected_op_quality(a, rid, "", false, kind)
 	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
 	q += float(_c("quality", "skill_bonus", 0.4)) * level(a, skill)
 	return clampf(q, 1.0, _ceiling(a, rid, kind))
@@ -1318,7 +1360,7 @@ static func _finish_op(t: Dictionary, a: Dictionary, op: Dictionary) -> void:
 	var mc: Dictionary = cfg("mistakes")
 	var sup := _supervised(t, sid)
 	var q := expected_op_quality(a, rid, sid, sup, kind) + rng.randfn(0.0, float(qc.get("sd", 8.0)) * _trait_mult(a, "sd"))
-	var skill := Crafting.recipe_skill(rid) if rid != "" else "smithing"
+	var skill := op_skill(rid, sid)   # B1: the worker's own competence in this station's discipline (checks, mistakes, experience)
 	var diff := Crafting.difficulty(rid) if rid != "" else 1
 	var chance := (float(mc.get("chance", 0.07)) + float(mc.get("per_gap", 0.02)) * maxi(0, diff - level(a, skill))) * _trait_mult(a, "mistake")
 	var note := ""
@@ -1895,3 +1937,36 @@ static func alumni_buy_for(a: Dictionary, want := {}) -> bool:
 	Chronicle.add("trade", line, {"adv": str(a.get("id", "")), "app": str(alum["id"])})
 	Events.adventurers_changed.emit()
 	return true
+
+
+# ======================================================================= developer / test helper
+## Takes on a specialist directly (developer tools, tests and rendered phases — a stand-in for an applicant of that
+## profession and their years at the bench): `profession` (Workers.PROFESSIONS), their level in its skill, the rank
+## (default from the level: below 3 novice, 3–4 apprentice, 5–7 journeyman, 8+ master). Through hire(): no signing fee,
+## the staff limit applies. Returns the apprentice, or {} when there is no room.
+static func dev_take_on(profession: String, lvl: int, rank := "", name := "") -> Dictionary:
+	if staff().size() >= max_staff():
+		return {}
+	var p := profession if Workers.PROFESSION.has(profession) else "blacksmith"
+	var levels := {}
+	for sk: String in _skill_ids():
+		levels[sk] = 0
+	levels[Workers.skill_of(p)] = lvl
+	var looks: Array = DB.names.get("applicant_looks", [])
+	var lk: Dictionary = looks[(staff().size() * 3 + lvl) % looks.size()] if not looks.is_empty() else {}
+	var pi := maxi(0, Workers.PROFESSIONS.find(p))
+	var nm := name if name != "" else "%s %s" % [["Tobin", "Wren", "Ada", "Edda", "Corwin"][pi], ["Vell", "Marsh", "Holt", "Brand", "Quill"][staff().size() % 5]]
+	var app := {"name": nm, "look": str(lk.get("look", "applicant_0")), "race": str(lk.get("race", "Human")), "female": bool(lk.get("female", false)),
+		"personality": "steady", "traits": [], "prefs": [Workers.discipline_of(p)], "levels": levels, "wage": 3 + int(lvl / 2), "fee": 0,
+		"profession": p}
+	applicants()   # the week's notice is read first, so it does not replace this one
+	(st()["applicants"] as Array).insert(0, app)
+	if hire(0) != "":
+		(st()["applicants"] as Array).erase(app)
+		return {}
+	var a: Dictionary = staff()[-1]
+	var rk := rank
+	if rk == "":
+		rk = "master" if lvl >= 8 else ("journeyman" if lvl >= 5 else ("apprentice" if lvl >= 3 else "novice"))
+	a["rank"] = rk
+	return a

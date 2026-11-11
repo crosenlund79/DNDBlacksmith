@@ -522,6 +522,13 @@ static func recipe_status(rid: String) -> Dictionary:
 		var usk: Array = u["skill"]
 		if Game.player_level(str(usk[0])) < int(usk[1]):
 			obs.append(_skill_obstacle(str(usk[0]), int(usk[1])))
+	# Living Workshop B1: work beyond the smith's basic grasp of another craft is a specialist's (Workers)
+	var sp := Workers.specialist_need("player", rid)
+	if not sp.is_empty():
+		var who := Workers.staff_who_can(rid)
+		obs.append({"kind": "specialist", "id": str(sp["skill"]), "level": int(sp["difficulty"]), "profession": str(sp["profession"]), "who": who,
+			"text": Workers.specialist_text("player", sp, rid),
+			"link": {"route": "workshop", "args": {}} if who != "" else {"route": "notice", "args": {"tab": "apprentices"}}})
 	var seen := {}
 	for s in r.get("steps", []):
 		var sid := str(s)
@@ -634,8 +641,22 @@ static func _recipe_step(rid: String, visiting: Array) -> Dictionary:
 			"node":
 				return {"text": str(o["text"]), "action": o["link"], "why": "%s is taught by a skill-tree node you have not learned." % str(r.get("name", rid))}
 			"skill":
+				if not Workers.can_grow("player", str(o["id"])) and Game.player_level(str(o["id"])) < int(o["level"]):
+					return {"text": "Take on %s with %s %d — the smith's %s stays basic" % [Workers.a_noun(Workers.skill_profession(str(o["id"]))),
+						SkillSys.skill_name(str(o["id"])), int(o["level"]), SkillSys.skill_name(str(o["id"])).to_lower()],
+						"action": {"route": "notice", "args": {"tab": "apprentices"}}, "why": "Mastery of another craft belongs to its specialists."}
 				return {"text": "Raise %s to %d (you: %d) — craft simpler pieces or practise at a station" % [SkillSys.skill_name(str(o["id"])),
 					int(o["level"]), Game.player_level(str(o["id"]))], "action": {}, "why": "%s needs more skill than you have yet." % str(r.get("name", rid))}
+			"specialist":
+				var prof := str(o.get("profession", ""))
+				if str(o.get("who", "")) != "":
+					var who := Workers.resolve(str(o["who"]))
+					return {"text": "Ask %s (%s) to make it — queue it in the Workshop Ledger" % [str(who["name"]), prof],
+						"action": o["link"], "why": "%s is %s's work; the smith's %s is basic." % [str(r.get("name", rid)), Workers.a_noun(prof),
+						SkillSys.skill_name(str(o["id"])).to_lower()]}
+				return {"text": "Take on %s with %s %d — then queue it in the Workshop Ledger" % [Workers.a_noun(prof), SkillSys.skill_name(str(o["id"])), int(o["level"])],
+					"action": o["link"], "why": "%s is %s's work; the smith's %s stays basic." % [str(r.get("name", rid)), Workers.a_noun(prof),
+					SkillSys.skill_name(str(o["id"])).to_lower()]}
 			"station":
 				return station_step(str(o["id"]), str(o["why"]))
 	var miss: Dictionary = rs["missing"]
