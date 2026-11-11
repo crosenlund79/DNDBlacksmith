@@ -6,10 +6,10 @@ extends UIWindow
 ## A2 layout: a fixed window that fits 1920×1080 (and 1600×900, the same canvas scaled) however many pieces the stores
 ## hold — the grid and the details column scroll on their own, and the details column can be collapsed (the grid then
 ## widens; clicking a piece opens it again; a right-click still opens the full inspection).
-const WIN := Vector2(1560, 900)
+const WIN := Vector2(1440, 820)   # #47: was 1560×900
 const SLOT := 72.0
 const GAP := 8
-const DETAIL_W := 440.0
+const DETAIL_W := 400.0
 ## Whether the details column is open (kept for the session).
 static var details_open := true
 
@@ -37,6 +37,11 @@ func _ready() -> void:
 	count_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	tabs.add_child(count_label)
+	# Living Workshop #46: where the materials came from, what was used, what is left
+	var ml := UIKit.button("Material ledger", func(): Events.open_panel.emit("materials", {}), 0)
+	ml.name = "MaterialLedgerButton"
+	ml.tooltip_text = "Each material: what came in since the record began and from where, what was used, and what is left."
+	tabs.add_child(ml)
 	toggle = UIKit.button("", func(): set_details(not details_open), 190)
 	toggle.name = "DetailsToggle"
 	tabs.add_child(toggle)
