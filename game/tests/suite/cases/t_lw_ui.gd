@@ -205,7 +205,7 @@ func test_health_from_records_only() -> void:
 	Game.advance_minutes(60)
 	eq(int(Game.state.get("health_since", -1)), 1, "a new game records from day 1")
 	var pts := HealthLog.points("elowen")
-	check(pts.size() == 1 and int(pts[0]["hp"]) == int(a["hp"]), "the first point is her actual health")
+	check(HealthLog.recorded(pts) == 1 and int(pts[0]["hp"]) == int(a["hp"]), "the first point is her actual health")
 	# a wound: the next hour records the real value, nothing in between is invented
 	a["hp"] = maxi(1, int(a["hp_max"]) / 3)
 	var wounded := int(a["hp"])
@@ -223,6 +223,17 @@ func test_health_from_records_only() -> void:
 		seen[int(lg[-1][0])] = int(lg[-1][1])
 		check(int(lg[-1][1]) <= int(a["hp_max"]), "never above the maximum")
 	check((a[HealthLog.KEY] as Array).size() <= HealthLog.CAP, "capped at %d points" % HealthLog.CAP)
+	# a steady adventurer adds nothing; the curve ends at the live value, which is not counted as a record
+	var steady := (a[HealthLog.KEY] as Array).size()
+	var last_hp := int((a[HealthLog.KEY] as Array)[-1][1])
+	for i in 30:
+		a["hp"] = last_hp
+		HealthLog.on_hour(10)
+	eq((a[HealthLog.KEY] as Array).size(), steady, "a steady adventurer adds no points")
+	Game.state["minute"] = int(Game.state["minute"]) + 1
+	var pn := HealthLog.points("elowen")
+	check(str(pn[-1]["kind"]) == "n" and int(pn[-1]["hp"]) == maxi(0, int(a["hp"])), "the curve ends at her health now")
+	eq(HealthLog.recorded(pn), pn.size() - 1, "…which is not counted as a record")
 	# fight records from the expedition archive are merged as they were written
 	var fought := 0
 	for e in Expeditions.active().values() + Expeditions.done():

@@ -1,13 +1,15 @@
 ## HealthLog — an adventurer's health over time, only from values the game actually recorded (Living Workshop #38).
 ## EN: Two real sources, merged for the character sheet's curve:
-##     1. the health log, recorded from now on: every hour (Sim.on_hour) a point is written when an adventurer's
-##        health has moved by a tenth of their maximum (or the maximum changed, or they fell), and once a day at
-##        midnight otherwise; capped at CAP points each (the oldest drop first). Kept lazily on the adventurer as
+##     1. the health log, recorded from now on: every hour (Sim.on_hour) a point is written for an adventurer the first
+##        time, and then whenever their health has moved by a tenth of their maximum since the last point (or the
+##        maximum changed, or they fell); nothing while it holds steady, so a quiet or retired adventurer costs no
+##        space. Capped at CAP points each (the oldest drop first). Kept lazily on the adventurer as
 ##        a["hp_log"] = [[minute, hp, hp_max, kind], …]; Game.state["health_since"] is the day recording began in
 ##        this save (day 1 for a new game, the first hour after loading for an older one).
 ##     2. the fight records the expedition archive already keeps (Expeditions.active()/done(): each combat's
 ##        party health before the fight and their state after it).
-##     Nothing is interpolated or invented: before the first recorded point the sheet says "No record before day N".
+##     The curve ends at their health now (live state). Nothing is interpolated or invented: before the first recorded
+##     point the sheet says "No record before day N".
 ## DA: En eventyrers helbred over tid — kun fra værdier, spillet faktisk har registreret; intet opfindes.
 class_name HealthLog
 extends RefCounted
@@ -15,17 +17,17 @@ extends RefCounted
 const KEY := "hp_log"
 const CAP := 120
 ## kind → words (tooltips and tests)
-const KIND_WORD := {"d": "daily record", "h": "health changed", "f": "before a fight", "a": "after a fight", "x": "fell"}
+const KIND_WORD := {"h": "health recorded", "f": "before a fight", "a": "after a fight", "x": "fell", "n": "now"}
 
 
-## Hourly (Sim.on_hour): a point for each adventurer whose health moved, and the midnight record.
-static func on_hour(h: int) -> void:
+## Hourly (Sim.on_hour): a point for each adventurer whose health moved (and a first point for each).
+static func on_hour(_h: int) -> void:
 	if Game.state.is_empty():
 		return
 	if not Game.state.has("health_since"):
 		Game.state["health_since"] = Game.day()
 	for a in Adv.all().values():
-		sample(a, "d" if h == 0 else "h")
+		sample(a)
 
 
 ## Records the adventurer's current health when it is worth a point (see the header). `force` always writes one.
@@ -41,7 +43,7 @@ static func sample(a: Dictionary, kind := "h", force := false) -> void:
 		if dead and int(last[1]) == 0:
 			return   # the fall is recorded once
 		var moved := absi(int(last[1]) - hp) >= maxi(1, int(round(mx * 0.1))) or int(last[2]) != mx or (dead and hp == 0)
-		if not moved and (kind != "d" or Game.now() - int(last[0]) < 1380):
+		if not moved:
 			return
 	if dead:
 		kind = "x"
@@ -80,7 +82,15 @@ static func points(adv_id: String) -> Array:
 	var out := []
 	for t in ts:
 		out.append(by_t[t])
+	# the curve ends at their health now — the live value, not a recorded one (kind "n"; never stored)
+	if not out.is_empty() and int(out[-1]["t"]) < Game.now() and a.has("hp") and a.has("hp_max"):
+		out.append({"t": Game.now(), "hp": maxi(0, int(a["hp"])), "max": int(a["hp_max"]), "kind": "n"})
 	return out
+
+
+## How many of these points are records (the live "now" point is not one).
+static func recorded(pts: Array) -> int:
+	return pts.filter(func(p): return str(p["kind"]) != "n").size()
 
 
 ## The day of the first recorded point (0 when there is none).
@@ -94,6 +104,7 @@ static func caption(pts: Array) -> String:
 		var since := int(Game.state.get("health_since", Game.day()))
 		return "No health recorded yet — the record began on day %d." % since
 	var d := first_day(pts)
+	var n := recorded(pts)
 	if d <= 1:
-		return "Recorded from day 1 · %d point%s." % [pts.size(), "" if pts.size() == 1 else "s"]
-	return "No record before day %d · %d point%s since." % [d, pts.size(), "" if pts.size() == 1 else "s"]
+		return "Recorded from day 1 · %d point%s." % [n, "" if n == 1 else "s"]
+	return "No record before day %d · %d point%s since." % [d, n, "" if n == 1 else "s"]

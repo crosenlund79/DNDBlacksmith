@@ -1,6 +1,7 @@
 ## HealthCurve — an adventurer's recorded health drawn over time (Living Workshop #38; data: HealthLog.points).
 ## EN: x = game time (day ticks), y = hit points; the maximum as a quiet dashed line (it rises with their level),
-##     the recorded health as a line through the recorded points only — fights marked in red, a fall with a cross.
+##     the recorded health as a line through the recorded points only — fights marked in red, a fall with a cross —
+##     ending at their health now (a ring).
 ##     Nothing is drawn before the first recorded point; hover a point for its day, time, value and what it records.
 ## DA: Eventyrerens registrerede helbred over tid; kun registrerede punkter tegnes.
 class_name HealthCurve
@@ -98,6 +99,8 @@ func _draw() -> void:
 			"x":
 				draw_line(c + Vector2(-5, -5), c + Vector2(5, 5), FIGHT, 2.0)
 				draw_line(c + Vector2(-5, 5), c + Vector2(5, -5), FIGHT, 2.0)
+			"n":   # now: the live value the line ends at (a ring, not a record)
+				draw_arc(c, 4.0 if i != _hover else 6.0, 0.0, TAU, 16, HP, 1.5, true)
 			_:
 				draw_circle(c, 2.5 if i != _hover else 4.5, HP)
 
