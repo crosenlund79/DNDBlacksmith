@@ -321,13 +321,13 @@ static func waiting_for_smith() -> Dictionary:
 ## The smith begins the stage he claimed: the order's materials are taken now if the piece is new (once — never again
 ## for later stages), and his craft job carries the order (Crafting.record_step then records each operation into the
 ## order). His job runs from the current operation to the end of the stage. "" or why not.
-static func begin_smith_stage(tid: int) -> String:
+static func begin_smith_stage(tid: int, under_steward := false) -> String:
 	var t := Apprentices.task(tid)
 	if t.is_empty() or str(t.get("state", "")) in Apprentices.FINISHED or not is_order(t):
 		return "No such open work order."
 	if Crafting.active():
 		return "Finish the current work first."
-	if Steward.smith_away():
+	if Steward.smith_away() and not under_steward:
 		return "The steward runs the workshop — take it back first."
 	var s := current(t)
 	if str(s.get("assignee", "")) != "player":

@@ -392,6 +392,9 @@ static func _work(minutes: int) -> void:
 	if _take_repair():
 		_work_repair(minutes)
 		return
+	if _take_order_stage():
+		_work_piece(minutes)
+		return
 	if _start_next():
 		_work_piece(minutes)
 		return
@@ -587,6 +590,60 @@ static func _start_next() -> bool:
 	m["start_fail_t"] = Game.now()
 	m["start_fail_n"] = q.size()
 	return false
+
+
+# ======================================================================= work orders (Living Workshop C1)
+## "" when the smith may work this claimed stage of a work order under the steward: his own trade (a smithing stage),
+## an ordinary Design (no secret, flagged or legendary-grade work), within the order rule and his level, and he may do
+## the stage at all (WorkOrders.stage_reason). Specialists' stages are never his.
+static func stage_ok(t: Dictionary, si: int) -> String:
+	var rid := str(t.get("recipe", ""))
+	var r := DB.recipe(rid)
+	var st := WorkOrders.stages(t)
+	if r.is_empty() or si < 0 or si >= st.size():
+		return "Unknown work."
+	if str(st[si]["disc"]) != "classic":
+		return "That stage is a specialist's craft."
+	if str(r.get("requires_flag", "")) != "" or str(r.get("teaches_flag", "")) != "" or str(r.get("min_rarity", "")) != "":
+		return "%s is not routine work." % str(r.get("name", rid))
+	if bool(SkillTree.node(SkillTree.recipe_node(rid)).get("secret", false)):
+		return "%s is a secret Design." % str(r.get("name", rid))
+	var why := WorkOrders.stage_reason("player", t, si)
+	if why != "":
+		return why
+	var d := Crafting.difficulty(rid)
+	if d > int(Steward.st()["orders"]["order_rules"]["max_difficulty"]):
+		return "Harder than your rule allows (difficulty %d)." % d
+	if d > Game.player_level("smithing"):
+		return "Beyond routine work for him (difficulty %d)." % d
+	return ""
+
+
+## A work-order stage the smith claimed waits for him: when it is routine smithing he takes it up under the steward —
+## the same stage, his own craft job carrying the order (begun here: marked, so it teaches him nothing), the order's
+## own materials. True when it is in hand.
+static func _take_order_stage() -> bool:
+	if not _on():
+		return false
+	var w := WorkOrders.waiting_for_smith()
+	if w.is_empty():
+		return false
+	var t := Apprentices.task(int(w["task"]))
+	var why := stage_ok(t, int(w["stage"]))
+	if why != "":
+		sm()["why_idle"] = "Your claimed stage of %s waits for you — %s" % [str(t.get("label", "a work order")), why.trim_suffix(".").to_lower()]
+		return false
+	if WorkOrders.begin_smith_stage(int(w["task"]), true) != "":
+		return false
+	Game.state["craft"]["steward"] = {"qid": -1, "purpose": "stage", "order_id": "", "t": Game.now(), "session": int(Steward.st().get("sessions", 0))}
+	var m := sm()
+	m["op_progress"] = 0.0
+	m["op_need"] = 0.0
+	m["why_idle"] = ""
+	acc()["begun"] = int(acc()["begun"]) + 1
+	Steward._log("smith_begin", "The smith took up his stage of %s (%s)." % [str(t.get("label", "")), WorkOrders.stage_title(t, int(w["stage"])).to_lower()],
+		{"recipe": str(t.get("recipe", "")), "purpose": "stage", "task": int(t["id"])})
+	return true
 
 
 # ======================================================================= repairs at the counter

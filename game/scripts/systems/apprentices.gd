@@ -527,6 +527,29 @@ static func can_make(app: Dictionary, recipe_id: String) -> String:
 	return Workers.competence_reason(app, recipe_id)
 
 
+## Living Workshop C1: can this apprentice make the Design as a work order — alone (can_make), or as its maker (the
+## forging stage) with every other stage open to someone on the staff? "" = yes, else why not (the first gap).
+## The steward plans with this (its decisions stay within what the workshop's people can really do).
+static func order_reason(app: Dictionary, recipe_id: String) -> String:
+	var whole := can_make(app, recipe_id)
+	if whole == "":
+		return ""
+	var probe := {"kind": "craft", "recipe": recipe_id, "op": 0, "ops_done": [], "started": false, "worker": ""}
+	if not WorkOrders.staged(probe):
+		return whole
+	var ms := WorkOrders.maker_stage(probe)
+	var why := WorkOrders.stage_reason(app, probe, ms)
+	if why != "":
+		return why
+	for s in WorkOrders.stages(probe):
+		var si := int(s["i"])
+		if si == ms:
+			continue
+		if not staff().any(func(b): return WorkOrders.stage_reason(b, probe, si) == ""):
+			return WorkOrders.staff_gap(probe, si)
+	return ""
+
+
 ## The rank's rules for a whole Design: the disciplines the rank may work in (their own profession's always), training
 ## in another discipline, equipment from the apprentice rank on, the rank's hardest work, legendary-grade work for
 ## masters. "" = within the rank.

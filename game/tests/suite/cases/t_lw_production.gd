@@ -559,3 +559,44 @@ func test_ledger_and_station_show_the_order() -> void:
 	check(_text_in(lp2, "at work"), "the stage at hand shows its worker at work")
 	lp2.free()
 	eq(str(rune["id"]), str(t.get("worker", "")), "the runesmith is on the rune stage")
+
+
+# ------------------------------------------------------------------ the steward and work orders (S1/S2 kept)
+func test_steward_plans_with_the_workshops_people() -> void:
+	_full_workshop()
+	var bs := Apprentices.dev_take_on("blacksmith", 9, "master", "Tobin Brand")
+	check(Apprentices.can_make(bs, EMBER) != "", "the master blacksmith cannot make the Emberwarden alone (%s)" % Apprentices.can_make(bs, EMBER))
+	check(Apprentices.order_reason(bs, EMBER) != "", "…nor as a work order without a runesmith: %s" % Apprentices.order_reason(bs, EMBER))
+	check(Steward._maker_for(EMBER).is_empty(), "so the steward plans no Emberwarden")
+	Apprentices.dev_take_on("runesmith", 6, "journeyman")
+	eq(Apprentices.order_reason(bs, EMBER), "", "with a runesmith on the staff it is a work order the blacksmith makes")
+	eq(str(Steward._maker_for(EMBER).get("id", "")), str(bs["id"]), "the steward plans with the workshop's real people (its maker: the blacksmith)")
+	eq(Apprentices.order_reason(bs, "iron_hatchet"), Apprentices.can_make(bs, "iron_hatchet"), "ordinary one-craft work: exactly as before")
+
+
+func test_steward_smith_works_claimed_stage_without_experience() -> void:
+	_full_workshop()
+	train("smithing", 8)
+	Apprentices.dev_take_on("runesmith", 7, "journeyman")
+	Apprentices.dev_take_on("alchemist", 7, "journeyman")
+	Apprentices.dev_take_on("leatherworker", 7, "journeyman")
+	_ember_mats()
+	var t := Apprentices.add_task("craft", {"recipe": EMBER})
+	WorkOrders.assign_stage(int(t["id"]), 0, "player")
+	WorkOrders.assign_stage(int(t["id"]), 3, "player")
+	var uid := int(t["uid"])
+	Steward.st()["orders"]["order_rules"]["max_difficulty"] = 6   # the player's standing rule lets him do this work
+	var skills0 := JSON.stringify(Game.player_skills())
+	_at_hour(8)
+	eq(Steward.activate(), "", "the steward takes over")
+	check(_until(func(): return str(t["state"]) in FIN, 3 * 1440), "the order is finished under the steward (%s %s)" % [t["state"], t.get("blocker", "")])
+	var st := WorkOrders.stages(t)
+	var it := Game.find_uid(uid)
+	if check(not it.is_empty(), "the sword is in the stores under its reserved uid"):
+		eq(str(Provenance.maker(it).get("id", "")), Provenance.SMITH_ID, "the smith — working under the steward — is its maker")
+		eq(Provenance.contributors(it).size(), 3, "the three specialists are recorded")
+		check(float(it.get("quality", 0.0)) <= StewardSmith.QUALITY_CAP + 0.01, "competent, not exceptional: %d%%" % int(it.get("quality", 0.0)))
+	var marks := (it.get("craft", {}).get("ops", []) as Array).filter(func(o): return str(o.get("by", "")) == "player")
+	check(not marks.is_empty() and marks.all(func(o): return bool(o.get("steward", false))), "his operations are marked as the steward's work")
+	Steward.deactivate()
+	eq(JSON.stringify(Game.player_skills()), skills0, "ZERO player experience: every skill unchanged")
