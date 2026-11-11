@@ -181,7 +181,11 @@ static func _caravan_arrive() -> void:
 	c["caravan_next"] = {}
 	var who := Talk.npc_name("caravan_master")
 	Chronicle.add("trade", "The Brask caravan rolled into the caravan camp — %s and three painted wagons of curios, exotic goods and fine arms." % who, {"npc": "caravan_master"})
-	Events.toast.emit("The travelling caravan has arrived at the caravan camp!", "good")
+	# Living Workshop #44: a clear, non-intrusive arrival — the toast names how long it stays and where, a journal
+	# line, the wagons' horses (an existing sound) and, while it is camped, the HUD's caravan chip (UIRoot)
+	Events.toast.emit("The Brask caravan has arrived at the caravan camp (east road) — it stays %d day%s. Curios, exotic goods, and wants to buy." % [stay, "" if stay == 1 else "s"], "good")
+	Game.journal("The Brask caravan rolled into the caravan camp on the east road; it means to stay %d day%s." % [stay, "" if stay == 1 else "s"])
+	Audio.play("sfx/neigh", -4.0)
 	TalkMarkers.flag("caravan_master", "The caravan is in town — curios, exotic goods, and wants to buy")
 
 
@@ -192,6 +196,7 @@ static func _caravan_depart() -> void:
 	c["caravan"] = {}
 	Chronicle.add("trade", "The Brask caravan packed up its wagons and took the east road out of Brindlewick.", {"npc": "caravan_master"})
 	Events.toast.emit("The caravan has left Brindlewick.", "info")
+	Game.journal("The Brask caravan took the east road out of Brindlewick.")
 	TalkMarkers.clear("caravan_master")
 	var g: Array = cfg().get("caravan", {}).get("schedule", {}).get("gap", [6, 10])
 	_schedule_caravan(randi_range(int(g[0]), int(g[1])))

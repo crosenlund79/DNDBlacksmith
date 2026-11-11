@@ -21,7 +21,7 @@ const PURCHASE_CATS := ["materials", "imports", "caravan", "pawn", "creatures", 
 const SRC_START := "Starting stores"
 const SRC_OWN := "Made at your stations"
 const SRC_DEV := "Developer tools"
-const SRC_RECEIVED := "Received — hauls, deliveries, gifts, work returned unused"
+const SRC_RECEIVED := "Received — hauls, hirelings' work, deliveries, gifts, returns"
 
 ## The last purchase line written to the gold ledger and the game minute it was written (Game.add_gold → note_gold),
 ## so materials that arrive in that same minute are attributed to that seller.
