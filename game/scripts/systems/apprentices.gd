@@ -901,7 +901,8 @@ static func _reset_iteration(t: Dictionary) -> void:
 
 
 static func _station_name(sid: String) -> String:
-	return str(DB.station(sid).get("name", sid.replace("_", " ").capitalize())).to_lower()
+	var n := str(DB.station(sid).get("name", sid.replace("_", " ").capitalize())).to_lower()
+	return n.substr(4) if n.begins_with("the ") else n   # "at the anvil", never "at the the anvil"
 
 
 static func _first_station(rid: String) -> String:
@@ -1014,7 +1015,10 @@ static func _holders(stype: String) -> String:
 
 ## A particular station in words: "anvil" for the only one, "anvil #2" when the workshop has several.
 static func _place_name(sid: String) -> String:
-	return Property.instance_label(sid).to_lower() if not Game.state.is_empty() else _station_name(sid)
+	if Game.state.is_empty():
+		return _station_name(sid)
+	var n := Property.instance_label(sid).to_lower()
+	return n.substr(4) if n.begins_with("the ") else n
 
 
 ## "not_installed", "locked", "busy", "worn" or "free".

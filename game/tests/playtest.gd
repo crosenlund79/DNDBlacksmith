@@ -4051,3 +4051,19 @@ func phase_lw_reliability() -> void:
 func phase_lw_knowledge() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lw_knowledge.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= The Living Workshop (PRODUCTION worker)
+## #37: several anvils and forges, bought one by one and each its own place; journeymen working at several anvils at
+## once (tests/playtest_lw_production.gd). Shots lws_*.
+func phase_lw_stations() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_production.gd").new()
+	await ph.run_stations(self)
+
+
+## C1: the Emberwarden Longsword as one staged work order — the smith forges and hones, a runesmith, an alchemist and a
+## leatherworker at their stations; the Ledger's stages; a save and load mid-stage; the sword's origin and contributors,
+## sold with its provenance (tests/playtest_lw_production.gd). Shots lwe_*.
+func phase_lw_emberwarden() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_production.gd").new()
+	await ph.run_emberwarden(self)

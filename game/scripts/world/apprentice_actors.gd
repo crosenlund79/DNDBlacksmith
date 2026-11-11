@@ -101,7 +101,7 @@ static func station_prompt(sid: String, base_label: String) -> String:
 	var a := Apprentices.get_a(u)
 	if a.is_empty():
 		return base_label
-	var sname := Property.instance_label(sid).to_lower()
+	var sname := Property.instance_label(sid).to_lower().trim_prefix("the ")
 	var he := "she" if bool(a.get("female", false)) else "he"
 	return "%s — %s is working at the %s; %s will step aside for you" % [base_label, str(a["name"]).split(" ")[0], sname, he]
 

@@ -117,10 +117,9 @@ static func capacity_report(plan := {}) -> Array:
 		for st in DB.stations.values():
 			if str(st.get("discipline", "")) == disc:
 				total += 1
-				for psid in plan["stations"]:   # #37: a type counts once, whichever of its instances stands
+				for psid in plan["stations"]:   # #37: every instance set up counts (three anvils are three stations)
 					if Property.type_of(str(psid)) == str(st["id"]) and Property.is_installed(str(psid)):
 						inst += 1
-						break
 		var places := 0
 		var rooms := []
 		var used := 0

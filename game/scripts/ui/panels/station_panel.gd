@@ -337,15 +337,14 @@ func _recipe_row(rec: Dictionary) -> Control:
 	var b := UIKit.small_button("Begin", func(): _start(rid), 110)
 	b.disabled = lock != "" or not Crafting.missing_inputs(rid).is_empty()
 	b.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	if lock != "" and order_reason(rid) == "":
-		# C1: beyond the smith alone, but his workshop's specialists can do the other crafts — order it as a work order
-		var ob := UIKit.small_button("Order it", func(): _order(rid), 110)
+	row.add_child(b)
+	if order_reason(rid) == "":
+		# C1: a Design of several crafts whose other stages his specialists can do — order it as a work order (whether or
+		# not the smith could also make it alone): he forges, they do their crafts' stages at their stations
+		var ob := UIKit.small_button("Order it", func(): _order(rid), 150)
 		ob.name = "OrderIt_" + rid
-		ob.tooltip_text = "Queue it as a work order: you forge (your stage, your checks here); your specialists do their crafts' stages at their stations."
-		ob.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		row.add_child(ob)
-	else:
-		row.add_child(b)
+		ob.tooltip_text = "Queue it as a work order: you do your own craft's stages (your checks, at the station); your specialists do theirs at their stations."
+		side.add_child(ob)
 	outer.add_child(row)
 	if selected == rid:
 		outer.add_child(_guidance(rid))

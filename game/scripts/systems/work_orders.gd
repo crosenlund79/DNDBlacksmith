@@ -168,11 +168,7 @@ static func stage_materials(t: Dictionary, si: int) -> Dictionary:
 	var st := stages(t)
 	var inputs: Dictionary = DB.recipe(rid).get("inputs", {})
 	for d in inputs:
-		var made_by := ""
-		for r in DB.recipes.values():
-			if str(r.get("output", "")) == str(d):
-				made_by = str(r.get("discipline", ""))
-				break
+		var made_by := _input_discipline(str(d))
 		var to := 0
 		for s in st:
 			if str(s["disc"]) == made_by and made_by != str(DB.recipe(rid).get("discipline", "")):
@@ -181,6 +177,22 @@ static func stage_materials(t: Dictionary, si: int) -> Dictionary:
 		if to == si:
 			out[str(d)] = int(inputs[d])
 	return out
+
+
+## The craft a material belongs to (for the Ledger only): the discipline of a Design that makes it, else by its kind
+## (threads, leather and cloth → leatherwork; runestones → rune work; coatings, oils, potions → alchemy).
+const INPUT_PREFIX := {"thread_": "stitching", "leather_": "stitching", "cloth_": "stitching", "hide_": "stitching", "runestone_": "runecraft",
+	"coating_": "alchemy", "oil_": "alchemy", "potion_": "alchemy", "infusion_": "alchemy"}
+
+
+static func _input_discipline(d: String) -> String:
+	for r in DB.recipes.values():
+		if str(r.get("output", "")) == d:
+			return str(r.get("discipline", ""))
+	for p in INPUT_PREFIX:
+		if d.begins_with(str(p)):
+			return str(INPUT_PREFIX[p])
+	return ""
 
 
 # ======================================================================= who may do a stage
