@@ -74,6 +74,18 @@ static func create(args: Dictionary) -> Control:
 	return SkillCheckPanel.new(args)
 
 
+## LW #58: the check for setting a runestone into a piece at the Rune Engraving Stand, from the smith's Runecraft against
+## the rune's own Design (Crafting.check_params, with fatigue and the assist option) like every other check. Before, the
+## station panel opened it with a fixed zone 28 / speed 0.6, the same for a novice and a master.
+static func socket_check(rune_def: String) -> Dictionary:
+	var rid := ""
+	for r in DB.recipes.values():
+		if str(r.get("output", "")) == rune_def:
+			rid = str(r["id"])
+			break
+	return Crafting.check_params("rune_engraving_stand", rid, 1)
+
+
 static func label(type: String) -> String:
 	return {"align": "Spark & Ember alignment", "edge": "Edge control", "multihit": "Multi-hit sequence",
 		"rune": "Rune stabilisation", "rings": "Ring contact"}.get(type, "Precision ring")
