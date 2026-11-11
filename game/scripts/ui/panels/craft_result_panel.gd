@@ -114,8 +114,13 @@ func _work_column(cr: Dictionary) -> Control:
 	var v := UIKit.vbox(6)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.add_child(_heading("The Work"))
-	v.add_child(UIKit.rich("[i]%s · %s · difficulty %d · %s %d[/i]" % [cr.get("recipe_name", ""), cr.get("material", ""),
-		int(cr.get("difficulty", 1)), SkillSys.skill_name(str(cr.get("skill", "smithing"))), int(cr.get("level", 0))], 20, true))
+	# Living Workshop B1: the level is the maker's own — say whose when a workshop specialist made it
+	var by := ""
+	if str(cr.get("maker_name", "")) != "":
+		var who := Workers.resolve(str(cr.get("maker", "")))
+		by = " · made by %s%s" % [str(cr["maker_name"]), (" (%s)" % Workers.title(who).to_lower()) if str(who["kind"]) == "apprentice" else ""]
+	v.add_child(UIKit.rich("[i]%s · %s · difficulty %d · %s %d%s[/i]" % [cr.get("recipe_name", ""), cr.get("material", ""),
+		int(cr.get("difficulty", 1)), SkillSys.skill_name(str(cr.get("skill", "smithing"))), int(cr.get("level", 0)), by], 20, true))
 	for o in cr.get("ops", []):
 		var row := UIKit.hbox(10)
 		var nm := UIKit.label(str(o.get("op", "")), 21, "body", UIKit.PAPER)

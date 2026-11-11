@@ -3906,6 +3906,13 @@ func phase_s2_clarity() -> void:
 	await ph.run(self)
 
 
+## The Living Workshop (FOUNDATION, B1): applicants with professions, who master-grade work needs, a specialist doing
+## what the smith cannot, the tree node met by a specialist (tests/playtest_lw_foundation.gd). Shots lwf_*.
+func phase_lw_foundation() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_foundation.gd").new()
+	await ph.run(self)
+
+
 ## Milestone S2 (ECONDEV): saving goals at the shop's price, plain pieces at the Salt Anvil, consultation and counter
 ## sales, and the developer tools behind the cheat switch (tests/playtest_s2_econdev.gd).
 func phase_s2_econdev() -> void:

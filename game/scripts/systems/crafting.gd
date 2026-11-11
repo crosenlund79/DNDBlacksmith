@@ -62,8 +62,9 @@ static func difficulty(recipe_id: String) -> int:
 	return int(DB.recipe(recipe_id).get("difficulty", 1)) + int(material(recipe_id).get("difficulty", 0))
 
 
-static func difficulty_word(recipe_id: String) -> String:
-	var gap := difficulty(recipe_id) - Game.player_level(recipe_skill(recipe_id))
+## How the work feels to `actor` (default the smith): the Design's difficulty against their level in its skill.
+static func difficulty_word(recipe_id: String, actor: Variant = "player") -> String:
+	var gap := difficulty(recipe_id) - Workers.level(actor, recipe_skill(recipe_id))
 	if gap <= -4:
 		return "routine work"
 	if gap <= -1:
@@ -76,48 +77,19 @@ static func difficulty_word(recipe_id: String) -> String:
 
 
 # ------------------------------------------------------------------ unlocks
+## May the SMITH work at this station? (owned and installed, learned in the tree, its upgrade, his own station skill).
+## Living Workshop B1: the same question for any worker is Workers.station_reason(actor, sid); the workshop's part
+## alone is Workers.workshop_station_reason(sid).
 static func station_locked_reason(station_id: String) -> String:
-	# workshop ownership: is the station installed in a room the smith owns?
-	var pr := Property.station_reason(station_id)
-	if pr != "":
-		return pr
-	# the skill tree: has the smith learned to use it?
-	var tr := SkillTree.station_reason(station_id)
-	if tr != "":
-		return tr
-	var st := DB.station(station_id)
-	var u: Dictionary = st.get("unlock", {})
-	if u.has("upgrade") and not Game.has_upgrade(u["upgrade"]):
-		return "Requires workshop upgrade: " + DB.upgrades.get(u["upgrade"], {}).get("name", u["upgrade"])
-	if u.has("skill"):
-		var sk: Array = u["skill"]
-		if Game.player_level(sk[0]) < int(sk[1]):
-			return "Requires %s %d" % [SkillSys.skill_name(sk[0]), int(sk[1])]
-	return ""
+	return Workers.station_reason("player", station_id)
 
 
+## May the SMITH make this Design himself? "" or the first reason, in this order: the workshop's knowledge (the skill
+## tree, a forgotten recipe's notes), his competence (what the Design names, then — Living Workshop B1 — work beyond
+## his basic grasp of another craft: "Needs a runesmith (Runecraft 6) — the smith's runecraft is basic (3)"), then each
+## station. For any worker: Workers.can_do(actor, recipe_id); for the workshop as a whole: Workers.workshop_can.
 static func recipe_locked_reason(recipe_id: String) -> String:
-	var r := DB.recipe(recipe_id)
-	var tr := SkillTree.recipe_reason(recipe_id)
-	if tr != "":
-		return tr
-	var rf := str(r.get("requires_flag", ""))
-	if rf != "" and not Game.has_flag(rf):
-		return "A forgotten recipe — find its notes among the relics"
-	var req: Dictionary = r.get("requires", {})
-	for sk in req:
-		if Game.player_level(sk) < int(req[sk]):
-			return "Requires %s %d" % [SkillSys.skill_name(sk), int(req[sk])]
-	var u: Dictionary = r.get("unlock", {})
-	if u.has("skill"):
-		var usk: Array = u["skill"]
-		if Game.player_level(usk[0]) < int(usk[1]):
-			return "Requires %s %d" % [SkillSys.skill_name(usk[0]), int(usk[1])]
-	for s in r.get("steps", []):
-		var why := station_locked_reason(s)
-		if why != "":
-			return DB.station(s).get("name", s) + " — " + why
-	return ""
+	return Workers.can_do("player", recipe_id)
 
 
 static func missing_inputs(recipe_id: String) -> Dictionary:
@@ -213,14 +185,18 @@ static func assist_on() -> bool:
 ## where skill weighs the recipe's difficulty against the relevant skill level (a beginner gets a
 ## narrow zone and a fast needle, an expert a wide zone and a slow one). `factors` in the result
 ## lists every multiplier for tooltips and tests. Quality itself is untouched: the minigames only
-## turn these into tolerances and paces. opts: {"assist": bool} forces / suppresses the assist.
+## turn these into tolerances and paces. opts: {"assist": bool} forces / suppresses the assist; {"actor": id} — the
+## worker at the station (Living Workshop B1; default the smith): THEIR level in the station's skill sets the zone and
+## pace, and the smith's fatigue counts only for the smith (Workers.check_params(actor, …) is the same call).
 ## DA: Prøvens zone og fart fra tydelige faktorer: færdighed mod sværhed, opskriftens kompleksitet,
 ##     stationens niveau, finjustering, træthed og evt. hjælp (tutorial-sværhed).
 static func check_params(station_id: String, recipe_id := "", checks := -1, opts := {}) -> Dictionary:
 	var c: Dictionary = DB.station(station_id).get("check", {"count": 1, "speed": 0.55, "zone": 34, "weight": 1.0})
 	var sk := cfg("skill")
 	var skill := skill_for_station(station_id)
-	var lvl := Game.player_level(skill)
+	var actor: Variant = opts.get("actor", "player")
+	var is_smith := Workers.kind(actor) == "player"
+	var lvl := Workers.level(actor, skill)
 	var f := {}
 	# 1. skill against difficulty (recipe difficulty includes its material)
 	var diff := float(difficulty(recipe_id)) if recipe_id != "" else 2.0
@@ -237,8 +213,8 @@ static func check_params(station_id: String, recipe_id := "", checks := -1, opts
 	var tune: Dictionary = STATION_TUNING.get(station_id, {})
 	f["tune_zone"] = float(tune.get("zone", 1.0))
 	f["tune_speed"] = float(tune.get("speed", 1.0))
-	# 4. the smith's condition
-	var wf := clampf(Vitality.work_factor(), 0.0, 1.0)
+	# 4. the smith's condition (his fatigue; other workers' tiredness is not modelled)
+	var wf := clampf(Vitality.work_factor(), 0.0, 1.0) if is_smith else 1.0
 	f["fatigue"] = 1.0 - FATIGUE_ZONE * (1.0 - wf)
 	# 5. assist / tutorial difficulty
 	var assist: bool = bool(opts.get("assist", assist_on()))
@@ -259,7 +235,7 @@ static func check_params(station_id: String, recipe_id := "", checks := -1, opts
 		"speed": speed,
 		"zone": clampf(zone, 12.0, 90.0),
 		"weight": float(c.get("weight", 1.0)),
-		"skill": skill, "level": lvl, "difficulty": diff, "assist": assist, "factors": f,
+		"skill": skill, "level": lvl, "difficulty": diff, "assist": assist, "factors": f, "actor": Workers.resolve(actor)["id"],
 	}
 
 
@@ -688,6 +664,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 			# an expert smith may still be a novice miner: damp only a skill he is also expert in (Mining XP hotfix)
 			if expert and Game.player_level(str(skill)) - difficulty(rid) >= int(sk.get("xp_expert_gap", 5)):
 				amt *= float(sk.get("xp_expert_mult", 0.4))
+			if not Workers.can_grow("player", str(skill)):
+				continue   # B1: another craft at the smith's basic level teaches him nothing more (the record says so)
 			xp[skill] = int(round(amt))
 			Game.grant_player_xp(skill, xp[skill])
 		Steward.end_marked(marked)

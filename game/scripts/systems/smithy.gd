@@ -81,7 +81,8 @@ static func tier_info(r: Dictionary) -> Dictionary:
 	if disc == "":
 		out["next"] = "Give the room a craft or set up stations to make it a workshop of its trade."
 		return out
-	var skill := Game.player_level(str(Crafting.DISCIPLINE_SKILL.get(disc, "smithing")))
+	# Living Workshop B1: the craft's best hand in the workshop (the smith or a specialist) — his other crafts stay basic
+	var skill := int(Workers.best_level(str(Crafting.DISCIPLINE_SKILL.get(disc, "smithing")))["level"])
 	var n := _in_room(r, disc)
 	var sk_name := SkillSys.skill_name(str(Crafting.DISCIPLINE_SKILL.get(disc, "smithing")))
 	var t := 0

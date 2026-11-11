@@ -495,8 +495,12 @@ func _masters() -> void:
 	# jewellery: gems give their nature to the piece
 	var ring := _craft("garnet_ring", 100.0, {"resonance": 6, "fortune": 40})
 	check(Items.stat(ring, "fire") > 0 and Items.stat(ring, "magic") > 0, "jewellery: garnet ring (fire %d, magic %d)" % [Items.stat(ring, "fire"), Items.stat(ring, "magic")])
-	# the arcane chain: charge adamantine, then a warplate with a ward bound into the metal
+	# the arcane chain: charge adamantine, then a warplate with a ward bound into the metal. Living Workshop B1: the
+	# warplate is an arcanist's masterwork, beyond a smith's basic arcane metalworking — this smith comes from an old save
+	# where he had earned Arcane 10 (migration 5 keeps every earned level; only new growth stops at the basic level)
 	Game.grant_player_xp("arcane_metalwork", 400)
+	check(Crafting.recipe_locked_reason("adamantine_warplate").contains("arcanist"), "arcane: a smith of basic arcane metalworking is refused the warplate (%s)" % Crafting.recipe_locked_reason("adamantine_warplate"))
+	Game.player_skills()["arcane_metalwork"] = {"lvl": 10, "xp": 0}
 	var ingot := _craft("charge_adamantine", 100.0, {"purity": 4})
 	check(Game.count("ingot_adamantine") >= 2 or not ingot.is_empty(), "arcane: charged adamantine (%d ingots)" % Game.count("ingot_adamantine"))
 	if Game.count("ingot_adamantine") < 2:
@@ -694,8 +698,16 @@ func _skilltree() -> void:
 				continue
 			var r: Dictionary = n["requires"]
 			if r.has("skill"):
-				while Game.player_level(str(r["skill"][0])) < int(r["skill"][1]):
-					Game.grant_player_xp(str(r["skill"][0]), 40)
+				var sk0 := str(r["skill"][0])
+				var need0 := int(r["skill"][1])
+				# Living Workshop B1: past the smith's basic level in another craft, a specialist on the staff brings it
+				if Workers.tree_level(sk0) < need0 and Workers.is_basic("player", sk0) and need0 > Workers.BASIC_LEVEL:
+					var spec := Apprentices.dev_take_on(Workers.skill_profession(sk0), need0)
+					check(not spec.is_empty(), "skilltree path: a %s with %s %d joins the staff" % [Workers.skill_profession(sk0), sk0, need0])
+				var gx := 0
+				while Workers.tree_level(sk0) < need0 and gx < 400:
+					Game.grant_player_xp(sk0, 40)
+					gx += 1
 			for f in r.get("flags", []):
 				Game.set_flag(str(f))
 			for dd in r.get("items_seen", []):
@@ -712,9 +724,24 @@ func _skilltree() -> void:
 	# dragon armour: legendary-grade, never below rare even from rough work
 	for pair in [["dragon_scale", 4], ["dragon_bone", 2], ["leather_wyrm", 2], ["ingot_orichalcum", 1]]:
 		Game.add_item(Items.make(pair[0], {"qty": pair[1]}), false)
-	check(Crafting.recipe_locked_reason("dragonscale_armor") == "" and Crafting.missing_inputs("dragonscale_armor").is_empty(), "skilltree path: dragonscale armour craftable (%s)" % Crafting.recipe_locked_reason("dragonscale_armor"))
-	var drag := _craft("dragonscale_armor", 55.0, {"guard": 8, "spellweave": 5, "temper": 6, "fortune": 10})
-	check(not drag.is_empty() and drag.get("rarity") in ["rare", "legendary"] and Items.stat(drag, "protection") > 20, "skilltree path: dragonscale armour forged (%s, protection %d)" % [drag.get("rarity"), Items.stat(drag, "protection")])
+	# Living Workshop B1: the workshop knows the Design; arcane masterwork is beyond the smith's basic arcane metalworking
+	check(Workers.workshop_reason("dragonscale_armor") == "" and Crafting.missing_inputs("dragonscale_armor").is_empty(), "skilltree path: the workshop knows dragonscale armour and has its materials (%s)" % Workers.workshop_reason("dragonscale_armor"))
+	check(Crafting.recipe_locked_reason("dragonscale_armor").contains("arcanist"), "skilltree path: the smith himself is refused — %s" % Crafting.recipe_locked_reason("dragonscale_armor"))
+	var arc := Apprentices.dev_take_on("arcanist", 9, "master")
+	if not arc.is_empty():
+		arc["skills"]["enchanted_stitching"] = {"lvl": 3, "xp": 0}   # basic leatherwork for the fitting mannequin (one worker per piece until C1)
+	check(not arc.is_empty() and Workers.can_do(arc, "dragonscale_armor") == "", "skilltree path: a master arcanist may make it (%s)" % (Workers.can_do(arc, "dragonscale_armor") if not arc.is_empty() else "no room"))
+	var drag := {}
+	if not arc.is_empty():
+		var dt := Apprentices.add_task("craft", {"recipe": "dragonscale_armor", "assignee": str(arc["id"])})
+		var gm := 0
+		while not dt.has("error") and not str(dt.get("state", "")) in ["done", "failed", "cancelled"] and gm < 8 * 1440:
+			Game.advance_minutes(15)
+			gm += 15
+		if not dt.has("error") and not (dt.get("made", []) as Array).is_empty():
+			drag = Game.find_uid(int(dt["made"][0]))
+	check(not drag.is_empty() and drag.get("rarity") in ["rare", "legendary"] and Items.stat(drag, "protection") > 20 and str(drag.get("craft", {}).get("maker", "")) == str(arc.get("id", "")),
+		"skilltree path: dragonscale armour made by the arcanist (%s, protection %d)" % [drag.get("rarity"), Items.stat(drag, "protection")])
 	# ---- dev helpers
 	SkillTree.reset_new()
 	check(SkillTree.learned().size() == 2, "skilltree: reset_new returns to the starting nodes")

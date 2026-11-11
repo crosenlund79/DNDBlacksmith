@@ -1,5 +1,5 @@
 ## Workshop apprentices (iteration 012): hiring, wages and limits; the unlock gate; eligibility by rank, skill and the
-## smith's own unlocks; queue priorities with automatic and manual assignment; materials taken and returned without
+## workshop's knowledge (Living Workshop B1: not by what the smith can do himself — a parallel specialist route); queue priorities with automatic and manual assignment; materials taken and returned without
 ## duplication; one worker per station (the smith first); work identical through small ticks and one long sleep;
 ## quality by rank against the smith's exceptional work; proportionate mistakes; rank-ups and specialties; mentoring;
 ## the apprentice as maker (mark, supervisor, workshop) through repair, sale, reforge and save/load; Epic and Hall of
@@ -148,6 +148,7 @@ func test_wages_loyalty_dismissal() -> void:
 # ------------------------------------------------------------------ eligibility
 func test_eligibility_by_rank_skill_unlock() -> void:
 	var a: Dictionary = _setup(1)[0]
+	a["profession"] = "blacksmith"   # Living Workshop B1: the rank rules below are about a blacksmith's other crafts
 	_skills(a, "novice", {"smithing": 1})
 	eq(Apprentices.can_make(a, "smelt_iron"), "", "a novice may smelt iron")
 	check(Apprentices.can_make(a, "iron_longsword") != "", "a novice may not forge a longsword (%s)" % Apprentices.can_make(a, "iron_longsword"))
@@ -164,12 +165,27 @@ func test_eligibility_by_rank_skill_unlock() -> void:
 	_skills(a, "master", {"arcane_metalwork": 9, "smithing": 9})
 	eq(Apprentices.can_make(a, "dragonscale_armor"), "", "a master may attempt legendary-grade work")
 	_skills(a, "journeyman", {"arcane_metalwork": 9})
-	check(Apprentices.can_make(a, "dragonscale_armor") != "", "legendary-grade work needs a master or the smith")
-	# the smith must have learned the recipe himself
-	check(Crafting.recipe_locked_reason("steel_longsword") != "", "the smith has not learned steel yet")
-	check(Apprentices.add_task("craft", {"recipe": "steel_longsword"}).has("error"), "an apprentice cannot make what the smith has not learned")
+	check(Apprentices.can_make(a, "dragonscale_armor") != "", "legendary-grade work needs a master")
+	# the WORKSHOP must know the Design (today: the smith's skill tree) — nobody makes what the forge does not know
+	check(Crafting.recipe_locked_reason("steel_longsword") != "", "the workshop has not learned steel yet")
+	check(str(Apprentices.add_task("craft", {"recipe": "steel_longsword"}).get("error", "")).contains("does not know"), "an apprentice cannot make a Design the workshop does not know")
 	var names := Apprentices.recipes_for(a).map(func(r): return str(r["id"]))
-	check(not names.has("steel_longsword"), "recipes_for lists only what the smith has unlocked")
+	check(not names.has("steel_longsword"), "recipes_for lists only Designs the workshop knows")
+	# Living Workshop B1 — the parallel specialist route: a Design the workshop KNOWS but the smith cannot make himself
+	# (beyond his basic runecraft) is open to a runesmith of the right level; specialists are no longer limited to what
+	# the smith personally can do. A specialist works their own craft from the start of their rank (no "training" rule).
+	SkillTree.unlock_all()
+	Property.dev_grant_all()
+	check(Crafting.recipe_locked_reason("concord_runestone").contains("runesmith"), "the smith himself is refused master-grade rune work (%s)" % Crafting.recipe_locked_reason("concord_runestone"))
+	a["profession"] = "runesmith"
+	_skills(a, "journeyman", {"smithing": 1, "runecraft": 0})
+	check(not Apprentices.can_make(a, "ward_runestone").contains("trained"), "a runesmith needs no training in their own craft (%s)" % Apprentices.can_make(a, "ward_runestone"))
+	check(Apprentices.can_make(a, "ward_runestone").contains("Needs Runecraft"), "…but their own level still counts (%s)" % Apprentices.can_make(a, "ward_runestone"))
+	_skills(a, "master", {"runecraft": 8})
+	eq(Apprentices.can_make(a, "concord_runestone"), "", "a master runesmith may make the Concord runestone the smith cannot")
+	check(Apprentices.recipes_for(a).any(func(r): return str(r["id"]) == "concord_runestone"), "recipes_for offers it to them")
+	var t := Apprentices.add_task("craft", {"recipe": "concord_runestone", "assignee": str(a["id"])})
+	check(not t.has("error"), "and it can be queued for them (%s)" % t.get("error", ""))
 
 
 # ------------------------------------------------------------------ queue & assignment

@@ -8,6 +8,11 @@
 ##   * knowledge flags come from what the systems teach (restoring a rune tablet, holding a dragon scale).
 ## The one stand-in: gold is credited as "business income" (earning it is covered by scenario B), so this
 ## scenario tests reachability of the crafting progression, not the economy's pacing.
+## The Living Workshop B1: the smith's other crafts stop growing at the basic level (Workers.BASIC_LEVEL) — the tree's
+## arcane, rune and leather nodes up to Legendary Arcane Craftsmanship are within it — and Dragonscale Armour, an
+## arcanist's masterwork, is made by a master arcanist the workshop takes on (a second stand-in: their years of training,
+## Apprentices.dev_take_on; a specialist's progression is covered by t_apprentices), through the real work queue, from
+## the materials the planner gathered.
 extends SuiteCase
 
 const SMOKE := []
@@ -264,6 +269,42 @@ func make(rid: String, depth := 0) -> String:
 	return "" if not it.is_empty() else "%s: the job did not finish" % rid
 
 
+## Living Workshop B1: a Design beyond the smith's basic grasp of another craft — the stations and materials come the
+## same way as make(); the smith is refused with the specialist's reason; a master of that profession (stand-in for their
+## training) makes it through the work queue.
+func make_by_specialist(rid: String, profession: String) -> String:
+	var r := DB.recipe(rid)
+	for sid in r["steps"]:
+		var why := ensure_station(str(sid))
+		if why != "":
+			return "%s: station %s — %s" % [rid, sid, why]
+	for def in r["inputs"]:
+		var err := acquire(str(def), int(r["inputs"][def]))
+		if err != "":
+			return "%s: %s" % [rid, err]
+	var mine := craft_blocker(rid)
+	check(mine.contains(profession), "the smith himself is refused %s: %s" % [rid, mine])
+	var spec := Apprentices.dev_take_on(profession, 9, "master")
+	if spec.is_empty():
+		return "no room for %s on the staff" % Workers.a_noun(profession)
+	for o in Crafting.operations(rid):   # the stations of other crafts ask their basic skill of whoever works them
+		var su: Dictionary = DB.station(str(o["station"])).get("unlock", {})
+		if su.has("skill") and Apprentices.level(spec, str(su["skill"][0])) < int(su["skill"][1]):
+			spec["skills"][str(su["skill"][0])] = {"lvl": int(su["skill"][1]), "xp": 0}
+	var why2 := Workers.can_do(spec, rid)
+	if why2 != "":
+		return "%s cannot make it: %s" % [spec["name"], why2]
+	var t := Apprentices.add_task("craft", {"recipe": rid, "assignee": str(spec["id"])})
+	if t.has("error"):
+		return str(t["error"])
+	var g := 0
+	while not str(t["state"]) in ["done", "failed", "cancelled"] and g < 10:
+		_day()
+		g += 1
+	_say("%s made %s" % [spec["name"], r.get("name", rid)])
+	return "" if str(t["state"]) == "done" and not (t["made"] as Array).is_empty() else "%s: %s %s" % [rid, t["state"], t.get("blocker", "")]
+
+
 ## Raise a skill by crafting known recipes that train it (cheapest inputs first).
 func train_by_crafting(skill: String, level: int) -> String:
 	var tries := 0
@@ -377,8 +418,8 @@ func test_beginner_to_master() -> void:
 		check(workshop_at != "", "workshop apprentices become available in a normal career")
 		note("apprentices unlocked " + workshop_at)
 	if SkillTree.is_unlocked("ar_legend"):
-		var e := make("dragonscale_armor")
-		check(e == "", "Dragonscale Armour forged from real dragon parts (%s)" % e)
+		var e := make_by_specialist("dragonscale_armor", "arcanist")
+		check(e == "", "Dragonscale Armour made from real dragon parts by the workshop's arcanist (%s)" % e)
 		var arm := {}
 		for it in Game.inventory():
 			if it.get("def", "") == DB.recipe("dragonscale_armor").get("output", ""):

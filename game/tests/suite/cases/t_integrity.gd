@@ -146,7 +146,7 @@ func test_commissions_possible() -> void:
 	Property.dev_grant_all()
 	SkillTree.unlock_all()
 	for sk in DB.skill_list:
-		train(str(sk["id"]), 12)
+		legacy_level(str(sk["id"]), 12)   # B1: an all-round master smith (an old save's levels) — content reach, not progression
 	var best := {}
 	for r in DB.recipes.values():
 		var rid: String = r["id"]

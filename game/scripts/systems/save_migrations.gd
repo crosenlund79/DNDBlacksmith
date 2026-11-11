@@ -26,6 +26,8 @@ const STEPS := [
 		"what": "Records that only refer to a piece (finished-expedition loot, repair requests for an adventurer's own piece) become uid + snapshot references; a delivered contract masterpiece moves to the holdings archive (out of the capped history); one uid held by two live holders keeps the most authoritative one. Same instances, same uids (ItemRegistry.migrate_records)."},
 	{"to": 4, "name": "campaign Unique registry",
 		"what": "Run 0.1 (decision D13): every piece or record of a Unique artifact in the save is registered; the lowest uid is the authentic piece and any others are kept whole as recorded legacy copies, so the campaign never mints that Unique again (Uniques.scan_state)."},
+	{"to": 5, "name": "worker professions",
+		"what": "The Living Workshop B1: the smith is the blacksmith; every workshop apprentice (on the staff or gone), and every waiting applicant, gains a profession from their strongest workshop skill (ties: their preferred discipline, then smithing). Every level, experience point, trait, wage, rank, log, memory, creation, task and contract hour is kept; the smith keeps every level (other crafts simply stop growing past the basic level from now on); field hirelings are unchanged (Workers.migrate_professions)."},
 ]
 
 
@@ -79,6 +81,8 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			_v2_to_v3(data)
 		4:
 			_v3_to_v4(data)
+		5:
+			_v4_to_v5(data)
 		_:
 			return false
 	return true
@@ -136,6 +140,17 @@ static func _v3_to_v4(data: Dictionary) -> void:
 		for d in r:
 			Log.info("  Unique %s: authentic uid %d, %d legacy cop%s kept" % [d, int(r[d]["uid"]), (r[d]["copies"] as Array).size(),
 				"y" if (r[d]["copies"] as Array).size() == 1 else "ies"])
+
+
+## v4 → v5 (The Living Workshop B1): worker professions. Idempotent; only a missing profession is written.
+static func _v4_to_v5(data: Dictionary) -> void:
+	var n := Workers.migrate_professions(data)
+	if n > 0:
+		var ap: Variant = data.get("apprentices", {})
+		var staff: Array = (ap as Dictionary).get("staff", []) if ap is Dictionary else []
+		for a in staff:
+			Log.info("  %s: %s" % [str(a.get("name", "?")), Workers.profession_name(str(a.get("profession", "")))])
+		Log.info("  %d workshop worker(s) given a profession" % n)
 
 
 ## Runs `fn` with Game.state pointing at `data` (systems read the save through Game.state), then restores it.
