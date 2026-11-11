@@ -483,3 +483,79 @@ func test_migration_work_orders() -> void:
 	var uid := int(t2["uid"])
 	check(_until(func(): return str(t2["state"]) in FIN, 2 * 1440), "the migrated order finishes")
 	eq(str(Provenance.maker(Game.find_uid(uid)).get("id", "")), str(bs["id"]), "the piece carries the reserved uid; the blacksmith is its maker")
+
+
+# ------------------------------------------------------------------ the Ledger and the station panel show the order
+func _host() -> Node:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	return root.get_child(root.get_child_count() - 1)
+
+
+func _find(n: Node, pred: Callable) -> Node:
+	if pred.call(n):
+		return n
+	for c in n.get_children():
+		var r := _find(c, pred)
+		if r != null:
+			return r
+	return null
+
+
+func _text_in(n: Node, needle: String) -> bool:
+	return _find(n, func(x): return (x is Label and (x as Label).text.contains(needle)) or (x is RichTextLabel and (x as RichTextLabel).text.contains(needle)) \
+		or (x is Button and (x as Button).text.contains(needle))) != null
+
+
+func test_ledger_and_station_show_the_order() -> void:
+	_full_workshop()
+	train("smithing", 8)
+	var rune := Apprentices.dev_take_on("runesmith", 2, "journeyman", "Edda Vell")
+	Apprentices.dev_take_on("alchemist", 6, "journeyman", "Mira Holt")
+	_ember_mats()
+	# the smith cannot make it alone (a leatherworker is missing: the grip) — "Order it" says why not yet
+	Apprentices.dev_take_on("leatherworker", 6, "journeyman", "Wren Marsh")
+	eq(StationPanel.order_reason(EMBER), "", "with a runesmith, an alchemist and a leatherworker it can be ordered")
+	var sp := StationPanel.new("anvil")
+	_host().add_child(sp)
+	sp._order(EMBER)
+	var t := {}
+	for x in Apprentices.open_tasks():
+		if str(x.get("recipe", "")) == EMBER:
+			t = x
+	check(not t.is_empty(), "Order it queued the Emberwarden as a work order")
+	eq(str(WorkOrders.stages(t)[0].get("assignee", "")), "player", "the smith took the forging stage")
+	eq(str(WorkOrders.stages(t)[3].get("assignee", "")), "player", "…and the honing")
+	sp.free()
+	_at_hour(8)
+	Game.advance_minutes(5)
+	# the station panel at the forge offers his stage
+	var fp := StationPanel.new("forge")
+	_host().add_child(fp)
+	check(fp.find_child("MyStage", true, false) != null, "the forge's panel offers his stage of the order")
+	fp.free()
+	var lp := WorkshopPanel.new()
+	_host().add_child(lp)
+	var tid := int(t["id"])
+	check(lp.find_child("Stages_%d" % tid, true, false) != null, "the Ledger lists the order's stages")
+	check(lp.find_child("StageAssign_%d_1" % tid, true, false) != null, "…with who does each stage")
+	check(lp.find_child("GoStage_%d" % tid, true, false) != null, "…and a way to walk to his stage")
+	check(_text_in(lp, "work order, 5 stages"), "the row says it is a work order")
+	check(_text_in(lp, "Ember Runestone"), "the rune stage's material is listed")
+	lp.free()
+	# his stage, then the runesmith (out of her depth) asks for a hand — the Ledger shows the request
+	var err := WorkOrders.begin_smith_stage(tid)
+	eq(err, "", "he takes up his stage")
+	while Crafting.active():
+		var qs := []
+		for i in int(Crafting.current_op().get("checks", 1)):
+			qs.append(100.0)
+		Crafting.record_step(Crafting.smith_instance(), qs)
+	check(_until(func(): return not WorkOrders.open_help().is_empty(), 240), "the runesmith asks for a hand")
+	var lp2 := WorkshopPanel.new()
+	_host().add_child(lp2)
+	var hid := int(WorkOrders.open_help()[0]["id"])
+	check(lp2.find_child("HelpRequest_%d" % hid, true, false) != null, "the Ledger shows the request with its answers")
+	check(_text_in(lp2, "Edda"), "…naming who asks")
+	check(_text_in(lp2, "at work"), "the stage at hand shows its worker at work")
+	lp2.free()
+	eq(str(rune["id"]), str(t.get("worker", "")), "the runesmith is on the rune stage")

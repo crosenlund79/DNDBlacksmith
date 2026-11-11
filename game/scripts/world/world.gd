@@ -710,6 +710,11 @@ func _update_marker() -> void:
 	if _marker == null or not is_instance_valid(_marker):
 		return
 	var st := Crafting.smith_instance()
+	if st == "" and not Crafting.active():
+		# C1: a work-order stage he claimed waits for him — the marker shows where it begins
+		var w := WorkOrders.waiting_for_smith()
+		if not w.is_empty():
+			st = Smithy.instance_for_smith(str(w["station"]), self)
 	if st == "":
 		_marker.visible = false
 		_marker_at = ""
@@ -2221,6 +2226,9 @@ static func station_usable(sid: String) -> bool:
 		return false
 	if Crafting.active():
 		return Crafting.smith_instance() == sid   # #37: the instance he will use for his next step
+	var w := WorkOrders.waiting_for_smith()   # C1: a work-order stage he claimed begins at this kind of station
+	if not w.is_empty() and Property.type_of(sid) == str(w["station"]):
+		return true
 	return WorldPrompts._ready_count(sid) > 0
 
 

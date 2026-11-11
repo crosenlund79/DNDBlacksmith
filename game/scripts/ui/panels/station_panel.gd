@@ -68,21 +68,38 @@ func _build() -> void:
 	if not job.is_empty():
 		var r := DB.recipe(job["recipe"])
 		var ops := Crafting.operations(job["recipe"])
-		body.add_child(UIKit.rich("[b]Current work:[/b] %s  [i](%s, %s)[/i]" % [r["name"], Crafting.material(job["recipe"]).get("name", ""), Crafting.difficulty_word(job["recipe"])], 22))
-		var done: Array = job.get("ops", [])
+		# Living Workshop C1: a job that carries a work order is the smith's own stage of it — the order holds the
+		# materials and the other stages' work; each operation names the hand that did (or will do) it
+		var order_t := Apprentices.task(int(job.get("order", -1))) if job.has("order") else {}
+		body.add_child(UIKit.rich("[b]%s[/b] %s  [i](%s, %s)[/i]" % ["Your stage of a work order:" if not order_t.is_empty() else "Current work:", r["name"],
+			Crafting.material(job["recipe"]).get("name", ""), Crafting.difficulty_word(job["recipe"])], 22))
+		var done: Array = order_t.get("ops_done", []) if not order_t.is_empty() else job.get("ops", [])
+		var stop := int(job.get("stop", ops.size()))
 		var lines := []
 		for i in ops.size():
 			var o: Dictionary = ops[i]
 			var nm := "%d. %s — %s (%d check%s · %s)" % [i + 1, o["op"], DB.station(o["station"]).get("name", o["station"]), int(o.get("checks", 1)), "s" if int(o.get("checks", 1)) > 1 else "",
 				check_name(str(o["station"]))]
+			var hand := ""
+			if not order_t.is_empty() and i < done.size():
+				var b := str(done[i].get("by", ""))
+				hand = "  — you" if b == "player" else "  — " + str(Apprentices.get_a(b).get("name", b)).split(" ")[0]
 			if i < int(job["step"]):
 				var q := float(done[i]["q"]) if i < done.size() else 0.0
-				lines.append("[color=#5e421c][s]%s[/s]  [b]%d%%[/b][/color]" % [nm, int(round(q))])
+				lines.append("[color=#5e421c][s]%s[/s]  [b]%d%%[/b]%s[/color]" % [nm, int(round(q)), hand])
 			elif i == int(job["step"]) and not job["awaiting_dice"]:
 				lines.append("[b][color=#7e2418]▶ %s[/color][/b]" % nm)
+			elif not order_t.is_empty() and i >= stop:
+				var si := WorkOrders.stage_index(order_t, i)
+				var who := str(WorkOrders.stages(order_t)[si].get("assignee", ""))
+				lines.append("[color=#6e5a40][i]%s — %s stage%s[/i][/color]" % [nm, str(WorkOrders.DISC_WORD.get(str(WorkOrders.stages(order_t)[si]["disc"]), "another")).to_lower(),
+					(", yours" if who == "player" else "")])
 			else:
 				lines.append(nm)
-		lines.append(("[b][color=#7e2418]▶ Roll the dice[/color][/b]" if job["awaiting_dice"] else "Then: roll the dice"))
+		if order_t.is_empty():
+			lines.append(("[b][color=#7e2418]▶ Roll the dice[/color][/b]" if job["awaiting_dice"] else "Then: roll the dice"))
+		else:
+			lines.append("Then: the piece goes on to the next stage's hand (or, the last stage done, to the stores)")
 		body.add_child(UIKit.rich("\n".join(lines), 20))
 		if job["awaiting_dice"]:
 			body.add_child(UIKit.button("Roll the dice and finish the piece", func(): Events.open_panel.emit("dice", {}), 420))
@@ -102,8 +119,16 @@ func _build() -> void:
 				go.name = "WalkNext"
 				go.tooltip_text = "Walks you there and opens it — the ember marker shows where it stands."
 				body.add_child(go)
-		body.add_child(UIKit.button("Abandon work (return materials)", func(): Crafting.cancel(), 340))
+		if job.has("order"):
+			var ab := UIKit.button("Set the work down (the order keeps its materials)", func(): Crafting.cancel(), 420)
+			ab.tooltip_text = "Your operations so far stay in the piece; the stage waits for you (or give it to someone in the Workshop Ledger)."
+			body.add_child(ab)
+		else:
+			body.add_child(UIKit.button("Abandon work (return materials)", func(): Crafting.cancel(), 340))
 	else:
+		var mine := _my_stage_box()
+		if mine != null:
+			body.add_child(mine)
 		content.add_child(_filter_bar())
 		list_box = UIKit.vbox(10)
 		body.add_child(list_box)
@@ -312,7 +337,15 @@ func _recipe_row(rec: Dictionary) -> Control:
 	var b := UIKit.small_button("Begin", func(): _start(rid), 110)
 	b.disabled = lock != "" or not Crafting.missing_inputs(rid).is_empty()
 	b.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(b)
+	if lock != "" and order_reason(rid) == "":
+		# C1: beyond the smith alone, but his workshop's specialists can do the other crafts — order it as a work order
+		var ob := UIKit.small_button("Order it", func(): _order(rid), 110)
+		ob.name = "OrderIt_" + rid
+		ob.tooltip_text = "Queue it as a work order: you forge (your stage, your checks here); your specialists do their crafts' stages at their stations."
+		ob.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(ob)
+	else:
+		row.add_child(b)
 	outer.add_child(row)
 	if selected == rid:
 		outer.add_child(_guidance(rid))
@@ -355,6 +388,66 @@ func _on_link(meta: String) -> void:
 	GuideUI.follow(meta, _back())
 
 
+## C1: can this Design be made as a work order now — the workshop knows it, its stations stand, it is not already in
+## the queue, and every stage has a hand (the smith for his own craft, the staff for theirs)? "" = yes.
+static func order_reason(rid: String) -> String:
+	if Game.state.is_empty() or not Apprentices.unlocked() or Apprentices.staff().is_empty():
+		return "No staff."
+	if Workers.workshop_reason(rid) != "":
+		return Workers.workshop_reason(rid)
+	for x in Apprentices.open_tasks():
+		if str(x.get("recipe", "")) == rid and str(x.get("kind", "")) == "craft":
+			return "Already in the queue."
+	var probe := {"kind": "craft", "recipe": rid, "op": 0, "ops_done": [], "started": false, "worker": ""}
+	var st := WorkOrders.stages(probe)
+	if st.size() < 2:
+		return "One craft — no stages to share."
+	for s2 in st:
+		if WorkOrders.who_can_stage(probe, int(s2["i"])).is_empty():
+			return WorkOrders.staff_gap(probe, int(s2["i"]))
+	return ""
+
+
+## Queues the Design as a work order; the smith claims the stages of his own craft that he may do.
+func _order(rid: String) -> void:
+	var t := Apprentices.add_task("craft", {"recipe": rid, "priority": 2})
+	if t.has("error"):
+		Events.toast.emit(str(t["error"]), "bad")
+		return
+	var mine := []
+	for s2 in WorkOrders.stages(t):
+		if str(s2["disc"]) == "classic" and WorkOrders.assign_stage(int(t["id"]), int(s2["i"]), "player") == "":
+			mine.append(WorkOrders.stage_title(t, int(s2["i"])).to_lower())
+	Events.toast.emit("%s is a work order%s — your specialists do their stages. See the Workshop Ledger." % [DB.recipe(rid).get("name", rid),
+		(": you do the " + " and the ".join(PackedStringArray(mine))) if not mine.is_empty() else ""], "good")
+	_build()
+
+
+## C1: a stage the smith claimed waits at this kind of station — take it up here.
+func _my_stage_box() -> Control:
+	var w := WorkOrders.waiting_for_smith()
+	if w.is_empty() or Property.type_of(str(w["station"])) != stype:
+		return null
+	var t := Apprentices.task(int(w["task"]))
+	var op: Dictionary = Crafting.operations(str(t["recipe"]))[int(w["op"])]
+	var v := UIKit.vbox(6)
+	v.name = "MyStage"
+	v.add_child(UIKit.rich("[b]Your stage of a work order:[/b] %s — %s. [i]The order holds its materials; your checks decide the work.[/i]" % [
+		str(t.get("label", "")), WorkOrders.stage_title(t, int(w["stage"])).to_lower()], 20))
+	var b := UIKit.button("Take up your stage: %s (%s)" % [str(op.get("op", "")), check_name(station_id)], func():
+		var err := WorkOrders.begin_smith_stage(int(w["task"]))
+		if err != "":
+			Events.toast.emit(err, "bad")
+			return
+		if Crafting.current_station() == stype:
+			Crafting.choose_instance(station_id)
+			_work(), 520)
+	b.name = "TakeUpStage"
+	v.add_child(b)
+	v.add_child(UIKit.divider())
+	return v
+
+
 func _start(rid: String) -> void:
 	if Crafting.start(rid):
 		Events.toast.emit("Begun: %s. First: %s at the %s." % [DB.recipe(rid)["name"], Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], "info")
@@ -385,7 +478,12 @@ func _walk_next() -> void:
 
 
 func _on_work_done(qs: Array, sid: String) -> void:
+	var was_order := Crafting.job().has("order")
 	Crafting.record_step(sid, qs)
+	if was_order and not Crafting.active():
+		# C1: his stage of a work order is done — the piece goes on to the next hand (or the stores)
+		Events.toast.emit("Your stage is done — the piece goes on to the next stage (Workshop Ledger).", "good")
+		return
 	if Crafting.job().get("awaiting_dice", false):
 		Events.open_panel.emit("dice", {})
 	else:

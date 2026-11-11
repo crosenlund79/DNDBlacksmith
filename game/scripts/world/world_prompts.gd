@@ -116,6 +116,9 @@ static func _station(sid: String) -> Dictionary:
 		return p
 	var ready := _ready_count(sid)
 	var acts: Array = []
+	var wos := WorkOrders.waiting_for_smith()   # Living Workshop C1: his claimed stage of a work order begins here
+	if not wos.is_empty() and str(wos["station"]) == Property.type_of(sid):
+		acts.append("Your stage (work order)")
 	if ready > 0:
 		acts.append("Craft (%d ready)" % ready)
 	else:
