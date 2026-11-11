@@ -4042,3 +4042,12 @@ func phase_lw_ui() -> void:
 func phase_lw_reliability() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lw_reliability.gd").new()
 	await ph.run(self)
+
+
+# ======================================================================= The Living Workshop (KNOWLEDGE worker)
+## B2: the Skill Tree as your own path and the workshop's knowledge, the ??? kept, a specialist bringing in what the
+## smith could not, the Workshop knowledge catalogue, Designs at a station, Help (tests/playtest_lw_knowledge.gd).
+## Shots lwk_<after|before>_* (before = a build without WorkshopKnowledge).
+func phase_lw_knowledge() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lw_knowledge.gd").new()
+	await ph.run(self)

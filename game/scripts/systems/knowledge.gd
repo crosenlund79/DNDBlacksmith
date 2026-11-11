@@ -1,6 +1,6 @@
 ## Knowledge — purchasable hints and specialist knowledge for genuinely hidden things.
 ## EN: Ordinary instructions are free (Guide). A few villagers sell what they alone know, through their own
-##     counters: Silas Quell (old notes: forgotten recipes, rune lore, the deep galleries), the harbourmaster
+##     counters: Silas Quell (old notes: forgotten Designs, rune lore, the deep galleries), the harbourmaster
 ##     (dragon lore, exotic cargo) and Maud Fennimore (where the wild herbs grow). A HINT tells where/how to
 ##     earn a discovery — it never sets the discovery itself. "Complete knowledge" may grant non-progression
 ##     knowledge (e.g. the names of exotic cargo, which lets the harbourmaster take an import order) — never a
@@ -19,9 +19,9 @@ extends RefCounted
 ## requires_flag: offered only once this is known (keeps hidden things hidden). grants: flags set by KNOWLEDGE only.
 const OFFERS := [
 	{"id": "hint_forgotten_recipes", "seller": "pawnbroker", "kind": "hint", "price": 45, "done_flag": "recipe_starsteel",
-		"title": "Old notes: forgotten recipes",
-		"teaser": "Quell has bought the papers of dead smiths. Some recipes were never written in any book.",
-		"text": "Weathered tablets turn up in hauls from the old barrows (the Barrow Fields, and older ruins once you find them). Study one from your inventory (or give a hireling relic-hunting work) and now and then the tablet holds an old smith's notes: a Forgotten Recipe scroll. Read the scroll in your inventory to learn it."},
+		"title": "Old notes: forgotten Designs",
+		"teaser": "Quell has bought the papers of dead smiths. Some Designs were never written in any book.",
+		"text": "Weathered tablets turn up in hauls from the old barrows (the Barrow Fields, and older ruins once you find them). Study one from your inventory (or give a hireling relic-hunting work) and now and then the tablet holds an old smith's notes: a Forgotten Design scroll. Read the scroll in your inventory to learn it."},
 	{"id": "hint_rune_lore", "seller": "pawnbroker", "kind": "hint", "price": 30, "done_flag": "rune_knowledge",
 		"title": "Old notes: rune lore",
 		"teaser": "The runesmiths of old left their knowledge in stone, not ink.",

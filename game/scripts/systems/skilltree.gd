@@ -1,14 +1,22 @@
-## SkillTree — the blacksmith's branching progression (data/skilltree.json, made by tools/data/make_skilltree.py).
-## EN: Six branches of nodes (Traditional Smithing, Mining & Metallurgy, Arcane Metalworking, Runecrafting,
-##     Alchemy, Leatherworking & Enchanted Stitching). A node is learned when its requirements are met —
-##     a skill level, prerequisite nodes, knowledge flags, installed stations, materials seen or handed over,
-##     tuition — and unlocks recipes, stations (eligible to buy and install) and techniques (small
-##     craftsmanship bonuses). Every recipe and every station is taught by exactly one node.
-##     State: Game.state["skilltree"] = {"nodes": [ids learned], "day": {id: day learned}};
-##            Game.state["items_seen"] = {item def: true} (fed by Game.add_item → note_item).
+## SkillTree — the smith's own path and the workshop's knowledge (data/skilltree.json, made by tools/data/make_skilltree.py).
+## EN: Seven branches of nodes, of two kinds (The Living Workshop B2; canonical §4.2, §5, D2, D3):
+##       the smith's own path (branch "owner": "smith" — Traditional Smithing, Mining & Metallurgy): his personal
+##         progression as the blacksmith; a node's skill requirement is HIS level, its techniques are his alone;
+##       the workshop's knowledge (owner "workshop" — Arcane Metalworking, Runecrafting, Alchemy, Leatherworking &
+##         Enchanted Stitching, Textiles & Tailoring): learned through a competent worker — the smith at his basic
+##         level of that craft or a specialist on the staff (Workers.tree_level; the worker it came through is
+##         recorded); never a demand that the smith master another profession.
+##     A node is learned when its requirements are met — a level in its own branch's craft, prerequisite nodes,
+##     knowledge flags, installed stations, materials the workshop has held or hands over, tuition. Learning adds the
+##     node's Designs (internal key: recipes), stations (eligible to buy and install) and techniques to the workshop's
+##     knowledge (WorkshopKnowledge), which every gate asks; it never raises anyone's competence. Every Design and every
+##     station is taught by exactly one node.
+##     State: Game.state["skilltree"] = {"nodes": [ids learned], "day": {id: day learned}, "by": {id: actor id} (lazy;
+##            absent = the smith)}; Game.state["items_seen"] = {item def: true} (fed by Game.add_item → note_item).
 ##     Old saves without "skilltree" get every node whose skill requirement they meet (ensure()).
-## DA: Smedens færdighedstræ. Seks grene; en knude læres når kravene er opfyldt og åbner opskrifter,
-##     stationer og teknikker. Gamle gemte spil får alle knuder hvis færdighedskrav de opfylder.
+## DA: Smedens egen sti (smedning, minedrift: hans egne niveauer og teknikker) og værkstedets viden om de andre
+##     håndværk (lært gennem en kompetent arbejder). En knude åbner Designs, stationer og teknikker i værkstedets
+##     viden; den giver aldrig nogen personlig kompetence. Gamle gemte spil får alle knuder hvis færdighedskrav de opfylder.
 class_name SkillTree
 
 const RARITY_RANK := {"common": 0, "magic": 1, "rare": 2, "legendary": 3}
@@ -76,6 +84,7 @@ static func _st() -> Dictionary:
 ## New game: the starting nodes only (basic ironworking and ordinary leatherwork).
 static func init_new() -> void:
 	Game.state["skilltree"] = {"nodes": (data().get("start", []) as Array).duplicate(), "day": {}}
+	WorkshopKnowledge.reset_to(data().get("start", []))
 	if not Game.state.has("items_seen"):
 		Game.state["items_seen"] = {}
 	for it in Game.inventory():
@@ -97,6 +106,7 @@ static func ensure() -> void:
 		if sk.is_empty() or Game.player_level(str(sk[0])) >= int(sk[1]):
 			learned.append(n["id"])
 	Game.state["skilltree"] = {"nodes": learned, "day": {}, "migrated": true}
+	WorkshopKnowledge.resync()   # B2: the rebuilt tree's knowledge is the workshop's
 	if not Game.state.has("items_seen"):
 		Game.state["items_seen"] = {}
 		if Game.state.has("player"):
@@ -155,20 +165,7 @@ static func requirements(id: String) -> Array:
 		return out
 	var r: Dictionary = n["requires"]
 	if r.has("skill"):
-		var sk: Array = r["skill"]
-		# Living Workshop B1 (seam for KNOWLEDGE, wave 2): the smith's own craft needs HIS level; another craft is workshop
-		# knowledge a competent specialist on the staff can bring (Workers.tree_level) — no grind past his basic level
-		var you := Game.player_level(str(sk[0]))
-		var have := Workers.tree_level(str(sk[0]))
-		var best := Workers.best_level(str(sk[0]))
-		var txt := "%s %d (you: %d)" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), you]
-		if have > you:
-			txt = "%s %d (you: %d · %s: %d)" % [SkillSys.skill_name(str(sk[0])), int(sk[1]), you, str(best["name"]), have]
-		var hint := "Raise it by crafting work that trains %s." % SkillSys.skill_name(str(sk[0]))
-		if Workers.is_basic("player", str(sk[0])) and int(sk[1]) > Workers.BASIC_LEVEL:
-			hint = "Beyond the smith's basic %s — %s on your staff with %s %d meets it." % [SkillSys.skill_name(str(sk[0])).to_lower(),
-				Workers.a_noun(Workers.skill_profession(str(sk[0]))), SkillSys.skill_name(str(sk[0])), int(sk[1])]
-		out.append({"ok": have >= int(sk[1]), "kind": "skill", "text": txt, "hint": hint})
+		out.append(_skill_requirement(n, r["skill"]))
 	for p in r.get("nodes", []):
 		var pn := node(str(p))
 		out.append({"ok": is_unlocked(str(p)), "kind": "node", "text": "Learned: %s (%s)" % [pn.get("name", p), branch(str(pn.get("branch", ""))).get("name", "")], "hint": ""})
@@ -188,6 +185,31 @@ static func requirements(id: String) -> Array:
 	if int(r.get("gold", 0)) > 0:
 		out.append({"ok": Game.gold() >= int(r["gold"]), "kind": "gold", "text": "Tuition: %d gold (you have %d)" % [int(r["gold"]), Game.gold()], "hint": "Paid when learning."})
 	return out
+
+
+## The skill row of a node's requirements. On the smith's own path: HIS level ("Smithing 6 (you: 5)"). In another
+## craft: the workshop's most competent hand meets it — the smith at his basic level, or a specialist on the staff
+## ("Runecraft 6 (you: 1 · Edda Vell: 8)"); beyond the smith's basic level the hint names the profession to take on.
+## {"ok", "kind": "skill", "text", "hint", "by": the worker it would be learned through ("" = nobody yet), "owner"}.
+static func _skill_requirement(n: Dictionary, sk: Array) -> Dictionary:
+	var skill := str(sk[0])
+	var need := int(sk[1])
+	var sname := SkillSys.skill_name(skill)
+	var you := Workers.level("player", skill)
+	var own := WorkshopKnowledge.node_owner(str(n["id"])) == "smith"
+	if own:
+		return {"ok": you >= need, "kind": "skill", "owner": "smith", "by": "player" if you >= need else "",
+			"text": "%s %d (you: %d)" % [sname, need, you], "hint": "Raise it by your own %s work — your own path as the blacksmith." % sname.to_lower()}
+	var best := Workers.best_level(skill)
+	var have := maxi(you, int(best["level"]))
+	var txt := "%s %d (you: %d)" % [sname, need, you]
+	if int(best["level"]) > you:
+		txt = "%s %d (you: %d · %s: %d)" % [sname, need, you, str(best["name"]), int(best["level"])]
+	var prof := Workers.skill_profession(skill)
+	var hint := "Workshop knowledge: any worker with %s %d brings it in — you, or %s on your staff." % [sname, need, Workers.a_noun(prof)]
+	if Workers.is_basic("player", skill) and need > Workers.BASIC_LEVEL:
+		hint = "Beyond the smith's basic %s — %s on your staff with %s %d meets it." % [sname.to_lower(), Workers.a_noun(prof), sname, need]
+	return {"ok": have >= need, "kind": "skill", "owner": "workshop", "by": WorkshopKnowledge.bearer(str(n["id"])), "text": txt, "hint": hint}
 
 
 ## Each requirement as text marked ✓ / ✗.
@@ -223,21 +245,35 @@ static func unlock(id: String) -> String:
 	var items: Dictionary = r.get("items", {})
 	for d in items:
 		Game.remove_def(str(d), int(items[d]))
-	_learn(id, true)
+	var by := WorkshopKnowledge.bearer(id)
+	_learn(id, true, by if by != "" else "player")
 	return ""
 
 
-static func _learn(id: String, announce: bool) -> void:
+## Records a learned node and adds what it teaches to the workshop's knowledge, through worker `by` (the smith on his
+## own path; in another craft the competent hand who brought it in).
+static func _learn(id: String, announce: bool, by := "player") -> void:
 	var st := _st()
 	if st["nodes"].has(id):
 		return
 	st["nodes"].append(id)
 	st["day"][id] = Game.day()
+	if by != "player":
+		if not st.get("by") is Dictionary:
+			st["by"] = {}
+		st["by"][id] = by
+	WorkshopKnowledge.learn_node(id, by)
 	if announce:
 		var n := node(id)
 		var what := unlock_summary(id)
-		Chronicle.add("skill", "Brannoc learned %s (%s)%s." % [n.get("name", id), branch(str(n.get("branch", ""))).get("name", ""), (" — " + what) if what != "" else ""], {"node": id}, true)
-		Events.toast.emit("Learned: %s" % n.get("name", id), "legendary" if id == "ar_legend" else "good")
+		var bname := str(branch(str(n.get("branch", ""))).get("name", ""))
+		if WorkshopKnowledge.node_owner(id) == "smith" or by == "player":
+			Chronicle.add("skill", "Brannoc learned %s (%s)%s." % [n.get("name", id), bname, (" — " + what) if what != "" else ""], {"node": id}, true)
+			Events.toast.emit("Learned: %s" % n.get("name", id), "legendary" if id == "ar_legend" else "good")
+		else:
+			var who := WorkshopKnowledge.who_text(by)
+			Chronicle.add("skill", "The workshop learned %s (%s) through %s%s." % [n.get("name", id), bname, who, (" — " + what) if what != "" else ""], {"node": id, "by": by}, true)
+			Events.toast.emit("The workshop learned %s — through %s" % [n.get("name", id), who], "legendary" if id == "ar_legend" else "good")
 		Audio.play("sfx/level_up")
 	Events.crafting_changed.emit()
 
@@ -267,21 +303,15 @@ static func node_state(id: String) -> String:
 	return "available" if can_unlock(id) == "" else "locked"
 
 
-# ------------------------------------------------------------------ gating (asked by Crafting)
+# ------------------------------------------------------------------ gating (the workshop's knowledge — B2)
+## Does the workshop know how to set up and work this station? (WorkshopKnowledge; not whether it is bought.)
 static func station_unlocked(sid: String) -> bool:
-	var ni := station_node(sid)
-	return ni == "" or is_unlocked(ni)
+	return WorkshopKnowledge.knows_station(sid)
 
 
-## "" when the station may be used, otherwise the reason (shown in tooltips).
+## "" when the workshop knows the station, otherwise the reason (shown in tooltips).
 static func station_reason(station_id: String) -> String:
-	if Game.state.is_empty():
-		return ""
-	var ni := station_node(station_id)
-	if ni == "" or is_unlocked(ni):
-		return ""
-	var n := node(ni)
-	return "Skill tree: learn «%s» (%s)" % [n.get("name", ni), branch(str(n.get("branch", ""))).get("name", "")]
+	return WorkshopKnowledge.station_reason(station_id)
 
 
 ## Secret recipes (requires_flag) are hidden from every list until their flag is known.
@@ -290,24 +320,16 @@ static func recipe_visible(rid: String) -> bool:
 	return rf == "" or Game.has_flag(rf)
 
 
+## Does the workshop know this Design? (WorkshopKnowledge — internal ids keep the word "recipe".)
 static func recipe_known(rid: String) -> bool:
-	if not recipe_visible(rid):
-		return false
-	var ni := recipe_node(rid)
-	return ni == "" or is_unlocked(ni)
+	return WorkshopKnowledge.knows_design(rid)
 
 
-## "" when the recipe is known and allowed, otherwise the reason.
+## "" when the workshop knows the Design, otherwise the reason.
 static func recipe_reason(recipe_id: String) -> String:
 	if Game.state.is_empty():
 		return ""
-	if not recipe_visible(recipe_id):
-		return "A forgotten recipe — find its notes among the relics"
-	var ni := recipe_node(recipe_id)
-	if ni == "" or is_unlocked(ni):
-		return ""
-	var n := node(ni)
-	return "Skill tree: learn «%s» (%s)" % [n.get("name", ni), branch(str(n.get("branch", ""))).get("name", "")]
+	return WorkshopKnowledge.design_reason(recipe_id)
 
 
 # ------------------------------------------------------------------ techniques
@@ -319,7 +341,7 @@ static func techniques() -> Array:
 	return out
 
 
-static func _matches(t: Dictionary, r: Dictionary) -> bool:
+static func technique_matches(t: Dictionary, r: Dictionary) -> bool:
 	var f: Dictionary = t.get("filter", {})
 	if f.has("discipline") and not (f["discipline"] as Array).has(r.get("discipline", "")):
 		return false
@@ -332,22 +354,15 @@ static func _matches(t: Dictionary, r: Dictionary) -> bool:
 	return true
 
 
-## Craftsmanship bonus (percentage points) from learned techniques for a recipe.
-static func quality_bonus(recipe_id: String) -> float:
-	var r := DB.recipe(recipe_id)
-	if r.is_empty() or Game.state.is_empty():
-		return 0.0
-	var b := 0.0
-	for t in techniques():
-		if float(t.get("quality", 0)) > 0.0 and _matches(t, r):
-			b += float(t["quality"])
-	return b
+## Craftsmanship bonus (percentage points) from the techniques that help `actor` (default the smith) on a Design —
+## B2: the workshop must know them and they must be the actor's own (WorkshopKnowledge.technique_applies).
+static func quality_bonus(recipe_id: String, actor: Variant = "player") -> float:
+	return WorkshopKnowledge.quality_bonus(recipe_id, actor)
 
 
-## Techniques that would apply to a recipe (for the designer and tooltips).
-static func techniques_for(recipe_id: String) -> Array:
-	var r := DB.recipe(recipe_id)
-	return techniques().filter(func(t): return float(t.get("quality", 0)) > 0.0 and _matches(t, r))
+## Techniques that help `actor` on a Design (for the designer and tooltips).
+static func techniques_for(recipe_id: String, actor: Variant = "player") -> Array:
+	return WorkshopKnowledge.techniques_for(recipe_id, actor)
 
 
 static func min_rarity_rank(recipe_id: String) -> int:
@@ -360,6 +375,7 @@ static func unlock_all() -> void:
 	for n in nodes():
 		if not is_unlocked(n["id"]):
 			_st()["nodes"].append(n["id"])
+	WorkshopKnowledge.resync()
 	Events.crafting_changed.emit()
 
 
@@ -372,6 +388,7 @@ static func unlock_node_force(id: String) -> void:
 ## Back to a new game's tree.
 static func reset_new() -> void:
 	Game.state["skilltree"] = {"nodes": (data().get("start", []) as Array).duplicate(), "day": {}}
+	WorkshopKnowledge.reset_to(data().get("start", []))
 	Events.crafting_changed.emit()
 
 

@@ -228,6 +228,7 @@ static func refresh_applicants() -> void:
 		levels["smithing"] = randi_range(0, 2)
 		var psk: String = str(Crafting.DISCIPLINE_SKILL.get(pref, "smithing"))
 		levels[psk] = int(levels.get(psk, 0)) + randi_range(1, 2)
+		levels[psk] = maxi(int(levels[psk]), WorkshopKnowledge.entry_level(pref))   # B2: work of their own craft from day one
 		var traits := []
 		var good := _trait_ids(true)
 		var bad := _trait_ids(false)
@@ -508,7 +509,7 @@ static func _specialty_match(app: Dictionary, cat: String) -> bool:
 ## Workers.can_do).
 static func can_make(app: Dictionary, recipe_id: String) -> String:
 	if DB.recipe(recipe_id).is_empty():
-		return "Unknown recipe."
+		return "Unknown Design."
 	return Workers.competence_reason(app, recipe_id)
 
 
@@ -518,7 +519,7 @@ static func can_make(app: Dictionary, recipe_id: String) -> String:
 static func rank_reason(app: Dictionary, recipe_id: String) -> String:
 	var r := DB.recipe(recipe_id)
 	if r.is_empty():
-		return "Unknown recipe."
+		return "Unknown Design."
 	var rd := rank_data(str(app.get("rank", "novice")))
 	var rn := str(rd.get("name", "Novice")).to_lower()
 	var disc := str(r.get("discipline", "classic"))
@@ -675,7 +676,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 		"craft", "prep":
 			var rid := str(t["recipe"])
 			if DB.recipe(rid).is_empty():
-				return {"error": "Choose a recipe."}
+				return {"error": "Choose a Design."}
 			if kind == "prep" and Items.is_equipment({"def": str(DB.recipe(rid).get("output", ""))}):
 				return {"error": "Preparation is for materials, potions and runes — queue equipment as crafting."}
 			# B1: the WORKSHOP must know the Design (and its stations); who is competent to make it is the worker's
@@ -699,7 +700,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 			t["repeat"] = 1
 			t["target"] = str(o.get("npc", ""))
 			if t["recipe"] != "" and DB.recipe(str(t["recipe"])).is_empty():
-				return {"error": "Unknown recipe."}
+				return {"error": "Unknown Design."}
 			t["label"] = "Commission for %s: %s" % [Talk.npc_name(str(o.get("npc", ""))), Shop.order_text(o)]
 		"repair":
 			t["repeat"] = 1
@@ -1320,6 +1321,8 @@ static func expected_op_quality(a: Dictionary, rid: String, sid := "", supervise
 	q += _trait_sum(a, "quality")
 	if _specialty_match(a, category(kind, rid)):
 		q += float(_c("specialty", "quality", 5.0))
+	if rid != "":
+		q += SkillTree.quality_bonus(rid, a)   # B2: the workshop's techniques this worker is competent to use
 	if supervised:
 		q += float(qc.get("supervised", 3.0))
 	if sid != "" and is_worn(sid):

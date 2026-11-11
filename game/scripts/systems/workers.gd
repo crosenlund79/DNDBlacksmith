@@ -9,8 +9,8 @@
 ##       competence   the actor's OWN skill level per discipline (SkillSys) — never the smith's on their behalf;
 ##       growth       unlimited in the profession's skills; other crafts stop growing at BASIC_LEVEL (D2: basic other-craft
 ##                    knowledge, mastery belongs to specialists). Levels earned above it before B1 are kept, never reduced;
-##       eligibility  can_do(actor, what) → "" or the reason. The workshop must know the Design (knowledge_reason — today
-##                    the skill tree; KNOWLEDGE, wave 2, replaces its internals), the stations must be there and usable
+##       eligibility  can_do(actor, what) → "" or the reason. The workshop must know the Design (knowledge_reason — the
+##                    WorkshopKnowledge catalogue, B2), the stations must be there and usable
 ##                    (station_reason), and the actor's competence must meet every operation (competence_reason);
 ##       checks       check_params(actor, …) and the quality inputs come from the acting worker's level.
 ##     What an operation asks (op_requirement): the skill of its STATION's discipline; for operations in the Design's
@@ -266,9 +266,10 @@ static func best_level(skill: String) -> Dictionary:
 	return out
 
 
-## The level that meets a skill-tree requirement (the seam KNOWLEDGE, wave 2, builds on). The smith's own craft
-## (smithing, mining) and the field skills are his personal tree: his level. Another craft is workshop knowledge that a
-## competent worker can bring (lead decision 4: no player-grind deadlocks): the best level on the staff.
+## The level that meets a Skill Tree requirement in this skill (B2, SkillTree._skill_requirement). The smith's own
+## path (smithing, mining) and the field skills: his own level. Another craft is the workshop's knowledge, brought in by a
+## competent worker (lead decision 4: no player-grind deadlocks): the best level on the staff — the smith's basic level
+## counts. Meeting it never raises anyone's competence (WorkshopKnowledge).
 static func tree_level(skill: String) -> int:
 	if not CRAFT_SKILLS.has(skill) or deep_skills("player").has(skill):
 		return level("player", skill)
@@ -318,19 +319,10 @@ static func requirements(rid: String) -> Array:
 
 
 # ======================================================================= eligibility
-## Does the workshop know this Design? "" = yes, otherwise why not. Workshop knowledge, not anyone's competence:
-## today the skill tree's recipe node and a secret Design's notes (KNOWLEDGE, wave 2, replaces the internals).
+## Does the workshop know this Design? "" = yes, otherwise why not. Workshop knowledge, not anyone's competence (B2:
+## the WorkshopKnowledge catalogue — Designs learned through the Skill Tree; a secret Design only after its discovery).
 static func knowledge_reason(rid: String) -> String:
-	var r := DB.recipe(rid)
-	if r.is_empty():
-		return "Unknown Design."
-	var tr := SkillTree.recipe_reason(rid)
-	if tr != "":
-		return tr
-	var rf := str(r.get("requires_flag", ""))
-	if rf != "" and not Game.has_flag(rf):
-		return "A forgotten recipe — find its notes among the relics"
-	return ""
+	return WorkshopKnowledge.design_reason(rid)
 
 
 ## Is the station there and known to the workshop (owned room, installed, learned in the tree, its upgrade bought)?
@@ -339,7 +331,7 @@ static func workshop_station_reason(sid: String) -> String:
 	var pr := Property.station_reason(sid)
 	if pr != "":
 		return pr
-	var tr := SkillTree.station_reason(sid)
+	var tr := WorkshopKnowledge.station_reason(sid)
 	if tr != "":
 		return tr
 	var u: Dictionary = DB.station(sid).get("unlock", {})
@@ -515,11 +507,20 @@ static func specialist_text(actor: Variant, q: Dictionary, rid := "") -> String:
 	var t := "Needs %s (%s %d) — %s %s is %s" % [a_noun(str(q.get("profession", ""))), SkillSys.skill_name(sk), need, whose,
 		SkillSys.skill_name(sk).to_lower(), word]
 	if rid != "":
+		var ready := false
 		for id in workshop_actors():
 			if str(id) != "player" and competence_reason(str(id), rid) == "":
 				var who := resolve(str(id))
 				t += ". %s (%s) can make it — queue it in the Workshop Ledger" % [who["name"], str(profession(who)).to_lower()]
+				ready = true
 				break
+		if not ready:
+			# B2 (honest blockers): a specialist of that craft on the staff who is not ready yet, and why
+			for id in workshop_actors():
+				if str(id) != "player" and profession(str(id)) == str(q.get("profession", "")):
+					var why := competence_reason(str(id), rid)
+					t += ". %s is not ready yet: %s" % [resolve(str(id))["name"], (why.left(1).to_lower() + why.substr(1)).trim_suffix(".")]
+					break
 	return t
 
 
@@ -576,12 +577,13 @@ static func op_quality_inputs(actor: Variant, rid: String, i: int) -> Dictionary
 
 
 ## The craftsmanship bonus a finished piece gets from its maker's level in the Design's skill (+ the smith's
-## techniques and a hireling's assistance — the smith only).
+## techniques and a hireling's assistance for the smith; B2: a specialist's own techniques — the workshop's methods
+## they are competent to use, WorkshopKnowledge.technique_applies).
 static func skill_bonus(actor: Variant, rid: String) -> float:
 	var a := resolve(actor)
 	if str(a["kind"]) == "player":
 		return Crafting.skill_bonus(rid)
-	return float(Crafting.cfg("skill").get("quality_per_level", 0.4)) * level(a, Crafting.recipe_skill(rid))
+	return float(Crafting.cfg("skill").get("quality_per_level", 0.4)) * level(a, Crafting.recipe_skill(rid)) + SkillTree.quality_bonus(rid, a)
 
 
 ## Expected craftsmanship of operation `i` by a simulated worker (apprentices/specialists); -1 for the smith, whose

@@ -12,7 +12,7 @@ extends RefCounted
 const ORDER := [
 	["talk_borin", "Speak with Borin in the workshop"],
 	["send_borin", "Open Hirelings [{panel_hirelings}]: assign Borin to Mining and send him to Ironroot Mine"],
-	["select_recipe", "At the Anvil, choose the Iron Longsword recipe"],
+	["select_recipe", "At the Anvil, choose the Iron Longsword Design"],
 	["craft_sword", "Work the stations in order — forge, anvil, quench, grind — then roll the dice"],
 	["serve_mira", "Mira needs gear before the Barrow Fields — sell it to her or deliver her commission (Commissions [{panel_orders}])"],
 	["visit_inn", "Visit the Tipsy Wyvern next door and talk to an adventurer"],

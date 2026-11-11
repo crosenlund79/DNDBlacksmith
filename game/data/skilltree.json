@@ -1,11 +1,13 @@
 {
- "_doc": "Generates game/data/skilltree.json — the Blacksmith's Skill Tree.",
+ "_doc": "Generates game/data/skilltree.json — the Skill Tree: the smith's own path and the workshop's knowledge.",
  "branches": [
   {
    "id": "mining",
    "name": "Mining & Metallurgy",
    "skill": "mining",
    "x": 0,
+   "owner": "smith",
+   "profession": "blacksmith",
    "colour": "#8a6a3a",
    "desc": "Ores, refining and alloys — from honest iron to orichalcum."
   },
@@ -14,6 +16,8 @@
    "name": "Traditional Smithing",
    "skill": "smithing",
    "x": 1,
+   "owner": "smith",
+   "profession": "blacksmith",
    "colour": "#7e2418",
    "desc": "The forge and the anvil: blades, armour and the master's eye."
   },
@@ -22,14 +26,18 @@
    "name": "Arcane Metalworking",
    "skill": "arcane_metalwork",
    "x": 2,
+   "owner": "workshop",
+   "profession": "arcanist",
    "colour": "#5a3e8a",
-   "desc": "Magic bound into the metal itself. Opens once a smith can handle leyline energy."
+   "desc": "Magic bound into the metal itself. Opens once the workshop can handle leyline energy."
   },
   {
    "id": "runecraft",
    "name": "Runecrafting",
    "skill": "runecraft",
    "x": 3,
+   "owner": "workshop",
+   "profession": "runesmith",
    "colour": "#2e4e6e",
    "desc": "Reading, restoring, engraving and finally inventing runes."
   },
@@ -38,6 +46,8 @@
    "name": "Alchemy",
    "skill": "alchemy",
    "x": 4,
+   "owner": "workshop",
+   "profession": "alchemist",
    "colour": "#3e6a2e",
    "desc": "Oils, distillations, reagents, infusions and exotic compounds."
   },
@@ -46,6 +56,8 @@
    "name": "Leatherworking & Enchanted Stitching",
    "skill": "enchanted_stitching",
    "x": 5,
+   "owner": "workshop",
+   "profession": "leatherworker",
    "colour": "#6a4422",
    "desc": "Hides to monster leather, linen to ethereal thread — and dragon scale."
   },
@@ -54,6 +66,8 @@
    "name": "Textiles & Tailoring",
    "skill": "enchanted_stitching",
    "x": 6,
+   "owner": "workshop",
+   "profession": "leatherworker",
    "colour": "#6e3a5e",
    "desc": "Flax, wool and silk spun, woven and cut into garments — up to moonweave and the archmage's robe."
   }
@@ -69,7 +83,7 @@
   },
   "recipe_starsteel": {
    "name": "The starsteel notes",
-   "hint": "a Forgotten Recipe found among the relics"
+   "hint": "a Forgotten Design found among the relics"
   },
   "found_mithril": {
    "name": "Mithril found",
@@ -559,7 +573,7 @@
      {
       "id": "t_processing",
       "name": "Advanced processing",
-      "desc": "+2% craftsmanship on every material recipe.",
+      "desc": "+2% craftsmanship on every material Design.",
       "quality": 2,
       "filter": {
        "category": [
@@ -667,14 +681,10 @@
    "id": "ar_energy",
    "branch": "arcane",
    "name": "Magical Energy Handling",
-   "desc": "Feeling the leyline in the metal — and surviving it. You sacrifice a nugget of mithril to learn how it drinks magic.",
+   "desc": "Feeling the leyline in the metal — and surviving it. The workshop sacrifices a nugget of mithril to learn how it drinks magic.",
    "x": 2,
    "y": 4.4,
    "requires": {
-    "skill": [
-     "smithing",
-     6
-    ],
     "nodes": [
      "s_heat",
      "r_engrave",

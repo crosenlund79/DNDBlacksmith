@@ -1598,7 +1598,7 @@
   "requires": {
    "smithing": 4
   },
-  "desc": "From a forgotten recipe found among the barrow-relics.",
+  "desc": "From a forgotten Design found among the barrow-relics.",
   "requires_flag": "recipe_starsteel"
  },
  {

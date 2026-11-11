@@ -192,7 +192,7 @@ func test_prompts() -> void:
 	var p := WorldPrompts.for_entity({"kind": "station", "id": "anvil"})
 	eq(p["title"], DB.station("anvil")["name"], "station prompt title")
 	check((p["actions"] as Array).has("Reforge") and (p["actions"] as Array).size() <= WorldPrompts.MAX_ACTIONS, "the anvil offers reforging (%s)" % [p["actions"]])
-	check((p["actions"] as Array).any(func(a): return str(a).begins_with("Craft (") or a == "Recipes"), "and crafting")
+	check((p["actions"] as Array).any(func(a): return str(a).begins_with("Craft (") or a == "Designs"), "and crafting")
 	check(WorldPrompts.line(p).contains("[E] "), "the line names the key (%s)" % WorldPrompts.line(p))
 	var locked := ""
 	for st in DB.stations.values():

@@ -358,7 +358,7 @@ static func _src_import(def: String, out: Array) -> void:
 			"obtainable", "", "arrives %d–%d days after ordering" % [int(lead[0]), int(lead[1])], _map_link("harbour"), int(info["unit"]))
 	elif not str(info["tier"]) in ["exotic", "legendary"]:
 		_src(out, "import", def, "Special import", "Brindlewick Harbour", "Order it from the harbourmaster", "locked",
-			"The harbourmaster only orders goods you know — hold or see it once, or learn a recipe that uses it", "", _map_link("harbour"), int(info["unit"]))
+			"The harbourmaster only orders goods you know — hold or see it once, or learn a Design that uses it", "", _map_link("harbour"), int(info["unit"]))
 
 
 static func _src_trade_run(def: String, out: Array) -> void:
@@ -623,7 +623,7 @@ static func station_step(sid: String, why: String) -> Dictionary:
 			"why": "It is in storage; a station only works when placed in a room you own."}
 	if why.begins_with("Not in your workshop"):
 		return {"text": "Buy a %s (%d g) — Property & Workshop › Equipment" % [sname(sid), Property.station_price(sid)], "action": {"route": "property", "args": {}},
-			"why": "The recipe needs it and your workshop has none."}
+			"why": "The Design needs it and your workshop has none."}
 	var ni := SkillTree.station_node(sid)
 	if ni != "" and not SkillTree.is_unlocked(ni):
 		return {"text": "Learn «%s» in the Skill Tree to use %s" % [str(SkillTree.node(ni).get("name", ni)), the_station(sid)],
