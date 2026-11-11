@@ -815,6 +815,11 @@ static func cancel_task(id: int) -> String:
 	if not a.is_empty():
 		a["task"] = -1
 		a["activity"] = ""
+	if Crafting.active() and int(Crafting.job().get("order", -1)) == id:
+		# LW acceptance: the smith's stage of a cancelled work order ends with it — no stale job left in his hands (it
+		# blocked new work and the steward's hand-over, and its further steps vanished without a piece)
+		Game.state["craft"] = {}
+		Events.crafting_changed.emit()
 	t["worker"] = ""
 	t["station"] = ""
 	t["at"] = ""

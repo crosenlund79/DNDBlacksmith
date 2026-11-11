@@ -624,6 +624,37 @@ func test_d_work_order_manual_and_under_the_steward_zero_xp() -> void:
 	_clean("after the steward's order")
 
 
+## Defect found by this acceptance (ACC-1): cancelling a work order in the Workshop Ledger while the smith is in the
+## middle of his claimed stage returned the materials but left his craft job carrying the cancelled order — new work
+## and the steward's hand-over were refused ("Finish or set aside the work at the station first") and his further
+## steps vanished without a piece. The job now ends with the order; nothing is doubled or lost.
+func test_d_cancelled_order_ends_the_smiths_stage() -> void:
+	_established(1357)
+	give("ingot_steel", 2)
+	give("runestone_ember", 1)
+	give("coating_flame", 1)
+	give("thread_ethereal", 1)
+	var before := {}
+	for d in ["ingot_steel", "runestone_ember", "coating_flame", "thread_ethereal"]:
+		before[d] = Game.count(d)
+	var t := Apprentices.add_task("craft", {"recipe": EMBER})
+	var tid := int(t["id"])
+	eq(WorkOrders.assign_stage(tid, 0, "player"), "", "the smith claims the forging")
+	_at_hour(8)
+	Game.advance_minutes(5)
+	eq(WorkOrders.begin_smith_stage(tid), "", "he begins it")
+	Crafting.record_step(Crafting.smith_instance(), [90.0])
+	check(Crafting.active() and int(Crafting.job().get("order", -1)) == tid, "he is in the middle of his stage")
+	eq(Apprentices.cancel_task(tid), "", "the order is cancelled in the Workshop Ledger (✕)")
+	for d in before:
+		eq(Game.count(str(d)), int(before[d]), "%s is back in the stores, once" % d)
+	check(not Crafting.active(), "his stage of the cancelled order ends with it — no stale job in his hands")
+	eq(Steward.can_activate(), "", "the steward can take over")
+	check(Crafting.start("hand_axe"), "and he can start other work")
+	Crafting.cancel()
+	_clean("after cancelling mid-stage")
+
+
 # ================================================================== e. the spouse's discount cap under the steward
 func _marry_helping(npc: String) -> void:
 	Social.set_romance(npc, "married")
