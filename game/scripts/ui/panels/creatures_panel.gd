@@ -96,6 +96,13 @@ func _build_left() -> void:
 			var r := UIKit.rich("[b]%s[/b]\n%s" % [it["name"], Companions.stat_line(it)], 18)
 			r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			h.add_child(r)
+			# Living Workshop #52: the one that walks at the smith's heel (Family.pet; the longest kept unless he chooses)
+			if int(Family.pet().get("uid", -1)) == uid:
+				h.add_child(UIKit.chip("walks with you", UIKit.RUBRIC))
+			elif not bool(it.get("for_sale", false)):
+				h.add_child(UIKit.small_button("Take it along", func():
+					Family.set_pet(uid)
+					_build(), 0))
 			var b := UIKit.button("Give to %s" % Talk.npc_name(adv) if adv != "" else "Pick an adventurer →", func():
 				var err := Commerce.give_owned_creature(uid, adv)
 				Events.toast.emit(err if err != "" else "%s goes to %s." % [it["name"], Talk.npc_name(adv)], "bad" if err != "" else "good")

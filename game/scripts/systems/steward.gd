@@ -58,6 +58,9 @@ const SEALED_PATRONS := ["royal", "leader"]
 
 ## The steward's pace choices (standing instruction "pace"): normal speed or half again as fast.
 const PACES := [1.0, 1.5]
+## Living Workshop #40: the optional pace while the steward's smith sleeps in his bed (standing instruction
+## "sleep_pace", off by default) — the whole simulation, as the day pace; back to the day pace when he wakes.
+const SLEEP_PACE := 5.0
 
 ## Runtime-only: the mode is on in THIS process. A loaded save never turns it on (on_loaded clears both flags).
 static var _on := false
@@ -127,6 +130,7 @@ static func default_orders() -> Dictionary:
 		"sell_rules": {"min_price_pct": 100, "list_new_work": true, "list_existing": false, "stock_target": 3, "sell_goods": true},
 		"smith_hours": [8, 18],      # S2: the smith's working hours (the midday hour off); outside them he rests and sleeps
 		"pace": 1.5,                 # S2: the whole simulation runs half again as fast while the steward works (1.0 or 1.5)
+		"sleep_pace": false,         # Living Workshop #40: 5× while the smith sleeps (optional; the canonical day pace stays)
 	}
 
 
@@ -242,6 +246,10 @@ static func set_orders(patch: Dictionary) -> String:
 				if not (v is int or v is float) or not PACES.has(float(v)):
 					return "The steward's pace is normal (1×) or half again as fast (1.5×)."
 				cur[k] = float(v)
+			"sleep_pace":
+				if not v is bool:
+					return "The night pace is on or off."
+				cur[k] = v
 			"sell_rules":
 				if not v is Dictionary:
 					return "Selling rules must be a dictionary."
@@ -261,7 +269,7 @@ static func set_orders(patch: Dictionary) -> String:
 		cur["session_limit"] = int(cur["daily_limit"])
 	st()["orders"] = cur
 	if is_active() and _pace_on:
-		Engine.time_scale = pace()   # a new pace applies at once
+		Engine.time_scale = target_pace()   # a new pace applies at once
 	_changed()
 	return ""
 
@@ -459,6 +467,41 @@ static func pace_on() -> bool:
 	return _pace_on
 
 
+## Living Workshop #40: is the optional night pace chosen (standing instruction "sleep_pace")?
+static func sleep_pace_on() -> bool:
+	if Game.state.is_empty() or not Game.state.has("steward"):
+		return false
+	return bool((Game.state["steward"].get("orders", {}) as Dictionary).get("sleep_pace", false))
+
+
+## The pace the whole simulation should run at now while the steward works: SLEEP_PACE while the smith sleeps in his
+## bed and the night pace is chosen, otherwise the day pace (pace()).
+static func target_pace() -> float:
+	if is_active() and sleep_pace_on() and StewardSmith.asleep():
+		return SLEEP_PACE
+	return pace()
+
+
+## StewardSmith.tick (every 5 game minutes): follows the smith's sleep — the night pace when he falls asleep, the day
+## pace the moment he is up. Only while the steward's pace is applied (never outside Steward Mode).
+static func refresh_pace() -> void:
+	if not is_active() or not _pace_on:
+		return
+	var p := target_pace()
+	if is_equal_approx(Engine.time_scale, p):
+		return
+	var night := p > pace()
+	Engine.time_scale = p
+	_log("pace", ("The smith is asleep: the night passes at %s×." % _num(SLEEP_PACE)) if night else ("The smith is up: back to the steward's pace (%s×)." % _pace_word()), {}, false)
+	Events.toast.emit(("The smith sleeps — the night passes at %s× until he wakes." % _num(SLEEP_PACE)) if night
+		else ("Morning — the forge is back at the steward's pace (%s×)." % _pace_word()), "info")
+	Events.time_changed.emit(Game.day(), int(Game.state.get("minute", 0)))
+
+
+static func _num(v: float) -> String:
+	return str(int(v)) if is_equal_approx(v, round(v)) else str(v)
+
+
 static func _pace_word() -> String:
 	return "1.5" if pace() > 1.0 else "1"
 
@@ -472,7 +515,7 @@ static func _apply_pace() -> void:
 		_prev_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0
 		_pace_on = true
 	Game.speed = 1
-	Engine.time_scale = pace()
+	Engine.time_scale = target_pace()
 	Events.time_changed.emit(Game.day(), int(Game.state.get("minute", 0)))
 
 
@@ -1583,6 +1626,21 @@ static func _record_sale(uid: int, name: String, npc: String, price: int) -> voi
 	_log("sell", "Sold %s to %s for %d g." % [name, Talk.npc_name(npc), price], {"uid": uid, "npc": npc, "gold": price})
 
 
+## Living Workshop #50–51: a sale the smith's spouse made at the counter while the steward ran the forge — counted in
+## the report like the steward's own (the ledger line itself is noted by note_ledger, as every coin is).
+static func note_counter_sale(uid: int, name: String, npc: String, price: int, by: String) -> void:
+	if not is_active():
+		return
+	var acc: Dictionary = st()["acc"]
+	acc["sold_n"] = int(acc.get("sold_n", 0)) + 1
+	acc["sold_gold"] = int(acc.get("sold_gold", 0)) + price
+	var sold: Array = acc["sold"]
+	sold.append({"uid": uid, "name": name, "npc": npc, "price": price, "day": Game.day(), "by": by})
+	while sold.size() > 60:
+		sold.pop_front()
+	_log("sell", "%s sold %s to %s for %d g at the counter." % [by, name, Talk.npc_name(npc), price], {"uid": uid, "npc": npc, "gold": price}, false)
+
+
 # ======================================================================= deferrals & sealed correspondence
 ## Records a matter the steward may not decide. source {type, id, key}: key de-duplicates (one entry per real
 ## event). action {route, args}: the panel that leads to the actual pending matter. Returns the entry ({} = known).
@@ -1883,7 +1941,7 @@ static func status() -> Dictionary:
 		"elapsed_minutes": (Game.now() - int(since.get("t", Game.now()))) if is_active() else 0,
 		"decisions": int(s["acc"].get("decisions", 0)), "last": last, "stalls": stalls, "deferred": deferred().size(), "letters": letters().size(),
 		"spent_today": _spent_today() if is_active() else 0, "spent_session": int(s["acc"].get("spent", 0)), "spendable": spendable(),
-		"gold": Game.gold(), "reserve": int(s["orders"]["reserve"]), "pace": pace(), "pace_on": _pace_on,
+		"gold": Game.gold(), "reserve": int(s["orders"]["reserve"]), "pace": pace(), "pace_on": _pace_on, "pace_now": Engine.time_scale if _pace_on else 1.0, "sleep_pace": sleep_pace_on(),
 		"smith": StewardSmith.status() if is_active() else {}}
 
 

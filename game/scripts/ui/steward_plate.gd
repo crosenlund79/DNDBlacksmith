@@ -132,7 +132,7 @@ func refresh() -> void:
 	var since := int(Steward.st()["since"].get("gold", s.get("gold", 0)))
 	var gold := int(s.get("gold", 0))
 	lines.append("[b]Away %s[/b] [color=#6e5a40]· since day %d, %s · pace %s · %d decision%s[/color]" % [StewardUI.elapsed(int(s.get("elapsed_minutes", 0))),
-		int(s.get("since_day", 0)), str(s.get("since_time", "")), StewardUI.pace_text(float(s.get("pace", 1.5))), int(s.get("decisions", 0)),
+		int(s.get("since_day", 0)), str(s.get("since_time", "")), StewardUI.pace_text(float(s.get("pace_now", s.get("pace", 1.5)))) + (" (asleep)" if float(s.get("pace_now", 1.0)) > float(s.get("pace", 1.5)) else ""), int(s.get("decisions", 0)),
 		"" if int(s.get("decisions", 0)) == 1 else "s"])
 	# S2: the smith himself at work under the steward
 	if not sm.is_empty():

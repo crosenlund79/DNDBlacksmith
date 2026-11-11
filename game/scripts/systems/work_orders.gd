@@ -221,10 +221,13 @@ static func stage_reason(actor: Variant, t: Dictionary, si: int) -> String:
 	return ""
 
 
-## Every workshop worker who may do the stage (the smith first).
+## Every workshop worker who may do the stage (the smith first). Only the smith and the workshop's employees take
+## stages — never anyone else the workshop's actor list may include (a helping spouse serves at the counter).
 static func who_can_stage(t: Dictionary, si: int) -> Array:
 	var out := []
 	for id in Workers.workshop_actors():
+		if not Workers.kind(str(id)) in ["player", "apprentice"]:
+			continue
 		if stage_reason(str(id), t, si) == "":
 			out.append(str(id))
 	return out

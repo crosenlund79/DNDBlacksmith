@@ -141,12 +141,16 @@ static func options(area: String) -> Array:
 		out.append({"id": "evening", "label": "Spend the evening (25 g)"})
 	if not is_free():
 		out.append({"id": "rumour", "label": "Ask what the adventurers are saying (5 g)"})
+	out.append_array(Family.talk_options(ID))   # Living Workshop #50–51: married, she may mind the shop counter
 	out.append({"id": "bye", "label": "Farewell"})
 	return out
 
 
 ## Resolves one of her options. Returns {} for options handled by Talk (evening, rumour, bye).
 static func choose(opt: String, _area: String) -> Dictionary:
+	var fr := Family.talk_choose(ID, opt)   # Living Workshop #50–51
+	if not fr.is_empty():
+		return fr
 	var s := st()
 	var e := Social.ensure(ID)
 	if opt == "talk":

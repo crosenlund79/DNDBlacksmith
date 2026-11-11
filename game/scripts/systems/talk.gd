@@ -135,6 +135,7 @@ static func options(npc: String, area: String) -> Array:
 			go["disabled"] = "you have no healing draught"
 		out.append(go)
 	out.append_array(Commerce.talk_options(npc))
+	out.append_array(Family.talk_options(npc))   # Living Workshop #50–51: the spouse and the shop counter
 	out.append_array(ItemStory.talk_options(npc))   # "Ask about Wolfbane — its travels"
 	if not out.any(func(o): return str(o["id"]) == "consult"):
 		out.append_array(Consult.talk_options(npc))   # "Talk about their gear and plans" (The Living Realm 3b)
@@ -150,6 +151,9 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 	var cr := Commerce.talk_choose(npc, opt)
 	if not cr.is_empty():
 		return cr
+	var fr := Family.talk_choose(npc, opt)   # Living Workshop #50–51
+	if not fr.is_empty():
+		return fr
 	var ir := ItemStory.talk_choose(npc, opt)
 	if not ir.is_empty():
 		return ir

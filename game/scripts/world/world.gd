@@ -74,6 +74,7 @@ func _ready() -> void:
 	_spawn_player()
 	_spawn_npcs()
 	ysort.add_child(CompanionFollowers.new(self))   # adventurers' creature companions trot behind them
+	_add_pet_follower()
 	_spawn_animals()
 	_refresh_bags()
 	_refresh_display()
@@ -94,6 +95,11 @@ func _ready() -> void:
 	Events.day_started.connect(func(_d): _refresh_bags())
 	_update_schedules(true)
 	_update_light(true)
+
+
+## Living Workshop #52: the smith's own creature (Family.pet) at his heel — its own small actor (PetFollower).
+func _add_pet_follower() -> void:
+	ysort.add_child(PetFollower.new(self))
 
 
 func _on_flag(f: String) -> void:
@@ -1793,6 +1799,9 @@ func spot_for(id: String) -> String:
 	var cer := Ceremony.spot_for(id, spots)   # a ceremony in the square overrides the day's routine
 	if cer != "":
 		return cer
+	var fam := Family.spot(id)   # Living Workshop #50–51: the smith's spouse behind the shop counter in her hours
+	if fam != "" and spots.has(fam):
+		return fam
 	var hire := Hire.get_h(id)
 	if not hire.is_empty():
 		var hold := Hire.tutorial_spot(hire)   # S2: Borin waits in the smithy for his first talk on a new game

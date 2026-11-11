@@ -170,6 +170,20 @@ func _pace_row(with_note := false) -> HBoxContainer:
 		b.custom_minimum_size = Vector2(0, 38)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(b)
+	# Living Workshop #40: optionally, the nights pass at 5× while the smith sleeps (back to this pace when he wakes)
+	var night := bool(StewardUI.orders().get("sleep_pace", false))
+	var nb := UIKit.button("Nights %s× while you sleep: %s" % [str(int(Steward.SLEEP_PACE)), "on" if night else "off"], func():
+		var why2 := Steward.set_orders({"sleep_pace": not night})
+		if why2 != "":
+			Events.toast.emit(why2, "bad")
+		build(), 0)
+	nb.name = "SleepPace"
+	nb.tooltip_text = "While the steward runs the forge and you are asleep in your bed, the whole village moves %s× as fast; your own pace returns the moment you wake. Never outside Steward Mode." % str(int(Steward.SLEEP_PACE))
+	nb.add_theme_font_size_override("font_size", 17)
+	nb.add_theme_color_override("font_color", UIKit.RUBRIC if night else UIKit.INK)
+	nb.custom_minimum_size = Vector2(0, 38)
+	nb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(nb)
 	if with_note:
 		var note := UIKit.label("the clock, people, walking and work all move together", 16, "body_italic", Color("#6e5a40"))
 		note.autowrap_mode = TextServer.AUTOWRAP_OFF
