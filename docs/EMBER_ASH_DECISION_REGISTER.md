@@ -22,7 +22,7 @@ technical work). No entry in this register authorises implementation; work start
 **Companion documents:** [`EMBER_ASH_ROADMAP_REGISTER.md`](EMBER_ASH_ROADMAP_REGISTER.md) (milestones, gates, dependencies,
 risks) and [`EMBER_ASH_PLAYTEST_OBSERVATIONS.md`](EMBER_ASH_PLAYTEST_OBSERVATIONS.md) (playtest observations OBS-01 … OBS-61).
 
-**Size:** 643 entries in this register, plus 61 playtest observations in the observation register.
+**Size:** 649 entries in this register, plus 61 playtest observations in the observation register.
 
 ---
 
@@ -126,7 +126,7 @@ passes recorded only what canonical does not name.
 | `TECH` | 33 | 28 | 5 | 0 | 0 | 11 | 7 | 0 | 15 | 0 |
 | `REL` | 10 | 8 | 2 | 0 | 0 | 3 | 1 | 2 | 4 | 0 |
 | `WS` | 14 | 8 | 2 | 2 | 2 | 3 | 2 | 0 | 9 | 0 |
-| `STAFF` | 24 | 18 | 2 | 0 | 4 | 6 | 0 | 0 | 18 | 0 |
+| `STAFF` | 24 | 18 | 2 | 0 | 4 | 5 | 1 | 0 | 18 | 0 |
 | `PROD` | 30 | 26 | 1 | 2 | 1 | 4 | 0 | 3 | 23 | 0 |
 | `STW` | 34 | 33 | 0 | 1 | 0 | 2 | 3 | 5 | 24 | 0 |
 | `EQ` | 58 | 49 | 3 | 2 | 4 | 21 | 13 | 1 | 23 | 0 |
@@ -136,18 +136,18 @@ passes recorded only what canonical does not name.
 | `CIV` | 8 | 6 | 0 | 0 | 2 | 6 | 2 | 0 | 0 | 0 |
 | `UX` | 33 | 32 | 0 | 1 | 0 | 0 | 5 | 1 | 27 | 0 |
 | `LORE` | 17 | 12 | 2 | 2 | 1 | 10 | 4 | 1 | 2 | 0 |
-| `BUG` | 60 | 35 | 19 | 5 | 1 | 25 | 6 | 4 | 25 | 0 |
-| `PROP` | 45 | 4 | 41 | 0 | 0 | 38 | 3 | 0 | 4 | 0 |
+| `BUG` | 61 | 36 | 19 | 5 | 1 | 25 | 6 | 4 | 26 | 0 |
+| `PROP` | 50 | 4 | 46 | 0 | 0 | 43 | 3 | 0 | 4 | 0 |
 | `QST` | 33 | 19 | 0 | 14 | 0 | 14 | 6 | 6 | 7 | 0 |
 | `HA` | 57 | 51 | 2 | 3 | 1 | 3 | 2 | 15 | 37 | 0 |
 | `HB` | 62 | 54 | 0 | 7 | 1 | 6 | 2 | 4 | 49 | 1 |
-| **All** | **643** | **486** | **80** | **41** | **36** | **189** | **75** | **61** | **317** | **1** |
+| **All** | **649** | **487** | **85** | **41** | **36** | **193** | **76** | **61** | **318** | **1** |
 
 ### 1.2 Counts by target
 
 | BASELINE | A1 | S1 | A2 | RUN0 | RUN0.1 | S2 | LW | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG | — |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 196 | 31 | 28 | 15 | 1 | 8 | 25 | 26 | 39 | 18 | 11 | 26 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 106 | 36 |
+| 196 | 31 | 28 | 15 | 1 | 8 | 25 | 27 | 39 | 18 | 11 | 26 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 111 | 36 |
 
 ### 1.3 Conflicts with canonical
 
@@ -233,7 +233,7 @@ holds while the steward runs the forge. The user's S2 brief superseded it: the w
 
 - **HB-033** — Preserve the work of "Observations #1–43", stated to be already implemented before Iteration 010.
 
-**`PROPOSED` (80).** Each needs an explicit yes or no before any implementation:
+**`PROPOSED` (85).** Each needs an explicit yes or no before any implementation:
 
 | ID | Proposal | Delivery | Target |
 |---|---|---|---|
@@ -247,7 +247,7 @@ holds while the steward runs the forge. The user's S2 brief superseded it: the w
 | WS-006 | Room tier derives from the room's specialists, stations and work done, not from the player's level; | PARTIAL | B1 |
 | WS-013 | Give the Project Bench a real station price (it falls back to 150 g because it is missing from `Property.PRICE`). | NOT STARTED | BACKLOG |
 | STAFF-004 | Route hireling workshop production through apprentice-style station tasks, or retire it, leaving hirelings as field/expedition staff. | NOT STARTED | B1 |
-| STAFF-019 | Measure apprentice economics (realised sales vs demand in a soak) before retuning; | NOT STARTED | BACKLOG |
+| STAFF-019 | Measure apprentice economics (realised sales vs demand in a soak) before retuning; | PARTIAL | BACKLOG |
 | PROD-025 | Run Project Bench stages through staged work orders, with quality from the actual worker's competence. | NOT STARTED | D |
 | EQ-006 | One lookup used by every system. Today `find_uid_anywhere`, `History.find_item` and `ItemStory.find` go through the registry but keep their old narrow scopes, because … | PARTIAL | A-REM |
 | EQ-011 | Non-equipment components built into a piece (socketed runestones, coatings) keep their maker. | NOT STARTED | BACKLOG |
@@ -315,6 +315,11 @@ holds while the steward runs the forge. The user's S2 brief superseded it: the w
 | PROP-043 | Further support work for the spouse (e.g. | NOT STARTED | BACKLOG |
 | PROP-044 | Keep toasts readable at the 5× night pace (≈ 1 s of real time today). | NOT STARTED | BACKLOG |
 | PROP-045 | Workshop catalogue filters by craft, a link from a Design to its station; | NOT STARTED | BACKLOG |
+| PROP-046 | Guidance shows the decisive obstacle first: | NOT STARTED | BACKLOG |
+| PROP-047 | Give the spouse something to sell: the steward lists counter goods (potions, oils) and affordable display pieces; | NOT STARTED | BACKLOG |
+| PROP-048 | An independence notice that would lapse while the steward runs the forge arrives as a sealed letter, or runs longer while the smith is away. | NOT STARTED | BACKLOG |
+| PROP-049 | A finished work order's Ledger row keeps who did which stage (stage records are reset after the last piece today; | NOT STARTED | BACKLOG |
+| PROP-050 | Tidy expired commission tasks in older saves (they stay "blocked — the commission is no longer open" in the player's queue). | NOT STARTED | BACKLOG |
 | HA-055 | Seasonal or regional events. | NOT STARTED | BACKLOG |
 | HA-056 | A deeper economy with supply-and-demand pricing. | NOT STARTED | BACKLOG |
 
@@ -645,7 +650,7 @@ records the change):
 | STAFF-016 | Personal specialist progression: profession skills, experience and character progression (D3). | CV §4.2 row 3, D3, §4.3 | APPROVED | VERIFIED | B1 | Apprentices: SkillSys skills/XP, ranks novice→master, emergent specialty, traits, mentoring, memories, creations, independence (`apprentices.gd`; `t_apprentices.test_rank_up_specialty_mentoring`, `t_workshop_e2e.test_apprentice_career`); hirelings: skills/XP/traits; no profession track (STAFF-007) LW: specialists grow by their own work in their own craft; the workshop branch of their craft records who brought each node in; techniques help a worker only at the node's level (FOUNDATION `61bf1f2`, KNOWLEDGE `319ce0f`). | — |
 | STAFF-017 | Workshop knowledge: a shared catalog of known Designs, techniques, tools, stations, rooms and feasible combinations, distinct from the smith's personal mastery (D3). | CV §4.2 row 2, §5, D3 | APPROVED | VERIFIED | B2 | "What the forge knows" = nodes the smith learned (`skilltree.gd:recipe_node/station_node`, `Crafting.recipe_locked_reason`); no workshop-level catalog. `knowledge.gd` is paid hints (CV §3.2), not this LW: `WorkshopKnowledge` store: Designs, stations and techniques the workshop knows, with day and the worker each came through; save step 6 migrates every known node/Design/secret (KNOWLEDGE `319ce0f`; `t_lw_knowledge`). | Can a qualified staff member, not only the smith, add a Design to the catalog? |
 | STAFF-018 | Capability layer: route every cross-discipline gate and scaling through workshop knowledge (what the forge knows) vs actor competence (who does this stage), with per-actor check parameters. | AR C1, §5.2; AR D3 default ((b) for the slice); CV §2.1 b1 (constraint) | APPROVED | VERIFIED | B2 | **Related:** TECH-002, STAFF-006, STAFF-013, QST-002, QST-003. 17 live system sites still use the smith's level across disciplines (AR said ~15). Gates (9): `skilltree.gd:159` (+legacy :97), `crafting.gd:92, 107`, `property.gd:706`, `shop.gd:959`, `refinement.gd:284`, apprentices via `apprentices.gd:532/665/1177`, `smithy.gd:86`. Scaling (8): `crafting.gd:64, 220, 340, 626`, `contracts.gd:578, 589`, `refinement.gd:124/140/264/431`, `consult.gd:528`. Plus 7 XP grants (STAFF-013) and UI mirrors (`guide.gd:517-637`, `reference.gd:241`, panels). Dead path `crafting.gd:112` (no recipe has unlock.skill). None changed since 154d08a LW: approved by the Living Workshop brief (B2); every gate asks workshop knowledge (`Workers.knowledge_reason`) and competence asks the acting worker (`Workers.can_do`) (FOUNDATION `61bf1f2`, KNOWLEDGE `319ce0f`). | Interim (b) "specialists satisfy non-smithing nodes" vs full split (a) for B? |
-| STAFF-019 | Measure apprentice economics (realised sales vs demand in a soak) before retuning; retune after professions and work orders. | AR I5, AR §4.3; ST §6 ("apprentice economy is generous") | PROPOSED | NOT STARTED | BACKLOG | **Related:** TECH-032, HB-053. `t_workshop_e2e.test_solo_to_workshop_economy` values unsold output at list price (`:177`); S1/A2 steward soaks reconcile the ledger but do not cap by demand | Placement needs decision (AR: after B/C). |
+| STAFF-019 | Measure apprentice economics (realised sales vs demand in a soak) before retuning; retune after professions and work orders. | AR I5, AR §4.3; ST §6 ("apprentice economy is generous") | PROPOSED | PARTIAL | BACKLOG | **Related:** TECH-032, HB-053. `t_workshop_e2e.test_solo_to_workshop_economy` values unsold output at list price (`:177`); S1/A2 steward soaks reconcile the ledger but do not cap by demand LW: measured in the acceptance soak (ACCEPTANCE `d0d5362`, `tests/lw_soak.tscn`, seeded): under the steward for 365 days a poor lone smith went 120 → 30,679 g and an established five-hand workshop 3,000 → 29,102 g (wages −7,359 g; the steward declined 175 orders; extra station instances ≤ 1 % used; repairs 56–60 % of income). Retuning not done (balance pass). | Placement needs decision (AR: after B/C). |
 | STAFF-020 | The basic level (`Workers.BASIC_LEVEL` 5) applies to every workshop worker's crafts outside their profession (a runesmith's smithing stops at 5 too); field hirelings are not capped; mining is the blacksmith's metallurgy (uncapped, Mining XP hotfix kept). | LW brief §1; lead decision 2 | APPROVED | VERIFIED | B1 | FOUNDATION `61bf1f2`; `t_lw_foundation.test_player_basic_cap_and_preserved_levels` | Threshold tuning: QST-033. |
 | STAFF-021 | Applicants arrive at their craft's entry level (arcanists at Arcane Metalworking 3; others 0–1), removing a deadlock where an arcanist could never begin their craft. | LW brief §2 (eliminate deadlocks) | APPROVED | VERIFIED | B2 | KNOWLEDGE `319ce0f`; `t_lw_knowledge.test_every_design_reachable_from_a_fresh_game_with_hires` (fails with the fix reverted) | — |
 | STAFF-022 | The Master rank's difficulty ceiling rises from 10 to 12 so Adamantine Warplate (difficulty 11) can be made by anyone at all. | LW brief §2 (eliminate deadlocks) | APPROVED | VERIFIED | B2 | KNOWLEDGE `319ce0f`; `data/apprentices.json`; reachability test (fails with the fix reverted) | — |
@@ -709,9 +714,9 @@ records the change):
 | STW-014 | Political commitments are left to the smith. | CV §4.5 b5; D19 | APPROVED | PARTIAL | S1 | Only patron letters exist (royal/leader patrons are sealed, `SEALED_PATRONS`). There is no political or civilization system yet. | Which future civilization or militia actions are "political commitments"? Depends on H, I and G. |
 | STW-015 | Inheritance, major relationships and consequential personal decisions are left to the smith: inheritance of notable pieces, deaths touching his work or his spouse, spouse visits and orders, advice and dispute visitors, independence and unpaid-wage notices, sponsorship outcomes. | CV §4.5 b5; D19; SMD §5.2 | APPROVED | IMPLEMENTED | S1 | `_scan_lore` (inherited/death/sponsored), `_personal`, `_scan_deferrals` (notices, customers). Only the independence notice, advice visitor and Epic deed are tested (`t_steward.test_notice_visitor_and_lore_deferrals`). Inheritance, death, spouse and dispute paths have no named test. | — |
 | STW-016 | The world is never frozen for deferred matters: visitors leave, offers and notices run out, and timers continue. Lapsed matters are reported as settled without the smith. | CV §4.5 b5; SMD §5.2 | APPROVED | VERIFIED | S1 | `_refresh_deferred` (`resolved_by: "world"`); `t_steward.test_contract_letter_deferred_and_sealed` (offers lapse), `test_notice_visitor_and_lore_deferrals` (visitor leaves); `report().lapsed` | — |
-| STW-017 | The steward never hires, dismisses, mentors or answers independence notices. Independence notices arrive as sealed letters, and if unanswered, masters leave by the normal rules. | SMD §5.1, §7 (Employees, gap 2); R:S1 §2, §7.1; CV §4.5 b5 | APPROVED | VERIFIED | S1 | **See STW-018** (may the steward hire / answer independence notices?). No `Apprentices.hire`/dismiss/mentor calls in `steward.gd`; notices are deferred and sealed (`_scan_deferrals`); 365-d soak: both apprentices left (days 183 and 290) and decisions fell to about 1 a month (SMD §6.1) | See STW-018. |
+| STW-017 | The steward never hires, dismisses, mentors or answers independence notices. Independence notices arrive as sealed letters, and if unanswered, masters leave by the normal rules. | SMD §5.1, §7 (Employees, gap 2); R:S1 §2, §7.1; CV §4.5 b5 | APPROVED | VERIFIED | S1 | **See STW-018** (may the steward hire / answer independence notices?). No `Apprentices.hire`/dismiss/mentor calls in `steward.gd`; notices are deferred and sealed (`_scan_deferrals`); 365-d soak: both apprentices left (days 183 and 290) and decisions fell to about 1 a month (SMD §6.1) LW: the acceptance soak saw a master's independence notice lapse under the steward (he left on day 128, reported honestly) — PROP-048. | See STW-018. |
 | STW-018 | Decide whether the steward may hire replacement staff or act on independence notices within standing instructions. Otherwise a long absence ends with no apprentices. | R:S1 §7 ("Whether it should ever hire replacements is your decision"); SMD §7 gap 2; R:A2 known limitations | UNDECIDED | NOT STARTED | BACKLOG | **Related:** QST-021, STW-017. Depends on STW-017. Placement needs a decision. | Is hiring a "consequential personal decision" (defer it) or routine staffing (CV "assigns available employees")? |
-| STW-019 | Steward production planning covers the workshop's ordinary outputs and stock upkeep. Today it never brews potions or goods, does not restock the display while `stock_target` unsold pieces stand there, does not repair the smith's own worn pieces, and never uses imports, the caravan, the pawnshop or the rival smith. | CV §4.5 b2; SMD §7 gaps 3–4, §5.1; R:S1 §2 | APPROVED | PARTIAL | BACKLOG | `GOODS` are only for selling; `_restock` pauses at `stock_target`; SMD §7 | Which gaps must close for "plans production … manages stock"? Placement needs a decision (likely alongside the C1 adapters). |
+| STW-019 | Steward production planning covers the workshop's ordinary outputs and stock upkeep. Today it never brews potions or goods, does not restock the display while `stock_target` unsold pieces stand there, does not repair the smith's own worn pieces, and never uses imports, the caravan, the pawnshop or the rival smith. | CV §4.5 b2; SMD §7 gaps 3–4, §5.1; R:S1 §2 | APPROVED | PARTIAL | BACKLOG | `GOODS` are only for selling; `_restock` pauses at `stock_target`; SMD §7 LW: the acceptance soak confirms: the steward sold 1 piece of its own in 365 days and lists no goods for the counter, so the spouse found nothing affordable to sell (PROP-047). | Which gaps must close for "plans production … manages stock"? Placement needs a decision (likely alongside the C1 adapters). |
 | STW-020 | Competent, not superior: the steward manages well but never outperforms the active player's craftsmanship or judgement. | CV §4.5 b6; D19; SMD §2, §7 gap 6 | APPROVED | IMPLEMENTED | S1 | By construction: it never crafts, plans conservatively (slowest hand ×1.25 against customer patience) and plans orders strictly. There is no player-versus-steward benchmark, and R:S1 §7 leaves the judgement to human acceptance. S2: the working smith's automatic checks are average for his skill and capped at 110 % (`StewardSmith.QUALITY_CAP`); never masterwork or anvil names. | No measurable player baseline yet; see QST-031 (steward-smith earnings). |
 | STW-021 | While You Were Away shows actual elapsed time, money changes, completed and pending production and orders, purchases, sales, stock, employee activity, significant world developments, and outstanding decisions and letters. Each section links to its real place. | CV §4.5 b7; D19; SMD §5.3; B:S1 §5 | APPROVED | VERIFIED | S1 | `steward.gd:report()`; `welcome_back_panel.gd`; `t_steward_ui.test_report_builds_empty_real_and_full`; the soaks assert the report's counts match the accumulators; phase `steward_s1` | "In the wider world" lists Lore events but links to Most Wanted › Legends, which reads the separate Chronicle feed (see LORE-002). |
 | STW-022 | The report is truthful: every claim is backed by recorded events and real state changes, with no duplicates or invented narrative. Gold reconciles to the session's ledger lines; world events are Lore importance ≥ 2 excluding the steward's own sales; deferrals are de-duplicated. | CV §4.5 b7; D19; SMD §2, §5.3 | APPROVED | VERIFIED | S1 | `report().gold.reconciled`; `note_ledger` (works around the 400-line ledger cap); `_dkeys` de-duplication; `t_steward._soak` ("gold change == Σ ledger lines", "report counts every piece made/sale"); `t_steward.test_save_load_mid_session_mode_off` (the closed session's report reconciles) | — |
@@ -980,7 +985,7 @@ records the change):
 ## Part III — Known defects, proposals and open questions
 
 
-### 15. Known bugs and limitations — `BUG` (60)
+### 15. Known bugs and limitations — `BUG` (61)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -1044,9 +1049,10 @@ records the change):
 | BUG-058 | Expedition loot ignored whether the class uses a piece (a wizard wore plate); found gear now follows `Adv.affinity` like purchases. | OBS-45 | APPROVED | VERIFIED | LW | RELIABILITY `5fea6d3`; `test_found_gear_follows_class_use`; numbers in `test_early_gear_value_numbers` | Loot value vs purse: PROP-028. |
 | BUG-059 | Asking an adventurer for a commission skipped their own want/purse rule (`Adv.decide`): day 9, 11 asks → 11 orders before, 5 after. | OBS-56 | APPROVED | VERIFIED | LW | RELIABILITY `5fea6d3`; `test_asking_for_a_commission_follows_their_rules` | Daily random order rule: PROP-029. |
 | BUG-060 | Walking figures lost the rest of each step at every waypoint, so walks took more game minutes at higher paces (81 % of the distance at 5×, 93 % at 1.5×); steps now carry past waypoints. | FAMILY (found measuring OBS-40) | APPROVED | VERIFIED | LW | FAMILY `7731642`; `npc.gd`; `test_npc_walk_same_game_minutes_at_any_step` | — |
+| BUG-061 | Cancelling a work order while the smith was working his stage of it left his craft job behind: new work and the steward's hand-over were refused and his further steps vanished without a piece (no duplication or loss). `Apprentices.cancel_task` now ends his stage of the cancelled order. | ACCEPTANCE (ACC-1) | APPROVED | VERIFIED | LW | ACCEPTANCE `d0d5362`; regression test in `t_lw_acceptance` (fails without the fix) | — |
 
 
-### 16. Proposals awaiting a decision — `PROP` (45)
+### 16. Proposals awaiting a decision — `PROP` (50)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -1089,12 +1095,17 @@ records the change):
 | PROP-037 | A second sizing pass over the remaining panels. | UI (#47) | PROPOSED | NOT STARTED | BACKLOG | UX-029 | — |
 | PROP-038 | The smith rolls the dice himself when he is the maker of a work order (the piece waits "ready for your dice"). | PRODUCTION | PROPOSED | NOT STARTED | BACKLOG | PROD-028 | — |
 | PROP-039 | The steward may claim routine smithing stages of orders it accepts for the working smith (a workshop without a blacksmith apprentice can then take staged commissions under the steward). | PRODUCTION | PROPOSED | NOT STARTED | BACKLOG | STW-034 | Widens S2's routine scope. |
-| PROP-040 | Commission Design choice and request feasibility by the whole workshop (`Workers.workshop_can`, staged work orders) instead of one apprentice / the smith alone; the Arcane Foundry upgrade asks the workshop's best Runecraft. | PRODUCTION, KNOWLEDGE, FOUNDATION | PROPOSED | NOT STARTED | BACKLOG | BUG-054, STAFF-018 | — |
+| PROP-040 | Commission Design choice and request feasibility by the whole workshop (`Workers.workshop_can`, staged work orders) instead of one apprentice / the smith alone; the Arcane Foundry upgrade asks the workshop's best Runecraft. | PRODUCTION, KNOWLEDGE, FOUNDATION | PROPOSED | NOT STARTED | BACKLOG | BUG-054, STAFF-018 LW: measured (ACCEPTANCE `d0d5362`): in a staffed workshop 153 of 475 commissions (32 %) were flagged "not yet" although the staff could make them as a work order (none impossible); changing it alters the commission mix and the A2 opportunity share — a balance decision. | — |
 | PROP-041 | A per-type station cap table (e.g. resonance pedestal ≤ 2) if five of every station feels too many. | PRODUCTION | PROPOSED | NOT STARTED | BACKLOG | WS-014 | — |
 | PROP-042 | Show "Stages worked by" on the craft-result screen and the character sheet's equipment card. | PRODUCTION | PROPOSED | NOT STARTED | BACKLOG | UX-009 | — |
 | PROP-043 | Further support work for the spouse (e.g. Róisín's tea house, fetching, tidying) within their competence. | FAMILY | PROPOSED | NOT STARTED | BACKLOG | STAFF-023 | — |
 | PROP-044 | Keep toasts readable at the 5× night pace (≈ 1 s of real time today). | FAMILY | PROPOSED | NOT STARTED | BACKLOG | STW-033 | — |
 | PROP-045 | Workshop catalogue filters by craft, a link from a Design to its station; mentoring that trains a specialist's own craft; a "basic (5) — mastery belongs to …" label on the Skills bars; a Design-level operation difficulty for contributions in another craft. | KNOWLEDGE, FOUNDATION | PROPOSED | NOT STARTED | BACKLOG | UX-033, STAFF-013 | — |
+| PROP-046 | Guidance shows the decisive obstacle first: when a Design needs a specialist (warded gloves, the mithril runeblade, the adamantine warplate), say so before suggesting a basic skill step. | ACCEPTANCE (F2) | PROPOSED | NOT STARTED | BACKLOG | UX-004 | — |
+| PROP-047 | Give the spouse something to sell: the steward lists counter goods (potions, oils) and affordable display pieces; in a 365-day steward soak the spouse sold nothing (76 of 94 browse checks "can't afford it", display cuirasses ≈ 430 g; no goods on display). | ACCEPTANCE (F3) | PROPOSED | NOT STARTED | BACKLOG | STAFF-023, STW-019 | Balance/steward planning. |
+| PROP-048 | An independence notice that would lapse while the steward runs the forge arrives as a sealed letter, or runs longer while the smith is away. | ACCEPTANCE (F5) | PROPOSED | NOT STARTED | BACKLOG | STW-017 | Design decision. |
+| PROP-049 | A finished work order's Ledger row keeps who did which stage (stage records are reset after the last piece today; the piece keeps them). | ACCEPTANCE (F7) | PROPOSED | NOT STARTED | BACKLOG | PROD-022 | — |
+| PROP-050 | Tidy expired commission tasks in older saves (they stay "blocked — the commission is no longer open" in the player's queue). | ACCEPTANCE (F8) | PROPOSED | NOT STARTED | BACKLOG | — | Pre-existing. |
 
 
 ### 17. Design questions (architecture review §7 and others) — `QST` (33)
@@ -1131,7 +1142,7 @@ records the change):
 | QST-028 | What should a legacy copy of a Unique show the player? Saves from before Run 0.1 may hold more than one Grimhold: the registry names the authentic piece (lowest uid) and records the others, which are kept whole and today look identical to it. | D13; CV §6.1, §6.2; Run 0.1 | UNDECIDED | NOT STARTED | E | EQ-024; `Uniques.is_legacy_copy()` already tells them apart | Leave them as they are; label them in the item panel (e.g. "one of several forged before the realm kept count"); or treat them as ordinary legendary pieces. Renaming them or changing their stats is excluded (§6.1). |
 | QST-029 | Front entrance: (a) a darkened threshold over the door and a brighter door lamp (code only); (b) a door hood/awning prop with a `template_` fallback; (c) a second "yard" entrance through the material store's loading door (new door, navigation, keep-clear and customer routing). | S2 brief §4; CLARITY investigation | UNDECIDED | NOT STARTED | BACKLOG | `docs/s2/reports/clarity.md` §10 | Which did the user mean? CLARITY recommends (a) or (b) if the issue is "I cannot see where the door is". |
 | QST-030 | Y and Q: keep Y = Workshop panel (matches its toolbar label) and Q = Workshop Ledger, or Y = Ledger with the button renamed "Property"? | S2 EARLY | UNDECIDED | IMPLEMENTED | S2 | UX-018 (first option built) | — |
-| QST-031 | Is the working smith "competent, not superior"? With no apprentices and starting resources he earned 120 → 4,825 g in 30 days and 120 → 31,113 g in a year, mostly from paid repairs (about 3.5 a day; every coin from real purses, ledger reconciled). There is no player baseline to compare. | CV v1.3 §4.5; S2 soaks | UNDECIDED | NOT STARTED | BACKLOG | STW-020, STW-029; needs a human playtest / a scripted player baseline (PROP-001) | Cap repairs per day, slow him, or accept? |
+| QST-031 | Is the working smith "competent, not superior"? With no apprentices and starting resources he earned 120 → 4,825 g in 30 days and 120 → 31,113 g in a year, mostly from paid repairs (about 3.5 a day; every coin from real purses, ledger reconciled). There is no player baseline to compare. | CV v1.3 §4.5; S2 soaks | UNDECIDED | NOT STARTED | BACKLOG | STW-020, STW-029; needs a human playtest / a scripted player baseline (PROP-001) LW: re-measured after the Living Workshop (ACCEPTANCE `d0d5362`): poor early game 120 → 30,679 g in 365 days (−1.4 % vs S2, 1,288 repairs) — unchanged in shape. | Cap repairs per day, slow him, or accept? |
 | QST-032 | A room's tier now counts the craft's best hand instead of the player's level (built so the smith's basic cap cannot block specialist rooms): keep this, or should the tier follow the room's stations and work done as WS-006 proposes? | FOUNDATION | UNDECIDED | IMPLEMENTED | LW | WS-006 | — |
 | QST-033 | The basic level is 5 (journeyman) for every workshop worker's other crafts, so master-grade work (difficulty ≥ 7) needs a specialist: is 5 the right threshold? | FOUNDATION | UNDECIDED | IMPLEMENTED | LW | STAFF-013, STAFF-020 | Balance pass. |
 
@@ -1352,4 +1363,4 @@ records the change):
 | 10 November 2026 | Run 0.1: EQ-024, QST-013 (D13 registry), ECO-042, TECH-016, QST-014, BUG-038 … BUG-041 (D14), GOV-030, WLD-015, QST-018 (D18), LORE-017, GOV-031 (split documented), QST-026, QST-015 (canonical v1.2), BUG-049, TECH-006, WS-005 updated; QST-028 added; target `RUN0.1` added. |
 | 10 November 2026 | S2: BUG-001, BUG-043, BUG-044, BUG-045, BUG-050 verified; BUG-005 superseded; BUG-020, ECO-011 partial; PROP-015/016/017/020 approved by the S2 brief and verified; ECO-044, STW-020, HB-056 updated; added STW-029 … STW-032, UX-017 … UX-023, PROP-022 … PROP-026, QST-029 … QST-031; target `S2`; canonical v1.3. |
 | 11 November 2026 | S2 completion: BUG-051 (Mining XP hotfix integrated into S2, `4fbfaee`). |
-| 11 November 2026 | Living Workshop: STAFF-002, 005 … 008, 012, 013, 015 … 018, PROD-001, 002, 004 … 014, 018, 019, 022, 026, WS-007, 012, EQ-010, STW-025, TECH-003, TECH-027, QST-003 verified; STAFF-014, GOV-026, HA-027, HB-019 (the universal smith) retired; PROD-016, PROD-023 interim values; WS-006, UX-009 partial; added STAFF-020 … 024, PROD-027 … 030, WS-014, STW-033, STW-034, UX-024 … 033, BUG-052 … 060, PROP-027 … 045, QST-032, QST-033; target `LW`; observations OBS-37 … OBS-61; canonical v1.4. |
+| 11 November 2026 | Living Workshop: STAFF-002, 005 … 008, 012, 013, 015 … 018, PROD-001, 002, 004 … 014, 018, 019, 022, 026, WS-007, 012, EQ-010, STW-025, TECH-003, TECH-027, QST-003 verified; STAFF-014, GOV-026, HA-027, HB-019 (the universal smith) retired; PROD-016, PROD-023 interim values; WS-006, UX-009 partial; added STAFF-020 … 024, PROD-027 … 030, WS-014, STW-033, STW-034, UX-024 … 033, BUG-052 … 061, PROP-027 … 050, QST-032, QST-033; acceptance measurements on STAFF-019, QST-031, STW-017, STW-019, PROP-040; target `LW`; observations OBS-37 … OBS-61; canonical v1.4. |

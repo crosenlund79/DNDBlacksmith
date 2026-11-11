@@ -50,7 +50,7 @@ contains A1, S1 or A2, and none of them has been accepted by a person playing on
 
 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 39 | 4 | 0 | 1 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 103 |
+| 39 | 4 | 0 | 1 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 108 |
 
 ---
 
@@ -448,7 +448,7 @@ converting pre-Iteration-011 Chronicle entries; a multi-year probe (TECH-026, pr
 
 ### 4.12 BACKLOG
 
-106 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 1, `WS` 2, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 23, `PROP` 40, `QST` 9, `HA` 5, `HB` 8.
+111 entries have no canonical placement or are proposals not yet placed. By prefix: `TECH` 1, `WS` 2, `STAFF` 1, `PROD` 1, `STW` 2, `EQ` 9, `ECO` 2, `ADV` 1, `UX` 1, `LORE` 1, `BUG` 23, `PROP` 45, `QST` 9, `HA` 5, `HB` 8.
 Items that need a placement decision rather than a scope decision: duplicate stations (WS-007, TECH-027), molds and
 patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), steward hiring (STW-018), apprentice economics
 (STAFF-019, TECH-032, HB-053). All `PROPOSED` entries are listed in the decision register §1.4.
@@ -557,8 +557,9 @@ patterns (PROD-020), the Reliquary and heirs (EQ-041 … EQ-046, EQ-057), stewar
    more counter filters, hirelings on upper floors); integrate S2 (a merge into the default branch would publish
    build-0.15.x unless the merge commit carries [skip ci]).
 3c. Living Workshop: accept or not after the Windows 0.16 playtest; the basic threshold (QST-033) and room tier by the
-   best hand (QST-032); proposals PROP-027 … PROP-045 (balance follow-ups, steward stage claiming, the smith's dice on
-   work orders, per-type station caps, spouse support work, …); integrate S2 and the Living Workshop (the LW branch
+   best hand (QST-032); proposals PROP-027 … PROP-050 (balance follow-ups, steward stage claiming, the smith's dice on
+   work orders, per-type station caps, spouse support work and something for the spouse to sell, commission capability by
+   the whole workshop, …); integrate S2 and the Living Workshop (the LW branch
    contains S2; a merge into the default branch needs [skip ci] or it publishes).
 
 **Before the next implementation milestone:**
@@ -578,7 +579,7 @@ HA-025); steward hiring (STW-018).
 **Before J:** the Lore retention policy (LORE-004).
 **Contradictory sources:** the wall and doorway editor (WS-010, HB-020, QST-023); multiplayer (HB-001); visible
 relationship meters (HA-029).
-**Proposals:** 80 `PROPOSED` entries, each needing a yes or no (decision register §1.4).
+**Proposals:** 85 `PROPOSED` entries, each needing a yes or no (decision register §1.4).
 
 ---
 
