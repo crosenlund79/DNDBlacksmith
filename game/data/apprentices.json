@@ -161,7 +161,7 @@
    "name": "Master",
    "works": 70,
    "skill": 8,
-   "max_difficulty": 10,
+   "max_difficulty": 12,
    "equipment": true,
    "disciplines": [
     "classic",
@@ -176,7 +176,7 @@
    "ceiling": 112.0,
    "raise": 3,
    "min_rarity": true,
-   "desc": "Hard work, arcane metal they have trained in, and legendary-grade recipes."
+   "desc": "Hard work, arcane metal they have trained in, and legendary-grade Designs."
   }
  ],
  "trained_level": 2,

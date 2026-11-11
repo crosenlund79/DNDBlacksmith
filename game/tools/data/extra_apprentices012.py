@@ -47,10 +47,13 @@ DATA = {
          "disciplines": ["classic", "stitching", "alchemy", "runecraft"], "trained_only": True,
          "quality": 6.0, "speed": 1.0, "ceiling": 104.0, "raise": 2,
          "desc": "Other disciplines they have trained (runes, potions) and steel work."},
-        {"id": "master", "name": "Master", "works": 70, "skill": 8, "max_difficulty": 10, "equipment": True,
+        # The Living Workshop B2: a master's reach covers the hardest Design in the catalogue (Adamantine Warplate,
+        # difficulty 11 with its material). At 10 nobody could ever make it once the smith's arcane work stopped at the
+        # basic level (B1) — a progression deadlock (tests: t_lw_knowledge reachability).
+        {"id": "master", "name": "Master", "works": 70, "skill": 8, "max_difficulty": 12, "equipment": True,
          "disciplines": ["classic", "stitching", "alchemy", "runecraft", "arcane"], "trained_only": True,
          "quality": 7.0, "speed": 1.15, "ceiling": 112.0, "raise": 3, "min_rarity": True,
-         "desc": "Hard work, arcane metal they have trained in, and legendary-grade recipes."},
+         "desc": "Hard work, arcane metal they have trained in, and legendary-grade Designs."},
     ],
     # a discipline counts as "trained" once the apprentice reaches this level in its skill
     "trained_level": 2,

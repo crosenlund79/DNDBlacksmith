@@ -228,6 +228,7 @@ static func refresh_applicants() -> void:
 		levels["smithing"] = randi_range(0, 2)
 		var psk: String = str(Crafting.DISCIPLINE_SKILL.get(pref, "smithing"))
 		levels[psk] = int(levels.get(psk, 0)) + randi_range(1, 2)
+		levels[psk] = maxi(int(levels[psk]), WorkshopKnowledge.entry_level(pref))   # B2: work of their own craft from day one
 		var traits := []
 		var good := _trait_ids(true)
 		var bad := _trait_ids(false)
@@ -1320,6 +1321,8 @@ static func expected_op_quality(a: Dictionary, rid: String, sid := "", supervise
 	q += _trait_sum(a, "quality")
 	if _specialty_match(a, category(kind, rid)):
 		q += float(_c("specialty", "quality", 5.0))
+	if rid != "":
+		q += SkillTree.quality_bonus(rid, a)   # B2: the workshop's techniques this worker is competent to use
 	if supervised:
 		q += float(qc.get("supervised", 3.0))
 	if sid != "" and is_worn(sid):
