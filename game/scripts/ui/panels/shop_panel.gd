@@ -80,7 +80,8 @@ func _family_row() -> void:
 	hl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	head.add_child(hl)
 	if bool(fs["helps"]):
-		var ch := UIKit.chip("on duty now" if bool(fs["on_duty"]) else "off duty", UIKit.RUBRIC if bool(fs["on_duty"]) else UIKit.FADED)
+		var ch := UIKit.chip(("at the counter now" if bool(fs.get("at_counter", true)) else "on her way to the counter") if bool(fs["on_duty"]) else "off duty",
+			UIKit.RUBRIC if bool(fs["on_duty"]) else UIKit.FADED)
 		ch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(ch)
 	v.add_child(head)

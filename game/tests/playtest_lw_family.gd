@@ -117,7 +117,9 @@ func _counter() -> void:
 	Shop.customers().append({"npc": "sigrun", "want": "browse", "arrived": now, "seated": now, "seat": 0, "present": true,
 		"budget": int(a["gold"]), "looking_for": "", "slot": Items.slot(it)})
 	w._update_schedules(true)
-	# she walks over from her morning place (real time; at most ~40 s)
+	# she walks over from her morning place (real time; at most ~40 s) — and serves nobody until she is there
+	if fam != null:
+		pt.expect(bool(_fam("on_duty")) and not bool(_fam("at_counter")), "lw_family: on duty but still on her way: she serves nobody yet")
 	var rn: NPCActor = w.npcs.get("roisin")
 	var cb: Vector2 = w.spots.get("smithy_counter_back", Vector2.ZERO)
 	var waited := 0.0

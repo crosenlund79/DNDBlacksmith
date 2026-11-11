@@ -3,8 +3,8 @@
 ##     agree, when asked in conversation, to help in the shop. She decides by her own character and how things stand
 ##     between you (WILLING), and stops on her own if that cools far enough (QUIT_MARGIN). In her hours — the shop's
 ##     opening hours, 9:00–18:00, with the midday hour off — and only while she is home (not on the road, not hurt, not
-##     waiting at the counter herself) she stands behind the shop counter (world spot "smithy_counter_back") and serves
-##     one waiting customer every 15 game minutes: an adventurer browsing the display, a villager wanting goods. She sells
+##     waiting at the counter herself) she stands behind the shop counter (world spot "smithy_counter_back") and, once
+##     her figure is there (at_counter; headless: by the schedule), serves one waiting customer every 15 game minutes: an adventurer browsing the display, a villager wanting goods. She sells
 ##     through the shop's own sale path (Shop.sell_to / Shop.sell_goods) at the display price — less at most the
 ##     discount the player allows her (discount_cap, 0–25 %, default 0 %): she gives only as much off as the buyer needs
 ##     to agree, never more than the cap, and the cap is enforced in the sale path itself (Shop.counter_price_reason).
@@ -23,7 +23,7 @@
 ##     Smedens eget dyr fra Hale-gården følger ham rundt.
 ##
 ## Public API (static):
-##   spouse() -> String   helper() -> String   helps() -> bool   on_duty() -> bool   duty_reason() -> String
+##   spouse() -> String   helper() -> String   helps() -> bool   on_duty() -> bool   duty_reason() -> String   at_counter() -> bool
 ##   discount_cap() -> int   set_discount_cap(pct) -> String   floor_price(listed) -> int   allows(price, listed, seller) -> bool
 ##   spot(npc) -> String (world.spot_for)   tick() (every 15 game minutes)   status() -> Dictionary   log_lines(n) -> Array
 ##   ask(npc) -> Dictionary {ok, text}   release(why := "") -> void   willing_at(npc) -> float   repair_reason() -> String
@@ -188,6 +188,23 @@ static func on_duty() -> bool:
 	return duty_reason() == ""
 
 
+## Is she standing behind the counter? With a world, her figure must have arrived there (the world walks her over at the
+## hour); headless runs (no world) go by the schedule alone — one engine for play and tests, like the steward's smith.
+static func at_counter(npc := "") -> bool:
+	var who := npc if npc != "" else helper()
+	var tree := Engine.get_main_loop() as SceneTree
+	var w: Node = tree.get_first_node_in_group("world") if tree != null else null
+	if w == null:
+		return true
+	var n: Variant = (w.get("npcs") as Dictionary).get(who, null) if w.get("npcs") is Dictionary else null
+	var sp: Variant = (w.get("spots") as Dictionary).get(COUNTER_SPOT, null) if w.get("spots") is Dictionary else null
+	if not n is Node2D or not sp is Vector2:
+		return true   # no figure or no counter in this world: the schedule decides
+	var fig: Node2D = n
+	var walking: bool = fig.get("path") is PackedVector2Array and not (fig.get("path") as PackedVector2Array).is_empty()
+	return fig.visible and not walking and fig.position.distance_to(sp as Vector2) < 80.0
+
+
 ## world.spot_for: behind the shop counter while on duty ("" = her ordinary routine).
 static func spot(npc: String) -> String:
 	if npc == "" or npc != helper() or not on_duty():
@@ -273,8 +290,8 @@ static func tick() -> void:
 		release("%s has stopped minding the shop counter — things between you are not what they were." % Talk.npc_name(npc))
 		Game.journal("%s has stopped minding the shop counter." % Talk.npc_name(npc))
 		return
-	if not on_duty():
-		return
+	if not on_duty() or not at_counter(npc):
+		return   # off duty, or still on her way to the counter
 	for c in Shop.waiting().duplicate():
 		if _serve(c):
 			return
@@ -427,7 +444,8 @@ static func status() -> Dictionary:
 	if sp == "":
 		return {}
 	var f := _fam()
-	return {"spouse": sp, "name": Talk.npc_name(sp), "helps": helps(), "on_duty": on_duty(), "why": duty_reason(), "cap": discount_cap(),
+	return {"spouse": sp, "name": Talk.npc_name(sp), "helps": helps(), "on_duty": on_duty(), "at_counter": helps() and on_duty() and at_counter(sp),
+		"why": duty_reason(), "cap": discount_cap(),
 		"steps": DISCOUNT_STEPS, "today": _today(), "sales_n": int(f.get("sales_n", 0)), "sales_gold": int(f.get("sales_gold", 0)),
 		"discount_gold": int(f.get("discount_gold", 0)), "hours": [COUNTER_START, COUNTER_END], "asked_today": asked_today(sp),
 		"willing": Social.aff(sp) >= willing_at(sp)}
