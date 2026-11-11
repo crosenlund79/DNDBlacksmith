@@ -116,19 +116,42 @@ func _select(it: Dictionary) -> void:
 	ItemSpirit.speak(it, "inspect")   # an awakened piece may remark on being looked over
 
 
+## LW #57: every slot the smith can wear (shield, cloak, belt and amulet were missing: a piece put on there vanished),
+## plus any other slot he wears something in. A worn piece can be selected and taken off again.
+func _worn_slots() -> Array:
+	var out: Array = Game.PLAYER_SLOTS.duplicate()
+	var eq: Dictionary = Game.state["player"]["equipment"]
+	for s in eq:
+		if not out.has(str(s)) and eq[s] is Dictionary and not (eq[s] as Dictionary).is_empty():
+			out.append(str(s))
+	return out
+
+
 func _detail() -> void:
 	UIKit.clear(detail)
 	detail.add_child(UIKit.label("Worn by Brannoc", 26, "heading"))
 	var eq: Dictionary = Game.state["player"]["equipment"]
-	var row := UIKit.hbox(6)
-	for s in ["weapon", "armor", "helmet", "gloves", "boots", "ring"]:
+	var row := GridContainer.new()
+	row.name = "WornSlots"
+	row.columns = 5
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	for s in _worn_slots():
 		var it: Dictionary = eq.get(s, {})
 		var sl := ItemSlot.new(it, 60.0)
-		sl.tooltip_text = s.capitalize() if it.is_empty() else ""
+		sl.name = "Worn_" + str(s)
+		sl.tooltip_text = str(s).capitalize() if it.is_empty() else ""
+		if not it.is_empty():
+			sl.selected = not selected.is_empty() and int(selected.get("uid", -1)) == int(it.get("uid", -2))
+			sl.clicked.connect(_select)
 		row.add_child(sl)
 	detail.add_child(row)
 	detail.add_child(UIKit.label("%d gold · %d items" % [Game.gold(), Game.inventory().size()], 22, "body_bold", UIKit.RUBRIC))
 	detail.add_child(UIKit.divider())
+	var worn := "" if selected.is_empty() else Game.player_worn_slot(int(selected["uid"]))
+	if worn != "":
+		_worn_detail(worn)
+		return
 	if selected.is_empty() or Game.find_uid(int(selected["uid"])).is_empty():
 		detail.add_child(UIKit.label("Select an item to inspect it.", 20, "body_italic"))
 		return
@@ -160,22 +183,59 @@ func _detail() -> void:
 			it["trade"] = not tr
 			Events.inventory_changed.emit(), 0))
 	if Items.is_equipment(it):
-		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])); selected = {}, 0))
+		detail.add_child(UIKit.button("Equip on Brannoc", func(): Game.equip_player(int(it["uid"])), 0))   # stays selected: shown as worn
 		var sale: bool = it.get("for_sale", false)
-		detail.add_child(UIKit.button("Remove from display" if sale else "Display for sale (%d g)" % Shop.price_of(it), func():
-			Shop.set_for_sale(int(it["uid"]), not sale), 0))
-		if sale:
-			var ph := UIKit.hbox()
-			ph.add_child(UIKit.label("Price:", 20))
-			var sb := SpinBox.new()
-			sb.min_value = 1
-			sb.max_value = 99999
-			sb.value = Shop.price_of(it)
-			sb.value_changed.connect(func(v): Shop.set_price(int(it["uid"]), int(v)))
-			ph.add_child(sb)
-			detail.add_child(ph)
+		var disp := UIKit.button("Remove from display" if sale else "Display for sale (%d g)" % Shop.price_of(it), func():
+			Shop.set_for_sale(int(it["uid"]), not sale), 0)
+		detail.add_child(disp)
+		# LW #48: the asking price is the smith's to set — shown for every piece (before it goes on display too), with
+		# the usual price beside it and a way back to it (the manual price itself is unchanged: Shop.set_price)
+		var ph := UIKit.hbox(8)
+		ph.name = "PriceRow"
+		var pl := UIKit.label("Your price:", 20, "body_bold")
+		pl.tooltip_text = "You set the asking price. Buyers pay it if they think it fair; the usual price follows the piece's value."
+		ph.add_child(pl)
+		var sb := SpinBox.new()
+		sb.name = "PriceBox"
+		sb.min_value = 1
+		sb.max_value = 99999
+		sb.suffix = "g"
+		sb.value = Shop.price_of(it)
+		sb.tooltip_text = pl.tooltip_text
+		var puid := int(it["uid"])
+		sb.value_changed.connect(func(v):
+			Shop.set_price(puid, int(v))
+			if not sale:
+				disp.text = "Display for sale (%d g)" % int(v))
+		ph.add_child(sb)
+		var usual := Shop.list_price(it)
+		ph.add_child(UIKit.label("usual %d g" % usual, 18, "body_italic"))
+		if it.has("price") and int(it["price"]) != usual:
+			var rb := UIKit.button("Usual price", func():
+				Shop.set_price(puid, usual)
+				Events.inventory_changed.emit(), 0)
+			rb.tooltip_text = "Back to the usual price for this piece (%d g)." % usual
+			ph.add_child(rb)
+		detail.add_child(ph)
 	if it["def"] == "potion_healing":
 		detail.add_child(UIKit.label("Healing draughts make thoughtful gifts.", 18, "body_italic"))
+
+
+## A piece the smith wears: what it is, its record, and taking it off (back to the stores — same piece, same uid).
+func _worn_detail(slot: String) -> void:
+	var it: Dictionary = Game.state["player"]["equipment"].get(slot, {})
+	detail.add_child(UIKit.label("You wear this (%s)" % slot.capitalize(), 20, "body_italic"))
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", Assets.panel_style("dark"))
+	p.add_child(UIKit.rich(Items.tooltip(it), 20, true))
+	detail.add_child(p)
+	var iuid := int(it.get("uid", -1))
+	detail.add_child(UIKit.button("Inspect — its maker, history and owners", func(): Events.open_panel.emit("item", {"uid": iuid}), 0))
+	var off := UIKit.button("Take it off (back to the stores)", func():
+		Game.unequip_player(slot)
+		selected = Game.find_uid(iuid), 0)
+	off.name = "TakeOff"
+	detail.add_child(off)
 
 
 func _study(uid: int) -> void:

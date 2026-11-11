@@ -12,6 +12,20 @@ extends MinigameBase
 
 const BIND := 4.0
 const CAPTURE := 30.0
+## LW #58: the socket's pull is measured against the binding's own tolerance (the inner ring). Before, the swirl
+## (70 px/s² × pace/√ease) made a rune held perfectly still on the socket orbit it at a radius beyond the inner ring at
+## ordinary skill, and a surge (260 px/s² × pace) threw it two or three rings out: a steady hold scored ~40–55 % at
+## Runecraft 1–4 and never reached 100 % even at Runecraft 8. Now a steady hold orbits at SWIRL × pace of the ring and a
+## surge carries the rune about SURGE × pace² of the ring out, so steadiness and skill (a wider ring, a calmer pace,
+## rarer surges) decide the binding. The player's pull on the rune (DRAW) and the damping are unchanged.
+const SWIRL := 0.4
+const SURGE := 0.8
+const DRAW := 9.0                       # the cursor's pull on the rune (per second²)
+const DAMP := 0.12                      # velocity kept after one second
+const OMEGA := 3.0                      # √DRAW: how fast the rune swings back to the cursor
+const DAMP_RATE := 2.1203               # ln(1 / DAMP)
+const SURGE_FADE := 500.0               # how fast a surge's push fades (px/s² per second)
+const SEAT_SPEED := 70.0                # the rune counts as seated below this speed (px/s)
 
 var r := Vector2.ZERO        # rune position relative to the socket (px)
 var v := Vector2.ZERO
@@ -36,6 +50,16 @@ func tol() -> float:
 	return 20.0 * ease
 
 
+## The sideways pull that makes a rune held on the socket circle it: the steady orbit's radius is SWIRL × pace of tol().
+func swirl_strength() -> float:
+	return SWIRL * tol() * pace * DAMP_RATE * OMEGA
+
+
+## A surge's initial push: it carries the rune about SURGE × pace² of tol() off the socket before the cursor pulls it back.
+func surge_strength() -> float:
+	return sqrt(2.0 * SURGE_FADE * OMEGA * SURGE * tol()) * pace
+
+
 func _start_round() -> void:
 	var a := randf() * TAU
 	r = Vector2(cos(a), sin(a)) * randf_range(150.0, 190.0)
@@ -53,29 +77,30 @@ func _start_round() -> void:
 func _tick(delta: float) -> void:
 	var item := _item_rect()
 	# forces: the socket's swirl (perpendicular), a wandering surge, and the player's guidance
-	var strength := 70.0 * pace / sqrt(ease)
-	var acc := Vector2(-r.y, r.x).normalized() * swirl * strength if r.length() > 2.0 else Vector2.ZERO
+	var acc := Vector2(-r.y, r.x).normalized() * swirl * swirl_strength() if r.length() > 2.0 else Vector2.ZERO
 	surge_t -= delta
 	if surge_t <= 0.0:
 		surge_t = randf_range(0.9, 1.8) * sqrt(ease)
-		surge = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized() * 260.0 * pace
+		surge = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized() * surge_strength()
 		swirl = -swirl if randf() < 0.3 else swirl
 		Audio.play("sfx/rune_hum", -12.0, 1.4)
 	acc += surge
-	surge = surge.move_toward(Vector2.ZERO, delta * 500.0)
+	surge = surge.move_toward(Vector2.ZERO, delta * SURGE_FADE)
 	var inp := Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_up", "move_down"))
 	acc += inp * 720.0
 	if mouse_active:
-		acc += (mouse_target - r) * 9.0
+		acc += (mouse_target - r) * DRAW
 	v += acc * delta
-	v *= pow(0.12, delta)          # magical damping
+	v *= pow(DAMP, delta)          # magical damping
 	r += v * delta
 	r = r.limit_length(item.size.x * 0.5)
 	var d := r.length()
 	live_q = q_from_error(d, tol())
 	if not seated:
 		guide_t += delta
-		if d <= CAPTURE or guide_t > 3.0:
+		# LW #58: the binding starts once the rune is IN the socket and has stopped swinging (before: anywhere inside 30 px,
+		# still flying, so the first overshoot past the socket was counted against the binding)
+		if (d <= maxf(CAPTURE * 0.5, tol()) and v.length() <= SEAT_SPEED) or guide_t > 3.0:
 			seated = true
 			Audio.play("sfx/chisel", -4.0)
 	else:

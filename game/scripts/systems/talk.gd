@@ -217,9 +217,22 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 		"equip":
 			return {"text": "", "action": "shop"}
 		"order":
-			var o := Shop.create_order(npc, a["needs"])
+			# LW #56: they commission only what they really want and can pay for (Adv.commission_ask — the rule their
+			# own plans follow); otherwise an honest answer
+			var ans := Adv.commission_ask(a)
+			if ans.has("why"):
+				match str(ans["why"]):
+					"refuses":
+						return {"text": "\"Not from you, smith. Not after last time.\""}
+					"open":
+						return {"text": "\"You've my order already, smith. That'll do me for now.\""}
+					"purse":
+						return {"text": "\"A new %s, if I could — but a commission's beyond my purse just now (%d g; about %d g would do).\"" % [
+							Shop.slot_phrase(str(ans["slot"])).trim_prefix("a ").trim_prefix("an "), int(a.get("gold", 0)), int(ans["cost"]) + 10]}
+				return {"text": "\"Nothing I need forged, thanks — my kit will serve for now.\""}
+			var o := Shop.create_order(npc, str(ans["slot"]))
 			if o.is_empty():
-				return {"text": "\"Not from you, smith. Not after last time.\""}
+				return {"text": "\"Nothing you could make me, I think.\""}
 			return {"text": "\"I need a %s — I'd pay %d gold. %s\"" % [Shop.order_text(o), o["reward"], o.get("note", "")]}
 		"drink":
 			if not Game.can_afford(4):
