@@ -508,3 +508,87 @@ func test_migration_keeps_secrets_and_discoveries() -> void:
 	eq(JSON.stringify(Game.player_skills(), "", true), skills, "every level is kept")
 	check(WorkshopKnowledge.discoveries().any(func(d): return str(d["flag"]) == "recipe_starsteel"), "the starsteel notes are listed among the discoveries")
 	eq(SkillTree.node_state("s_starsteel"), "unlocked", "the node is still learned")
+
+
+# ------------------------------------------------------------------ the panel: the tree and the workshop's knowledge
+func _host() -> Node:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	return root.get_child(root.get_child_count() - 1)
+
+
+func _mount(c: Node) -> Node:
+	_host().add_child(c)
+	return c
+
+
+func _unmount(n: Node) -> void:
+	if is_instance_valid(n):
+		if n.get_parent():
+			n.get_parent().remove_child(n)
+		n.free()
+
+
+func _text_of(n: Node) -> String:
+	var t := ""
+	for c in n.get_children():
+		if c.is_queued_for_deletion() or (c is CanvasItem and not (c as CanvasItem).visible):
+			continue
+		if c is Label:
+			t += (c as Label).text + "\n"
+		elif c is RichTextLabel:
+			t += (c as RichTextLabel).get_parsed_text() + "\n"
+		elif c is Button:
+			t += (c as Button).text + "\n"
+		t += _text_of(c)
+	return t
+
+
+func test_panel_shows_both_layers() -> void:
+	_workshop()
+	for nid in ["r_identify", "r_clean", "r_blank", "r_engrave", "r_stabilise", "r_original", "r_combo", "s_blades", "m_common", "m_alloys", "s_steel", "s_heat", "s_alloy"]:
+		SkillTree.unlock_node_force(nid)
+	Game.player_skills()["runecraft"] = {"lvl": Workers.BASIC_LEVEL, "xp": 0}
+	var rune := Apprentices.dev_take_on("runesmith", 8, "master")
+	if not check(not rune.is_empty(), "a runesmith joins"):
+		return
+	var tp := SkillTreePanel.new({"select": "r_master"})
+	_mount(tp)
+	check(tp.body.visible and not tp.kscroll.visible, "it opens on the tree")
+	tp._show("r_master", true)
+	var page := _text_of(tp.side)
+	check(page.contains("The workshop's knowledge") and page.contains("through %s" % rune["name"]), "the master rune seal is the workshop's knowledge, learned through the runesmith: %s" % page.left(300))
+	check(page.contains("Helps whoever works it with Runecraft 6"), "its technique says whom it helps")
+	tp._show("s_heat", true)
+	page = _text_of(tp.side)
+	check(page.contains("Your own path") and page.contains("Your personal technique"), "a smithing seal is the smith's own path and personal technique")
+	tp._learn("r_master")
+	tp._do_refresh()
+	eq(WorkshopKnowledge.brought_by("r_master"), str(rune["id"]), "learned from the panel through the runesmith")
+	tp._set_view("knowledge")
+	check(not tp.body.visible and tp.kscroll.visible and tp.tab_know.button_pressed and not tp.tab_tree.button_pressed, "the knowledge view replaces the tree")
+	var kt := _text_of(tp.kview)
+	check(kt.contains("What the workshop knows") and kt.contains("Designs ·"), "the catalogue has its summary")
+	check(kt.contains("Steel Longsword") and kt.contains("Steelworking"), "known Designs by craft, with the node they came from")
+	check(kt.contains("Concord Runestone") and kt.contains(str(rune["name"])), "the master rune Design names who may make it (the runesmith)")
+	check(kt.contains("Master runewright") and kt.contains("helps whoever has Runecraft 6"), "techniques say whom they help")
+	check(kt.contains("Interrupted quench") and kt.contains("yours"), "the smith's own techniques are his")
+	check(kt.contains("Brought in through your staff") and kt.contains("Master Runecrafting"), "the runesmith's credit")
+	check(not kt.contains("Starsteel"), "the secret Design is not in the catalogue before its discovery")
+	# switching views and refreshing leaves no ghosts
+	for i in 3:
+		tp._set_view("tree")
+		tp._set_view("knowledge")
+	var ghosts := 0
+	for c in tp.kview.get_children():
+		if c.is_queued_for_deletion() and (c as CanvasItem).visible:
+			ghosts += 1
+	eq(ghosts, 0, "replaced catalogue content leaves the layout at once")
+	tp._refresh()
+	tp._refresh()
+	check(tp._refresh_queued, "refreshes are still gathered once per frame")
+	tp._do_refresh()
+	_unmount(tp)
+	var tk := SkillTreePanel.new({"view": "knowledge"})
+	_mount(tk)
+	check(tk.kscroll.visible and not tk.body.visible, "it can open on the workshop's knowledge")
+	_unmount(tk)
