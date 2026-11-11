@@ -1,8 +1,8 @@
 <!--
-  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.3.docx (Design Baseline 1.3, 10 November 2026).
+  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.4.docx (Design Baseline 1.4, 11 November 2026).
   The .docx is the approved source; this file reproduces its text faithfully for use in the repository (generated from
   the .docx, so both share one revision history — see "Revision history" at the end). Only formatting was adapted for
-  Markdown (boxed callouts → blockquotes). The v1.2, v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
+  Markdown (boxed callouts → blockquotes). The v1.3, v1.2, v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
   explicit user approval, a version increment and matching updates to both files (CLAUDE.md §2.5).
 -->
 
@@ -16,7 +16,7 @@
 >
 > A blacksmith may create a sword, see it travel through generations, repair it when it returns, and discover that its history helped shape the fate of a realm. The smith need not become its hero.
 
-**DESIGN BASELINE 1.3**
+**DESIGN BASELINE 1.4**
 
 9 November 2026 · Authoritative creative direction
 
@@ -29,7 +29,7 @@ This document is the **single canonical map for the intended game**. It supersed
 | **Field**             | **Rule**                                                                                                                                                |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.                                                        |
-| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) v1.2 (editorial clarifications, 10 November 2026) and v1.3 (Steward Mode: the working smith and its pace, 10 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
+| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) v1.2 (editorial clarifications, 10 November 2026) v1.3 (Steward Mode: the working smith and its pace, 10 November 2026) and v1.4 (the Living Workshop, 11 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
 | Code baseline at adoption | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026). Later delivery status is tracked in the repository’s roadmap register, not here.                                                              |
 | Technical evidence    | Claude status audit, Extra High architecture report and the repository’s decision, roadmap and playtest-observation registers are evidence, not the game’s creative authority.                                                 |
 | What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                                                                   |
@@ -144,11 +144,15 @@ Begin with a rundown, spatially constrained smithy. Upgrade through **predefined
 
 The existing broad skill tree should **evolve carefully** into personal smithing progression plus workshop knowledge, with save-safe migration. The player is allowed basic non-smithing activity for continuity, but advanced craft mastery is not grindable by the smith.
 
+**Professions and competence (v1.4).** The workshop professions are blacksmith, leatherworker and tailor, runesmith, alchemist and herbalist, and arcanist; every workshop worker has one and their own competence. The smith is the blacksmith: his smithing, with mining as his metallurgy, grows without limit, while his other crafts grow only to a basic level (levels already earned in older saves are kept). Work beyond the basic level in another craft needs a qualified specialist, and checks, quality and station access always use the competence of the person actually doing the work. Workshop knowledge records which Designs, stations and techniques the workshop knows and through whom; knowing a Design never grants personal skill, and a non-smithing branch is brought into the workshop by a competent worker rather than by the smith’s own grind.
+
 ## 4.3 Employees are real participants
 
 Preserve the two existing staff entity families where technically useful: **workshop apprentices/specialists** and **field hirelings**. Give them compatible worker-profile foundations for professions, skills, progression and basic employment logic. Avoid a risky wholesale merge.
 
 Workshop specialists perform suitable work at actual stations. The alchemist profession includes herbalism expertise; the existing village herbalist remains a supplier. “Druid” may be a character tradition or background, **not** another mandatory workshop profession.
+
+**Family at the workshop (v1.4).** A spouse may voluntarily help — chiefly with customers and sales at the shop counter during their hours — without taking an employee slot or becoming a second identity; other work follows their actual competence. The player sets the largest discount they may give a customer, including none, and every sale is an ordinary recorded transaction. The smith’s own pet, where he has one, visibly accompanies him. Neither adds free production or compulsory management.
 
 ## 4.4 Hybrid production: the central operational model
 
@@ -165,6 +169,8 @@ Workshop specialists perform suitable work at actual stations. The alchemist pro
 - Finished equipment goes to **finished-goods storage**; the player chooses its disposition.
 
 - Some help requests arise naturally from real, difficult work. Optional requests can be declined; employees continue, potentially without a bonus. Only expressly flagged exceptional work may require cooperation.
+
+- **Several stations of a type (v1.4).** A workshop may hold several stations of the same type — for about five workers, three to five forges, anvils or similar where the rooms permit — each with its own place, price and availability, and workers spread across the free ones. A work order keeps one item identity from the moment it is placed; each stage is worked by an eligible person (or claimed by the player) at a real station, contributions are recorded in provenance and Lore, and the Workshop Ledger shows each stage’s worker, progress, materials and blockers.
 
 The actual mechanic for stage persistence, assignment, movement, work-blocks and assistance is **technical implementation**, not new creative scope. It must preserve the physical, believable workshop.
 
@@ -186,7 +192,7 @@ Steward Mode lets the player explicitly hand the running workshop to a steward a
 
 - **The working smith.** The steward may also direct the smith’s own routine work — ordinary repairs, routine commissions, preparation such as smelting, and restocking — using his existing skills, unlocked Designs, real materials, time and stations. He visibly walks to the station and works there, keeps working hours and breaks, tires, rests and sleeps. His work is competent rather than exceptional; masterpieces, risky reworking, experiments and protected, Unique or Epic items stay with the player.
 
-- **Pace.** While Steward Mode is active the whole simulation runs at 1.5× normal speed by default (the player may choose normal speed): world time, people, production, movement, travel, commerce, fatigue and events together; nothing is multiplied separately. Normal speed returns immediately on exit. There is still no offline progression or catch-up.
+- **Pace.** While Steward Mode is active the whole simulation runs at 1.5× normal speed by default (the player may choose normal speed): world time, people, production, movement, travel, commerce, fatigue and events together; nothing is multiplied separately. Normal speed returns immediately on exit. There is still no offline progression or catch-up. Optionally (off by default) the pace rises to about 5× while the steward’s smith sleeps and returns to the chosen pace when he wakes.
 
 - **While You Were Away.** On return the player sees the actual elapsed game time, financial changes, completed and pending production and orders, purchases, sales, stock and employee activity, significant world developments, and outstanding decisions and correspondence. Every claim is backed by recorded events and real state changes, without duplicates or invented narrative.
 
@@ -458,7 +464,7 @@ The following records the eighteen architectural decisions (D1–D18) explicitly
 | D16 Replayability        | Reproducible beginnings, emergent and potentially different histories; deterministic test mode as needed.                                                                  |
 | D17 Historic upgrades    | Arcanists may enchant and specialists may refine old existing artifacts while identity remains.                                                                            |
 | D18 Earned renown        | Reputation cannot be bought directly; acclaim follows actual deeds and credible spread.                                                                                    |
-| D19 Steward Mode         | Explicit, online-only autonomous workshop management within standing instructions; real actions only; consequential matters deferred; truthful While You Were Away report. The steward may direct the smith’s own routine work without any experience gain; 1.5× default pace while active. |
+| D19 Steward Mode         | Explicit, online-only autonomous workshop management within standing instructions; real actions only; consequential matters deferred; truthful While You Were Away report. The steward may direct the smith’s own routine work without any experience gain; 1.5× default pace while active; optional ~5× while the smith sleeps. |
 
 ## 14.1 Later design additions now included
 
@@ -472,12 +478,14 @@ The following records the eighteen architectural decisions (D1–D18) explicitly
 
 - **Steward Mode (D19):** an explicit, online-only autonomous workshop manager acting within the player’s standing instructions; it defers consequential matters, reports truthfully on return and may deliver sealed correspondence from real events. Approved 9 November 2026 as the next development priority (v1.1). Extended 10 November 2026 (v1.3): the steward may direct the smith’s own routine, visible work (no experience) at a default 1.5× pace.
 
+- **The Living Workshop (v1.4):** five workshop professions with individual competence and a basic-level limit on the smith’s other crafts; workshop knowledge separate from personal skill; several stations of a type within room limits; staged work orders with one item identity and recorded contributions; a spouse’s voluntary counter work within a player-set discount; the pet at the smith’s side; an optional night pace in Steward Mode. Approved 11 November 2026 in the Living Workshop brief.
+
 # 15 Open details, not invitations to change direction
 
 | **Still to determine**                                                                 | **What is already fixed**                                                                                             |
 |----------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| Exact room capacities; multi-station spacing; individual worker routing and queue UI   | Believable artisan workshop; multiple stations permitted, no factory grid.                                            |
-| Exact professions, skill numbers, migration and compatibility                          | Deep smith tree; qualified specialists; personal credit; old saves preserved.                                         |
+| Exact room capacities; multi-station spacing; individual worker routing and queue UI   | Believable artisan workshop; several stations of a type within room limits (three to five for about five workers), no factory grid.                                            |
+| Skill numbers, growth rates and the basic-level threshold’s tuning                          | Five professions (blacksmith, leatherworker and tailor, runesmith, alchemist and herbalist, arcanist); deep smith tree with basic other crafts; qualified specialists; personal credit; old saves preserved.                                         |
 | Quality formulas, assistance chance/frequency, exceptional-work thresholds             | Requests come from actual work, can normally be ignored, with special required cases clearly flagged.                 |
 | Affix mechanics, sets, arcane/runic boundaries and rarity balance                      | Unique is truly one-of-one; Epic is historical; existing item may be enchanted without replacement.                   |
 | Physical damage states, restoration costs, ritual requirements and heirs’ legal claims | Routine upgrades never casually delete relics; important restoration retains identity and respects consent/ownership. |
@@ -490,7 +498,7 @@ Other mechanics that would meaningfully widen scope—full naval travel, family-
 
 ## 16.1 Authority and revision control
 
-- **Treat this document (v1.3) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
+- **Treat this document (v1.4) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
 
 - Any new scope or reversal requires an explicit decision. Add a short change record: what changed, why, impacts and date.
 
@@ -526,3 +534,4 @@ Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE
 | 1.1 — 9 November 2026 | Added §4.5 Steward Mode, its priority in §12 and decision D19 (§14, §14.1); version labels updated. All v1.0 decisions are unchanged. Approved explicitly by the user. |
 | 1.2 — 10 November 2026 | Editorial clarifications only, requested by the user (Run 0.1): the charter, §2 and the appendix date the 0.14.6 code baseline to the document’s adoption and point to the repository registers for later delivery status; the appendix says where each design source is kept; §14 counts D19 alongside the eighteen audit decisions; D15 names the Master Design’s Phase 0–10 roadmap as restated in §12.1 and confirms that this document prevails over the Master Design’s wording; version labels updated. No design decision, scope, priority or boundary changed. |
 | 1.3 — 10 November 2026 | Approved by the user in the S2 brief (10 November 2026): §4.5 Steward Mode — the steward may direct the smith’s own routine, visible work (repairs, routine commissions, preparation, restocking) within working hours, breaks, fatigue and sleep, competent rather than exceptional; the smith gains no experience, skill, mastery or unlocks for it (replaces “the absent smith gains no crafting experience”); the whole simulation runs at 1.5× by default while the mode is active (normal speed optional) and returns to normal on exit. D19 and §14.1 updated. Supersedes the S1 implementation rule that the smith’s fatigue holds while the steward runs the forge. All other decisions unchanged. |
+| 1.4 — 11 November 2026 | Approved by the user in the Living Workshop brief (11 November 2026) and recorded as built: §4.2 professions (blacksmith, leatherworker and tailor, runesmith, alchemist and herbalist, arcanist), per-worker competence, the smith’s other crafts limited to a basic level (earned levels kept), workshop knowledge separate from personal skill; §4.3 a spouse’s voluntary counter work within a player-set discount (no employee slot, no second identity) and the smith’s pet at his side; §4.4 several stations of a type within room limits and staged work orders with one item identity and the Workshop Ledger; §4.5 an optional ~5× pace while the steward’s smith sleeps. D19, §14.1 and §15 updated. All other decisions unchanged. |
