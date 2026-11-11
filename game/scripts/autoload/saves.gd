@@ -1,5 +1,6 @@
 ## Saves — versioned persistence with multiple slots.
-## EN: Slots: slot_1..slot_3, autosave, quicksave → user://saves/<slot>.json.
+## EN: Slots: slot_1..slot_10 (the player's own, MANUAL_SLOTS), autosave, quicksave → user://saves/<slot>.json.
+##     (Living Workshop #42: ten manual slots; saves made in slot_1..slot_3 by earlier builds are the same files.)
 ##     Each file holds {meta, data}. A save is written to <slot>.json.tmp, read back and parsed (verified), the
 ##     previous good file is copied to <slot>.bak, and only then is the temp file renamed over <slot>.json. Every
 ##     file operation is checked: on any failure the previous good file (and its .bak) stay untouched, save()
@@ -10,7 +11,7 @@
 ##     (user://test_saves/run_<unix>_<pid>/, removed by end_test_run(); run folders older than a day are swept) and
 ##     path() refuses the real save folder, so automated runs can never touch a player's saves. Rendered play-tests
 ##     use the persistent user://test_saves/playtest/ (their reload phases continue a save across processes).
-## DA: Pladser: slot_1..slot_3, autosave, quicksave. Der skrives til en midlertidig fil, som læses tilbage og
+## DA: Pladser: slot_1..slot_10, autosave, quicksave. Der skrives til en midlertidig fil, som læses tilbage og
 ##     kontrolleres; den forrige fil gemmes som .bak, og først derefter omdøbes den nye fil. Alle filoperationer
 ##     tjekkes; ved fejl bevares den forrige fil. En ødelagt fil indlæses fra .bak. Ældre gemte spil opgraderes
 ##     trin for trin (SaveMigrations). Tests bruger deres egen mappe pr. kørsel og kan aldrig røre rigtige gemte spil.
@@ -21,7 +22,10 @@ const TEST_ROOT := "user://test_saves/"
 const STALE_RUN_SECONDS := 86400
 ## Where saves go. In test mode this is the run's private folder (or a sub-folder of it).
 var dir := DIR
-const SLOTS := ["slot_1", "slot_2", "slot_3", "autosave", "quicksave"]
+## The player's own slots (Living Workshop #42: ten; earlier builds had three — their files are the same slot_1..slot_3).
+const MANUAL_SLOTS := 10
+const SLOTS := ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6", "slot_7", "slot_8", "slot_9", "slot_10",
+	"autosave", "quicksave"]
 ## True for automated tests: path() then refuses the real save folder.
 var test_mode := false
 ## This test run's folder name under TEST_ROOT ("" outside test mode).
@@ -159,6 +163,16 @@ func newer_schema(slot: String) -> int:
 func newer_text(v: int, slot := "") -> String:
 	return "%sThis save was made by a newer version of Ember & Ash (save format %d); this version can read save format %d and older. It has not been loaded or changed — update the game to continue it." % [
 		("%s: " % slot.replace("_", " ").capitalize()) if slot != "" else "", v, Game.SAVE_VERSION]
+
+
+## The player-facing name of a slot: "Slot 7", "Autosave", "Quicksave".
+static func slot_label(slot: String) -> String:
+	return slot.replace("_", " ").capitalize()
+
+
+## The slots the player saves into by hand (the Save screen); the Load screen lists every slot in SLOTS.
+static func manual_slots() -> Array:
+	return SLOTS.filter(func(s): return str(s).begins_with("slot_"))
 
 
 func latest_slot() -> String:
