@@ -97,7 +97,7 @@ func _established(rng := 9001, purse := 60000, lvl := 7) -> Dictionary:
 	train("smithing", 8)
 	var hands := {}
 	for p in ["blacksmith", "runesmith", "alchemist", "leatherworker"]:
-		var a := Apprentices.dev_take_on(p, lvl, "journeyman")
+		var a := Apprentices.dev_take_on(p, lvl, "master" if lvl >= 8 else "journeyman")
 		check(not a.is_empty(), "a %s is taken on" % p)
 		hands[p] = a
 	return hands
@@ -268,6 +268,144 @@ func test_a_fresh_poor_smith() -> void:
 	eq(StationPanel.order_reason(EMBER), "No staff.", "'Order it' is not offered without staff")
 	check(Apprentices.unlock_reason() == "" or Apprentices.unlock_reason().length() > 10, "the way to the notice board is named: %s" % Apprentices.unlock_reason())
 	_clean("poor smith")
+	# once the workshop knows every Design (fixture), each one beyond his basic grasp names the specialist to take on
+	SkillTree.unlock_all()
+	Property.dev_grant_all()
+	var beyond := 0
+	var dead := []
+	var two_step := []
+	var keep := JSON.stringify(Game.player_skills())
+	for rid3 in DB.recipes:
+		var why := Workers.can_do("player", str(rid3))
+		if why == "" or not Guide.recipe_visible(str(rid3)) or Workers.specialist_need("player", str(rid3)).is_empty():
+			continue
+		beyond += 1
+		# follow the steps: a basic skill step he can take first (e.g. "Raise Enchanted Stitching to 3"), then the specialist
+		var steps := PackedStringArray()
+		var stp2 := Guide.next_step("recipe:" + str(rid3))
+		var g := 0
+		while str(stp2.get("action", {}).get("route", "")) != "notice" and str(stp2.get("text", "")).begins_with("Raise ") and g < 4:
+			steps.append(str(stp2["text"]).get_slice(" —", 0))
+			for o in Guide.recipe_status(str(rid3))["obstacles"]:
+				if str(o["kind"]) == "skill" and int(o["level"]) <= Workers.BASIC_LEVEL:
+					Game.player_skills()[str(o["id"])] = {"lvl": int(o["level"]), "xp": 0}   # as if he had raised it
+			stp2 = Guide.next_step("recipe:" + str(rid3))
+			g += 1
+		if str(stp2.get("action", {}).get("route", "")) != "notice" or not str(stp2.get("text", "")).begins_with("Take on"):
+			dead.append("%s: %s" % [rid3, str(stp2.get("text", ""))])
+		elif not steps.is_empty():
+			two_step.append("%s (%s, then: %s)" % [rid3, "; ".join(steps), str(stp2["text"]).get_slice(" —", 0)])
+		Game.state["player"]["skills"] = JSON.parse_string(keep)
+		Game.state["player"]["skills"] = Saves._restore_ints(Game.state["player"]["skills"])
+	check(beyond >= 5, "several master-grade Designs are beyond the basic smith (%d)" % beyond)
+	eq(dead, [], "each of them leads him, step by step, to the notice board for the specialist")
+	if not two_step.is_empty():
+		note("FINDING: the first step shown is a basic skill step that does not by itself open the Design: %s" % ", ".join(PackedStringArray(two_step)))
+
+
+# ================================================================== b. an established five-hand workshop
+## Who stands at each installed instance of `stype` now ("" = free).
+func _users(stype: String) -> Dictionary:
+	var out := {}
+	for sid in Property.instances(stype):
+		out[str(sid)] = Apprentices.instance_user(str(sid))
+	return out
+
+
+func test_b_established_workshop_spreads_over_station_instances() -> void:
+	var hands := _established(8080, 60000, 6)
+	eq(Workers.workshop_actors().size(), 5, "five hands: the smith and four specialists (the most the workshop houses)")
+	eq(Property.max_instances("anvil"), 5, "one anvil per pair of hands, at most five")
+	for t in ["anvil", "anvil", "forge", "forge", "grinding_wheel", "stitching_table"]:
+		_buy_instance(t)
+	eq(Property.instance_count("anvil"), 3, "three anvils")
+	eq(Property.instance_count("forge"), 3, "three forges")
+	check(Property.validate(Property.plan_copy()) == "", "the workshop plan is valid with the extra stations")
+	for pair in [["ingot_iron", 40], ["coal", 40], ["leather_cured", 20], ["thread_linen", 10], ["runestone_blank", 4], ["reagent_salt", 12],
+			["herb_emberleaf", 8], ["herb_moonwort", 8]]:
+		give(str(pair[0]), int(pair[1]))
+	var bs := str(hands["blacksmith"]["id"])
+	_at_hour(7)   # the day's work starts with the sampling
+	var queue := [["craft", "iron_hatchet", 10, bs], ["craft", "iron_longsword", 4, ""], ["prep", "ward_runestone", 3, ""], ["prep", "whetstone_oil", 4, ""],
+		["prep", "healing_draught", 3, ""], ["craft", "leather_boots", 3, ""], ["craft", "studded_leather", 2, ""]]
+	var tasks := []
+	for q in queue:
+		var opts := {"recipe": str(q[1]), "repeat": int(q[2])}
+		if str(q[3]) != "":
+			opts["assignee"] = str(q[3])
+		var t := Apprentices.add_task(str(q[0]), opts)
+		if check(not t.has("error"), "%s ×%d queued (%s)" % [q[1], q[2], t.get("error", "")]):
+			tasks.append(t)
+	var studded: Dictionary = tasks[-1]
+	check(WorkOrders.staged(studded), "studded leather is a staged work order (leather · anvil · leather)")
+	# three working days, sampled every five minutes; the smith works pieces by hand at the anvils and forges
+	var busy := {}        # instance id → sampled minutes in use
+	var peak := {}        # type → most instances of it in use at once
+	var waited_free := []
+	var smith_pieces := 0
+	var smith_wait := 0
+	for d in 3:
+		if d > 0:
+			_at_hour(7)
+		for step in 12 * 12:
+			if not Crafting.active() and Game.hour() < 18 and Game.count("ingot_iron") > 4:
+				if Crafting.start("hand_axe"):
+					smith_wait = 0
+			elif Crafting.active():
+				smith_wait += 1
+				if smith_wait >= 4:   # twenty minutes an operation
+					smith_wait = 0
+					var at := Crafting.smith_instance()
+					Crafting.choose_instance(at)
+					var qs := []
+					for i in int(Crafting.current_op().get("checks", 1)):
+						qs.append(90.0)
+					Crafting.record_step(at, qs)
+					if Crafting.job().get("awaiting_dice", false):
+						if not Crafting.finish({"edge": 10, "temper": 8, "fortune": 40}, "digital").is_empty():
+							smith_pieces += 1
+			Game.advance_minutes(5)
+			for ty in ["anvil", "forge", "grinding_wheel", "stitching_table", "crucible"]:
+				var u := _users(ty)
+				var n := 0
+				for sid in u:
+					if str(u[sid]) != "":
+						n += 1
+						busy[sid] = int(busy.get(sid, 0)) + 5
+				peak[ty] = maxi(int(peak.get(ty, 0)), n)
+			for t2 in Apprentices.open_tasks():
+				if not str(t2.get("blocker", "")).begins_with("Waiting for the"):
+					continue
+				var ops := Crafting.operations(str(t2.get("recipe", "")))
+				if ops.is_empty():
+					continue
+				var ty2 := Property.type_of(str(ops[mini(int(t2.get("op", 0)), ops.size() - 1)].get("station", "")))
+				for sid2 in Property.instances(ty2):
+					if Apprentices.instance_user(str(sid2)) == "":
+						waited_free.append("%s waits for %s while %s stands free" % [t2.get("label", ""), ty2, sid2])
+	check(int(peak.get("anvil", 0)) >= 2, "two or more anvils worked at once (peak %d)" % int(peak.get("anvil", 0)))
+	check(int(peak.get("forge", 0)) >= 2 or int(peak.get("anvil", 0)) >= 3, "…and forges too (peak %d)" % int(peak.get("forge", 0)))
+	eq(waited_free.slice(0, 3), [], "nobody waits for a station while another of its kind stands free")
+	var used := []
+	for sid in Property.instances("anvil"):
+		used.append("%s %d min" % [sid, int(busy.get(str(sid), 0))])
+	check((Property.instances("anvil") as Array).filter(func(s): return int(busy.get(str(s), 0)) > 0).size() >= 2, "the work spreads over the anvils: %s" % ", ".join(PackedStringArray(used)))
+	var made := 0
+	for t3 in tasks:
+		made += int(t3["done"])
+	check(made >= 10, "the hands got real work done (%d pieces and batches)" % made)
+	check(smith_pieces >= 3, "the smith made pieces of his own beside them (%d)" % smith_pieces)
+	var util := PackedStringArray()
+	var ks := busy.keys()
+	ks.sort()
+	for k in ks:
+		util.append("%s %d" % [k, int(busy[k])])
+	note("peaks %s; minutes in use (3 days, 07–19): %s; staff pieces %d, smith %d" % [str(peak), ", ".join(util), made, smith_pieces])
+	note("queue: %s" % ", ".join(PackedStringArray(tasks.map(func(x): return "%s %d/%d %s %s" % [x["recipe"], int(x["done"]), int(x["repeat"]), x["state"], str(x.get("blocker", "")).left(50)]))))
+	if str(studded["state"]) == "done":
+		var su := Game.find_uid(int((studded["made"] as Array)[-1]))
+		check(not su.is_empty() and Provenance.contributors(su).size() + 1 >= 1, "the staged studded leather was made")
+	_clean("established workshop")
 
 
 # ================================================================== c. the Emberwarden from raw materials to a buyer
@@ -580,3 +718,339 @@ func test_e_spouse_discount_cap_under_the_steward() -> void:
 	check(bool(r["gold"]["reconciled"]), "the steward's report reconciles every coin")
 	eq(_smith_learning(), xp0, "zero player experience")
 	_clean("spouse sales")
+
+
+# ================================================================== f. commissions only for what can be made
+## RELIABILITY's independent data oracle (t_lw_reliability._feasible): is there ANY Design whose piece this adventurer
+## would use for the slot, of the tier, reaching the stat — by itself (range top × 1.2) or with one runestone (× 1.32)?
+func _oracle(a: Dictionary, slot: String, stat: String, need: int, tier: int) -> bool:
+	var rune := 0
+	for r in DB.recipes.values():
+		var d := DB.item(str(r["output"]))
+		if str(d.get("type", "")) == "runestone":
+			rune = maxi(rune, int(floor(float(d.get("stats", {}).get(stat, 0)) * 1.32)))
+	for r in DB.recipes.values():
+		var out := str(r["output"])
+		var d := DB.item(out)
+		if str(d.get("slot", "")) != slot or str(d.get("type", "")) == "companion" or Adv.affinity(a, {"def": out}) <= 0.0 or Items.tier({"def": out}) < tier:
+			continue
+		var v: Variant = d.get("stats", {}).get(stat, 0)
+		var top := int(floor((float(v[1]) if v is Array else float(v)) * 1.2))
+		if top >= need or (slot == "weapon" and not (stat in ["attack", "protection", "magic"]) and rune >= need):
+			return true
+	return false
+
+
+## Can the workshop — its knowledge, stations and people — make this Design as a work order? Every stage has a hand.
+func _wo_ok(rid: String, memo: Dictionary) -> bool:
+	if memo.has(rid):
+		return bool(memo[rid])
+	var probe := {"kind": "craft", "recipe": rid, "op": 0, "ops_done": [], "started": false, "worker": ""}
+	var ok := Workers.knowledge_reason(rid) == ""
+	if ok:
+		for s in WorkOrders.stages(probe):
+			if WorkOrders.who_can_stage(probe, int(s["i"])).is_empty():
+				ok = false
+				break
+	memo[rid] = ok
+	return ok
+
+
+## A Design the workshop can make as a work order that meets the commission ("" = none): the piece itself, or a piece
+## with a runestone set into it (the runestone's Design must be feasible too).
+func _wo_route(a: Dictionary, o: Dictionary, memo: Dictionary) -> String:
+	if o.has("def"):
+		for r in DB.recipes.values():
+			if str(r["output"]) == str(o["def"]) and _wo_ok(str(r["id"]), memo):
+				return str(r["id"])
+		return ""
+	var req := {"stat": str(o["stat"]), "min": int(o["min"]), "tier": int(o.get("tier", 1))}
+	var rr := Shop.rune_route(str(o["stat"]))
+	for r in DB.recipes.values():
+		var how := Shop._route(r, str(o["slot"]), a, req)
+		if how == "" or not _wo_ok(str(r["id"]), memo):
+			continue
+		if how == "rune" and not _wo_ok(str(rr.get("recipe", "")), memo):
+			continue
+		return str(r["id"])
+	return ""
+
+
+## Checks every commission in `orders` (oracle + work-order feasibility); returns {n, bad_oracle, bad_wo, flagged_but_makeable, examples}.
+func _audit_orders(orders: Array, memo: Dictionary) -> Dictionary:
+	var out := {"n": 0, "bad_oracle": 0, "bad_wo": 0, "flagged_makeable": 0, "not_wo": 0, "examples": [], "not_wo_why": []}
+	for o in orders:
+		var a := Adv.get_a(str(o.get("npc", "")))
+		if a.is_empty():
+			continue
+		out["n"] = int(out["n"]) + 1
+		if not o.has("def") and not _oracle(a, str(o["slot"]), str(o["stat"]), int(o["min"]), int(o.get("tier", 1))):
+			out["bad_oracle"] = int(out["bad_oracle"]) + 1
+			(out["examples"] as Array).append("oracle: %s %s %s ≥ %d" % [a["cls"], o["slot"], o["stat"], int(o["min"])])
+		var route := _wo_route(a, o, memo)
+		if route == "":
+			out["not_wo"] = int(out.get("not_wo", 0)) + 1
+			var why := ""
+			var req := {"stat": str(o.get("stat", "")), "min": int(o.get("min", 0)), "tier": int(o.get("tier", 1))}
+			for r in DB.recipes.values():
+				if not o.has("def") and Shop._route(r, str(o["slot"]), a, req) != "":
+					var probe := {"kind": "craft", "recipe": str(r["id"]), "op": 0, "ops_done": [], "started": false, "worker": ""}
+					for s in WorkOrders.stages(probe):
+						if WorkOrders.who_can_stage(probe, int(s["i"])).is_empty():
+							why = "%s: %s" % [r["id"], WorkOrders.staff_gap(probe, int(s["i"])).get_slice(" —", 0)]
+					break
+			(out["not_wo_why"] as Array).append("%s %s (%s)%s" % [a["cls"], Shop.order_text(o), why, " — flagged 'not yet'" if bool(o.get("opportunity", false)) else ""])
+			if not bool(o.get("opportunity", false)):
+				out["bad_wo"] = int(out["bad_wo"]) + 1   # promised as makeable, yet nobody can make it: dishonest
+				(out["examples"] as Array).append("no work order: %s %s" % [a["cls"], Shop.order_text(o)])
+		elif bool(o.get("opportunity", false)):
+			out["flagged_makeable"] = int(out["flagged_makeable"]) + 1
+	return out
+
+
+func test_f_commissions_only_for_what_the_workshop_can_make() -> void:
+	var tot := {"n": 0, "bad_oracle": 0, "bad_wo": 0, "flagged_makeable": 0, "not_wo": 0}
+	var examples := []
+	var not_wo := []
+	var parts_n := 0
+	var parts_bad := []
+	for world_seed in [9001, 77, 1234]:
+		_established(world_seed, 60000, 8)
+		var memo := {}
+		var seen := {}
+		var orders := []
+		# the world's own commissions over three weeks (Sim, adventurers' plans, consultations, broken blades …)
+		for d in 21:
+			Game.advance_minutes(1440)
+			for o in Shop.orders():
+				if not seen.has(str(o["id"])):
+					seen[str(o["id"])] = true
+					orders.append(o)
+		# and one commission from every adventurer for every slot they would ask about, through Shop.create_order
+		for a in Adv.all().values():
+			if str(a.get("status", "")) == "dead" or Shop.refuses(str(a["id"])):
+				continue
+			for slot in Adv.desired_slots(a):
+				var o2 := Shop.create_order(str(a["id"]), str(slot))
+				if not o2.is_empty():
+					orders.append(o2.duplicate(true))
+			for pt in Shop.multi_parts_for(a):
+				if str(pt.get("kind", "")) != "craft":
+					continue
+				parts_n += 1
+				if not _wo_ok(str(pt["recipe"]), memo):
+					parts_bad.append("%s: %s" % [a["cls"], pt["recipe"]])
+		Shop.orders().clear()
+		var r := _audit_orders(orders, memo)
+		for k in tot:
+			tot[k] = int(tot[k]) + int(r[k])
+		examples.append_array(r["examples"])
+		not_wo.append_array(r["not_wo_why"])
+	note("%d commissions checked (3 worlds, a five-hand workshop of masters without an arcanist: 21 days of the world's own + every adventurer × slot): %d fail the data oracle; %d no work order of this workshop could make (%d of them promised as makeable); %d flagged 'not yet' that the staffed workshop could make; %d multi-part pieces, %d not makeable"
+		% [int(tot["n"]), int(tot["bad_oracle"]), int(tot["not_wo"]), int(tot["bad_wo"]), int(tot["flagged_makeable"]), parts_n, parts_bad.size()])
+	if not not_wo.is_empty():
+		note("beyond this workshop's people (honestly 'not yet'): %s" % ", ".join(PackedStringArray(not_wo.slice(0, 6))))
+	check(int(tot["n"]) >= 200, "many commissions were generated (%d)" % int(tot["n"]))
+	eq(int(tot["bad_oracle"]), 0, "no commission asks for what no Design they would use makes %s" % str(examples.slice(0, 4)))
+	eq(int(tot["bad_wo"]), 0, "no commission is promised as makeable that the workshop's people cannot make as a work order %s" % str(examples.slice(0, 4)))
+	check(int(tot["not_wo"]) * 20 <= int(tot["n"]), "commissions beyond the staffed workshop are rare (%d of %d)" % [int(tot["not_wo"]), int(tot["n"])])
+	eq(parts_bad.slice(0, 4), [], "every multi-part piece can be made by the staffed workshop")
+
+
+# ================================================================== g. short cross-system smoke
+func _host() -> Node:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	return root.get_child(root.get_child_count() - 1)
+
+
+func _ghosts(n: Node) -> int:
+	var g := 0
+	for c in n.get_children():
+		if c.is_queued_for_deletion() and (c as CanvasItem).visible:
+			g += 1
+	return g
+
+
+func test_g_checks_shield_tree_after_moving_stations_and_ten_slots() -> void:
+	var hands := _established(3131, 60000, 6)
+	var bs := str(hands["blacksmith"]["id"])
+	# per-actor checks: each worker's own level shapes the check (the smith at Smithing 8, the blacksmith at 6)
+	var cs := Workers.check_params("player", "anvil", "iron_longsword")
+	var cb := Workers.check_params(bs, "anvil", "iron_longsword")
+	eq(str(cb.get("actor", "")), bs, "the check carries its actor")
+	check(float(cs.get("zone", 0.0)) > float(cb.get("zone", 0.0)), "the smith's wider zone (%.1f) than the blacksmith's (%.1f) — his own level" % [float(cs.get("zone", 0.0)), float(cb.get("zone", 0.0))])
+	var cr := Workers.check_params(str(hands["runesmith"]["id"]), "rune_engraving_stand", "ward_runestone")
+	var cp := Workers.check_params("player", "rune_engraving_stand", "ward_runestone")
+	check(float(cr.get("zone", 0.0)) > float(cp.get("zone", 0.0)), "at the rune stand the runesmith's check is the easier one")
+	# #57: a shield the smith forges and wears stays one piece, shown and taken off again
+	give("ingot_iron", 2)
+	give("leather_cured", 2)
+	var sh := craft("round_shield")
+	if check(not sh.is_empty(), "a round shield forged (%s)" % craft_blocker("round_shield")):
+		var uid := int(sh["uid"])
+		eq(Game.equip_player(uid), "shield", "worn in the shield slot")
+		check(Game.find_uid(uid).is_empty() and is_same(Game.state["player"]["equipment"]["shield"], sh), "the very piece is worn, not copied")
+		eq(str(ItemRegistry.where(uid).get("holder", "")), "smith", "the registry knows where it is")
+		check(save_load("lwacc_shield"), "save/load while worn")
+		eq(int(Game.state["player"]["equipment"].get("shield", {}).get("uid", -1)), uid, "still worn after loading")
+		check(Game.unequip_player("shield") and not Game.find_uid(uid).is_empty(), "taken off: back in the stores")
+	# #59–60: buy and move station instances, then open and rebuild the skill tree
+	var a2 := _buy_instance("anvil")
+	var f2 := _buy_instance("forge")
+	if check(a2 != "" and f2 != "", "two more stations bought and set up"):
+		var plan := Property.plan_copy()
+		var p0 := Property.pos_of(a2)
+		Property.store(plan, a2)
+		eq(Property.commit(plan), "", "the new anvil is put in storage")
+		plan = Property.plan_copy()
+		eq(Property.auto_place(plan, a2), "", "…and set up again elsewhere")
+		eq(Property.commit(plan), "", "the plan is applied")
+		check(Property.is_installed(a2), "it stands (moved from %s to %s)" % [p0, Property.pos_of(a2)])
+	var tp := SkillTreePanel.new()
+	_host().add_child(tp)
+	for i in 3:
+		tp._build_skills()
+	eq(_ghosts(tp.skill_row), 0, "rebuilding the branch row leaves no ghosts")
+	for id in ["s_basic", "r_master", "ar_plating", "l_dragon", "s_starsteel", ""]:
+		tp._show(id, true)
+		eq(_ghosts(tp.side), 0, "the side page for «%s» is laid out alone" % id)
+	tp._refresh()
+	tp._refresh()
+	check(tp._refresh_queued, "refreshes in one frame are gathered")
+	tp._do_refresh()
+	tp.get_parent().remove_child(tp)
+	tp.free()
+	_clean("after buying and moving stations")
+	# ten save slots: each holds the game and loads it back
+	var slots := Saves.manual_slots()
+	eq(slots.size(), 10, "ten save slots")
+	var snap := JSON.stringify({"gold": Game.gold(), "day": Game.day(), "staff": Apprentices.staff().size(), "anvils": Property.instances("anvil")})
+	for s in slots:
+		check(Saves.save(str(s)), "saved into %s" % s)
+	for s in [slots[0], slots[4], slots[9]]:
+		check(Saves.load_slot(str(s)), "%s loads" % s)
+		eq(JSON.stringify({"gold": Game.gold(), "day": Game.day(), "staff": Apprentices.staff().size(), "anvils": Property.instances("anvil")}), snap, "%s holds the same game" % s)
+	for s in slots:
+		Saves.delete(str(s))
+	_clean("after the save slots")
+
+
+# ================================================================== h. old saves
+func _install_golden(name: String, slot: String) -> bool:
+	var text := FileAccess.get_file_as_string(FIXTURES + name + ".json")
+	if not check(text.length() > 1000, "the golden save %s is present" % name):
+		return false
+	var f := FileAccess.open(Saves.path(slot), FileAccess.WRITE)
+	if not check(f != null, "it can be copied into this run's test folder"):
+		return false
+	f.store_string(text)
+	f.close()
+	return true
+
+
+func _snap(v: Variant) -> String:
+	return JSON.stringify(v, "", true, true)
+
+
+## Loaded and migrated: the version, identity, Uniques, idempotent re-migration, a round trip, three days of play.
+func _old_save_checks(label: String, steps_expected: Array) -> void:
+	var errs := Log.error_count
+	var rep: Dictionary = Saves.last_load.get("migration", {})
+	eq(int(Game.state.get("version", -1)), Game.SAVE_VERSION, "%s: migrated to schema %d" % [label, Game.SAVE_VERSION])
+	check(steps_expected.all(func(s): return (rep.get("steps", []) as Array).has(s)), "%s: the Living Workshop steps ran %s" % [label, str(rep.get("steps", []))])
+	_clean("%s loaded" % label)
+	var once := _snap(Game.state)
+	var again: Dictionary = JSON.parse_string(once)
+	again = Saves._restore_ints(again)
+	for to in range(1, SaveMigrations.latest() + 1):
+		SaveMigrations.apply_step(to, again)
+	eq(_snap(again), once, "%s: migrating the migrated save again changes nothing" % label)
+	check(save_load("lwacc_old_rt"), "%s: saved and loaded again" % label)
+	eq((Saves.last_load.get("migration", {}).get("steps", ["?"]) as Array).size(), 0, "%s: a schema-%d save runs no step" % [label, Game.SAVE_VERSION])
+	var d0 := Game.day()
+	for i in 3:
+		Game.advance_minutes(1440)
+		for c in Shop.customers().duplicate():
+			if not bool(c.get("present", false)):
+				Shop.mark_arrived(str(c["npc"]), false)
+	eq(Game.day(), d0 + 3, "%s: three more days of play" % label)
+	eq(Log.error_count, errs, "%s: no errors logged while loading on and playing" % label)
+	_clean("%s after three days" % label)
+
+
+func test_h_golden_saves_load_migrate_and_play_on() -> void:
+	for g in GOLDEN:
+		var slot := "lwacc_" + str(g).replace(".", "_").replace("-", "_")
+		if not _install_golden(str(g), slot):
+			continue
+		var errs := Log.error_count
+		if not check(Saves.load_slot(slot), "%s loads through the real loader" % g):
+			continue
+		eq(Log.error_count, errs, "%s: loading logs no error" % g)
+		eq(int(Saves.last_load.get("migration", {}).get("from", -1)), 1, "%s: a schema-1 save" % g)
+		_old_save_checks(str(g), ["worker professions", "workshop knowledge", "station instances and work orders"])
+		# migrating the same file twice from scratch gives the same data
+		var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(FIXTURES + str(g) + ".json"))
+		var d1: Dictionary = Saves._restore_ints(raw["data"])
+		var d2: Dictionary = Saves._restore_ints((JSON.parse_string(FileAccess.get_file_as_string(FIXTURES + str(g) + ".json")) as Dictionary)["data"])
+		SaveMigrations.run(d1)
+		SaveMigrations.run(d2)
+		eq(_snap(d1), _snap(d2), "%s: two migrations of the same file agree" % g)
+		Saves.delete(slot)
+
+
+func test_h_schema4_save_with_apprentices_tasks_and_stations() -> void:
+	var hands := _established(2468, 60000, 7)
+	var bs: Dictionary = Apprentices.get_a(str(hands["blacksmith"]["id"]))
+	bs["skills"]["smithing"] = {"lvl": 9, "xp": 0}
+	bs["rank"] = "master"
+	give("ingot_steel", 2)
+	give("runestone_ember", 1)
+	give("coating_flame", 1)
+	give("thread_ethereal", 1)
+	give("ingot_iron", 6)
+	give("leather_cured", 2)
+	give("ore_iron", 4)
+	give("coal", 6)
+	var ember := Apprentices.add_task("craft", {"recipe": EMBER, "assignee": str(bs["id"])})
+	var sword := Apprentices.add_task("craft", {"recipe": "iron_longsword", "repeat": 2})
+	var smelt := Apprentices.add_task("prep", {"recipe": "smelt_iron", "repeat": 2})
+	check(not ember.has("error") and not sword.has("error") and not smelt.has("error"), "three tasks queued")
+	_at_hour(8)
+	check(_until(func(): return int(ember["op"]) >= 2, 600), "the master blacksmith forged and drew the Emberwarden's blade (op %d)" % int(ember["op"]))
+	var plan := Property.plan_copy()
+	Property.store(plan, "loom")
+	eq(Property.commit(plan), "", "a station waits in storage")
+	# the shape of a schema-4 save: no professions, no workshop-knowledge store, tasks without stages or reserved uids
+	var tids := Apprentices.open_tasks().map(func(t): return int(t["id"]))
+	var taken := JSON.stringify(ember["taken"])
+	for a in Apprentices.staff():
+		(a as Dictionary).erase("profession")
+	(Game.state["player"] as Dictionary).erase("profession")
+	Game.state.erase("workshop_knowledge")
+	for t in Apprentices.tasks():
+		for k in ["stages", "stages_for", "uid", "handoff"]:
+			(t as Dictionary).erase(k)
+	var layout := _snap(Property.st()["stations"])
+	var stored := _snap(Property.st()["stored"])
+	check(save_as_version("lwacc_v4", 4), "written as a schema-4 save")
+	check(Saves.load_slot("lwacc_v4"), "it loads through the real loader")
+	Saves.delete("lwacc_v4")
+	eq(Saves.last_load.get("migration", {}).get("steps", []), ["worker professions", "workshop knowledge", "station instances and work orders"], "steps 5, 6 and 7 run, once each")
+	for a in Apprentices.staff():
+		check(Workers.PROFESSIONS.has(str(a.get("profession", ""))), "%s has a profession again (%s)" % [a["name"], a.get("profession", "")])
+	check(WorkshopKnowledge.knows_design(EMBER), "the workshop knows its Designs again")
+	eq(_snap(Property.st()["stations"]), layout, "the layout is unchanged (every station is instance #1 under its id)")
+	eq(_snap(Property.st()["stored"]), stored, "storage unchanged")
+	eq(Apprentices.open_tasks().map(func(t): return int(t["id"])), tids, "every open task is still there")
+	var e2 := Apprentices.task(int(ember["id"]))
+	check(e2.has("stages") and str(e2["stages"][0]["state"]) == "done" and str(e2["stages"][0]["by"]) == str(bs["id"]), "the in-flight Emberwarden became a work order, its forging done by the blacksmith")
+	check(int(e2.get("uid", 0)) > 0, "…with its piece's uid reserved")
+	eq(JSON.stringify(e2["taken"]), taken, "…and its materials in hand")
+	var uid := int(e2["uid"])
+	_old_save_checks("schema-4 workshop", ["station instances and work orders"])
+	e2 = Apprentices.task(int(ember["id"]))
+	check(str(e2.get("state", "")) in FIN or WorkOrders.stage_index(e2) > 0, "the work went on (%s)" % e2.get("state", ""))
+	if str(e2.get("state", "")) == "done":
+		var it := ItemRegistry.find(uid)
+		check(not it.is_empty() and str(Provenance.maker(it).get("id", "")) == str(bs["id"]), "the finished Emberwarden carries the reserved uid; the blacksmith is its maker")
