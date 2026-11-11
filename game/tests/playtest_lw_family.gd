@@ -114,6 +114,11 @@ func _counter() -> void:
 	var listed := Shop.price_of(it)
 	a["gold"] = listed - maxi(1, int(listed * 0.06))
 	var now := Game.day() * 24 + Game.hour()
+	# only the arranged buyer waits at the counter: another customer who can pay the full tag (e.g. Brother Tomas) would
+	# fairly be served first and take the piece, and the sale under test (within the cap) would never happen
+	for c in Shop.customers().duplicate():
+		if str(c.get("npc", "")) != "sigrun":
+			Shop.customers().erase(c)
 	Shop.customers().append({"npc": "sigrun", "want": "browse", "arrived": now, "seated": now, "seat": 0, "present": true,
 		"budget": int(a["gold"]), "looking_for": "", "slot": Items.slot(it)})
 	w._update_schedules(true)
