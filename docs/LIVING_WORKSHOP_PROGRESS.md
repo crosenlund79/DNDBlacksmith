@@ -43,12 +43,12 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 ## Workstreams
 | Worker | Wave | Scope | Status | Branch / commits |
 |---|---|---|---|---|
-| FOUNDATION | 1 | B1 capability/profession model, per-actor checks, migration 5 | spawned | |
-| RELIABILITY | 1 | #57, #59–61, #53, #58, #39, #45, #56; verify #41, #48, #49 | spawned | |
-| UI | 1 | #38, #42, #43, #44, #46, #47, #54–55 | spawned | |
-| KNOWLEDGE | 2 | B2 trees, workshop knowledge, Designs naming, migration 6 | after FOUNDATION | |
-| PRODUCTION | 2 | #37 station instances + C1 work orders + ledger + Emberwarden chain, migration 7 | after FOUNDATION | |
-| FAMILY | 2 | #50–52 spouse/pet, #40 steward sleep pace | after FOUNDATION | |
+| FOUNDATION | 1 | B1 capability/profession model, per-actor checks, migration 5 | spawned (229a1af) | WIP `claude/lw-wip-foundation` |
+| RELIABILITY | 1 | #57, #59–61, #53, #58, #39, #45, #56; verify #41, #48, #49 | spawned (229a1af) | WIP `claude/lw-wip-reliability` |
+| UI | 1 | #38, #42, #43, #44, #46, #47, #54–55 | spawned (229a1af) | WIP `claude/lw-wip-ui` |
+| KNOWLEDGE | 2 | B2 trees, workshop knowledge, Designs naming, migration 6 | brief `docs/lw/lw_w_knowledge.md` (031101b); after FOUNDATION | |
+| PRODUCTION | 2 | #37 station instances + C1 work orders + ledger + Emberwarden chain, migration 7 | brief `docs/lw/lw_w_production.md` (031101b); after FOUNDATION | |
+| FAMILY | 2 | #50–52 spouse/pet, #40 steward sleep pace | brief `docs/lw/lw_w_family.md` (031101b); after FOUNDATION | |
 
 ## Lead pending
 - [ ] Merge wave 1 (focused checks), push; spawn wave 2 on the merged head.
