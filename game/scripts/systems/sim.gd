@@ -14,6 +14,7 @@ static func on_hour(_day: int, h: int) -> void:
 	Shop.customer_hour(h)
 	Consult.on_hour(h)   # The Living Realm 3b: adventurers come for equipment advice; past advice is judged
 	Expeditions.on_hour(h)
+	HealthLog.on_hour(h)   # Living Workshop #38: adventurers' health over time, from real values only
 	Trade.on_hour(h)
 	Commerce.on_hour(h)
 	Apprentices.on_hour(h)

@@ -41,7 +41,7 @@ func _init(id: String, start_tab := "Overview", compare := -1) -> void:
 			compare_slot = Items.slot(cit)
 			compare_uid = compare
 	blocks_time = false
-	super._init("", 1600, 940, false)
+	super._init("", 1520, 870, false)   # #47: was 1600×940 (it covered the toolbar)
 	if Assets.has_tex("ui/dossier"):
 		var sb := StyleBoxTexture.new()
 		sb.texture = Assets.get_tex("ui/dossier")
@@ -61,7 +61,7 @@ func _ready() -> void:
 	var body := UIKit.hbox(26)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left = UIKit.vbox(8)
-	left.custom_minimum_size = Vector2(300, 0)
+	left.custom_minimum_size = Vector2(270, 0)
 	body.add_child(left)
 	var right := UIKit.vbox(8)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -69,16 +69,15 @@ func _ready() -> void:
 	right.add_child(tab_row)
 	right.add_child(UIKit.divider())
 	page = UIKit.vbox(10)
-	var sc := UIKit.scroll(page, 720)
+	var sc := UIKit.scroll(page, 650)
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(sc)
 	body.add_child(right)
 	content.add_child(body)
 	for t in TABS:
-		var b := UIKit.button(t, select_tab.bind(t))
+		var b := UIKit.small_button(t, select_tab.bind(t))
 		b.toggle_mode = true
 		b.name = "Tab" + t
-		b.add_theme_font_size_override("font_size", 20)
 		tab_row.add_child(b)
 	_build()
 	Events.expeditions_changed.connect(_build)
@@ -131,7 +130,7 @@ func _build_left(a: Dictionary) -> void:
 	var k := _know()
 	var frame := PanelContainer.new()
 	frame.add_theme_stylebox_override("panel", _box(Color(0.13, 0.08, 0.05, 0.10), UIKit.GILT, 3, 6))
-	var por := UIKit.portrait("portraits/" + adv_id, 270)
+	var por := UIKit.portrait("portraits/" + adv_id, 220)
 	if a["status"] == "dead":
 		por.modulate = Color(0.55, 0.5, 0.48)
 	frame.add_child(por)
@@ -162,11 +161,11 @@ func _build_left(a: Dictionary) -> void:
 	var ex := Expeditions.exp_of(adv_id)
 	if not ex.is_empty() and Expeditions.can_observe():
 		var eid: String = ex["id"]
-		left.add_child(UIKit.button("Watch them live", func(): Events.open_panel.emit("observe", {"id": eid}), 270))
+		left.add_child(UIKit.button("Watch them live", func(): Events.open_panel.emit("observe", {"id": eid}), 240))
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(sp)
-	left.add_child(UIKit.button("◂ All adventurers", func(): Events.open_panel.emit("adventurers", {}), 270))
+	left.add_child(UIKit.button("◂ All adventurers", func(): Events.open_panel.emit("adventurers", {}), 240))
 
 
 # ======================================================================= pages
@@ -187,6 +186,16 @@ func _page_overview(a: Dictionary) -> void:
 			inj = "Wounded — still mending"
 		cond.add_child(UIKit.label(inj, 20, "body_bold", UIKit.RUBRIC if inj != "Uninjured" else C_GOOD))
 		cond.add_child(UIKit.label("Carries %d healing draught%s · %d gold in the purse" % [int(a.get("potions", 0)), "" if int(a.get("potions", 0)) == 1 else "s", int(a.get("gold", 0))], 19))
+		# Living Workshop #38: health over time — recorded values only (HealthLog), with the honest start of the record
+		var pts := HealthLog.points(adv_id)
+		var hh := UIKit.hbox(8)
+		hh.add_child(UIKit.label("Health over time", 19, "body_bold"))
+		var cap := UIKit.note(HealthLog.caption(pts), 16)
+		cap.name = "HealthCaption"
+		cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hh.add_child(cap)
+		cond.add_child(hh)
+		cond.add_child(HealthCurve.new(pts, 540, 124))
 	else:
 		cond.add_child(UIKit.label("You don't know them well enough to say how they really are.", 19, "body_italic"))
 	row.add_child(cond)
