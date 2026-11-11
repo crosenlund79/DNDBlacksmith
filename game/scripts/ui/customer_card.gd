@@ -29,24 +29,24 @@ static func build(r: Dictionary, width := 0.0) -> PanelContainer:
 	sb.set_corner_radius_all(3)
 	sb.content_margin_left = 16
 	sb.content_margin_right = 14
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 10
+	sb.content_margin_top = 7
+	sb.content_margin_bottom = 7
 	sb.shadow_color = Color(0, 0, 0, 0.25)
 	sb.shadow_size = 4
 	pc.add_theme_stylebox_override("panel", sb)
 	if width > 0.0:
 		pc.custom_minimum_size = Vector2(width, 0)
-	var v := UIKit.vbox(6)
+	var v := UIKit.vbox(4)
 	pc.add_child(v)
 	# header: what it is about
 	var head := UIKit.hbox(12)
 	var main_icon := _main_icon(r)
 	if main_icon != "":
-		head.add_child(_framed(main_icon, 58))
+		head.add_child(_framed(main_icon, 44))   # #47: was 58
 	var hv := UIKit.vbox(0)
 	hv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hv.add_child(UIKit.label(str(KIND_WORD.get(r.get("kind", ""), "Customer")).to_upper(), 15, "heading", UIKit.RUBRIC))
-	hv.add_child(UIKit.label(str(r.get("headline", "")), 26, "heading"))
+	hv.add_child(UIKit.label(str(r.get("headline", "")), 22, "heading"))   # #47: was 26
 	head.add_child(hv)
 	v.add_child(head)
 	# the requirement chips

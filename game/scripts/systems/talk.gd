@@ -99,7 +99,8 @@ static func options(npc: String, area: String) -> Array:
 			eo["disabled"] = "no equipment in your stores"
 		out.append(eo)
 		if a.get("needs", "") != "" and not Shop.open_orders().any(func(o): return o["npc"] == npc):
-			out.append({"id": "order", "label": "Ask what they need forged"})
+			# Living Workshop #54–55: a commission opportunity — they will place an order if asked (WhoIsWho)
+			out.append({"id": "order", "label": "Ask what they need forged — a commission opportunity (%s)" % Shop.slot_phrase(str(a["needs"]))})
 		if c.get("romance", false):
 			var stage := Social.romance(npc)
 			if stage in ["none", "dating"] and Game.hour() >= 17 and area == "inn":
