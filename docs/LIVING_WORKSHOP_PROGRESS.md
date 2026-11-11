@@ -1,6 +1,6 @@
 # The Living Workshop (B1 + B2 + C1 + playtest consolidation #37–61) — progress
 
-**Status: IN PROGRESS.** Isolated branch `claude/living-workshop` (from S2 `fce1f08`). Nothing merged into the
+**Status: COMPLETE (11 November 2026) — on the isolated branch, not integrated, not released.** Isolated branch `claude/living-workshop` (from S2 `fce1f08`). Nothing merged into the
 development branch; nothing released. Target: Windows 0.16 acceptance build (Actions artifact, not a release).
 
 ## Recovery and baseline (verified on the remote)
@@ -68,14 +68,19 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 - [x] Lead final run on d0d5362 (the shipping code): compile 260/0, suite 409/409, unit 390/390; soak `both 365`: LW SOAK OK
   (poor 120 → 30,679 g; established 3,000 → 29,102 g; ledger reconciled; 0 duplicate uids; 0 materials off the record;
   305–353 ms per simulated day; save 3.3–3.7 MB at day 365); seeded skill-tree fuzz 1234: 12 rounds, no crash.
-- [ ] All 59 rendered phases on d0d5362 (started 16:06 UTC; `$S/lw/final_run.sh`, log `$S/lw/final_run.log`).
-- [ ] Windows 0.16 artifact: run #17 on d0d5362 https://github.com/crosenlund79/DNDBlacksmith/actions/runs/43052431889
-  (run #16 on 6ccae6b failed in the runner's apt step — infrastructure, not code).
-- [ ] Consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
+- [x] All 59 rendered phases on d0d5362: 58/59 at first; `lw_family` failed once because another customer (Brother Tomas,
+  full price) was fairly served before the arranged buyer — test-only fix 554f482 (only the arranged buyer at the counter);
+  `lw_family` then passed twice. 59/59.
+- [x] Windows 0.16 artifact **`EmberAndAsh-Windows-0.16.19`** (212.7 MB: installer + portable zip), run #19 on 554f482
+  https://github.com/crosenlund79/DNDBlacksmith/actions/runs/43073154275 — tests, export, packaged Linux self-check, NSIS
+  installer, Windows silent install + launch self-check all green; Publish skipped (non-default branch). Runs #16, #17, #18
+  failed only at the runner's apt step (`Temporary failure resolving 'azure.archive.ubuntu.com'` installing NSIS).
+- [x] Real saves untouched (`user://saves/` last modified 9 November).
+- [x] Consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
   idempotence, 30/365-day soaks, conservation, zero steward XP; real saves unchanged.
-- [ ] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap).
-- [ ] Windows 0.16 acceptance artifact (RELEASE_VERSION 0.16 on this branch; workflow_dispatch; verify artifact exists).
-- [ ] Final report.
+- [x] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap) — evidence final.
+- [x] Windows 0.16 acceptance artifact (see above).
+- [x] Final report (in the session). Next: nothing — awaiting the user (Windows playtest, decisions, integration).
 
 ## Resume procedure
 `git fetch origin && git checkout claude/living-workshop`; read this file, `CLAUDE.md`, the canonical design, and
