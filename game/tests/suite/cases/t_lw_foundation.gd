@@ -40,6 +40,15 @@ func _golden_data(name: String) -> Dictionary:
 	return Saves._restore_ints(doc["data"])
 
 
+## The task queue without the fields a later save step adds (Living Workshop C1: stages and the reserved uid).
+func _queue_text(q: Array) -> String:
+	var c := q.duplicate(true)
+	for t in c:
+		for k in ["stages", "stages_for", "uid"]:
+			(t as Dictionary).erase(k)
+	return JSON.stringify(c, "", true)
+
+
 ## Everything about a worker except the profession (what migration 5 must leave untouched).
 func _without_profession(a: Dictionary) -> String:
 	var c := a.duplicate(true)
@@ -314,7 +323,7 @@ func test_migration_5_golden_saves() -> void:
 		var before := staff.map(func(a): return _without_profession(a))
 		var player_before := JSON.stringify(data["player"]["skills"], "", true)
 		var hire_before := JSON.stringify(data.get("hirelings", []), "", true)
-		var rep := SaveMigrations.run(data)
+		var rep := SaveMigrations.run(data, 5)   # step 5 itself (later steps have their own tests)
 		eq(rep["steps"], ["worker professions"], "%s: step 5 runs" % g)
 		eq(int(data["version"]), 5, "%s: now schema 5" % g)
 		eq(str(data["player"].get("profession", "")), "blacksmith", "%s: the smith is the blacksmith" % g)
@@ -359,17 +368,17 @@ func test_migration_5_schema4_save_with_apprentices() -> void:
 	var keep := {}
 	for x in [a, b, c]:
 		keep[str(x["id"])] = _without_profession(x)
-	var tasks := JSON.stringify(Apprentices.tasks(), "", true)
+	var tasks := _queue_text(Apprentices.tasks())
 	check(save_as_version("suite_lwf_v4", 4), "written as a schema-4 save")
 	check(Saves.load_slot("suite_lwf_v4"), "it loads")
 	var rep: Dictionary = Saves.last_load.get("migration", {})
-	eq(rep.get("steps", []), ["worker professions"], "only step 5 runs")
+	eq((rep.get("steps", []) as Array).slice(0, 1), ["worker professions"], "step 5 runs first (later steps follow)")
 	eq(str(Apprentices.get_a(str(a["id"])).get("profession", "")), "runesmith", "the strongest skill decides (runecraft 6 over smithing 3)")
 	eq(str(Apprentices.get_a(str(b["id"])).get("profession", "")), "alchemist", "a tie goes to the preferred discipline (alchemy 5 = stitching 5)")
 	eq(str(Apprentices.get_a(str(c["id"])).get("profession", "")), "blacksmith", "a smithing apprentice becomes a blacksmith")
 	for id in keep:
 		eq(_without_profession(Apprentices.get_a(str(id))), keep[id], "%s keeps every level, experience point, trait, wage, memory and log" % Apprentices.get_a(str(id)).get("name", id))
-	eq(JSON.stringify(Apprentices.tasks(), "", true), tasks, "the queue is unchanged")
+	eq(_queue_text(Apprentices.tasks()), tasks, "the queue is unchanged (beyond the work-order fields a later step adds)")
 	eq(Game.player_level("runecraft"), 8, "the smith keeps runecraft 8")
 	# idempotent: saving and loading again changes nothing
 	var snap := JSON.stringify(Apprentices.st(), "", true)

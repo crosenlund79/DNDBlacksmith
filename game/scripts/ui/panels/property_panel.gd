@@ -217,7 +217,7 @@ func _side_layout() -> void:
 		side.add_child(UIKit.button("Turn the line (%s)" % ("vertical" if split_vertical else "horizontal"), func(): split_vertical = not split_vertical; _build(), 300))
 	if tool == "stations":
 		if carrying != "":
-			side.add_child(UIKit.rich("Carrying: [b]%s[/b]" % DB.station(carrying).get("name", carrying), 19))
+			side.add_child(UIKit.rich("Carrying: [b]%s[/b]" % Property.instance_label(carrying), 19))
 			var h := UIKit.hbox(6)
 			h.add_child(UIKit.button("Turn it", func(): carry_flip = not carry_flip; view.queue_redraw(), 140))
 			h.add_child(UIKit.button("Put in storage", func(): Property.store(plan, carrying); carrying = ""; _build(), 200))
@@ -229,7 +229,7 @@ func _side_layout() -> void:
 			var flow := HFlowContainer.new()
 			for sid in stored:
 				var id: String = sid
-				var b2 := UIKit.button(str(DB.station(id).get("name", id)), func(): carrying = id; carry_flip = false; _build(), 0)
+				var b2 := UIKit.button(Property.instance_label(id), func(): carrying = id; carry_flip = false; _build(), 0)
 				b2.add_theme_font_size_override("font_size", 17)
 				b2.tooltip_text = "Click to carry it to a spot of your choice."
 				flow.add_child(b2)
@@ -409,10 +409,22 @@ func _side_equipment() -> void:
 			var l := UIKit.label(str(st["name"]), 18, "body_bold")
 			l.custom_minimum_size = Vector2(240, 0)
 			h.add_child(l)
-			if Property.is_installed(sid):
-				h.add_child(UIKit.label("installed", 17, "body_italic", Color("#26622f")))
-			elif (plan["stored"] as Array).has(sid) or (Property.st()["stored"] as Array).has(sid):
-				h.add_child(UIKit.label("in storage — place it in Workshop layout", 17, "body_italic", Color("#735800")))
+			var owned_n := Property.instance_count(sid)   # Living Workshop #37: several of a type, each bought and placed
+			if owned_n > 0:
+				var set_up := Property.instances(sid).size()
+				var words := ("installed" if owned_n == 1 else "%d set up" % set_up) if set_up > 0 else ""
+				if owned_n > set_up:
+					words += ("%s%d in storage — place %s in Workshop layout" % [", " if words != "" else "", owned_n - set_up, "it" if owned_n - set_up == 1 else "them"])
+				var wl := UIKit.label(words, 17, "body_italic", Color("#26622f") if set_up > 0 else Color("#735800"))
+				wl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				h.add_child(wl)
+				var more := Property.more_reason(sid)
+				var nprice := Property.station_price(sid)
+				var mb := UIKit.small_button("Another · %d g" % nprice, func(): _buy_station(sid), 170)
+				mb.name = "BuyAnother_" + sid
+				mb.disabled = more != "" or not Game.can_afford(nprice)
+				mb.tooltip_text = more if more != "" else "Buy another %s (#%d) — each further one costs a little more to fit into a working room." % [str(st["name"]).to_lower(), owned_n + 1]
+				h.add_child(mb)
 			else:
 				var why := SkillTree.station_reason(sid)
 				if why != "":
@@ -435,8 +447,9 @@ func _buy_station(sid: String) -> void:
 		Events.toast.emit(err, "bad")
 		return
 	Audio.play("sfx/coins", -2.0)
-	if not (plan["stored"] as Array).has(sid):
-		(plan["stored"] as Array).append(sid)
+	for got in Property.st()["stored"]:   # #37: the bought instance ("anvil#2") joins the plan's storage
+		if not (plan["stored"] as Array).has(got) and not (plan["stations"] as Dictionary).has(got):
+			(plan["stored"] as Array).append(got)
 	_build()
 
 
@@ -631,7 +644,7 @@ class PlanView extends Control:
 		var sz := Vector2(float(size[0]), float(size[1])) / 64.0 * sc
 		var pa: Array = entry["pos"]
 		var c := _px(Vector2(float(pa[0]), float(pa[1])))
-		var tex := Assets.get_tex("stations/" + sid, Vector2i(int(size[0]), int(size[1])))
+		var tex := Assets.get_tex("stations/" + Property.type_of(sid), Vector2i(int(size[0]), int(size[1])))
 		if bool(entry.get("flip", false)):
 			draw_set_transform(c, 0.0, Vector2(-1, 1))
 			draw_texture_rect(tex, Rect2(-sz * 0.5, sz), false, tint)
@@ -642,4 +655,4 @@ class PlanView extends Control:
 		draw_rect(Rect2(_px(fp.position), fp.size * sc), Color("#20140c", 0.35), false, 1.0)
 		_station_use(sid, c, sz)
 		if sid == p.carrying or p.tab == "equipment":
-			draw_string(Assets.font("body"), c + Vector2(-60, sz.y * 0.5 + 12), str(st.get("name", sid)), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Color("#20140c"))
+			draw_string(Assets.font("body"), c + Vector2(-60, sz.y * 0.5 + 12), Property.instance_label(sid), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Color("#20140c"))

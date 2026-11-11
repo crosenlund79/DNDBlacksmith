@@ -303,7 +303,7 @@ static func dismiss(id: String) -> String:
 		return "No such apprentice."
 	var t := task(int(a.get("task", -1)))
 	if not t.is_empty() and str(t.get("station", "")) != "" and float(t.get("progress", 0.0)) > 0.0:
-		return "%s is in the middle of work at the %s — let them finish the step or cancel the task first." % [a["name"], _station_name(str(t["station"]))]
+		return "%s is in the middle of work at the %s — let them finish the step or cancel the task first." % [a["name"], _place_name(str(t["station"]))]
 	_release(a)
 	for t2 in open_tasks():
 		if str(t2.get("assignee", "")) == id:
@@ -719,7 +719,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 			for x in open_tasks():
 				if str(x["kind"]) == "maintain" and str(x["target"]) == sid:
 					return {"error": "That station is already on the upkeep list."}
-			t["label"] = "Tend the %s" % _station_name(sid)
+			t["label"] = "Tend the %s" % _place_name(sid)
 		"contract":
 			# The Living Realm: hours of work on a major contract at the Project Bench (or its stations); the
 			# hardest recipe of the order decides who is qualified; each repeat is one hour of the order.
@@ -774,6 +774,7 @@ static func cancel_task(id: int) -> String:
 		a["activity"] = ""
 	t["worker"] = ""
 	t["station"] = ""
+	t["at"] = ""
 	t["state"] = "cancelled"
 	t["blocker"] = ""
 	_changed()
@@ -837,6 +838,7 @@ static func _reset_iteration(t: Dictionary) -> void:
 	t["fetch"] = 0.0
 	t["walk"] = 0.0
 	t["carry"] = ""
+	t["at"] = ""
 	t.erase("redo")
 
 
@@ -856,7 +858,7 @@ static func task_ops(t: Dictionary, app := {}) -> Array:
 			var it := repair_item(t)
 			return [{"station": str(_c("time", "repair_station", "grinding_wheel")), "op": "Mend the %s" % str(it.get("name", "piece")).to_lower(), "checks": 1, "weight": 1.0}]
 		"maintain":
-			return [{"station": str(t.get("target", "")), "op": "Clean, oil and true the %s" % _station_name(str(t.get("target", ""))), "checks": 1, "weight": 1.0}]
+			return [{"station": str(t.get("target", "")), "op": "Clean, oil and true the %s" % _place_name(str(t.get("target", ""))), "checks": 1, "weight": 1.0}]
 		"contract":
 			var sid := str(t.get("station", ""))
 			if sid == "":
@@ -892,14 +894,69 @@ static func is_worn(sid: String) -> bool:
 
 
 ## Who is at a station right now: "smith" (his current craft operation is there — he always has priority; an
-## apprentice steps aside and waits), an apprentice id, or "".
+## apprentice steps aside and waits), an apprentice id, or "". Living Workshop (#37): a station INSTANCE id — an
+## apprentice holds the instance they work at or are walking to (t["at"]), the smith the instance of his current
+## operation (Crafting.smith_instance).
 static func station_user(sid: String) -> String:
-	if Crafting.active() and Crafting.current_station() == sid:
+	return instance_user(sid)
+
+
+## station_user for one instance; `include_smith` false leaves the smith out (used to choose his instance).
+static func instance_user(sid: String, include_smith := true) -> String:
+	if include_smith and Crafting.active() and Crafting.current_station() == Property.type_of(sid) and Crafting.smith_instance() == sid:
 		return "smith"
 	for t in tasks():
-		if str(t.get("state", "")) == "working" and str(t.get("station", "")) == sid and str(t.get("worker", "")) != "":
+		if str(t.get("state", "")) == "working" and str(t.get("worker", "")) != "" and (str(t.get("station", "")) == sid or str(t.get("at", "")) == sid):
 			return str(t["worker"])
 	return ""
+
+
+## The instance of station type `stype` a worker should use now: the one they already hold when it is still free for
+## them, else the free instance nearest to where they last worked (same floor first), else "" (every one is in use).
+## `fixed` = exactly that instance (upkeep of one particular station).
+static func pick_instance(stype: String, who: String, prefer := "", fixed := "") -> String:
+	var cands: Array = [fixed] if fixed != "" else Property.instances(stype)
+	var free := []
+	for sid_v in cands:
+		var sid := str(sid_v)
+		if not Property.is_installed(sid):
+			continue
+		var u := instance_user(sid)
+		if u == "" or u == who:
+			free.append(sid)
+	if free.is_empty():
+		return ""
+	if prefer != "" and free.has(prefer):
+		return prefer
+	if free.size() == 1 or prefer == "" or not Property.is_installed(prefer):
+		return str(free[0])
+	var from := Property.pos_of(prefer)
+	var fl := Property.station_floor(prefer)
+	var best := str(free[0])
+	var best_d := INF
+	for sid2 in free:
+		var d := Property.pos_of(str(sid2)).distance_to(from) + (0.0 if Property.station_floor(str(sid2)) == fl else 60.0)
+		if d < best_d:
+			best_d = d
+			best = str(sid2)
+	return best
+
+
+## Who holds every instance of a type ("the smith, Wren, Tobin") — for a "waiting" line.
+static func _holders(stype: String) -> String:
+	var names := PackedStringArray()
+	for sid in Property.instances(stype):
+		var u := instance_user(str(sid))
+		if u == "smith":
+			names.append("the smith")
+		elif u != "":
+			names.append(str(get_a(u).get("name", "someone")).split(" ")[0])
+	return ", ".join(names)
+
+
+## A particular station in words: "anvil" for the only one, "anvil #2" when the workshop has several.
+static func _place_name(sid: String) -> String:
+	return Property.instance_label(sid).to_lower() if not Game.state.is_empty() else _station_name(sid)
 
 
 ## "not_installed", "locked", "busy", "worn" or "free".
@@ -949,6 +1006,9 @@ static func tick(minutes: int) -> void:
 			var t := task(int(a.get("task", -1)))
 			if not t.is_empty():
 				t["station"] = ""
+				if str(t.get("at", "")) != "":
+					t["last_at"] = str(t["at"])   # #37: the instance is free while they are away; they return to it if they can
+					t["at"] = ""
 			a["activity"] = "On the midday break" if ph == "break" else "Gone home for the day"
 		if changed:
 			_changed()
@@ -1040,9 +1100,9 @@ static func task_problem(t: Dictionary) -> String:
 				return "The piece is no longer here."
 		"maintain":
 			if not Property.is_installed(str(t["target"])):
-				return "The %s is not installed." % _station_name(str(t["target"]))
+				return "The %s is not installed." % _place_name(str(t["target"]))
 			if station_condition(str(t["target"])) >= 99.5 and not bool(t.get("started", false)):
-				return "The %s is in good order." % _station_name(str(t["target"]))
+				return "The %s is in good order." % _place_name(str(t["target"]))
 		"commission":
 			var o := _order(str(t["order_id"]))
 			if not bool(t.get("started", false)) and (o.is_empty() or str(o.get("status", "")) != "open"):
@@ -1195,21 +1255,37 @@ static func _work(a: Dictionary, minutes: float) -> bool:
 		if left <= 0.0:
 			return changed
 	var op: Dictionary = ops[mini(int(t["op"]), ops.size() - 1)]
-	var sid := str(op.get("station", ""))
-	# 3. the station: installed, usable by THIS worker (B1: their own station skill), and free (the smith has priority)
-	var st_why := Workers.station_reason(a, sid)
-	if not Property.is_installed(sid) or st_why != "":
+	var stype := Property.type_of(str(op.get("station", "")))
+	# 3. the station: installed, usable by THIS worker (B1: their own station skill), and free (the smith has priority).
+	#    #37: any free instance of the type — the one already held, else the nearest free one; all busy = wait.
+	var st_why := Workers.station_reason(a, stype)
+	if not Property.is_installed(stype) or st_why != "":
 		t["state"] = "blocked"
 		t["station"] = ""
-		t["blocker"] = "The %s is not available — %s" % [_station_name(sid), Property.station_reason(sid) if Property.station_reason(sid) != "" else st_why]
-		a["activity"] = "Waiting: the %s is not available" % _station_name(sid)
+		t["at"] = ""
+		t["blocker"] = "The %s is not available — %s" % [_station_name(stype), Property.station_reason(stype) if Property.station_reason(stype) != "" else st_why]
+		a["activity"] = "Waiting: the %s is not available" % _station_name(stype)
 		return true
-	var user := station_user(sid)
-	if user != "" and user != str(a["id"]):
+	var held := str(t.get("at", ""))
+	var prefer := held if held != "" and Property.type_of(held) == stype else str(t.get("last_at", ""))
+	var sid := pick_instance(stype, str(a["id"]), prefer, str(t["target"]) if str(t["kind"]) == "maintain" else "")
+	if sid == "":
 		t["station"] = ""
-		t["blocker"] = "Waiting for the %s (%s is using it)." % [_station_name(sid), "the smith" if user == "smith" else str(get_a(user).get("name", "someone"))]
-		a["activity"] = "Waiting for the %s" % _station_name(sid)
+		t["at"] = ""
+		var n_inst := Property.instances(stype).size()
+		if n_inst <= 1:
+			var user := instance_user(str(Property.instances(stype)[0]) if n_inst == 1 else stype)
+			t["blocker"] = "Waiting for the %s (%s is using it)." % [_station_name(stype), "the smith" if user == "smith" else str(get_a(user).get("name", "someone"))]
+		else:
+			t["blocker"] = "Waiting for the %s (all %d in use: %s)." % [_station_name(stype), n_inst, _holders(stype)]
+		a["activity"] = "Waiting for the %s" % _station_name(stype)
 		return changed
+	if sid != held:
+		if held != "" and Property.type_of(held) == stype and float(t["walk"]) <= 0.0:
+			t["walk"] = WALK_MIN   # another of its kind: they carry the work over
+		t["at"] = sid
+		t["station"] = ""
+		changed = true
 	if t["blocker"] != "" or str(t["state"]) != "working":
 		changed = true
 	t["state"] = "working"
@@ -1219,14 +1295,14 @@ static func _work(a: Dictionary, minutes: float) -> bool:
 		var w := minf(left, float(t["walk"]))
 		t["walk"] = float(t["walk"]) - w
 		left -= w
-		a["activity"] = "Going to the %s" % _station_name(sid)
+		a["activity"] = "Going to the %s" % _place_name(sid)
 		if left <= 0.0:
 			return changed
 	t["station"] = sid
 	if float(t["need"]) <= 0.0:
-		t["need"] = op_minutes(a, t, op)
+		t["need"] = op_minutes(a, t, op, sid)
 	t["progress"] = float(t["progress"]) + left
-	a["activity"] = "%s at the %s" % [str(op.get("op", "Working")), _station_name(sid)]
+	a["activity"] = "%s at the %s" % [str(op.get("op", "Working")), _place_name(sid)]
 	if float(t["progress"]) >= float(t["need"]):
 		_finish_op(t, a, op)
 		changed = true
@@ -1267,7 +1343,7 @@ static func _task_title(t: Dictionary) -> String:
 
 
 ## Minutes for one operation by this apprentice (data: time, ranks, traits, specialty, station wear).
-static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
+static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary, at := "") -> float:
 	var tm: Dictionary = cfg("time")
 	var base := float(tm.get("op_base", 30.0)) + float(tm.get("per_check", 12.0)) * int(op.get("checks", 1))
 	var kind := str(t.get("kind", ""))
@@ -1285,7 +1361,7 @@ static func op_minutes(a: Dictionary, t: Dictionary, op: Dictionary) -> float:
 	f *= _trait_mult(a, "speed")
 	if _specialty_match(a, category(kind, rid)):
 		f *= float(_c("specialty", "speed", 1.15))
-	if kind != "maintain" and is_worn(str(op.get("station", ""))):
+	if kind != "maintain" and is_worn(at if at != "" else str(op.get("station", ""))):
 		f *= float(_c("wear", "slow", 0.8))
 	return maxf(float(tm.get("min_op", 10.0)), base / maxf(0.25, f))
 
@@ -1351,15 +1427,18 @@ static func _ceiling(a: Dictionary, rid: String, kind: String) -> float:
 
 
 static func _finish_op(t: Dictionary, a: Dictionary, op: Dictionary) -> void:
-	var sid := str(op.get("station", ""))
+	var sid := Property.type_of(str(op.get("station", "")))
+	var at := str(t.get("station", ""))   # #37: the instance it was worked at
+	if at == "" or Property.type_of(at) != sid:
+		at = str(op.get("station", ""))
 	var rid := _recipe_of(t, a)
 	var kind := str(t["kind"])
 	var key := "%d|%s|%d|%d" % [int(t["id"]), str(a["id"]), Game.now(), int(t["op"])]
 	var rng := _rng(key)
 	var qc: Dictionary = cfg("quality")
 	var mc: Dictionary = cfg("mistakes")
-	var sup := _supervised(t, sid)
-	var q := expected_op_quality(a, rid, sid, sup, kind) + rng.randfn(0.0, float(qc.get("sd", 8.0)) * _trait_mult(a, "sd"))
+	var sup := _supervised(t, at)
+	var q := expected_op_quality(a, rid, at, sup, kind) + rng.randfn(0.0, float(qc.get("sd", 8.0)) * _trait_mult(a, "sd"))
 	var skill := op_skill(rid, sid)   # B1: the worker's own competence in this station's discipline (checks, mistakes, experience)
 	var diff := Crafting.difficulty(rid) if rid != "" else 1
 	var chance := (float(mc.get("chance", 0.07)) + float(mc.get("per_gap", 0.02)) * maxi(0, diff - level(a, skill))) * _trait_mult(a, "mistake")
@@ -1404,17 +1483,22 @@ static func _finish_op(t: Dictionary, a: Dictionary, op: Dictionary) -> void:
 		var line2 := _pick_line("surprise", key) % [a["name"], str(DB.item(str(DB.recipe(rid).get("output", ""))).get("name", "work")).to_lower() if rid != "" else "work"]
 		log_line(str(a["id"]), line2)
 	q = clampf(q, float(qc.get("floor", 10.0)), float(qc.get("op_cap", 118.0)))
-	(t["ops_done"] as Array).append({"op": str(op.get("op", "")), "station": sid, "q": q, "checks": [q], "w": float(op.get("weight", 1.0)),
-		"by": str(a["id"]), "supervised": sup})
+	var rec := {"op": str(op.get("op", "")), "station": sid, "q": q, "checks": [q], "w": float(op.get("weight", 1.0)),
+		"by": str(a["id"]), "supervised": sup}
+	if at != sid or Property.instance_count(sid) > 1:
+		rec["at"] = at
+	(t["ops_done"] as Array).append(rec)
 	if sup:
 		t["was_supervised"] = true
 	if kind != "maintain":
-		_wear(sid, float(_c("wear", "per_op", 2.5)))
+		_wear(at, float(_c("wear", "per_op", 2.5)))
 	add_xp(a, skill, float(_c("xp", "per_op", 2)))
 	t["op"] = int(t["op"]) + 1
 	t["progress"] = 0.0
 	t["need"] = 0.0
 	t["station"] = ""
+	t["last_at"] = at
+	t["at"] = ""
 	t["walk"] = WALK_MIN
 	t.erase("redo")
 	if int(t["op"]) >= task_ops(t, a).size():
@@ -1512,7 +1596,7 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 				s[sid] = {"condition": 100.0, "uses": 0}
 			s[sid]["condition"] = clampf(maxf(float(s[sid]["condition"]), 60.0 + q * 0.4), 0.0, 100.0)
 			add_xp(a, "smithing", float(xpc.get("maintain", 4)))
-			log_line(str(a["id"]), "%s tended the %s (now %d%%)." % [a["name"], _station_name(sid), int(round(float(s[sid]["condition"])))])
+			log_line(str(a["id"]), "%s tended the %s (now %d%%)." % [a["name"], _place_name(sid), int(round(float(s[sid]["condition"])))])
 		"contract":
 			var cid := str(t["target"])
 			var used := Contracts.apprentice_hour(cid, a, q)
@@ -1620,6 +1704,9 @@ static func current(app: Dictionary) -> Dictionary:
 	var ops := task_ops(t, app)
 	if not ops.is_empty():
 		out["station"] = str(ops[mini(int(t.get("op", 0)), ops.size() - 1)].get("station", ""))
+		var at := str(t.get("at", ""))
+		if at != "" and Property.type_of(at) == Property.type_of(str(out["station"])):
+			out["station"] = at   # #37: the instance they hold
 	if str(t.get("station", "")) != "" and float(t.get("walk", 0.0)) <= 0.0:
 		out["phase"] = "working"
 	return out
@@ -1705,7 +1792,7 @@ static func bottlenecks() -> Array[String]:
 	ks.sort()
 	for sid in ks:
 		if is_worn(str(sid)) and Property.is_installed(str(sid)):
-			out.append("The %s is worn (%d%%) — apprentices work slower and rougher there." % [_station_name(str(sid)), int(round(station_condition(str(sid))))])
+			out.append("The %s is worn (%d%%) — apprentices work slower and rougher there." % [_place_name(str(sid)), int(round(station_condition(str(sid))))])
 	var idle := staff().filter(func(a): return on_shift(a) and int(a.get("task", -1)) == -1)
 	if not idle.is_empty() and open_tasks().filter(func(t): return str(t.get("worker", "")) == "").is_empty():
 		out.append("%s %s nothing to do — queue some work." % [", ".join(PackedStringArray(idle.map(func(a): return str(a["name"])))), "has" if idle.size() == 1 else "have"])
@@ -1937,6 +2024,16 @@ static func alumni_buy_for(a: Dictionary, want := {}) -> bool:
 	Chronicle.add("trade", line, {"adv": str(a.get("id", "")), "app": str(alum["id"])})
 	Events.adventurers_changed.emit()
 	return true
+
+
+# ======================================================================= save step (work orders)
+## Save step "station instances and work orders" (Living Workshop C1) on raw save data. Idempotent; returns the number
+## of tasks converted. (Filled in with the staged work orders.)
+static func migrate_work_orders(data: Dictionary) -> int:
+	var ap: Variant = data.get("apprentices")
+	if not ap is Dictionary:
+		return 0
+	return 0
 
 
 # ======================================================================= developer / test helper

@@ -37,7 +37,7 @@ static func log_crafted(it: Dictionary) -> void:
 	var cr: Dictionary = it.get("craft", {})
 	var seen := {}
 	for o in cr.get("ops", []):
-		var st := str(o.get("station", ""))
+		var st := str(o.get("at", o.get("station", "")))   # Living Workshop #37: the instance it was worked at
 		if st == "" or seen.has(st):
 			continue
 		seen[st] = true

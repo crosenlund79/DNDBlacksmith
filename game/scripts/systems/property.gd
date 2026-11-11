@@ -506,7 +506,7 @@ static func free_places(plan: Dictionary = {}) -> int:
 static func auto_place(plan: Dictionary, station_id: String) -> String:
 	var disc := str(DB.station(station_id).get("discipline", ""))
 	var sp: Dictionary = data().get("station_pos", {})
-	var home: Array = sp.get(station_id, DB.station(station_id).get("pos", [0, 0]))
+	var home: Array = sp.get(type_of(station_id), DB.station(station_id).get("pos", [0, 0]))
 	var cands: Array = [Vector2(float(home[0]), float(home[1]))]
 	var rooms_by := []
 	for r in plan["rooms"]:
@@ -727,41 +727,172 @@ static func remove_door(plan: Dictionary, d: Dictionary) -> String:
 	return ""
 
 
-# ------------------------------------------------------------------ stations
-static func is_installed(station_id: String) -> bool:
+# ------------------------------------------------------------------ station instances (Living Workshop #37, D6)
+## Several stations of one type may stand in the workshop (canonical §4.1, D6), each with its own id, place, price and
+## worker. Instance #1 keeps the bare type id ("anvil" — every save and layout from before stays valid); further ones
+## are "anvil#2", "anvil#3" … `type_of` gives the type; DB.station(instance) reads the type's data. Questions about the
+## workshop's means ("is there an anvil?") take a type; questions about a place ("who works at anvil#2?") an instance.
+## Believable limits: at most MAX_PER_TYPE of a type, never more than the workshop has hands to keep busy (the smith and
+## his staff, at least two), the Project Bench once; room capacity, spacing and reachability still decide each place.
+const INSTANCE_SEP := "#"
+const MAX_PER_TYPE := 5
+const SINGLE_TYPES := ["project_bench"]
+## Each further instance costs this share of the type's price more (2nd ×1.25, 3rd ×1.5 … 5th ×2): fitting another
+## hearth or bench into a working room, not a bulk discount and not a new economy.
+const EXTRA_PRICE_STEP := 0.25
+
+
+## The station type of an instance id ("anvil#2" → "anvil"; a bare type id is its own type).
+static func type_of(sid: String) -> String:
+	var i := sid.find(INSTANCE_SEP)
+	return sid if i < 0 else sid.substr(0, i)
+
+
+## The instance number (1 for the bare type id).
+static func instance_no(sid: String) -> int:
+	var i := sid.find(INSTANCE_SEP)
+	return 1 if i < 0 else maxi(1, int(sid.substr(i + 1)))
+
+
+static func instance_id(type: String, n: int) -> String:
+	return type if n <= 1 else "%s%s%d" % [type, INSTANCE_SEP, n]
+
+
+## "the anvil" / "anvil #2" — how a player tells two of a kind apart.
+static func instance_label(sid: String) -> String:
+	var n := str(DB.station(sid).get("name", type_of(sid)))
+	return n if instance_no(sid) <= 1 and instance_count(type_of(sid)) <= 1 else "%s #%d" % [n, instance_no(sid)]
+
+
+## The instances of a type that stand in the workshop (or, `installed_only` false, also those in storage), #1 first.
+static func instances(type: String, installed_only := true) -> Array:
+	var out := []
 	if Game.state.is_empty():
-		return true
+		return [type]
+	var t := type_of(type)
+	for sid_v in (st()["stations"] as Dictionary).keys():
+		var sid := str(sid_v)
+		if type_of(sid) == t and (not installed_only or _instance_installed(sid)):
+			out.append(sid)
+	if not installed_only:
+		for sid_v2 in st()["stored"]:
+			if type_of(str(sid_v2)) == t and not out.has(str(sid_v2)):
+				out.append(str(sid_v2))
+	out.sort_custom(func(a, b): return instance_no(str(a)) < instance_no(str(b)))
+	return out
+
+
+## How many of a type the workshop owns (set up or in storage).
+static func instance_count(type: String) -> int:
+	return instances(type, false).size() if not Game.state.is_empty() else 0
+
+
+## Is at least one of this type set up in an owned room?
+static func has_type(type: String) -> bool:
+	return not instances(type).is_empty()
+
+
+static func _instance_installed(sid: String) -> bool:
 	var s: Dictionary = st()["stations"]
-	if not s.has(station_id):
+	if not s.has(sid):
 		return false
-	var r := room_at_tile(rooms(), pos_of(station_id))
+	var e: Dictionary = s[sid]
+	var p: Array = e.get("pos", [0, 0])
+	var r := room_at_tile(rooms(), Vector2(float(p[0]), float(p[1])))
 	return not r.is_empty() and room_owned(r)
 
 
+## The most instances of a type the workshop may have now: one per pair of hands (the smith and his staff), at least
+## two, at most MAX_PER_TYPE; single-purpose stations once.
+static func max_instances(type: String) -> int:
+	if SINGLE_TYPES.has(type_of(type)):
+		return 1
+	var staff := 0
+	if not Game.state.is_empty() and Game.state.get("apprentices") is Dictionary:
+		staff = (Game.state["apprentices"].get("staff", []) as Array).size()
+	return clampi(1 + staff, 2, MAX_PER_TYPE)
+
+
+## Why another of this type cannot be bought now ("" = it can; the price and the tree are checked by buy_station).
+static func more_reason(type: String) -> String:
+	var t := type_of(type)
+	var n := instance_count(t)
+	if n == 0:
+		return ""
+	var name := str(DB.station(t).get("name", t))
+	if SINGLE_TYPES.has(t):
+		return "You already have one."
+	var cap := max_instances(t)
+	if n >= MAX_PER_TYPE:
+		return "%d of the %s is as many as a workshop can keep busy." % [MAX_PER_TYPE, name.to_lower()]
+	if n >= cap:
+		return "Another %s needs another pair of hands — the workshop keeps one per worker (now %d, at least 2, at most %d): take on more staff first." % [
+			name.to_lower(), cap, MAX_PER_TYPE]
+	return ""
+
+
+# ------------------------------------------------------------------ stations
+## A type id: is at least one of the type set up in an owned room? An instance id ("anvil#2"): is that one set up?
+static func is_installed(station_id: String) -> bool:
+	if Game.state.is_empty():
+		return true
+	if station_id.contains(INSTANCE_SEP):
+		return _instance_installed(station_id)
+	return _instance_installed(station_id) or has_type(station_id)
+
+
 static func is_owned_station(station_id: String) -> bool:
-	return is_installed(station_id) or (st()["stored"] as Array).has(station_id)
+	if station_id.contains(INSTANCE_SEP):
+		return is_installed(station_id) or (st()["stored"] as Array).has(station_id)
+	return instance_count(station_id) > 0
 
 
 static func station_reason(station_id: String) -> String:
 	if Game.state.is_empty() or is_installed(station_id):
 		return ""
-	if (st()["stored"] as Array).has(station_id):
+	if (st()["stored"] as Array).has(station_id) or (not station_id.contains(INSTANCE_SEP) and instance_count(station_id) > 0):
 		return "Bought, but not set up yet — place it under Property & Workshop › Workshop layout"
 	return "Not in your workshop — buy it under Property & Workshop › Equipment"
 
 
+## Where a station stands (plan tiles). A type id answers for its first installed instance.
 static func pos_of(station_id: String) -> Vector2:
-	var e: Dictionary = st()["stations"].get(station_id, {})
+	var e: Dictionary = st()["stations"].get(_placed(station_id), {})
 	var p: Array = e.get("pos", [0, 0])
 	return Vector2(float(p[0]), float(p[1]))
 
 
 static func flipped(station_id: String) -> bool:
-	return bool(st()["stations"].get(station_id, {}).get("flip", false))
+	return bool(st()["stations"].get(_placed(station_id), {}).get("flip", false))
 
 
+## The placed entry a station id stands for: itself when placed, else (a type id) its first installed instance.
+static func _placed(station_id: String) -> String:
+	var s: Dictionary = st()["stations"]
+	if s.has(station_id) or station_id.contains(INSTANCE_SEP):
+		return station_id
+	var inst := instances(station_id)
+	return str(inst[0]) if not inst.is_empty() else station_id
+
+
+## The price of a station: a type id → the next one to buy (the first at the list price, each further one
+## EXTRA_PRICE_STEP more); an instance id → what that instance cost.
 static func station_price(station_id: String) -> int:
-	return int(PRICE.get(station_id, 150))
+	var t := type_of(station_id)
+	var base := int(PRICE.get(t, 150))
+	var n := instance_no(station_id) if station_id.contains(INSTANCE_SEP) else instance_count(t) + 1
+	return int(round(float(base) * (1.0 + EXTRA_PRICE_STEP * float(maxi(0, n - 1)))))
+
+
+## The id the next bought instance of a type gets: the bare type id while no instance holds it, else type#n.
+static func _next_instance_id(type: String) -> String:
+	var have := {}
+	for sid in instances(type, false):
+		have[str(sid)] = true
+	var n := 1
+	while have.has(instance_id(type, n)):
+		n += 1
+	return instance_id(type, n)
 
 
 ## Collision footprint in tiles (mirrors world.gd: 0.76 × 0.56 of the sprite, centred slightly low).
@@ -773,19 +904,29 @@ static func footprint(station_id: String, entry: Dictionary) -> Rect2:
 	return Rect2(c - sz * Vector2(0.38, 0.28), sz * Vector2(0.76, 0.56))
 
 
+## Buys a station of this type (#37: another instance when one is already owned, within max_instances); it waits in
+## storage until placed. Returns "" or why not.
 static func buy_station(station_id: String) -> String:
-	if is_owned_station(station_id):
-		return "You already have one."
-	var why := SkillTree.station_reason(station_id)
+	var t := type_of(station_id)
+	var more := more_reason(t)
+	if more != "":
+		return more
+	var why := SkillTree.station_reason(t)
 	if why != "":
 		return why
-	var price := station_price(station_id)
+	var price := station_price(t)
 	if not Game.can_afford(price):
 		return "You need %d gold." % price
-	Game.add_gold(-price, "equipment", "Bought " + str(DB.station(station_id).get("name", station_id)), "village_trades")
-	(st()["stored"] as Array).append(station_id)
-	Chronicle.add("property", "Brannoc bought a %s for the workshop." % DB.station(station_id).get("name", station_id), {"station": station_id})
-	Events.toast.emit("%s delivered — place it in the workshop." % DB.station(station_id).get("name", station_id), "good")
+	var iid := _next_instance_id(t)
+	var nm := str(DB.station(t).get("name", t))
+	Game.add_gold(-price, "equipment", "Bought " + nm + ((" #%d" % instance_no(iid)) if instance_no(iid) > 1 else ""), "village_trades")
+	(st()["stored"] as Array).append(iid)
+	if instance_no(iid) > 1:
+		Chronicle.add("property", "Brannoc bought another %s for the workshop (#%d)." % [nm, instance_no(iid)], {"station": iid})
+		Events.toast.emit("%s #%d delivered — place it in the workshop." % [nm, instance_no(iid)], "good")
+	else:
+		Chronicle.add("property", "Brannoc bought a %s for the workshop." % nm, {"station": iid})
+		Events.toast.emit("%s delivered — place it in the workshop." % nm, "good")
 	Tutorial.complete("progress")
 	return ""
 
@@ -1045,13 +1186,39 @@ static func main_stations() -> Array:
 		var here := stations_in(r)
 		var disc := room_discipline(r)
 		var pick := ""
-		if here.has(MAIN_STATION.get(disc, "")):
-			pick = MAIN_STATION[disc]
-		elif not here.is_empty():
+		var main_type := str(MAIN_STATION.get(disc, ""))
+		for sid in here:   # #37: the room's main station by TYPE (its lowest-numbered instance)
+			if type_of(str(sid)) == main_type and (pick == "" or instance_no(str(sid)) < instance_no(pick)):
+				pick = str(sid)
+		if pick == "" and not here.is_empty():
 			pick = here[0]
 		if pick != "":
 			out.append(pick)
 	return out
+
+
+# ------------------------------------------------------------------ save step (station instances)
+## Save step "station instances and work orders" (Living Workshop #37), on raw save data: every station already in the
+## workshop is instance #1 of its type under its own id (nothing moves); a station both placed and listed in storage
+## is kept placed once, and storage lists each instance once. Idempotent. Returns the number of entries tidied.
+static func migrate_instances(data: Dictionary) -> int:
+	var p: Variant = data.get("property")
+	if not p is Dictionary:
+		return 0
+	var placed: Variant = (p as Dictionary).get("stations", {})
+	var stored: Variant = (p as Dictionary).get("stored", [])
+	if not placed is Dictionary or not stored is Array:
+		return 0
+	var keep := []
+	var n := 0
+	for sid in stored:
+		if (placed as Dictionary).has(str(sid)) or keep.has(str(sid)):
+			n += 1
+			continue
+		keep.append(str(sid))
+	if n > 0:
+		(p as Dictionary)["stored"] = keep
+	return n
 
 
 # ------------------------------------------------------------------ dev helpers

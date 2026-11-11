@@ -48,7 +48,7 @@ const TUTORIAL := {
 
 static func config_for(station: String) -> Dictionary:
 	var all: Dictionary = DB.crafting.get("minigames", {})
-	var c: Variant = all.get(station, {})
+	var c: Variant = all.get(Property.type_of(station), {})   # Living Workshop #37: an instance ("anvil#2") plays its type's check
 	return c if c is Dictionary else {}
 
 

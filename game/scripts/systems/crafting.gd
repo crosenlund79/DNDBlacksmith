@@ -105,8 +105,9 @@ static func missing_inputs(recipe_id: String) -> Dictionary:
 
 static func recipes_for_station(station_id: String) -> Array:
 	var out := []
+	var t := Property.type_of(station_id)   # #37: any instance of a station offers its type's Designs
 	for r in DB.recipes.values():
-		if r["steps"].has(station_id):
+		if r["steps"].has(t):
 			out.append(r)
 	return out
 
@@ -150,6 +151,33 @@ static func current_op() -> Dictionary:
 
 static func current_station() -> String:
 	return str(current_op().get("station", ""))
+
+
+## Living Workshop (#37): the station INSTANCE the smith works the current operation at — the one he chose (walked up
+## to or worked at: job["at"]) while it is of the operation's type and set up; otherwise the first set-up instance of
+## that type no apprentice is using (else the first). "" without a current operation.
+static func smith_instance() -> String:
+	var t := current_station()
+	if t == "":
+		return ""
+	var at := str(job().get("at", ""))
+	if at != "" and Property.type_of(at) == t and Property.is_installed(at):
+		return at
+	var inst := Property.instances(t)
+	if Game.state.has("apprentices"):
+		for sid in inst:
+			if Apprentices.instance_user(str(sid), false) == "":
+				return str(sid)
+	return str(inst[0]) if not inst.is_empty() else t
+
+
+## The smith settles at this instance for his current operation (he walked up to it, or works there). An apprentice
+## using it steps aside to another free one of its kind (the smith has priority).
+static func choose_instance(sid: String) -> void:
+	var j := job()
+	if j.is_empty() or Property.type_of(sid) != current_station() or not Property.is_installed(sid):
+		return
+	j["at"] = sid
 
 
 static func skill_for_station(station_id: String) -> String:
@@ -210,7 +238,7 @@ static func check_params(station_id: String, recipe_id := "", checks := -1, opts
 	f["complexity"] = clampf(1.0 + COMPLEXITY_PER_OP * (n_ops - 3), COMPLEXITY_RANGE.x, COMPLEXITY_RANGE.y)
 	# 3. workstation tier and hand tuning
 	f["tier"] = float(STATION_TIER.get(str(DB.station(station_id).get("discipline", "classic")), 1.0))
-	var tune: Dictionary = STATION_TUNING.get(station_id, {})
+	var tune: Dictionary = STATION_TUNING.get(Property.type_of(station_id), {})
 	f["tune_zone"] = float(tune.get("zone", 1.0))
 	f["tune_speed"] = float(tune.get("speed", 1.0))
 	# 4. the smith's condition (his fatigue; other workers' tiredness is not modelled)
@@ -283,19 +311,23 @@ static func grade(q: float) -> String:
 
 static func record_step(station_id: String, qualities: Array) -> void:
 	var j := job()
-	if j.is_empty() or current_station() != station_id:
+	var t := Property.type_of(station_id)   # #37: any instance of the operation's station type
+	if j.is_empty() or current_station() != t:
 		return
 	var o := current_op()
 	var w := float(o.get("weight", 1.0))
 	var sum := 0.0
 	for q in qualities:
-		j["samples"].append({"station": station_id, "q": float(q), "w": w})
+		j["samples"].append({"station": t, "q": float(q), "w": w})
 		sum += float(q)
 	if not j.has("ops"):
 		j["ops"] = []
-	j["ops"].append({"op": str(o.get("op", "")), "station": station_id, "q": sum / maxf(1.0, qualities.size()),
-		"checks": qualities.duplicate(), "w": w})
+	var rec := {"op": str(o.get("op", "")), "station": t, "q": sum / maxf(1.0, qualities.size()), "checks": qualities.duplicate(), "w": w}
+	if station_id != t or Property.instance_count(t) > 1:
+		rec["at"] = station_id   # the instance he worked at
+	j["ops"].append(rec)
 	j["step"] = int(j["step"]) + 1
+	j.erase("at")
 	var sw := Steward.marked(j)   # S2: work begun under the steward teaches the smith nothing (also when he finishes it later)
 	Steward.begin_marked(sw)
 	Game.grant_player_xp(skill_for_station(station_id), 3 + qualities.size() * 2)

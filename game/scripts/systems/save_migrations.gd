@@ -28,6 +28,8 @@ const STEPS := [
 		"what": "Run 0.1 (decision D13): every piece or record of a Unique artifact in the save is registered; the lowest uid is the authentic piece and any others are kept whole as recorded legacy copies, so the campaign never mints that Unique again (Uniques.scan_state)."},
 	{"to": 5, "name": "worker professions",
 		"what": "The Living Workshop B1: the smith is the blacksmith; every workshop apprentice (on the staff or gone), and every waiting applicant, gains a profession from their strongest workshop skill (ties: their preferred discipline, then smithing). Every level, experience point, trait, wage, rank, log, memory, creation, task and contract hour is kept; the smith keeps every level (other crafts simply stop growing past the basic level from now on); field hirelings are unchanged (Workers.migrate_professions)."},
+	{"to": 6, "name": "station instances and work orders",
+		"what": "The Living Workshop #37 and C1: every station already in the workshop becomes instance #1 of its type under the same id (layouts, storage, wear and the stations' history unchanged; a station both set up and listed in storage is kept set up once); every open apprentice task that makes a Design becomes a staged work order — its operations grouped into stages by station discipline, the stages already worked marked done by whoever worked them, the current stage with its worker — and an open order for equipment reserves the uid its piece will carry. Materials in hand, progress, workers and finished pieces are kept (Property.migrate_instances, Apprentices.migrate_work_orders)."},
 ]
 
 
@@ -83,6 +85,8 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			_v3_to_v4(data)
 		5:
 			_v4_to_v5(data)
+		6:
+			_migrate_station_instances_and_work_orders(data)
 		_:
 			return false
 	return true
@@ -151,6 +155,17 @@ static func _v4_to_v5(data: Dictionary) -> void:
 		for a in staff:
 			Log.info("  %s: %s" % [str(a.get("name", "?")), Workers.profession_name(str(a.get("profession", "")))])
 		Log.info("  %d workshop worker(s) given a profession" % n)
+
+
+## v5 → v6 (The Living Workshop #37 + C1): station instances and staged work orders. Idempotent: a second pass finds
+## nothing to change. Instance #1 keeps the type id, so no layout key moves; open Design tasks gain their stages.
+static func _migrate_station_instances_and_work_orders(data: Dictionary) -> void:
+	var n := Property.migrate_instances(data)
+	if n > 0:
+		Log.info("  station instances: %d storage entr%s tidied" % [n, "y" if n == 1 else "ies"])
+	var w := Apprentices.migrate_work_orders(data)
+	if w > 0:
+		Log.info("  %d open task%s became staged work orders" % [w, "" if w == 1 else "s"])
 
 
 ## Runs `fn` with Game.state pointing at `data` (systems read the save through Game.state), then restores it.

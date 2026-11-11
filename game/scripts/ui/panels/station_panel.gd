@@ -23,14 +23,19 @@ var chips_row: HBoxContainer
 var count_label: Label
 
 
+## The station's TYPE (#37: the panel may be opened at an instance, "anvil#2"; Designs, services and art are the type's).
+var stype := ""
+
+
 func _init(id: String) -> void:
 	station_id = id
-	var st := DB.station(id)
-	super._init(st.get("name", id), 1180, 800)   # #47: was 1220×860
+	stype = Property.type_of(id)
+	super._init(Property.instance_label(id) if not Game.state.is_empty() else str(DB.station(id).get("name", id)), 1180, 800)   # #47: was 1220×860
 
 
 func _ready() -> void:
 	super._ready()
+	Crafting.choose_instance(station_id)   # #37: he walked up to this one — his current step is worked here
 	_build()
 	Events.crafting_changed.connect(_build)
 	Events.inventory_changed.connect(_build)
@@ -40,7 +45,7 @@ func _build() -> void:
 	UIKit.clear(content)
 	var st := DB.station(station_id)
 	var head := UIKit.hbox(18)
-	head.add_child(UIKit.icon("stations/" + station_id, 128))
+	head.add_child(UIKit.icon("stations/" + stype, 128))
 	var info := UIKit.vbox(4)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_child(UIKit.label(Crafting.DISCIPLINE_NAME.get(st.get("discipline", ""), ""), 22, "heading_italic", UIKit.RUBRIC))
@@ -81,7 +86,7 @@ func _build() -> void:
 		body.add_child(UIKit.rich("\n".join(lines), 20))
 		if job["awaiting_dice"]:
 			body.add_child(UIKit.button("Roll the dice and finish the piece", func(): Events.open_panel.emit("dice", {}), 420))
-		elif Crafting.current_station() == station_id:
+		elif Crafting.current_station() == stype:
 			var op := Crafting.op_params()
 			var wb := UIKit.button("%s (%d check%s · %s)" % [op["op"], op["count"], "s" if op["count"] > 1 else "", check_name(station_id)], _work, 520)
 			wb.name = "WorkButton"
@@ -103,14 +108,14 @@ func _build() -> void:
 		list_box = UIKit.vbox(10)
 		body.add_child(list_box)
 		_fill_list()
-	if station_id == "rune_engraving_stand" and why == "":
+	if stype == "rune_engraving_stand" and why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(_socket_ui())
-	if station_id == "infusion_rack" and why == "":
+	if stype == "infusion_rack" and why == "":
 		body.add_child(UIKit.divider())
 		body.add_child(_treat_ui())
 	if why == "" and job.is_empty():
-		var svc := WorkshopServices.build(station_id)   # sharpening (grinding wheel), reforging (anvil)
+		var svc := WorkshopServices.build(stype)   # sharpening (grinding wheel), reforging (anvil)
 		if svc != null:
 			body.add_child(UIKit.divider())
 			body.add_child(svc)
@@ -353,7 +358,8 @@ func _on_link(meta: String) -> void:
 func _start(rid: String) -> void:
 	if Crafting.start(rid):
 		Events.toast.emit("Begun: %s. First: %s at the %s." % [DB.recipe(rid)["name"], Crafting.current_op().get("op", ""), DB.station(Crafting.current_station())["name"]], "info")
-		if Crafting.current_station() == station_id:
+		if Crafting.current_station() == stype:
+			Crafting.choose_instance(station_id)
 			_work()
 
 

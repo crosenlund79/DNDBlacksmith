@@ -89,7 +89,7 @@ static func _station(sid: String) -> Dictionary:
 	if sid == Contracts.BENCH:
 		return Contracts.prompt()   # The Living Realm: the Project Bench (major contracts)
 	var st := DB.station(sid)
-	var p := _p(str(st.get("name", sid)))
+	var p := _p(Property.instance_label(sid))   # #37: "Anvil #2" when the workshop has several
 	# iteration 012: an apprentice at this station says so (the smith still takes it; they step aside)
 	var ap := ApprenticeActors.station_prompt(sid, "")
 	if ap != "":
@@ -106,7 +106,7 @@ static func _station(sid: String) -> Dictionary:
 	if not job.is_empty():
 		if bool(job.get("awaiting_dice", false)):
 			p["actions"] = ["Roll the dice"]
-		elif Crafting.current_station() == sid:
+		elif Crafting.current_station() == Property.type_of(sid):
 			p["actions"] = [str(Crafting.current_op().get("op", "Work")).capitalize() + " (next step)"]
 		else:
 			p["actions"] = ["Current work"]
@@ -121,7 +121,7 @@ static func _station(sid: String) -> Dictionary:
 	else:
 		acts.append("Recipes")
 		p["off"].append("Nothing ready — materials missing")
-	match sid:
+	match Property.type_of(sid):
 		"grinding_wheel":
 			acts.append("Sharpen")
 			var reps := Shop.waiting().filter(func(c): return str(c.get("want", "")) == "repair").size()

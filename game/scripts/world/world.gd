@@ -590,14 +590,15 @@ func _build_stations() -> void:
 			ysort.add_child(node)
 			_solid(Rect2(pos - size * Vector2(0.38, 0.28), size * Vector2(0.76, 0.56)))
 			s.flip_h = Property.flipped(sid)
-			station_sprites[st["id"]] = s
+			station_sprites[sid] = s
 		else:
 			var fs := _sprite("stations/" + st["id"], pos, floor_layer)
 			fs.flip_h = Property.flipped(sid)
-			station_sprites[st["id"]] = fs
+			station_sprites[sid] = fs
 			node = fs
 		var is_main := mains.has(sid)
-		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", st["id"], str(st["name"]) + (" — choose recipes here" if is_main else ""))
+		# Living Workshop (#37): every INSTANCE is its own interactable ("anvil#2"); the sprite and base are its type's
+		_add_interactable(pos, maxf(size.x, size.y) * 0.5 + 42.0, "station", sid, Property.instance_label(sid) + (" — choose recipes here" if is_main else ""))
 		if is_main:
 			_main_station_mark(pos, size)
 		for fx in st.get("fx", []):
@@ -609,6 +610,7 @@ func _build_stations() -> void:
 	_marker.visible = false
 	add_child(_marker)
 	Events.crafting_changed.connect(_update_marker)
+	Events.apprentices_changed.connect(_update_marker)   # #37: the smith's free instance follows the apprentices
 	Events.station_worked.connect(_station_worked)
 	_update_marker()
 	Events.world_flag_changed.connect(func(_f): _refresh_station_locks())
@@ -699,25 +701,39 @@ func station_pos(id: String) -> Vector2:
 	return bpos("smithy", tpos.x, tpos.y)
 
 
-## Ember marker bobbing over the station the current crafting job needs next.
+## Ember marker bobbing over the station the current crafting job needs next (#37: the instance he will use).
+var _marker_at := ""
+var _marker_tw: Tween
+
+
 func _update_marker() -> void:
-	var st := Crafting.current_station()
+	if _marker == null or not is_instance_valid(_marker):
+		return
+	var st := Crafting.smith_instance()
 	if st == "":
 		_marker.visible = false
+		_marker_at = ""
 		return
+	if st == _marker_at and _marker.visible:
+		return
+	_marker_at = st
 	var size: Array = DB.station(st)["size"]
 	_marker.visible = true
 	var base := station_pos(st) - Vector2(0, float(size[1]) * 0.5 + 30.0)
 	_marker.position = base
+	if _marker_tw != null and _marker_tw.is_valid():
+		_marker_tw.kill()   # one bobbing tween at a time (it moves between instances now)
 	var tw := _marker.create_tween().set_loops()
+	_marker_tw = tw
 	tw.tween_property(_marker, "position:y", base.y - 12.0, 0.45).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_marker, "position:y", base.y, 0.45).set_trans(Tween.TRANS_SINE)
 
 
 ## Tactile feedback in the world for each resolved check: sparks, steam, bubbles, rune and arcane flashes.
-func _station_worked(id: String, quality: float) -> void:
-	var pos := station_pos(id)
+func _station_worked(iid: String, quality: float) -> void:
+	var pos := station_pos(iid)
 	var good := quality >= 95.0
+	var id := Property.type_of(iid)   # #37: the effect belongs to the type, the place to the instance
 	match id:
 		"anvil", "arcane_anvil", "grinding_wheel", "rune_polishing_wheel":
 			var sp := FX.sparks()
@@ -2133,7 +2149,7 @@ static func station_usable(sid: String) -> bool:
 	if not Property.is_installed(sid) or Crafting.station_locked_reason(sid) != "":
 		return false
 	if Crafting.active():
-		return Crafting.current_station() == sid
+		return Crafting.smith_instance() == sid   # #37: the instance he will use for his next step
 	return WorldPrompts._ready_count(sid) > 0
 
 

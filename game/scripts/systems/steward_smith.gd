@@ -401,7 +401,7 @@ static func _work(minutes: int) -> void:
 static func _work_piece(minutes: int) -> void:
 	var m := sm()
 	var j := Crafting.job()
-	var sid := Crafting.current_station()
+	var sid := Crafting.smith_instance()   # Living Workshop #37: the instance of the step's station he will use
 	if sid == "":
 		_finish_piece()
 		return
@@ -415,6 +415,7 @@ static func _work_piece(minutes: int) -> void:
 	if not _reach("station:" + sid, minutes):
 		m["act"] = "walk"
 		return
+	Crafting.choose_instance(sid)   # he stands at it: an apprentice there steps aside to another of its kind
 	m["act"] = "work"
 	if float(m["op_need"]) <= 0.0:
 		m["op_need"] = _op_minutes(str(j["recipe"]), Crafting.current_op())
@@ -437,7 +438,7 @@ static func _finish_op() -> void:
 	var qs: Array = []
 	for i in maxi(1, int(op.get("checks", 1))):
 		qs.append(snappedf(minf(QUALITY_CAP, Contracts.smith_hour_quality(rid, rng)), 0.1))
-	Crafting.record_step(sid, qs)
+	Crafting.record_step(Crafting.smith_instance() if Crafting.current_station() == Property.type_of(sid) else sid, qs)
 	m["op_progress"] = 0.0
 	m["op_need"] = 0.0
 	m["ops_n"] = int(m["ops_n"]) + 1
@@ -721,7 +722,14 @@ static func _work_repair(minutes: int) -> void:
 		m["job"] = {}
 		m["act"] = "idle"
 		return
-	var sid := _repair_station()
+	var sid := str(job.get("at", ""))
+	if Game.state.has("apprentices") and float(job.get("progress", 0.0)) <= 0.0:
+		var free := Apprentices.pick_instance(_repair_station(), "smith", sid)   # #37: a free wheel of the several
+		if free != "":
+			sid = free
+	if sid == "":
+		sid = _repair_station()
+	job["at"] = sid
 	if not _reach("station:" + sid, minutes):
 		m["act"] = "walk"
 		return

@@ -194,7 +194,7 @@ func _stations() -> Control:
 	for sid_v in installed + others:
 		var sid := str(sid_v)
 		var state := Apprentices.station_state(sid)
-		g.add_child(UIKit.label(str(DB.station(sid).get("name", sid)), 16, "body_bold"))
+		g.add_child(UIKit.label(Property.instance_label(sid), 16, "body_bold"))   # #37: "Anvil #2"
 		var col: Color = ApprenticeUI.STATION_COLS.get(state, UIKit.INK)
 		var word := str(ApprenticeUI.STATION_WORDS.get(state, state))
 		var u := Apprentices.station_user(sid)
