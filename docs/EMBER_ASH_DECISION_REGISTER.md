@@ -19,7 +19,7 @@ technical work). No entry in this register authorises implementation; work start
 **Companion documents:** [`EMBER_ASH_ROADMAP_REGISTER.md`](EMBER_ASH_ROADMAP_REGISTER.md) (milestones, gates, dependencies,
 risks) and [`EMBER_ASH_PLAYTEST_OBSERVATIONS.md`](EMBER_ASH_PLAYTEST_OBSERVATIONS.md) (playtest observations OBS-01 … OBS-21).
 
-**Size:** 590 entries in this register, plus 21 playtest observations in the observation register.
+**Size:** 591 entries in this register, plus 21 playtest observations in the observation register.
 
 ---
 
@@ -132,18 +132,18 @@ passes recorded only what canonical does not name.
 | `CIV` | 8 | 6 | 0 | 0 | 2 | 6 | 2 | 0 | 0 | 0 |
 | `UX` | 23 | 22 | 0 | 1 | 0 | 2 | 4 | 1 | 16 | 0 |
 | `LORE` | 17 | 12 | 2 | 2 | 1 | 10 | 4 | 1 | 2 | 0 |
-| `BUG` | 50 | 25 | 19 | 5 | 1 | 25 | 6 | 4 | 15 | 0 |
+| `BUG` | 51 | 26 | 19 | 5 | 1 | 25 | 6 | 4 | 16 | 0 |
 | `PROP` | 26 | 4 | 22 | 0 | 0 | 19 | 3 | 0 | 4 | 0 |
 | `QST` | 31 | 19 | 0 | 12 | 0 | 20 | 6 | 4 | 1 | 0 |
 | `HA` | 57 | 51 | 2 | 3 | 1 | 2 | 2 | 15 | 38 | 0 |
 | `HB` | 62 | 54 | 0 | 7 | 1 | 5 | 2 | 5 | 49 | 1 |
-| **All** | **590** | **449** | **65** | **40** | **36** | **200** | **84** | **60** | **245** | **1** |
+| **All** | **591** | **450** | **65** | **40** | **36** | **200** | **84** | **60** | **246** | **1** |
 
 ### 1.2 Counts by target
 
 | BASELINE | A1 | S1 | A2 | RUN0 | RUN0.1 | S2 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG | — |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 196 | 31 | 28 | 15 | 1 | 8 | 24 | 39 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 89 | 36 |
+| 196 | 31 | 28 | 15 | 1 | 8 | 25 | 39 | 17 | 7 | 22 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 89 | 36 |
 
 ### 1.3 Conflicts with canonical
 
@@ -942,7 +942,7 @@ records the change):
 ## Part III — Known defects, proposals and open questions
 
 
-### 15. Known bugs and limitations — `BUG` (50)
+### 15. Known bugs and limitations — `BUG` (51)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -996,6 +996,7 @@ records the change):
 | BUG-048 | Payment records that D14 relies on survive long campaigns. Today `Game.state.ledger` keeps only its last 400 lines (a 365-day steward soak writes about 1,447), yet `Payments.business_with`, `gift_budget` and `unaccounted` read it; contract history keeps 30 entries. | D14 ("explicit and recorded"); CV §10.4; Run 0 economy audit | UNDECIDED | PARTIAL | BACKLOG | `game.gd:190`; `payments.gd`; `contracts.gd:851`; the durable record is `order.paid` on `Shop.orders` (never pruned); related ECO-042, LORE-008 | Which payment records must be permanent, and where (Gate J retention policy)? |
 | BUG-049 | Player, test and design documents describe the current build. Today no `game/docs` file or README mentions Steward Mode; `TESTING.md` lacks rows for `t_steward`, `t_steward_ui`, `t_economy_a2`, `t_experience_a2` and other suites; `STEWARD_MODE_DESIGN.md` §6.1 soak figures predate A2; `DANSK.md` stops at Iteration 009; `VERTICAL_SLICE_REPORT.md` is an unlabelled historical snapshot. | CLAUDE.md §2.7 (honest status); Run 0 Steward/UX/Lore and history audits | APPROVED | PARTIAL | A-REM | related TECH-023, PROP-010, UX-015 Run 0.1: `TESTING.md` gained the `t_run01` row and the corrected `t_smithy` renown wording; `TECHNICAL.md` gained schema 4 and the history section. The other gaps remain. | Documentation only. Run 0 deliberately changed no existing document; authorise a documentation pass? |
 | BUG-050 | The selling-tutorial gate tells a customer's payment from background income. Borin's hourly "sales" line can still complete the step while a counter-class panel (e.g. a conversation) is open. | B:A2 obs 1; Run 0 observation audit (OBS-01 residual) | APPROVED | VERIFIED | S2 | `tutorial.gd:_on_gold`, `serving_at_counter()`; the A2 ledger `party` field could distinguish them; inferred from code, not reproduced S2: only the served customer's payment completes the selling step; `t_s2_early`, unit check in `test_runner`. | Reproduce first; fix not authorised. |
+| BUG-051 | An expert smith still learns Mining from smelting: the expert XP damping applied to every skill of a recipe once the smith was expert in its main craft, so a smith expert at smithing but a novice miner gained (almost) no Mining XP from smelting. Damping now applies only to a skill he is also expert in. | Mining XP hotfix (`hotfix/mining-xp`, `c8baf4e`), integrated into S2 as `4fbfaee` | APPROVED | VERIFIED | S2 | `crafting.gd` (expert damping per skill); `t_mining_xp.expert_smith_still_learns_mining_from_smelting`; the S2 zero-XP guard (`Game.grant_player_xp`) still withholds all XP under the steward (STW-030) | — |
 
 
 ### 16. Proposals awaiting a decision — `PROP` (26)
@@ -1282,3 +1283,4 @@ records the change):
 | 10 November 2026 | Created in Run 0 (roadmap reconciliation) from canonical v1.1 and nine verified audit passes at `fa7b5b7`. |
 | 10 November 2026 | Run 0.1: EQ-024, QST-013 (D13 registry), ECO-042, TECH-016, QST-014, BUG-038 … BUG-041 (D14), GOV-030, WLD-015, QST-018 (D18), LORE-017, GOV-031 (split documented), QST-026, QST-015 (canonical v1.2), BUG-049, TECH-006, WS-005 updated; QST-028 added; target `RUN0.1` added. |
 | 10 November 2026 | S2: BUG-001, BUG-043, BUG-044, BUG-045, BUG-050 verified; BUG-005 superseded; BUG-020, ECO-011 partial; PROP-015/016/017/020 approved by the S2 brief and verified; ECO-044, STW-020, HB-056 updated; added STW-029 … STW-032, UX-017 … UX-023, PROP-022 … PROP-026, QST-029 … QST-031; target `S2`; canonical v1.3. |
+| 11 November 2026 | S2 completion: BUG-051 (Mining XP hotfix integrated into S2, `4fbfaee`). |
