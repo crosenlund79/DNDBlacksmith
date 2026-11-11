@@ -297,6 +297,74 @@ func test_rune_binding_follows_skill() -> void:
 	check(idle < 40.0, "a rune left to itself binds badly (%.0f %%)" % idle)
 
 
+# ------------------------------------------------------------------ #39 people spread around their destinations
+func _village() -> VillageWorld:
+	var w := VillageWorld.new()
+	_host().add_child(w)
+	return w
+
+
+## Groups of visible people standing within `px` of each other (outside the smithy's waiting seats).
+func _stacks(w: VillageWorld, px := 20.0) -> Array:
+	var vis := []
+	for id in w.npcs:
+		var n: NPCActor = w.npcs[id]
+		if n.visible and not str(n.target_spot).begins_with("wait_seat_"):
+			vis.append(n)
+	var out := []
+	for i in vis.size():
+		for j in range(i + 1, vis.size()):
+			if (vis[i] as NPCActor).position.distance_to((vis[j] as NPCActor).position) < px:
+				out.append("%s+%s@%s" % [vis[i].npc_id, vis[j].npc_id, vis[i].target_spot])
+	return out
+
+
+func test_people_spread_around_their_destinations() -> void:
+	fresh_game()
+	var w := _village()
+	var stacked := 0
+	var samples := 0
+	var shared_spots := 0
+	var worst := 0
+	for d in 3:
+		for h in [9, 10, 11, 14, 15, 16, 17, 19, 20]:
+			Game.state["day"] = 1 + d
+			Game.state["minute"] = h * 60
+			w._update_schedules(true)
+			samples += 1
+			var at := {}
+			for id in w.npcs:
+				var n: NPCActor = w.npcs[id]
+				if not n.visible:
+					continue
+				var sp := w.spot_for(str(id))
+				eq(str(n.target_spot), sp, "%s keeps their real schedule (%s)" % [id, sp])
+				if w.spots.has(sp):
+					check(n.position.distance_to(w.spots[sp]) <= 2.3 * VillageWorld.T, "%s stands at %s (%.0f px from it)" % [id, sp, n.position.distance_to(w.spots[sp])])
+				at[sp] = int(at.get(sp, 0)) + 1
+			for sp in at:
+				if int(at[sp]) > 1 and not str(sp).begins_with("wait_seat_"):
+					shared_spots += 1
+					worst = maxi(worst, int(at[sp]))
+			var st := _stacks(w)
+			stacked += st.size()
+			if not st.is_empty():
+				check(false, "day %d %02d:00 nobody stands on someone else (%s)" % [1 + d, h, ", ".join(PackedStringArray(st.slice(0, 4)))])
+	note("%d village moments: %d times several people shared a destination (up to %d at once) — now each stands in their own place; %d overlaps" % [samples, shared_spots, worst, stacked])
+	check(shared_spots > 0, "the schedules really do send several people to one spot (the situation #39 describes)")
+	# every standing place is on open ground in sight of the spot
+	var nav := PlayerNav.of(w)
+	if check(nav != null, "the walk grid is there"):
+		for sp in w._stand:
+			for id in w._stand[sp]:
+				var off: Vector2 = w._stand[sp][id]
+				if off == Vector2.ZERO:
+					continue   # the spot itself (a seat stays a seat)
+				check(w._stand_ok(w.spots[sp], w.spots[sp] + off) and nav.walkable(w.spots[sp] + off), "%s's place at %s is open ground in sight of it" % [id, sp])
+	w.get_parent().remove_child(w)
+	w.free()
+
+
 # ------------------------------------------------------------------ #56 asking an adventurer what they need forged
 func _in_town(cls := "") -> Dictionary:
 	for a in Adv.all().values():
