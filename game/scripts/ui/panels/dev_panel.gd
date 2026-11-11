@@ -374,10 +374,10 @@ func _iter9_tools() -> void:
 		["Install every station", func(): Property.dev_grant_all(); _rebuild("Every station installed")],
 		["Buy every station (to storage)", func(): _buy_all_stations()],
 		["Open Property & Workshop", func(): Events.open_panel.emit("property", {})]])
-	_section("Skill tree & recipes", [
+	_section("Skill tree & Designs", [
 		["Unlock every skill-tree node", func(): _static_call("res://scripts/systems/skilltree.gd", "unlock_all"); Events.world_flag_changed.emit("tree"); _say("Every node unlocked")],
 		["Reset the tree to a new game", func(): _static_call("res://scripts/systems/skilltree.gd", "reset_new"); _say("Tree reset")],
-		["Learn every secret recipe", func(): _secret_recipes()],
+		["Learn every secret Design", func(): _secret_recipes()],
 		["Open the skill tree", func(): Events.open_panel.emit("skilltree", {})],
 		["Open the equipment designer", func(): Events.open_panel.emit("designer", {})]])
 	_section("Iteration 010 — village life", [
@@ -470,7 +470,7 @@ func _secret_recipes() -> void:
 		if f != "":
 			Game.set_flag(f)
 	Events.world_flag_changed.emit("recipes")
-	_say("Secret recipes learned")
+	_say("Secret Designs learned")
 
 
 ## Representative states for testing progression and the expanded building.

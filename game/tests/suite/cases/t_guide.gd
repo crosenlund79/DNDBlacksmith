@@ -209,7 +209,7 @@ func test_knowledge_persists() -> void:
 	check(save_load("suite_guide_k"), "save/load")
 	check(Knowledge.owned("hint_forgotten_recipes") and Knowledge.owned("know_exotic_cargo"), "bought knowledge persists through save/load")
 	var titles: Array = Reference.tab_entries("knowledge").map(func(e): return str(e["title"]))
-	check(titles.has("Old notes: forgotten recipes"), "the hint is in Help › Knowledge (%s)" % str(titles))
+	check(titles.has("Old notes: forgotten Designs"), "the hint is in Help › Knowledge (%s)" % str(titles))
 	check(Knowledge.offers("pawnbroker").any(func(o): return bool(o["bought"]) and str(o["text"]) != ""), "Quell's counter shows it as known, with its text")
 	eq(Knowledge.buy("nonsense"), "Nobody sells that.", "unknown offers are refused")
 

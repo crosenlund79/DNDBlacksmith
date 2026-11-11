@@ -509,7 +509,7 @@ static func _specialty_match(app: Dictionary, cat: String) -> bool:
 ## Workers.can_do).
 static func can_make(app: Dictionary, recipe_id: String) -> String:
 	if DB.recipe(recipe_id).is_empty():
-		return "Unknown recipe."
+		return "Unknown Design."
 	return Workers.competence_reason(app, recipe_id)
 
 
@@ -519,7 +519,7 @@ static func can_make(app: Dictionary, recipe_id: String) -> String:
 static func rank_reason(app: Dictionary, recipe_id: String) -> String:
 	var r := DB.recipe(recipe_id)
 	if r.is_empty():
-		return "Unknown recipe."
+		return "Unknown Design."
 	var rd := rank_data(str(app.get("rank", "novice")))
 	var rn := str(rd.get("name", "Novice")).to_lower()
 	var disc := str(r.get("discipline", "classic"))
@@ -676,7 +676,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 		"craft", "prep":
 			var rid := str(t["recipe"])
 			if DB.recipe(rid).is_empty():
-				return {"error": "Choose a recipe."}
+				return {"error": "Choose a Design."}
 			if kind == "prep" and Items.is_equipment({"def": str(DB.recipe(rid).get("output", ""))}):
 				return {"error": "Preparation is for materials, potions and runes — queue equipment as crafting."}
 			# B1: the WORKSHOP must know the Design (and its stations); who is competent to make it is the worker's
@@ -700,7 +700,7 @@ static func add_task(kind: String, opts := {}) -> Dictionary:
 			t["repeat"] = 1
 			t["target"] = str(o.get("npc", ""))
 			if t["recipe"] != "" and DB.recipe(str(t["recipe"])).is_empty():
-				return {"error": "Unknown recipe."}
+				return {"error": "Unknown Design."}
 			t["label"] = "Commission for %s: %s" % [Talk.npc_name(str(o.get("npc", ""))), Shop.order_text(o)]
 		"repair":
 			t["repeat"] = 1

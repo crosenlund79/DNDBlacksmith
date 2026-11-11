@@ -241,7 +241,7 @@ static func yield_lines(it: Dictionary) -> Array:
 	var total := base + int(y.get("bonus", 0))
 	var pur_v := int(y.get("purity", -1))
 	var lines := []
-	var head := "[b]Batch: %d %s[/b] — the recipe makes %d" % [total, nm, base]
+	var head := "[b]Batch: %d %s[/b] — the Design makes %d" % [total, nm, base]
 	if int(y.get("bonus", 0)) > 0:
 		var cause := "your craftsmanship reached %d%% (105%% or more adds a unit)" % int(round(q)) if str(y.get("why", "")) == "craftsmanship" \
 			else "the purity die rolled a 6 (a pure batch adds a unit)"
@@ -251,7 +251,7 @@ static func yield_lines(it: Dictionary) -> Array:
 			(", purity %d" % pur_v) if pur_v >= 0 else ""]
 	lines.append(head)
 	if str(d.get("type", "")) == "material":
-		lines.append("[i][color=#c8b898]Craftsmanship sets how many units a batch yields, not their grade: these join your %s stock and work exactly like the rest in later recipes.[/color][/i]" % nm)
+		lines.append("[i][color=#c8b898]Craftsmanship sets how many units a batch yields, not their grade: these join your %s stock and work exactly like the rest in later Designs.[/color][/i]" % nm)
 	return lines
 
 

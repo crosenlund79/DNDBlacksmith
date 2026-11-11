@@ -573,7 +573,7 @@
      {
       "id": "t_processing",
       "name": "Advanced processing",
-      "desc": "+2% craftsmanship on every material recipe.",
+      "desc": "+2% craftsmanship on every material Design.",
       "quality": 2,
       "filter": {
        "category": [

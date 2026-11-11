@@ -150,7 +150,7 @@ NODES = [
       techniques=[T("t_rare_minerals", "Rare minerals", "Gems and rare ores in expedition loot are recognised at a glance.")], icon="icons/gem_garnet"),
     N("m_adv", "mining", "Advanced Processing", "Double refining, fluxes and slow cooling for flawless stock.", 0, 3.2,
       skill=("mining", 3), nodes=["m_rare"],
-      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material recipe.", 2, category=["material"])], icon="icons/ingot_steel"),
+      techniques=[T("t_processing", "Advanced processing", "+2% craftsmanship on every material Design.", 2, category=["material"])], icon="icons/ingot_steel"),
     N("m_mithril", "mining", "Mithril", "The pale metal that drinks magic. It must be charged before it can be worked.", 0, 4.2,
       skill=("mining", 3), nodes=["m_adv"], seen=["ore_mithril"],
       techniques=[T("t_mithril", "Mithril lore", "Mithril can be charged at the Arcane Crucible.")], icon="icons/ore_mithril"),

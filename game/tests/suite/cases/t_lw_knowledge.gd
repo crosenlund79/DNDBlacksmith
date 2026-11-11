@@ -592,3 +592,47 @@ func test_panel_shows_both_layers() -> void:
 	_mount(tk)
 	check(tk.kscroll.visible and not tk.body.visible, "it can open on the workshop's knowledge")
 	_unmount(tk)
+
+
+# ------------------------------------------------------------------ "Recipe" → "Design" where the player reads it
+func test_player_reads_designs_not_recipes() -> void:
+	_workshop()
+	SkillTree.unlock_all()
+	Game.set_flag("recipe_starsteel")
+	var bad := []
+	for t in Reference.TABS:
+		if str(t[1]).to_lower().contains("recipe"):
+			bad.append("tab " + str(t[1]))
+	for e in Reference.entries():
+		for f in ["title", "body"]:
+			if str(e[f]).to_lower().contains("recipe"):
+				bad.append("Help › %s: %s" % [e["title"], str(e[f]).left(60)])
+	for s in Tutorial.STEPS:
+		if str(s.get("text", "")).to_lower().contains("recipe") or str(s.get("title", "")).to_lower().contains("recipe"):
+			bad.append("tutorial " + str(s["id"]))
+	for o in Knowledge.OFFERS:
+		for f in ["title", "teaser", "text"]:
+			if str(o.get(f, "")).to_lower().contains("recipe"):
+				bad.append("knowledge " + str(o["id"]))
+	for id in DB.items:
+		var it: Dictionary = DB.items[id]
+		if str(it.get("name", "")).to_lower().contains("recipe") or str(it.get("desc", "")).to_lower().contains("recipe"):
+			bad.append("item " + str(id))
+	for rid in DB.recipes:
+		if str(DB.recipe(str(rid)).get("desc", "")).to_lower().contains("recipe") or str(DB.recipe(str(rid)).get("name", "")).to_lower().contains("recipe"):
+			bad.append("Design " + str(rid))
+	for n in SkillTree.nodes():
+		if (str(n.get("name", "")) + str(n.get("desc", "")) + JSON.stringify(n["unlocks"].get("techniques", []))).to_lower().contains("recipe"):
+			bad.append("node " + str(n["id"]))
+	for f in SkillTree.data().get("flags", {}).values():
+		if JSON.stringify(f).to_lower().contains("recipe"):
+			bad.append("flag hint")
+	check(bad.is_empty(), "no player-facing text says 'recipe' %s" % str(bad))
+	eq(DB.item("recipe_scroll").get("name", ""), "Forgotten Design", "the relic scroll is a Forgotten Design (its id stays recipe_scroll)")
+	check(DB.recipes.has("iron_longsword") and Reference.tab_entries("recipes").size() > 0, "internal ids and the Help tab id are unchanged")
+	eq(Workers.knowledge_reason("no_such_design"), "Unknown Design.", "reasons speak of Designs")
+	check(Help_search_finds("recipe") and Help_search_finds("design"), "Help search still finds Designs by either word")
+
+
+func Help_search_finds(word: String) -> bool:
+	return Reference.search(word).any(func(e): return str(e["tab"]) == "recipes")

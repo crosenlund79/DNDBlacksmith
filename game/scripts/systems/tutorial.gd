@@ -11,8 +11,8 @@ extends RefCounted
 const STEPS := [
 	{"id": "move", "title": "Find your feet", "text": "Walk with W A S D or the arrow keys. Hold {run} to hurry.", "on": ["moved"]},
 	{"id": "interact", "title": "Lend a hand", "text": "Walk up to a person or a workstation and press {interact} (or Space) when its name appears.", "on": ["panel:dialogue", "panel:station", "panel:shop", "panel:notice", "panel:loot", "panel:sleep"]},
-	{"id": "craft", "title": "Work the metal", "text": "At a station, choose a recipe, then play its precision checks: press {interact} as the needle crosses the gilt zone.", "on": ["station_worked"]},
-	{"id": "dice", "title": "Roll for fortune", "text": "Finish every step of the recipe, then roll the dice. Craftsmanship and the fortune die decide the rarity.", "on": ["item_crafted"]},
+	{"id": "craft", "title": "Work the metal", "text": "At a station, choose a Design, then play its precision checks: press {interact} as the needle crosses the gilt zone.", "on": ["station_worked"]},
+	{"id": "dice", "title": "Roll for fortune", "text": "Finish every step of the Design, then roll the dice. Craftsmanship and the fortune die decide the rarity.", "on": ["item_crafted"]},
 	{"id": "customer", "title": "Serve a customer", "text": "Customers sit outside the shop door (speech marks on the minimap). Talk to them to sell, repair or deliver a commission.", "on": ["sale"]},
 	{"id": "skills", "title": "Know your craft", "text": "Open the Skill Tree with {panel_skills} (or its toolbar button); {panel_skill_levels} (or a right-click on that button) shows your skill levels.", "on": ["panel:skills", "panel:skilltree"]},
 	{"id": "hirelings", "title": "Put your people to work", "text": "Open Hirelings ({panel_hirelings}) and set what Borin works at — or send him on an expedition.", "on": ["hireling_work"]},
