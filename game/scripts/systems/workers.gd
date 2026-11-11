@@ -507,11 +507,20 @@ static func specialist_text(actor: Variant, q: Dictionary, rid := "") -> String:
 	var t := "Needs %s (%s %d) — %s %s is %s" % [a_noun(str(q.get("profession", ""))), SkillSys.skill_name(sk), need, whose,
 		SkillSys.skill_name(sk).to_lower(), word]
 	if rid != "":
+		var ready := false
 		for id in workshop_actors():
 			if str(id) != "player" and competence_reason(str(id), rid) == "":
 				var who := resolve(str(id))
 				t += ". %s (%s) can make it — queue it in the Workshop Ledger" % [who["name"], str(profession(who)).to_lower()]
+				ready = true
 				break
+		if not ready:
+			# B2 (honest blockers): a specialist of that craft on the staff who is not ready yet, and why
+			for id in workshop_actors():
+				if str(id) != "player" and profession(str(id)) == str(q.get("profession", "")):
+					var why := competence_reason(str(id), rid)
+					t += ". %s is not ready yet: %s" % [resolve(str(id))["name"], (why.left(1).to_lower() + why.substr(1)).trim_suffix(".")]
+					break
 	return t
 
 

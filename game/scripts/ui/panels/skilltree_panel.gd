@@ -191,16 +191,22 @@ func _build_skills() -> void:
 		var own := WorkshopKnowledge.branch_owner(str(b["id"])) == "smith"
 		var best := Workers.best_level(sk)
 		if own or str(best["actor"]) == "player":
-			row.add_child(UIKit.label("%s %d · %s" % [SkillSys.skill_name(sk), Game.player_level(sk), "yours" if own else "you"], 17, "body_bold"))
-			var bar := UIKit.bar(SkillSys.progress(Game.player_skills(), sk), 1.0, 60)
+			var mine := UIKit.label("You %d" % Game.player_level(sk), 17, "body_bold")
+			mine.clip_text = true
+			mine.custom_minimum_size = Vector2(60, 0)
+			mine.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			mine.tooltip_text = ("Your own path: your %s level." if own else "Your %s level — the workshop's best hand in it.") % SkillSys.skill_name(sk)
+			row.add_child(mine)
+			var bar := UIKit.bar(SkillSys.progress(Game.player_skills(), sk), 1.0, 40)
 			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			bar.tooltip_text = "%d / %d experience to the next level" % [int(Game.player_skills().get(sk, {}).get("xp", 0)), SkillSys.xp_needed(Game.player_level(sk) + 1)]
 			row.add_child(bar)
 		else:
-			var who := UIKit.label("%s %d · %s" % [SkillSys.skill_name(sk), int(best["level"]), str(best["name"]).split(" ")[0]], 17, "body_bold")
+			var who := UIKit.label("%s %d · you %d" % [str(best["name"]).split(" ")[0], int(best["level"]), Game.player_level(sk)], 17, "body_bold")
 			who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			who.clip_text = true
+			who.custom_minimum_size = Vector2(60, 0)
 			who.tooltip_text = "The workshop's best hand in %s: %s (%d). Yours: %d." % [SkillSys.skill_name(sk).to_lower(), best["name"], int(best["level"]), Game.player_level(sk)]
 			row.add_child(who)
 		row.add_child(UIKit.label("%d/%d" % [SkillTree.count_learned(str(b["id"])), nb.size()], 16, "body_italic"))
@@ -266,9 +272,11 @@ func _show(id: String, force: bool) -> void:
 		side.add_child(kl)
 	elif st == "available":
 		var bearer := WorkshopKnowledge.bearer(id)
-		var through := "" if own or bearer == "player" or bearer == "" else " — through %s" % str(Workers.resolve(bearer)["name"])
-		var lb := UIKit.button("✦ Learn %s%s" % [n["name"], through], _learn.bind(id), 0)
+		var via := not own and bearer != "player" and bearer != ""
+		var lb := UIKit.button(("✦ Learn through %s" % str(Workers.resolve(bearer)["name"])) if via else ("✦ Learn %s" % n["name"]), _learn.bind(id), 0)
 		lb.name = "LearnButton"
+		lb.clip_text = true   # a long name never widens the side page (and the window)
+		lb.tooltip_text = lb.text
 		side.add_child(lb)
 		if not own and bearer != "":
 			var wl := UIKit.note("The workshop learns it through %s. Nobody's skills change." % WorkshopKnowledge.who_text(bearer), 17)
@@ -486,6 +494,11 @@ func _build_knowledge() -> void:
 static func _nobody_text(rid: String) -> String:
 	var q := Workers.specialist_need("player", rid)
 	if not q.is_empty():
+		for aid in Workers.workshop_actors():
+			if str(aid) != "player" and Workers.profession(str(aid)) == str(q["profession"]):
+				var r := Workers.can_do(str(aid), rid)
+				return "%s, your %s: %s" % [str(Workers.resolve(str(aid))["name"]), str(q["profession"]) if Workers.PROFESSION.has(str(q["profession"])) else "specialist",
+					(r.left(1).to_lower() + r.substr(1)).trim_suffix(".")]
 		return "needs %s (%s %d)" % [Workers.a_noun(str(q["profession"])), SkillSys.skill_name(str(q["skill"])), int(q["level"])]
 	var why := Crafting.recipe_locked_reason(rid)
 	return "not yet: " + (why.left(70) + ("…" if why.length() > 70 else ""))
@@ -716,7 +729,8 @@ class TreeCanvas extends Control:
 		var groups := {"smith": [], "workshop": []}
 		for b in SkillTree.branches():
 			(groups[WorkshopKnowledge.branch_owner(str(b["id"]))] as Array).append(float(b["x"]))
-		var fs := int(maxf(8.0, 15.0 * zoom))
+		var fs := int(maxf(9.0, 18.0 * zoom))
+		var fbold := Assets.font("body_bold")
 		for g in groups:
 			var xs: Array = groups[g]
 			if xs.is_empty():
@@ -724,14 +738,14 @@ class TreeCanvas extends Control:
 			var x0 := ORIGIN.x + float(xs.min()) * COL_W - COL_W * 0.5 + 14
 			var x1 := ORIGIN.x + float(xs.max()) * COL_W + COL_W * 0.5 - 14
 			var col := Color("#7e2418") if g == "smith" else Color("#2e4e6e")
-			var txt := "YOUR OWN PATH — the blacksmith's craft, your own levels" if g == "smith" else "THE WORKSHOP'S KNOWLEDGE — learned through a competent hand: you at your basic level, or a specialist"
+			var txt := "YOUR OWN PATH — your own levels" if g == "smith" else "THE WORKSHOP'S KNOWLEDGE — through a competent hand: you at your basic level, or a specialist"
 			var a := scr(Vector2(x0, 14))
 			var bpt := scr(Vector2(x1, 14))
-			var sz := fi.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			var sz := fbold.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
 			var mid := (a.x + bpt.x) * 0.5
-			draw_line(a, Vector2(mid - sz.x * 0.5 - 8, a.y), Color(col, 0.6), maxf(1.0, 1.4 * zoom))
-			draw_line(Vector2(mid + sz.x * 0.5 + 8, a.y), bpt, Color(col, 0.6), maxf(1.0, 1.4 * zoom))
-			draw_string(fi, Vector2(mid - sz.x * 0.5, a.y + fs * 0.35), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col.darkened(0.2))
+			draw_line(a, Vector2(mid - sz.x * 0.5 - 8, a.y), Color(col, 0.6), maxf(1.0, 1.6 * zoom))
+			draw_line(Vector2(mid + sz.x * 0.5 + 8, a.y), bpt, Color(col, 0.6), maxf(1.0, 1.6 * zoom))
+			draw_string(fbold, Vector2(mid - sz.x * 0.5, a.y + fs * 0.35), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col.darkened(0.15))
 
 	## The arcane branch starts sealed: a large faint padlock and a line of explanation in its empty column.
 	func _sealed_note(cx: float, fi: Font) -> void:
