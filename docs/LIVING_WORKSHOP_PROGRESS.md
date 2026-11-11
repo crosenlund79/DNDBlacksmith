@@ -47,7 +47,7 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
 | RELIABILITY | 1 | #57, #59–61, #53, #58, #39, #45, #56; verify #41, #48, #49 | **merged** 5fea6d3 (#59–60 root cause: skill-tree panel left old content in layout during rebuilds → message-queue overflow → SIGSEGV; fixed + seeded fuzz test); worker: full 237/346/385, `lw_reliability` 0 fail | `claude/lw-reliability` 46253af |
 | UI | 1 | #38, #42, #43, #44, #46, #47, #54–55 | **merged** 653631d, `claude/lw-ui` 9c0bfd8 (#43 not reproduced → hardened); worker: full 242 scripts, suite 342/342, unit 385/385, `lw_ui` 0 fail @1920/1600; lead: compile 242/0, t_lw_ui + t_saves green | `worktree-agent-a99d9abbf2c078959` 9c0bfd8 |
 | KNOWLEDGE | 2 | B2 trees, workshop knowledge, Designs naming, migration 6 | **merged** 319ce0f (tree identical to worker's tested 40e58c0, which already contained a5bc210): `WorkshopKnowledge` store; smith's own path = smithing + mining, other crafts learned through the most competent hand; `ar_energy` Smithing-6 gate removed; deadlocks fixed (master max_difficulty 10→12 for Adamantine Warplate; arcanist applicants start at Arcane 3); schema 6 `migrate_workshop_knowledge`; worker: full 250/374/390 green, `lw_knowledge` 0 fail | `claude/lw-knowledge` 40e58c0 |
-| PRODUCTION | 2 | #37 station instances + C1 work orders + ledger + Emberwarden chain, migration 7 | brief `docs/lw/lw_w_production.md` (031101b); after FOUNDATION | |
+| PRODUCTION | 2 | #37 station instances + C1 work orders + ledger + Emberwarden chain, migration 7 | **merged** a64e144 (tree identical to worker's 6f3aa7d): instance #1 keeps the type id, further `anvil#2`…; one per pair of hands (min 2, max 5), +25 % per extra; work orders = apprentice tasks with `stages[]` (craft-grouped), uid reserved at creation, maker = forging-stage worker (PROD-010 fixed), `prov` contributors + Lore, smith claims stages, D8 help requests; Ledger stages; steward plans via Workers; schema 7; worker: full 258/399/390 green, `lw_stations` + `lw_emberwarden` 0 fail | `claude/lw-production` 6f3aa7d |
 | FAMILY | 2 | #50–52 spouse/pet, #40 steward sleep pace | **merged** 7731642 (tree identical to worker's tested fea54a2): `Family` (spouse serves the counter in shop hours by consent, one NPC identity, no slot; cap 0–25 %, default 0 %, enforced in `Shop.counter_price_reason`); pet follower (Hale Farm creature, existing art); night pace 5× opt-in (default off), restored at 06:00/exit/load/new game; walking-step loss at waypoints fixed in `npc.gd`; worker: full 254/384/390 green, `lw_family` 0 fail | `claude/lw-family` fea54a2 |
 
 ## Lead pending
@@ -55,9 +55,10 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
   `lw_foundation` and `lw_ui` 0 failures on the merged head.
 - [x] RELIABILITY merged (5fea6d3; `WhoIsWho.is_opportunity` follows the #56 ask rule): lead full run ALL GREEN — compile
   247/0, suite 363/363, unit 390/390; rendered `lw_reliability` 0 failures. Wave-2 workers told to merge this head.
-- [ ] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on a9a08ca (WIP → `claude/lw-wip-knowledge|production|family`);
+- [x] Wave 2 (KNOWLEDGE, PRODUCTION, FAMILY) spawned on a9a08ca (WIP → `claude/lw-wip-knowledge|production|family`);
   all workers were paused by the 5-hour usage limit at ~12:5x UTC and resumed at 13:22 UTC from their own transcripts; PRODUCTION's schema step is renumbered to 7 at merge (each worker appends after 5 in its branch).
-- [ ] Merge wave 2; consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
+- [x] Merge wave 2 (a64e144).
+- [ ] Consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
   idempotence, 30/365-day soaks, conservation, zero steward XP; real saves unchanged.
 - [ ] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap).
 - [ ] Windows 0.16 acceptance artifact (RELEASE_VERSION 0.16 on this branch; workflow_dispatch; verify artifact exists).
