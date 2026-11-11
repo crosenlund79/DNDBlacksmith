@@ -295,3 +295,208 @@ func test_rune_binding_follows_skill() -> void:
 	var idle := g.q_sum / maxf(g.bind_t, 0.001)
 	g.free()
 	check(idle < 40.0, "a rune left to itself binds badly (%.0f %%)" % idle)
+
+
+# ------------------------------------------------------------------ #56 asking an adventurer what they need forged
+func _in_town(cls := "") -> Dictionary:
+	for a in Adv.all().values():
+		Adv.ensure(a)
+		if (cls == "" or str(a["cls"]) == cls) and str(a.get("status", "")) in ["in_town", "injured"]:
+			return a
+	for a in Adv.all().values():
+		if cls == "" or str(a["cls"]) == cls:
+			a["status"] = "in_town"
+			return a
+	return {}
+
+
+func test_asking_for_a_commission_follows_their_rules() -> void:
+	fresh_game()
+	days(8)   # a week of expeditions: purses, wounds and "needs" as play brings them
+	Shop.orders().clear()
+	# the numbers: before LW #56 every in-town adventurer with a "needs" slot commissioned on asking
+	var before := 0
+	var now := 0
+	var answers := {}
+	var broke_reward := 0
+	var offered := 0
+	for a in Adv.all().values():
+		Adv.ensure(a)
+		if str(a.get("needs", "")) == "":
+			continue   # the talk option is offered only to adventurers with a "needs" slot (Talk.options)
+		offered += 1
+		if not Shop.refuses(str(a["id"])):
+			before += 1
+			if int(a.get("gold", 0)) < Adv.commission_cost(a) + 10:
+				broke_reward += int(Shop.order_need(a, str(a["needs"]))["min"]) * 3 + 40 + int(a["level"]) * 18
+		var ans := Adv.commission_ask(a)
+		answers[str(ans.get("why", "commission"))] = int(answers.get(str(ans.get("why", "commission")), 0)) + 1
+		if ans.has("slot") and not ans.has("why"):
+			now += 1
+	note("day 9, %d of %d adventurers can be asked: asking used to bring %d commissions (about %d g of reward from those who could not pay a commission, the village subsidy covering their share); now %d (%s)" % [
+		offered, Adv.all().size(), before, broke_reward, now, str(answers)])
+	check(now <= before, "asking never brings more commissions than before")
+	# a penniless adventurer with no weapon: an honest answer, no commission
+	var a := _in_town()
+	if not check(not a.is_empty(), "an adventurer in town"):
+		return
+	var npc := str(a["id"])
+	a["equipment"].erase("weapon")
+	a["gold"] = 0
+	var r := Talk.choose(npc, "order", "village")
+	check(Shop.open_orders().filter(func(o): return o["npc"] == npc).is_empty(), "no commission from someone who cannot pay for one")
+	check(str(r.get("text", "")).contains("purse"), "they say why: %s" % r.get("text", ""))
+	# with coin, the same want becomes a commission
+	a["gold"] = Adv.commission_cost(a) + 60
+	r = Talk.choose(npc, "order", "village")
+	var mine := Shop.open_orders().filter(func(o): return o["npc"] == npc)
+	check(mine.size() == 1, "with the coin they commission it (%s)" % r.get("text", ""))
+	# asking again while it is open: no second order
+	r = Talk.choose(npc, "order", "village")
+	eq(Shop.open_orders().filter(func(o): return o["npc"] == npc).size(), 1, "one open commission at a time")
+	# well kitted out: nothing to forge
+	Shop.orders().clear()
+	for s in Adv.desired_slots(a):
+		if s == "companion":
+			continue
+		var best: Dictionary = {}
+		for rr in DB.recipes.values():
+			var d := DB.item(str(rr["output"]))
+			if str(d.get("slot", "")) == s and Adv.affinity(a, {"def": str(rr["output"])}) > 0.0:
+				var it := Items.make(str(rr["output"]), {"quality": 110.0})
+				if best.is_empty() or Items.score(it) > Items.score(best):
+					best = it
+		if not best.is_empty():
+			a["equipment"][s] = best
+	a["wants_prop"] = ""
+	a["gold"] = 5000
+	var ans2 := Adv.commission_ask(a)
+	eq(str(ans2.get("why", "")), "content", "well equipped: nothing they need forged")
+	r = Talk.choose(npc, "order", "village")
+	check(Shop.open_orders().filter(func(o): return o["npc"] == npc).is_empty(), "and no commission (%s)" % r.get("text", ""))
+
+
+# ------------------------------------------------------------------ #61 commissions only for what a Design makes
+## Independent oracle: is there ANY Design in the game whose piece this adventurer would use for `o`'s slot, of its tier,
+## that reaches `o`'s stat — by itself (range top × 1.2) or with one runestone set into it (stat × 1.32)?
+func _feasible(a: Dictionary, slot: String, stat: String, need: int, tier: int) -> bool:
+	var rune := 0
+	for r in DB.recipes.values():
+		var d := DB.item(str(r["output"]))
+		if str(d.get("type", "")) == "runestone":
+			rune = maxi(rune, int(floor(float(d.get("stats", {}).get(stat, 0)) * 1.32)))
+	for r in DB.recipes.values():
+		var out := str(r["output"])
+		var d := DB.item(out)
+		if str(d.get("slot", "")) != slot or str(d.get("type", "")) == "companion" or Adv.affinity(a, {"def": out}) <= 0.0 or Items.tier({"def": out}) < tier:
+			continue
+		var v: Variant = d.get("stats", {}).get(stat, 0)
+		var top := int(floor((float(v[1]) if v is Array else float(v)) * 1.2))
+		if top >= need or (slot == "weapon" and not (stat in ["attack", "protection", "magic"]) and rune >= need):
+			return true
+	return false
+
+
+## The commission rules before LW #61 (Shop.order_need as it was), to count what they asked for.
+func _old_need(a: Dictionary, slot: String) -> Dictionary:
+	var stat := "attack" if slot == "weapon" else ("magic" if slot in ["ring", "amulet"] else "protection")
+	var need: int = maxi(Items.stat(a.get("equipment", {}).get(slot, {}), stat) + 2, int(a.get("level", 1)) * 2 + 4)
+	var prop := str(a.get("wants_prop", ""))
+	var tier := 2 if int(a.get("level", 1)) >= 5 and slot in ["weapon", "armor", "shield"] else 1
+	if prop != "" and slot == "weapon":
+		stat = prop
+		need = 3 + int(a.get("level", 1)) / 3
+	return {"stat": stat, "min": mini(need, Shop.slot_ceiling(slot, stat)), "tier": tier}
+
+
+func test_commissions_ask_only_for_what_a_design_makes() -> void:
+	var asked := 0
+	var bad_now := 0
+	var bad_before := 0
+	var examples := {}
+	for world_seed in [9001, 77, 1234]:
+		fresh_game("journeyman", world_seed)
+		for a in Adv.all().values():
+			var lv0 := int(a.get("level", 1))
+			for lv in [1, 3, 5, 7, 9]:
+				a["level"] = lv
+				for prop in ["", "fire", "frost"]:
+					a["wants_prop"] = prop
+					for slot in Adv.desired_slots(a):
+						if slot == "companion":
+							continue
+						var n := Shop.order_need(a, slot)
+						var o := _old_need(a, slot)
+						asked += 1
+						if not _feasible(a, slot, str(o["stat"]), int(o["min"]), int(o["tier"])):
+							bad_before += 1
+							var key := "%s %s (%s ≥ %d, %s)" % [a["cls"], slot, o["stat"], int(o["min"]), Items.TIER_WORD[int(o["tier"])]]
+							examples[key] = true
+						if bool(n.get("none", false)):
+							continue
+						if not _feasible(a, slot, str(n["stat"]), int(n["min"]), int(n["tier"])):
+							bad_now += 1
+							check(false, "%s %s at level %d asks for %s ≥ %d, %s — no Design they would use makes it" % [a["cls"], slot, lv, n["stat"], int(n["min"]), Items.TIER_WORD[int(n["tier"])]])
+			a["level"] = lv0
+			a["wants_prop"] = ""
+	var ex: Array = examples.keys()
+	ex.sort()
+	note("%d commission requests examined (3 worlds, every adventurer at levels 1–9, with and without a fire/frost want): %d impossible before LW #61, %d now" % [asked, bad_before, bad_now])
+	note("impossible before (kinds): " + ", ".join(PackedStringArray(ex.slice(0, 12))))
+	eq(bad_now, 0, "no commission asks for something no Design they would use can make")
+	check(bad_before > 0, "the old rules did ask for impossible pieces (the defect is real)")
+	# companions are never commissioned (no Design makes one)
+	fresh_game()
+	var any_adv: Dictionary = Adv.all().values()[0]
+	check(Shop.create_order(str(any_adv["id"]), "companion").is_empty(), "no commission for a companion creature")
+	# a wizard veteran is not asked to wear steel armour
+	for a in Adv.all().values():
+		if str(a["cls"]) == "Wizard":
+			a["level"] = 7
+			var nd := Shop.order_need(a, "armor")
+			eq(int(nd["tier"]), 1, "a level-7 wizard's armour commission does not demand steel (no plate for a wizard)")
+			break
+
+
+func test_frost_weapon_capability_is_honest() -> void:
+	fresh_game()
+	var a: Dictionary = {}
+	for x in Adv.all().values():
+		if str(x["cls"]) == "Fighter":
+			a = x
+			break
+	if not check(not a.is_empty(), "a fighter in the roster"):
+		return
+	var req := {"stat": "frost", "min": 3}
+	var cap := Shop.slot_capability("weapon", a, req)
+	note("frost weapon on a new forge: %s — %s" % [cap["state"], cap["why"]])
+	check(str(cap["state"]) == "locked", "a new forge cannot honestly promise a frost weapon (it knows no frost runestone): %s" % cap["state"])
+	check(not Shop.can_make_slot("weapon", a, req), "can_make_slot agrees")
+	# learn runecraft up to the frost runestone, buy the engraving stand, hold a frost runestone: now it can
+	SkillTree.unlock_all()
+	Property.dev_grant_all()
+	Property.dev_install_in_owned()
+	give("runestone_frost", 1)
+	give("ingot_iron", 4)
+	give("leather_cured", 2)
+	give("coal", 4)
+	var cap2 := Shop.slot_capability("weapon", a, req)
+	note("frost weapon with the rune route: %s — %s" % [cap2["state"], cap2["why"]])
+	check(str(cap2["state"]) in ["now", "materials"] and str(cap2.get("rune", "")) == "runestone_frost", "with a frost runestone Design and stand, a blade plus the rune is offered (%s)" % cap2["state"])
+	check(str(cap2["why"]).contains("Frost Runestone"), "the card says the rune must be set into it")
+	# multi-part requests: only pieces the adventurer would use, never a secret Design by name
+	var wiz: Dictionary = {}
+	for x in Adv.all().values():
+		if str(x["cls"]) == "Wizard":
+			wiz = x
+	if check(not wiz.is_empty(), "a wizard in the roster"):
+		fresh_game()
+		for x in Adv.all().values():
+			if str(x["cls"]) == "Wizard":
+				wiz = x
+		for i in 40:
+			for pt in Shop.multi_parts_for(wiz):
+				if str(pt.get("kind", "")) != "craft":
+					continue
+				check(Adv.affinity(wiz, {"def": str(pt["def"])}) > 0.0, "the wizard asks only for things a wizard would use (%s)" % pt["def"])
+				check(Guide.recipe_visible(str(pt["recipe"])), "no secret Design is named (%s)" % pt["recipe"])
