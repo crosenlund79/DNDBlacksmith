@@ -1,9 +1,9 @@
 # S2 "The Living Smithy" — resume point
 
-**Written:** 10 November 2026, before a usage-limit pause. **Status: S2 IN PROGRESS — all four workers are merged into the isolated S2 branch and verified; final verification,
-registers and the Windows acceptance artifact are under way. Nothing from S2 is merged into the development branch,
-nothing is released.** This file and `docs/s2/` (plan and worker briefs) live only on the isolated branch
-`claude/s2-living-smithy`.
+**Written:** 10 November 2026; **completed:** 11 November 2026. **Status: S2 COMPLETE on its isolated branch
+`claude/s2-living-smithy` — verified, ready for human acceptance on Windows. Nothing from S2 is merged into the
+development branch, nothing is released.** This file and `docs/s2/` (plan, worker briefs and reports) live only on the
+isolated branch.
 
 ## 1. Where everything is (all verified on the remote)
 
@@ -52,31 +52,25 @@ items of NEW SCOPE explicitly approved by the S2 brief — the steward directing
 Worker reports (status first) are written to the session scratchpad `…/scratchpad/s2/reports/<worker>.md`; if the scratchpad
 is lost, the worker commit messages and this file are the record.
 
-## 4. Pending (in order)
-1. DONE — all four workers finished and merged (STEWARD last), keeps its full test run green, writes its report; the lead re-pushes `s2-wip-*`.
-2. **Lead review and merge** into `claude/s2-living-smithy`, one worker at a time (CLARITY, ECONDEV and EARLY merged;
-   STEWARD last). Lead fix pending: a commission's reward package is capped by the commission's reward instead of
-   what the giver paid (a penniless Mira can "give" one — D14); cap it at Payments.GIFT_SHARE of the giver's own payment. Expected conflict hot spots: `world.gd` (STEWARD/CLARITY/EARLY), `smithy.gd`
-   (STEWARD/EARLY), `crafting.gd` (STEWARD/CLARITY), `shop.gd` (CLARITY/ECONDEV), `station_panel.gd` (CLARITY/EARLY),
-   `player_nav.gd` (STEWARD/EARLY), `game.gd` (STEWARD/ECONDEV), `ui_root.gd` (EARLY/ECONDEV), `tests/playtest.gd` (phase
-   registrations), `game/README.md`, `docs/TESTING.md`, `docs/PLAYGUIDE.md`. Drop `t_zz_probe.gd`.
-3. After each merge: `--import`, `GODOT=<godot> ./run_tests.sh full` green.
-4. Full verification (S2 brief §9): fresh and golden (migrated) saves; the first-hour tutorial; the steward smith alone in
-   a poor early game and with apprentices; zero personal XP across activation/completion/exit/save-load; consistent 1.5×
-   pace; ledger reconciliation; `ItemRegistry.scan` and `Uniques.audit` clean; steward soaks 30/365 (+ poor early game)
-   with actual activity and finances; the 48 existing rendered phases + `s2_steward`, `s2_clarity`, `s2_early`,
-   `s2_econdev`; real save directory unchanged.
-5. Canonical **v1.3** (Steward Mode: the working smith and the default 1.5× pace, exactly as built; the fatigue rule), DOCX
-   and Markdown synchronized (word-level check), change history; `CLAUDE.md` pointer.
-6. Registers: observation register OBS-22 … (the Nov-10 handwritten observations — originals not available; the S2 brief
-   summarises them), statuses for OBS-01 … OBS-21, the §8 deferred proposals (hunting/grocer, donations, survival
-   incentives, visible gear, hand-designed adventurers, voices, B1/B2/C1); decision and roadmap registers with S2 evidence.
-7. Windows acceptance build: set `game/RELEASE_VERSION` to `0.15` on the S2 branch (a non-default branch never publishes),
-   dispatch `.github/workflows/windows-installer.yml` on `claude/s2-living-smithy`, confirm "SMOKE OK" and that the artifact
-   `EmberAndAsh-Windows-0.15.<run>` exists (90-day retention). **Merging S2 into the default branch later would publish
-   build-0.15.x unless the merge commit carries `[skip ci]`.**
-8. Final report (implemented, deferred, before/after screenshots, tests, steward activity and economics, branch/commit,
-   backup, Windows download location, readiness for human acceptance). Then STOP — no merge, no release, no B1.
+## 4. Completion record (11 November 2026)
+- **All four workers merged** (CLARITY `4d887e3`, ECONDEV `53fe7b5`, EARLY `8d86dd0`, STEWARD `2309117`); lead fixes
+  `29f9edd` (reward package capped by the giver's own payment, D14), `415f64f` (the autopilot never completes the
+  tutorial's move step), `81ba92e` (steward test: anvil names only — deed names earned later are history); canonical
+  **v1.3** `8974092`; registers `77ded7e`, `b416347` (BUG-051); acceptance version 0.15 `b362877`; Mining XP hotfix
+  integrated `4fbfaee` (user request); `iter2` rendered phase brings its own moonwort `70ae07c` (test fragility, not a
+  defect: a hireling's alchemy hour may brew a draught from stored moonwort — existing behaviour, HA-025).
+- **Automated tests on the final head:** compile 235 scripts, suite 334/334, unit 385/385 — ALL GREEN (golden saves
+  0.11.2–0.14.6 migrate to schema 4; zero XP across exit and save/load; pace restored on exit and load; soaks reconciled:
+  poor early game 30 d 120 → 4,825 g, 365 d 120 → 31,113 g; with apprentices 30 d 3,000 → 7,025 g, 365 d 3,000 → 30,743 g).
+- **Rendered:** the 52-phase regression passed 50/52 at `b362877`; the two failures (`iter2` 3 checks, `iter2_reload` 1
+  dependent check) were the moonwort test fragility, fixed in `70ae07c` and both re-run with 0 failures; after the hotfix
+  `craft`, `craft_reload`, `steward_s1`, `s2_steward` re-run with 0 failures. Real save directory unchanged.
+- **Windows:** CI runs #13 (`b362877`, artifact `EmberAndAsh-Windows-0.15.13`) and #14 (`4fbfaee`, artifact
+  `EmberAndAsh-Windows-0.15.14`) passed tests, export, silent install and launch ("SMOKE OK"); publish skipped; latest
+  release still build-0.14.6. A final run on the S2 head is recorded in the final report.
+- **Open for the user:** QST-028 (Unique legacy copies), QST-029 (front entrance), QST-030 (Y/Q), QST-031 (working-smith
+  earnings), PROP-022 … PROP-026; accept S2 after the Windows playtest; integrate (a merge into the default branch would
+  publish build-0.15.x unless the merge commit carries `[skip ci]`).
 
 ## 5. Blockers and notes
 - The **handwritten November 10 observations** are not in any file or message available to Claude; the S2 brief's
