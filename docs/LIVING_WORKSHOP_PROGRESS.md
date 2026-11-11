@@ -63,8 +63,14 @@ and the profession list (canonical §15 open detail). → canonical v1.4 at the 
   decision register +52 / 55 updated, roadmap B1/B2/C1 delivered on this branch. Evidence cells completed at the end.
 - [x] RELEASE_VERSION 0.16 (6ccae6b); pre-acceptance Windows packaging run #16
   https://github.com/crosenlund79/DNDBlacksmith/actions/runs/43046977142 (final artifact rebuilt after acceptance).
-- [ ] All 59 rendered phases on the integrated head (running: `$S/allLW.sh`, log `$S/lw/accept_run.sh` output).
-- [ ] ACCEPTANCE worker (e2e `t_lw_acceptance`, 30/365-day soaks, conservation, zero XP, old saves) → merge.
+- [x] ACCEPTANCE worker merged d0d5362 (`t_lw_acceptance` scenarios a–h; `tests/lw_soak.tscn`; ACC-1 fixed: cancelling a
+  work order mid-stage left the smith's craft job behind). Findings F1–F8 → PROP-040 (measured), PROP-046 … 050.
+- [x] Lead final run on d0d5362 (the shipping code): compile 260/0, suite 409/409, unit 390/390; soak `both 365`: LW SOAK OK
+  (poor 120 → 30,679 g; established 3,000 → 29,102 g; ledger reconciled; 0 duplicate uids; 0 materials off the record;
+  305–353 ms per simulated day; save 3.3–3.7 MB at day 365); seeded skill-tree fuzz 1234: 12 rounds, no crash.
+- [ ] All 59 rendered phases on d0d5362 (started 16:06 UTC; `$S/lw/final_run.sh`, log `$S/lw/final_run.log`).
+- [ ] Windows 0.16 artifact: run #17 on d0d5362 https://github.com/crosenlund79/DNDBlacksmith/actions/runs/43052431889
+  (run #16 on 6ccae6b failed in the runner's apt step — infrastructure, not code).
 - [ ] Consolidated acceptance (§9): full suite, unit, all rendered phases + new e2e, old saves/migration
   idempotence, 30/365-day soaks, conservation, zero steward XP; real saves unchanged.
 - [ ] Canonical v1.4 (DOCX + MD, change history); registers (decision, observation #37–61, roadmap).
