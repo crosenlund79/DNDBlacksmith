@@ -81,16 +81,43 @@ func _legend_chip(text: String, state: String) -> Control:
 	return h
 
 
+## LW #59–60: learning a node fires several signals (gold, inventory, crafting, level-up) in one frame; each used to
+## rebuild the branch row and the side page at once. They are gathered into one rebuild at the end of the frame.
+var _refresh_queued := false
+
+
 func _refresh() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or _refresh_queued:
+		return
+	_refresh_queued = true
+	_do_refresh.call_deferred()
+
+
+func _do_refresh() -> void:
+	_refresh_queued = false
+	if not is_inside_tree() or is_queued_for_deletion():
 		return
 	_build_skills()
 	canvas.queue_redraw()
 	_show(shown, true)
 
 
+## LW #59–60: empties a row or page before it is rebuilt. UIKit.clear only queues the old children for deletion, so
+## until the end of the frame they still took part in layout beside the new ones: the side page held two pages and the
+## branch row two or three rows at once (the chart was briefly laid out 3,400–5,300 px wide), and the window, the chart
+## and the side page's scroll bar were resized back and forth within the frame. A seeded run of buying, moving and
+## learning while browsing the tree (tests/playtest_lw_probe.gd) ended in "Message queue out of memory" — a flood of
+## deferred layout calls — and a crash (SIGSEGV). Hidden children leave the layout at once; they are still freed at the
+## end of the frame (safe for the Learn button whose own press rebuilt the page).
+static func _clear(node: Node) -> void:
+	for c in node.get_children():
+		if c is CanvasItem:
+			(c as CanvasItem).visible = false
+		c.queue_free()
+
+
 func _build_skills() -> void:
-	UIKit.clear(skill_row)
+	_clear(skill_row)
 	for b in SkillTree.branches():
 		var card := PanelContainer.new()
 		var sb := StyleBoxFlat.new()
@@ -132,7 +159,7 @@ func _show(id: String, force: bool) -> void:
 	if id == shown and not force:
 		return
 	shown = id
-	UIKit.clear(side)
+	_clear(side)
 	if id == "" or SkillTree.node(id).is_empty():
 		side.add_child(UIKit.label("The Smith's Path", 28, "title"))
 		side.add_child(UIKit.rich("Every craft in the forge is learned here. Gilt seals are known to you; a seal that [color=#9e3a0c][b]glows[/b][/color] can be learned now; grey seals still wait for skill, knowledge, materials or a teacher's fee.\n\nSkills rise through the work itself: every operation at a station and every finished piece trains the craft it belongs to.\n\n[i]Hover over a seal to read it; click it to keep it open here.[/i]", 19))

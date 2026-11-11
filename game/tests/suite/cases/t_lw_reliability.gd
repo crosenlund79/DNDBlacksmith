@@ -470,6 +470,47 @@ func test_manual_price_is_discoverable() -> void:
 	_unmount(p)
 
 
+# ------------------------------------------------------------------ #59–60 the skill tree's rebuilds
+## The crash (reproduced by the seeded fuzz in tests/playtest_lw_probe.gd: buy, move, learn, browse the tree → "Message
+## queue out of memory" → SIGSEGV) came with whole pages being laid out twice within a frame: UIKit.clear() leaves the
+## old children in the layout until the frame ends. The panel now hides them at once and gathers refreshes.
+func test_skill_tree_rebuilds_leave_no_ghosts() -> void:
+	fresh_game()
+	Property.dev_grant_all()
+	Property.dev_install_in_owned()
+	for sk in ["mining", "runecraft", "alchemy", "enchanted_stitching", "smithing"]:
+		train(sk, 6)
+	Game.state["gold"] = 5000
+	var tp := SkillTreePanel.new()
+	_mount(tp)
+	var row_w := tp.skill_row.get_combined_minimum_size().x
+	var win_w := tp.get_combined_minimum_size().x
+	for i in 3:
+		tp._build_skills()   # what three signals in one frame used to do
+	var ghosts := 0
+	for c in tp.skill_row.get_children():
+		if c.is_queued_for_deletion() and (c as CanvasItem).visible:
+			ghosts += 1
+	eq(ghosts, 0, "replaced branch cards leave the layout at once")
+	check(tp.skill_row.get_combined_minimum_size().x <= row_w + 1.0, "the branch row is measured once, not three times (%.0f → %.0f px)" % [row_w, tp.skill_row.get_combined_minimum_size().x])
+	check(tp.get_combined_minimum_size().x <= win_w + 1.0, "the window does not balloon (%.0f → %.0f px)" % [win_w, tp.get_combined_minimum_size().x])
+	for id in ["s_basic", "r_master", "s_starsteel", "r_master", "ar_plating", ""]:
+		tp._show(id, true)
+		var vis_old := 0
+		for c in tp.side.get_children():
+			if c.is_queued_for_deletion() and (c as CanvasItem).visible:
+				vis_old += 1
+		eq(vis_old, 0, "the side page for «%s» is laid out alone" % id)
+	# learning fires gold, inventory, crafting and level signals: one rebuild, at the end of the frame
+	tp._refresh()
+	tp._refresh()
+	tp._refresh()
+	check(tp._refresh_queued, "refreshes are gathered")
+	tp._do_refresh()
+	check(not tp._refresh_queued, "and done once")
+	_unmount(tp)
+
+
 func test_starsteel_secret_kept() -> void:
 	fresh_game()
 	check(not SkillTree.is_unlocked("s_alloy") and SkillTree.node_state("s_starsteel") == "hidden", "a new smith does not know the secret")

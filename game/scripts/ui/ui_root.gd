@@ -50,7 +50,10 @@ func _ready() -> void:
 	Events.legendary_found.connect(func(_it): legendary_flash())
 	Events.skill_level_up.connect(_on_level_up)
 	Events.close_panels.connect(close_current)
-	Events.inventory_changed.connect(Reference.note_seen)
+	# a static function outlives this UI: a rebuilt world (bought rooms, moved stations, a loaded save) must not connect it
+	# twice (LW #59–60: "already connected" engine error on every rebuild)
+	if not Events.inventory_changed.is_connected(Reference.note_seen):
+		Events.inventory_changed.connect(Reference.note_seen)
 	Tutorial.wire()
 	add_child(SpiritVoice.new())   # awakened pieces speak (ItemSpirit); wires the Lore hook
 	Reference.note_seen()
