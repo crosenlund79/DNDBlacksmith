@@ -10,6 +10,8 @@ extends SuiteCase
 
 const SMOKE := ["test_activation_and_runtime_flag", "test_instructions_validated_and_saved", "test_save_load_mid_session_mode_off",
 	"test_contract_letter_deferred_and_sealed", "test_protected_pieces"]
+## Long-running tests left out of `run_tests.sh quick` (they still run in full and in CI).
+const SLOW := ["test_soak_365_days"]
 const FIN := ["done", "failed", "cancelled"]
 
 

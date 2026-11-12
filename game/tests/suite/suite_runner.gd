@@ -1,5 +1,6 @@
 ## The permanent regression & progression suite.
-##   godot --headless --path game res://tests/suite/suite.tscn -- [smoke|full|<case>...]
+##   godot --headless --path game res://tests/suite/suite.tscn -- [smoke|quick|full] [<case>...]
+##   quick = full minus the long-running tests a case lists in `const SLOW := [...]` (named in the report as omitted).
 ## EN: Discovers tests/suite/cases/*.gd (SuiteCase subclasses), runs every test_* method from a fresh seeded game,
 ##     with saves redirected to this run's own folder user://test_saves/run_<unix>_<pid>/ (real saves are never touched). Prints PASS / FAIL / SKIPPED with
 ##     diagnostics and writes user://logs/suite_report.txt. Exit code 0 = no failures.
@@ -12,6 +13,7 @@ var lines: Array[String] = []
 var n_pass := 0
 var n_fail := 0
 var n_skip := 0
+var omitted: Array[String] = []   # quick mode: the SLOW tests not run
 
 
 func _ready() -> void:
@@ -19,7 +21,7 @@ func _ready() -> void:
 	var mode := "full"
 	var only: Array[String] = []
 	for a in args:
-		if a in ["smoke", "full"]:
+		if a in ["smoke", "quick", "full"]:
 			mode = a
 		else:
 			only.append(a)
@@ -35,11 +37,15 @@ func _ready() -> void:
 			_result("FAIL", cname, "load", ["the case script does not compile"])
 			continue
 		var smoke: Array = script.get_script_constant_map().get("SMOKE", [])
+		var slow: Array = script.get_script_constant_map().get("SLOW", [])
 		for m in script.get_script_method_list():
 			var mname: String = m["name"]
 			if not mname.begins_with("test_"):
 				continue
 			if mode == "smoke" and not smoke.has(mname):
+				continue
+			if mode == "quick" and slow.has(mname):
+				omitted.append("%s.%s" % [cname, mname.substr(5)])
 				continue
 			var inst: SuiteCase = script.new()
 			inst.fresh_game()
@@ -55,6 +61,8 @@ func _ready() -> void:
 			if Crafting.active():
 				Crafting.cancel()
 	_out("")
+	if mode == "quick":
+		_out("Omitted in quick mode (const SLOW): %d — %s" % [omitted.size(), ", ".join(omitted) if not omitted.is_empty() else "none"])
 	_out("%d passed, %d failed, %d skipped — %.1f s" % [n_pass, n_fail, n_skip, (Time.get_ticks_msec() - t0) / 1000.0])
 	DirAccess.make_dir_recursive_absolute("user://logs")
 	var f := FileAccess.open("user://logs/suite_report.txt", FileAccess.WRITE)

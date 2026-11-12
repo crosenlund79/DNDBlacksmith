@@ -13,6 +13,8 @@ extends SuiteCase
 
 const SMOKE := ["test_activation_needs_no_skill", "test_early_smith_alone_does_real_work", "test_zero_xp_across_exit_and_save_load",
 	"test_pace_on_restored_on_exit_and_load"]
+## Long-running tests left out of `run_tests.sh quick` (they still run in full and in CI).
+const SLOW := ["test_soak_poor_early_365_days"]
 
 
 # ------------------------------------------------------------------ fixtures

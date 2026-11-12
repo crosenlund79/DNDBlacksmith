@@ -9,6 +9,8 @@ extends SuiteCase
 
 const SMOKE := ["test_scanner_detects_faults", "test_purchases_keep_identity", "test_repair_record_does_not_fork",
 	"test_pawn_round_trip", "test_migration_converts_old_state", "test_lookups_route_through_registry"]
+## Long-running tests left out of `run_tests.sh quick` (they still run in full and in CI).
+const SLOW := ["test_year_integrity_probe"]
 
 
 # ------------------------------------------------------------------ fixtures

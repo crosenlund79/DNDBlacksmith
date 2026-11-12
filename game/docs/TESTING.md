@@ -10,6 +10,8 @@ recreated.
 |---|---|
 | Everything: compile check, regression & progression suite, unit tests | `GODOT=/path/to/godot ./run_tests.sh` |
 | Fast smoke subset for routine changes | `GODOT=/path/to/godot ./run_tests.sh smoke` |
+| Everything except the long-running tests a case lists in `const SLOW` (the two 365-day Steward soaks, the year-long identity probe; still run by `full` and CI) | `GODOT=/path/to/godot ./run_tests.sh quick` |
+| Failures and totals only (any mode); complete stage output kept in `$TEST_LOG_DIR` (default `.godot/test_logs/`) | `QUIET=1 GODOT=/path/to/godot ./run_tests.sh [quick\|full\|smoke]` |
 | Windows | `run_tests_windows.bat [smoke\|full]` |
 | One suite case only | `godot --headless --path . res://tests/suite/suite.tscn -- t_property` |
 | Rendered play-tests (need a display or `xvfb-run`) | `godot --path . res://tests/playtest.tscn -- <phase>` |
