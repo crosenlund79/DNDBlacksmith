@@ -13,10 +13,33 @@ recreated.
 | Everything except the long-running tests a case lists in `const SLOW` (the two 365-day Steward soaks, the year-long identity probe; still run by `full` and CI) | `GODOT=/path/to/godot ./run_tests.sh quick` |
 | Failures and totals only (any mode); complete stage output kept in `$TEST_LOG_DIR` (default `.godot/test_logs/`) | `QUIET=1 GODOT=/path/to/godot ./run_tests.sh [quick\|full\|smoke]` |
 | Windows | `run_tests_windows.bat [smoke\|full]` |
-| One suite case only | `godot --headless --path . res://tests/suite/suite.tscn -- t_property` |
+| PARTIAL verification of one area (compile check, the area's suite tests, all unit tests) — see "Focused tests" | `QUIET=1 GODOT=/path/to/godot ./run_tests.sh focus <workshop\|commerce>` |
+| One suite case only (or one test: `t_saves.step_registry`) | `godot --headless --path . res://tests/suite/suite.tscn -- t_property` |
 | Rendered play-tests (need a display or `xvfb-run`) | `godot --path . res://tests/playtest.tscn -- <phase>` |
 
 Exit code 0 means green. Reports go to `user://logs/suite_report.txt` and `user://logs/test_report.txt`.
+
+### Focused tests (PARTIAL verification)
+
+`./run_tests.sh focus <area>` checks routine work inside one area quickly. It runs:
+- the compile check;
+- the suite tests mapped to the area in `tests/suite/focus_areas.cfg` (in `quick` mode, so `const SLOW` tests stay out);
+- all unit tests, because `tests/test_runner.gd` has no safe selector.
+
+It prints `== PARTIAL verification …` first, a per-case "Tests run" list (whole case, or the selected tests with their
+results) after the suite, and ends with `PARTIAL GREEN …` instead of `ALL GREEN`. It is never a substitute for `quick`
+or `full` before a merge, or for CI (`full`).
+
+- **Areas:** `workshop` (production, staff, stations, Designs and workshop knowledge) and `commerce` (counter, commissions,
+  prices, trade, payments). Each lists its own cases whole, plus single cross-system contract tests from other cases:
+  identity and maker, save migrations, the steward, the Living Workshop journeys, purchases and the ledger.
+- **Selectors:** `t_case` (the whole case) or `t_case.test` (one test, the name as the report prints it). The suite runner
+  accepts the same selectors directly: `godot --headless --path . res://tests/suite/suite.tscn -- quick t_saves.step_registry`.
+- **Failing clearly:** an unknown area stops with exit code 2 and lists the known areas. A selector that matches no case or
+  test is reported as a FAIL ("unknown selector"), so a renamed test can never silently shrink an area.
+- **Extending:** add `<area>: <selector> …` lines to `tests/suite/focus_areas.cfg`; lines of one area add up and `#`
+  starts a comment. A new area needs nothing else. Prefer whole cases for the area's own cases and single tests for
+  contracts with other systems. When adding a case, decide whether an area should list it.
 
 **Real saves are never touched.** Any scene under `res://tests/` (suite, unit tests, play-tests, soak) runs in test
 mode: saves go to the run's own folder `user://test_saves/run_<unix>_<pid>/` (`Saves.use_test_dir()`, removed by
