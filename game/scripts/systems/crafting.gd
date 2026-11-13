@@ -402,21 +402,73 @@ static func dice_spec() -> Dictionary:
 
 
 # ------------------------------------------------------------------ rarity
-## Rarity score and verdict from craftsmanship, the fortune die and bonuses (all from crafting.json).
-static func rarity_eval(quality: float, fortune: int, bonus := 0.0) -> Dictionary:
+## Rarity score and verdict from craftsmanship, the fortune die and bonuses (all from crafting.json). `crafted`:
+## crafted work (canonical v1.6 §6.2) — no masterwork bonus in the score (Masterwork stays a craftsmanship distinction);
+## found loot keeps the bonus. The crafted cap and the Legendary gates are crafted_rarity()'s business.
+static func rarity_eval(quality: float, fortune: int, bonus := 0.0, crafted := false) -> Dictionary:
 	var rc := cfg("rarity")
 	var w: Dictionary = rc.get("weights", {"quality": 0.75, "fortune": 0.35})
 	var th: Dictionary = rc.get("thresholds", {"magic": 68, "rare": 88, "legendary": 112})
 	var mw: Dictionary = rc.get("masterwork", {"quality": 115, "bonus": 26})
 	var parts := {"quality": quality * float(w["quality"]), "fortune": fortune * float(w["fortune"]), "bonus": bonus, "masterwork": 0.0}
-	if quality >= float(mw.get("quality", 115)):
+	var is_mw := quality >= float(mw.get("quality", 115))
+	if is_mw and not crafted:
 		parts["masterwork"] = float(mw.get("bonus", 26))
 	var score: float = parts["quality"] + parts["fortune"] + parts["bonus"] + parts["masterwork"]
 	var rar := "common"
 	for r in ["magic", "rare", "legendary"]:
 		if score >= float(th[r]):
 			rar = r
-	return {"score": score, "rarity": rar, "parts": parts, "thresholds": th, "masterwork": parts["masterwork"] > 0.0}
+	return {"score": score, "rarity": rar, "parts": parts, "thresholds": th, "masterwork": is_mw}
+
+
+## Canonical v1.6 §6.2 — crafted rarity: ordinary Designs top out at crafted_cap (Rare) whatever the rolls; a designated
+## Legendary Design (recipes.json legendary) is Legendary only when every gate holds (legendary_shortfall). `skill_level`:
+## the relevant craft's skill of the qualified worker; `master_specialist`: a master specialist made it (their
+## craftsmanship cannot pass master_quality, so that ceiling counts as the craftsmanship gate).
+static func crafted_rarity(rid: String, q: float, fortune: int, bonus: float, skill_level: int, master_specialist := false) -> Dictionary:
+	var rev := rarity_eval(q, fortune, bonus, true)
+	var why := legendary_shortfall(rid, q, fortune, float(rev["score"]), skill_level, master_specialist)
+	rev["legendary_why"] = why
+	rev["legendary_design"] = bool(DB.recipe(rid).get("legendary", false))
+	if why.is_empty():
+		rev["rarity"] = "legendary"
+	else:
+		var cap := str(cfg("rarity").get("crafted_cap", "rare"))
+		if int(SkillTree.RARITY_RANK.get(str(rev["rarity"]), 0)) > int(SkillTree.RARITY_RANK.get(cap, 2)):
+			rev["rarity"] = cap
+			rev["capped"] = true
+	return rev
+
+
+## The rarity bonus a Design's material and runestone inputs bring (part of the rarity score).
+static func rarity_bonus(rid: String) -> float:
+	var r := DB.recipe(rid)
+	var bonus := float(material(rid).get("rarity_bonus", 0))
+	for inp in r.get("inputs", {}):
+		if DB.item(inp).get("type") == "runestone" and inp != "runestone_blank":
+			bonus += float(cfg("rarity").get("runestone_bonus", 8))
+	return bonus
+
+
+## What stands between this piece and Legendary ([] = nothing: it is Legendary). Plain player-facing reasons.
+static func legendary_shortfall(rid: String, q: float, fortune: int, score: float, skill_level: int, master_specialist := false) -> Array:
+	var lc: Dictionary = cfg("rarity").get("legendary_crafting", {})
+	var r := DB.recipe(rid)
+	if not bool(r.get("legendary", false)):
+		return ["%s is not a Legendary Design — ordinary work tops out at Rare" % str(r.get("name", rid))]
+	var out := []
+	var need_skill := int(lc.get("skill", 6))
+	if skill_level < need_skill:
+		out.append("%s %d of %d — a master of the craft must work it" % [SkillSys.skill_name(recipe_skill(rid)), skill_level, need_skill])
+	var need_q := float(lc.get("master_quality", 112)) if master_specialist else float(lc.get("quality", 115))
+	if q < need_q:
+		out.append("craftsmanship %d%% of %d%%" % [int(round(q)), int(need_q)])
+	if fortune < int(lc.get("fortune", 95)):
+		out.append("fortune %d of %d" % [fortune, int(lc.get("fortune", 95))])
+	if score < float(lc.get("score", 125)):
+		out.append("rarity score %d of %d" % [int(round(score)), int(lc.get("score", 125))])
+	return out
 
 
 # ------------------------------------------------------------------ weighted dice
@@ -663,12 +715,13 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 	for sk_key in explain:
 		breakdown.append(stat_explanation(str(sk_key), explain[sk_key], q, str(mat.get("name", "")), skill_id, lvl))
 	# rarity: quality + fortune + material + runestone bonuses
-	var bonus := float(mat.get("rarity_bonus", 0))
-	for inp in r["inputs"]:
-		if DB.item(inp).get("type") == "runestone" and inp != "runestone_blank":
-			bonus += float(cfg("rarity").get("runestone_bonus", 8))
+	var bonus := rarity_bonus(rid)
 	var fortune := int(totals.get("fortune", 50))
-	var rev := rarity_eval(q, fortune, bonus) if totals.has("fortune") else {"score": 0.0, "rarity": "common", "parts": {}, "masterwork": false}
+	# canonical v1.6 §6.2: the relevant craft's skill of the qualified worker (the smith; an apprentice maker; for a work
+	# order the best of whoever worked that craft's stages) and whether a master specialist's ceiling bounds the work
+	var leg_skill := int(maker.get("skill_level", Game.player_level(skill_id) if player else int(maker.get("level", 0))))
+	var master_spec := not player and str(maker.get("rank", "")) == "master"
+	var rev := crafted_rarity(rid, q, fortune, bonus, leg_skill, master_spec) if totals.has("fortune") else {"score": 0.0, "rarity": "common", "parts": {}, "masterwork": false, "legendary_why": []}
 	if r.get("discipline", "") == "arcane":
 		it["arcane_glow"] = true
 		# arcane metalworking binds an ability into the metal itself (distinct from a socketed rune)
@@ -726,6 +779,8 @@ static func build(rid: String, ops: Array, q: float, dice: Dictionary, mode := "
 		"difficulty": difficulty(rid), "skill": skill_id, "level": lvl,
 		"ops": ops.duplicate(true), "base_quality": base, "skill_bonus": q - base, "quality": q,
 		"dice": dice_log, "dice_mode": mode, "rarity_score": rev["score"], "rarity_parts": rev.get("parts", {}),
+		"legendary_design": bool(rev.get("legendary_design", false)), "legendary_why": rev.get("legendary_why", []),
+		"rarity_capped": bool(rev.get("capped", false)),
 		"masterwork": rev.get("masterwork", false), "xp": xp, "expert": expert, "day": Game.day(),
 		"advantage": {"tier": int(adv["tier"]), "word": str(adv["word"]), "rolls": int(adv["rolls"])},
 		"breakdown": breakdown, "tree_bonus": SkillTree.quality_bonus(rid) if player else 0.0, "assist_bonus": hireling_assist(rid) if player else 0.0,

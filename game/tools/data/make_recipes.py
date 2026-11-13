@@ -21,12 +21,23 @@ def W(name, obj):
 # ---------------------------------------------------------------- tunables
 crafting = {
  "_doc": "Crafting balance. Rarity score = quality*w.quality + fortune*w.fortune + material/rune bonus "
-         "(+ masterwork bonus when quality >= masterwork.quality). Thresholds are inclusive lower bounds.",
+         "(+ masterwork bonus when quality >= masterwork.quality — found loot only; crafted pieces get no masterwork "
+         "bonus). Thresholds are inclusive lower bounds. Crafted work is capped at crafted_cap unless the Design is "
+         "a designated Legendary Design (recipes.json legendary: true) and every legendary_crafting gate is met "
+         "(canonical v1.6 §6.2).",
  "rarity": {
   "weights": {"quality": 0.75, "fortune": 0.35},
   "thresholds": {"magic": 68, "rare": 88, "legendary": 112},
   "masterwork": {"quality": 115, "bonus": 26, "label": "Masterwork"},
   "runestone_bonus": 8,
+  "crafted_cap": "rare",
+  "legendary_crafting": {
+   "_doc": "A designated Legendary Design comes out Legendary only when all hold: the relevant craft's skill of the "
+           "qualified worker >= skill (the maker, or the specialist who worked that craft's stages of a work order), "
+           "craftsmanship >= quality (a master specialist, whose craftsmanship cannot exceed master_quality, at that "
+           "ceiling), the fortune die >= fortune (of 100) and the rarity score >= score.",
+   "skill": 6, "quality": 115, "master_quality": 112, "fortune": 95, "score": 125,
+  },
  },
  "check": {
   "_doc": "Continuous precision curve. Zone centre = peak, zone edge = edge, misses fall to floor.",
@@ -577,7 +588,15 @@ recipes += [
     desc="An elven-style warbow: the silverleaf varnish keeps it from ever taking a set."),
 ]
 
+# Canonical v1.6 §6.2: only these advanced Designs may produce Legendary equipment (all others cap at Rare).
+LEGENDARY_DESIGNS = ["starsteel_blade", "mithril_runeblade", "adamantine_warplate", "dragonscale_armor",
+                     "archmage_robe", "concord_runestone"]
+for _r in recipes:
+    if _r["id"] in LEGENDARY_DESIGNS:
+        _r["legendary"] = True
+
 if __name__ == "__main__":
+    assert all(any(r["id"] == x for r in recipes) for x in LEGENDARY_DESIGNS), "a Legendary Design is missing"
     ids = set()
     for r in recipes:
         assert r["id"] not in ids, r["id"]

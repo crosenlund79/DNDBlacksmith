@@ -1189,7 +1189,8 @@
   "requires": {
    "arcane_metalwork": 1
   },
-  "desc": "The magic lives in the metal; the markings glow when the blade is drawn."
+  "desc": "The magic lives in the metal; the markings glow when the blade is drawn.",
+  "legendary": true
  },
  {
   "id": "garnet_ring",
@@ -1599,7 +1600,8 @@
    "smithing": 4
   },
   "desc": "From a forgotten Design found among the barrow-relics.",
-  "requires_flag": "recipe_starsteel"
+  "requires_flag": "recipe_starsteel",
+  "legendary": true
  },
  {
   "id": "charge_adamantine",
@@ -1722,7 +1724,8 @@
   "requires": {
    "arcane_metalwork": 1
   },
-  "desc": "The ward is in the metal itself — not a rune set into it."
+  "desc": "The ward is in the metal itself — not a rune set into it.",
+  "legendary": true
  },
  {
   "id": "hunting_bow",
@@ -2222,7 +2225,8 @@
    "runecraft": 100
   },
   "requires": {},
-  "desc": "A complex combination: fire, ward and your own rune singing as one."
+  "desc": "A complex combination: fire, ward and your own rune singing as one.",
+  "legendary": true
  },
  {
   "id": "mithril_plated_cuirass",
@@ -2742,7 +2746,8 @@
   },
   "requires": {},
   "desc": "Legendary armour of true dragon scale on a dragon-bone frame. It never leaves the forge below rare.",
-  "min_rarity": "rare"
+  "min_rarity": "rare",
+  "legendary": true
  },
  {
   "id": "spin_flax",
@@ -3808,7 +3813,8 @@
    "runecraft": 15
   },
   "requires": {},
-  "desc": "The finest robe a tailor can make: warded cloth over moonweave. A wizard wearing it shrugs off curses and fire alike."
+  "desc": "The finest robe a tailor can make: warded cloth over moonweave. A wizard wearing it shrugs off curses and fire alike.",
+  "legendary": true
  },
  {
   "id": "iron_shortsword",

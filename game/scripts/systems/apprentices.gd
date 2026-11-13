@@ -1802,6 +1802,9 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 					"supervised": sup, "rank": str(mk.get("rank", "")), "rank_name": str(mk.get("rank_name", ""))}
 			if int(t.get("uid", 0)) > 0:
 				maker["uid"] = int(t["uid"])   # C1: the uid reserved when the order was created
+			var dsl := WorkOrders.design_skill_level(t)
+			if dsl >= 0:
+				maker["skill_level"] = dsl   # v1.6 §6.2: the specialist who worked the Design's craft meets the Legendary skill gate
 			var dice := roll_dice(r.get("dice", {}), q, rng)
 			t["taken"] = {}   # the materials became the piece
 			var it2 := Crafting.build(rid, t["ops_done"], q, dice, "digital", maker)

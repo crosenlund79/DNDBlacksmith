@@ -34,10 +34,24 @@ func _build() -> void:
 	var q := Crafting.final_quality(j)
 	content.add_child(UIKit.rich("[b]%s[/b] — craftsmanship [color=#9e3a0c][b]%d%%[/b][/color]\n[i]Your precision sets the foundation; the dice decide the rest.[/i]" % [DB.recipe(j.get("recipe", "")).get("name", ""), int(round(q))], 24))
 	if spec.has("fortune"):
-		var lo := Crafting.rarity_eval(q, 1, 0.0)
-		var hi := Crafting.rarity_eval(q, 100, 0.0)
-		content.add_child(UIKit.rich("[i]With this craftsmanship the piece will be at least [b]%s[/b] and at best [b]%s[/b] (before material and rune bonuses).[/i]" % [
+		# canonical v1.6 §6.2: the crafted range, with this Design's material and rune bonuses, and why Legendary is or
+		# is not within reach (only designated Designs, with every gate met)
+		var rid := str(j.get("recipe", ""))
+		var bonus := Crafting.rarity_bonus(rid)
+		var lsk := Game.player_level(Crafting.recipe_skill(rid))
+		var lo := Crafting.crafted_rarity(rid, q, 1, bonus, lsk)
+		var hi := Crafting.crafted_rarity(rid, q, 100, bonus, lsk)
+		content.add_child(UIKit.rich("[i]With this craftsmanship the piece will be at least [b]%s[/b] and at best [b]%s[/b].[/i]" % [
 			Items.RARITY_LABEL[lo["rarity"]], Items.RARITY_LABEL[hi["rarity"]]], 20))
+		var lc: Dictionary = DB.crafting.get("rarity", {}).get("legendary_crafting", {})
+		var note := ""
+		if not bool(hi.get("legendary_design", false)):
+			note = "An ordinary Design: Rare is the most it can be. Only advanced Legendary Designs can become Legendary."
+		elif str(hi["rarity"]) == "legendary":
+			note = "A Legendary Design within your reach: Legendary needs the fortune die at %d or more." % int(lc.get("fortune", 95))
+		else:
+			note = "A Legendary Design, out of reach this time — %s." % ", ".join(hi.get("legendary_why", []))
+		content.add_child(UIKit.rich("[color=#5e421c]%s[/color]" % note, 19))
 	var adv := Crafting.advantage(q)
 	var how := ""
 	match int(adv["tier"]):

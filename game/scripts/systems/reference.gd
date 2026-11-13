@@ -282,8 +282,12 @@ static func _dice(out: Array) -> void:
 	_e(out, "dice", "The dice", "After the last step you roll the Design's dice (digitally or with your own).\n" + "\n".join(lines), "ui/dice_d20", "dice roll d20 d100 physical")
 	var rar: Dictionary = DB.crafting.get("rarity", {})
 	var th: Dictionary = rar.get("thresholds", {})
-	_e(out, "dice", "Rarity", "Craftsmanship and the fortune die combine into a rarity score: Magic from %s, Rare from %s, Legendary from %s. Runestones, fine materials and masterwork (%s%% craftsmanship) add to it. Common · Magic · Rare · Legendary." % [
-		str(th.get("magic", "?")), str(th.get("rare", "?")), str(th.get("legendary", "?")), str(rar.get("masterwork", {}).get("quality", "?"))], "icons/star", "rarity common magic rare legendary masterwork")
+	var lc: Dictionary = rar.get("legendary_crafting", {})
+	_e(out, "dice", "Rarity", ("Craftsmanship and the fortune die combine into a rarity score: Magic from %s, Rare from %s. Runestones and fine materials add to it. Masterwork (%s%% craftsmanship) is a mark of craftsmanship of its own. "
+		+ "Ordinary Designs are Rare at most. Only advanced Legendary Designs (the Starsteel Blade, the Mithril Runeblade, Adamantine Warplate, Dragonscale Armour, the Archmage's Robe and the Concord Runestone) can become Legendary — and only from a master's hands "
+		+ "(the craft's skill %s, made by whoever works it), with %s%% craftsmanship (a master specialist: their best), a fortune of %s or more and a score of %s. Common · Magic · Rare · Legendary. Epic is not a rarity: it is earned by deeds.") % [
+		str(th.get("magic", "?")), str(th.get("rare", "?")), str(rar.get("masterwork", {}).get("quality", "?")), str(lc.get("skill", "?")),
+		str(lc.get("quality", "?")), str(lc.get("fortune", "?")), str(lc.get("score", "?"))], "icons/star", "rarity common magic rare legendary masterwork epic")
 
 
 static func _workshop(out: Array) -> void:

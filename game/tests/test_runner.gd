@@ -153,11 +153,17 @@ func _crafting() -> void:
 	Game.add_item(Items.make("ingot_iron", {"qty": 6}), false)
 	Game.add_item(Items.make("leather_cured", {"qty": 3}), false)
 	var master := _craft("iron_longsword", 119.0, {"edge": 6, "temper": 5, "fortune": 12})
-	check(master.get("rarity") == "legendary" and master.get("star", false), "rarity: masterwork with a poor roll is legendary (%s)" % master.get("rarity"))
+	# canonical v1.6 §6.2: no automatic masterwork bonus, and an ordinary Design tops out at Rare
+	check(master.get("rarity") in ["magic", "rare"] and bool(master.get("craft", {}).get("rarity_parts", {}).has("masterwork")) and float(master["craft"]["rarity_parts"]["masterwork"]) == 0.0,
+		"rarity: masterwork with a poor roll is no longer Legendary — no masterwork bonus (%s)" % master.get("rarity"))
+	var lucky := _craft("iron_longsword", 125.0, {"edge": 20, "temper": 12, "fortune": 100})
+	check(lucky.get("rarity") == "rare" and bool(lucky.get("craft", {}).get("rarity_capped", false)),
+		"rarity: an ordinary Design caps at Rare even with masterful work and a perfect roll (%s)" % lucky.get("rarity"))
 	var sloppy := _craft("iron_longsword", 60.0, {"edge": 20, "temper": 12, "fortune": 100})
 	check(sloppy.get("rarity") in ["common", "magic"], "rarity: sloppy work with a perfect roll stays modest (%s)" % sloppy.get("rarity"))
 	# base statistics (random rarity affixes aside): craftsmanship outweighs a perfect roll
-	check(int(master["stats"]["attack"]) > int(sloppy["stats"]["attack"]), "stats: craftsmanship dominates the dice (base %d vs %d)" % [int(master["stats"]["attack"]), int(sloppy["stats"]["attack"])])
+	# (v1.6 §6.2: the masterwork piece is no longer automatically Legendary, so compare the whole piece, rarity included)
+	check(Items.score(master) > Items.score(sloppy), "stats: craftsmanship dominates the dice (power %.0f vs %.0f; base attack %d vs %d)" % [Items.score(master), Items.score(sloppy), int(master["stats"]["attack"]), int(sloppy["stats"]["attack"])])
 	# material matters: steel beats iron at the same quality and rolls
 	var steel := _craft("steel_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30}, "physical")
 	var iron := _craft("iron_longsword", 100.0, {"edge": 10, "temper": 6, "fortune": 30})
@@ -1214,10 +1220,10 @@ func _saves() -> void:
 	check(Game.state["day"] is int and Game.state["minute"] % 60 >= 0, "saves: clock restored as ints")
 	check(Hire.get_h("borin") != {} or true, "saves: hirelings restored")
 	var crafted := Game.inventory().filter(func(x): return x.has("craft") and Items.is_equipment(x))
-	var leg := crafted.filter(func(x): return x.get("rarity") == "legendary")
+	var leg := Game.inventory().filter(func(x): return x.get("rarity") == "legendary")
 	check(not crafted.is_empty() and crafted[0]["craft"].get("ops", []).size() > 0 and crafted[0]["craft"].get("dice", {}).has("edge"),
 		"saves: crafted items keep their record of the work")
-	check(not leg.is_empty() and leg[0].get("star", false), "saves: crafted legendary survives save/load with its star")
+	check(not leg.is_empty() and leg[0].get("star", false), "saves: a legendary piece survives save/load with its star")
 	Saves.delete("test_slot")
 
 

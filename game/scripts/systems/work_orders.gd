@@ -56,6 +56,20 @@ static func plan(rid: String) -> Array:
 
 
 ## The task's stages (built on first use when its Design is known; consistent with a task already under way).
+## Canonical v1.6 §6.2: the best skill in the Design's own craft among the hands that worked that craft's stages (the
+## smith's own level when he worked them) — a qualified specialist satisfies the Legendary skill gate. -1: no such stage.
+static func design_skill_level(t: Dictionary) -> int:
+	var sk := Crafting.recipe_skill(str(t.get("recipe", "")))
+	var best := -1
+	for s in stages(t):
+		if str(s.get("skill", "")) != sk or str(s.get("by", "")) == "":
+			continue
+		var by := str(s["by"])
+		var lv := Game.player_level(sk) if by == "player" else Apprentices.level(Apprentices.get_a(by), sk)
+		best = maxi(best, lv)
+	return best
+
+
 static func stages(t: Dictionary) -> Array:
 	ensure(t)
 	return t.get("stages", [])

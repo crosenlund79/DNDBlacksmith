@@ -216,6 +216,12 @@ func _dice_column(cr: Dictionary) -> Control:
 		if float(parts.get("masterwork", 0)) > 0:
 			bits.append("[color=#ffa050]masterwork %.0f[/color]" % float(parts["masterwork"]))
 		v.add_child(UIKit.rich("[color=#c8b898]Score %.0f = %s[/color]" % [float(cr.get("rarity_score", 0)), " + ".join(bits)], 19, true))
+		# canonical v1.6 §6.2: why it is not Legendary (a Legendary Design that missed a gate, or ordinary work capped at Rare)
+		var why: Array = cr.get("legendary_why", [])
+		if bool(cr.get("legendary_design", false)) and not why.is_empty():
+			v.add_child(UIKit.rich("[color=#c8b898]Legendary Design — not Legendary this time: %s.[/color]" % ", ".join(why), 19, true))
+		elif bool(cr.get("rarity_capped", false)):
+			v.add_child(UIKit.rich("[color=#c8b898]Rare is the most an ordinary Design can be; only advanced Legendary Designs become Legendary.[/color]", 19, true))
 	return v
 
 
