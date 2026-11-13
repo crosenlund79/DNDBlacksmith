@@ -89,7 +89,7 @@ func test_hud_counters_fit() -> void:
 	Game.state["gold"] = 1234567
 	ui._refresh_hud()
 	ui._layout_left()
-	eq(ui.gold_label.text, "1,234,567 gold", "the HUD shows the whole purse")
+	eq(ui.gold_label.text, "1,234,567 g", "the HUD shows the whole purse")
 	var f := ui.gold_label.get_theme_font("font")
 	var need := f.get_string_size(ui.gold_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, ui.gold_label.get_theme_font_size("font_size")).x
 	check(ui.gold_label.get_combined_minimum_size().x + 0.5 >= need, "the purse label asks for its whole text (%d ≥ %d)" % [int(ui.gold_label.get_combined_minimum_size().x), int(need)])

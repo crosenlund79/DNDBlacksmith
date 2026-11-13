@@ -20,14 +20,29 @@ func _init(it := {}, px := 72.0) -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 
+## The slot whose item tooltip is showing (v1.7 #69): it is dismissed when that slot goes away under the mouse.
+static var _tip_owner: ItemSlot = null
+
+
 func _ready() -> void:
 	mouse_entered.connect(_on_hover)
-	mouse_exited.connect(func(): UIRoot.hide_tooltip())
+	mouse_exited.connect(_on_leave)
+	tree_exiting.connect(_on_leave)
+	visibility_changed.connect(func():
+		if not is_visible_in_tree():
+			_on_leave())
 
 
 func _on_hover() -> void:
 	if not item.is_empty() and not hidden_item:
+		_tip_owner = self
 		UIRoot.show_tooltip(Items.tooltip(item))
+
+
+func _on_leave() -> void:
+	if _tip_owner == self or _tip_owner == null or not is_instance_valid(_tip_owner):
+		_tip_owner = null
+		UIRoot.hide_tooltip()
 
 
 func _gui_input(event: InputEvent) -> void:

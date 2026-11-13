@@ -86,35 +86,39 @@ func _build_hud() -> void:
 	var tl := PanelContainer.new()
 	tl.name = "HudPlate"
 	tl.add_theme_stylebox_override("panel", Assets.panel_style("parchment"))
-	tl.position = Vector2(20, 18)
+	tl.position = Vector2(14, 12)
 	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_plate = tl
-	var v := UIKit.vbox(2)
-	clock_label = UIKit.label("", 26, "heading")
+	# v1.7 #73: a compact plate — day, weekday, time and gold on one line, the energy strip under it, then the objective
+	var v := UIKit.vbox(1)
+	clock_label = UIKit.label("", 21, "heading")
 	clock_label.name = "HudClock"
 	clock_label.mouse_filter = Control.MOUSE_FILTER_PASS   # its tooltip names the season and the weather (v1.6 §11)
-	gold_label = UIKit.label("", 24, "body_bold", UIKit.RUBRIC)
+	gold_label = UIKit.label("", 20, "body_bold", UIKit.RUBRIC)
 	gold_label.name = "HudGold"
-	objective_label = UIKit.rich("", 20)
-	objective_label.custom_minimum_size = Vector2(430, 0)
-	v.add_child(clock_label)
+	objective_label = UIKit.rich("", 16)
+	objective_label.custom_minimum_size = Vector2(330, 0)
+	var top := UIKit.hbox(10)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(clock_label)
+	top.add_child(gold_label)
+	v.add_child(top)
 	# energy (Vitality): a slim bar under the clock, coloured as fatigue builds
-	var er := UIKit.hbox(8)
+	var er := UIKit.hbox(6)
 	er.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	energy_label = UIKit.label("", 18, "body_italic")
-	energy_bar = UIKit.bar(100.0, 100.0, 150)
-	energy_bar.custom_minimum_size = Vector2(150, 12)
+	energy_label = UIKit.label("", 15, "body_italic")
+	energy_bar = UIKit.bar(100.0, 100.0, 120)
+	energy_bar.custom_minimum_size = Vector2(120, 9)
 	energy_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	energy_bar.show_percentage = false
 	energy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var efill := StyleBoxFlat.new()
 	efill.set_corner_radius_all(3)
 	energy_bar.add_theme_stylebox_override("fill", efill)
-	er.add_child(UIKit.label("Energy", 18, "body_bold"))
+	er.add_child(UIKit.label("Energy", 15, "body_bold"))
 	er.add_child(energy_bar)
 	er.add_child(energy_label)
 	v.add_child(er)
-	v.add_child(gold_label)
 	# Living Workshop #44: while the caravan is camped, a quiet chip says so (and how long); click: where it is
 	caravan_chip = UIKit.small_button("", func(): Events.open_panel.emit("map", {"venue": "caravan"}))
 	caravan_chip.name = "CaravanChip"
@@ -158,7 +162,7 @@ func _build_hud() -> void:
 	hud.add_child(toolbar)
 	# left: the tutorial card
 	tutorial_card = TutorialCard.new()
-	tutorial_card.position = Vector2(20, 250)
+	tutorial_card.position = Vector2(14, 160)
 	hud.add_child(tutorial_card)
 	hud.add_child(HirelingHud.new())   # bottom-left: the hands at a glance (iteration 010)
 	steward_plate = StewardPlate.new()   # Steward Mode: the live status plate / sealed-letter chip (right, under the minimap)
@@ -245,10 +249,10 @@ func _build_hud() -> void:
 func _refresh_hud() -> void:
 	if Game.state.is_empty():
 		return
-	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name(), Game.time_string(),
+	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name().left(3) + ".", Game.time_string(),
 		"  ‖ paused" if Game.paused else ("  ▸×%d" % Game.speed if Game.speed > 1 else "")]
 	clock_label.tooltip_text = Seasons.describe(Game.day(), int(Game.state.get("minute", 0)))   # canonical v1.6 §11
-	gold_label.text = "%s gold" % UIKit.num(Game.gold())   # #43: grouped digits; the plate sizes itself to the text
+	gold_label.text = "%s g" % UIKit.num(Game.gold())   # #43: grouped digits; the plate sizes itself to the text
 	var cm: Variant = Game.state.get("commerce", {})   # read without creating state (Commerce.st() fills keys in)
 	var cv: Dictionary = (cm as Dictionary).get("caravan", {}) if cm is Dictionary else {}
 	caravan_chip.visible = not cv.is_empty()
@@ -256,7 +260,7 @@ func _refresh_hud() -> void:
 		var left_min := maxi(0, int(cv.get("leaves", 0)) - Game.now())
 		var hrs := maxi(1, int(ceil(float(left_min) / 60.0)))
 		var dys := int(ceil(float(left_min) / 1440.0))
-		caravan_chip.text = "Caravan at the camp — leaves in %s" % (("%d hour%s" % [hrs, "" if hrs == 1 else "s"]) if left_min < 1440
+		caravan_chip.text = "Caravan — leaves in %s" % (("%d hour%s" % [hrs, "" if hrs == 1 else "s"]) if left_min < 1440
 			else ("%d day%s" % [dys, "" if dys == 1 else "s"]))
 	energy_bar.value = Vitality.energy()
 	var fb := Vitality.band()
@@ -278,7 +282,7 @@ func _layout_left() -> void:
 		return
 	hud_plate.reset_size()
 	if is_instance_valid(tutorial_card):
-		tutorial_card.position.y = maxf(250.0, hud_plate.position.y + hud_plate.size.y + 14.0)
+		tutorial_card.position.y = maxf(120.0, hud_plate.position.y + hud_plate.size.y + 10.0)
 
 
 func _process(delta: float) -> void:
@@ -294,7 +298,9 @@ func _process(delta: float) -> void:
 			p.x = mp.x - tooltip_panel.size.x - 16
 		if p.y + tooltip_panel.size.y > vs.y:
 			p.y = vs.y - tooltip_panel.size.y - 8
+		p = p.max(Vector2(8, 8))   # v1.7 #69: never off the top or left edge either
 		tooltip_panel.position = p
+		move_child(tooltip_panel, get_child_count() - 1)   # always above every panel and overlay
 	if debug_label.visible:
 		debug_label.text = "FPS %d | day %d %s | area %s | blockers %d | errors %d | missing sprites %d\n%s" % [
 			Engine.get_frames_per_second(), Game.day(), Game.time_string(), Game.state.get("player", {}).get("area", "?"),

@@ -112,3 +112,65 @@ func run_ironfront(p: Node) -> void:
 	pt.expect(not Ironfront.found_shelf().is_empty(), "ironfront: a card %s found on the road is on Barnaby's shelf" % a.get("name", ""))
 	await _shot("if_shop")
 	await pt.close_panel()
+
+
+## lvw_ui: the compact HUD; the stores with icon categories and the floating item tooltip (no fixed description area,
+## kept on screen at the edges, dismissed on leaving); the hireling ledger (gear left, assignments and expeditions
+## right, the skills box optional).
+func run_ui(p: Node) -> void:
+	pt = p
+	await pt.click("New Game")
+	await pt.wait(2.5)
+	var ui: UIRoot = UIRoot.instance
+	pt.note("hud plate %s" % str(ui.hud_plate.size))
+	pt.expect(ui.hud_plate.size.y < 150 and ui.hud_plate.size.x < 470, "ui: the HUD plate is compact (%dx%d)" % [int(ui.hud_plate.size.x), int(ui.hud_plate.size.y)])
+	await _shot("ui_hud")
+	for d in ["sword_iron", "shield_kite", "ore_iron", "runestone_ember", "relic_idol"]:
+		Game.add_item(Items.make(d, {"quality": 90.0}))
+	Events.open_panel.emit("inventory", {})
+	await pt.wait(1.0)
+	var inv: Control = pt.panel()
+	pt.expect(inv is InventoryPanel, "ui: the stores open")
+	for k in ["all", "equipment", "materials", "magic", "relics"]:
+		var b := inv.find_child("Cat_" + k, true, false) as Button
+		pt.expect(b != null and b.tooltip_text != "", "ui: the %s category is an icon with a hover label" % k)
+	pt.expect(not (inv.find_child("DetailScroll", true, false) as Control).visible, "ui: no fixed description column at first")
+	# hover a piece: the floating tooltip
+	var grid: GridContainer = (inv as InventoryPanel).grid
+	var slot: ItemSlot = grid.get_child(0) as ItemSlot
+	slot.mouse_entered.emit()
+	pt.get_viewport().warp_mouse(slot.get_global_rect().get_center())
+	await pt.wait(0.4)
+	pt.expect(ui.tooltip_panel.visible and ui.tooltip_text.text.length() > 20, "ui: hovering a piece shows its full description")
+	var r := ui.tooltip_panel.get_global_rect()
+	var vs := pt.get_viewport().get_visible_rect().size
+	pt.expect(r.position.x >= 0 and r.position.y >= 0 and r.end.x <= vs.x + 1 and r.end.y <= vs.y + 1, "ui: the tooltip is on screen %s" % str(r))
+	pt.expect(ui.tooltip_panel.get_index() == ui.get_child_count() - 1, "ui: the tooltip is above every panel")
+	await _shot("ui_stores_tooltip")
+	# near the right/bottom edge it moves to stay on screen
+	pt.get_viewport().warp_mouse(vs - Vector2(10, 10))
+	await pt.wait(0.3)
+	r = ui.tooltip_panel.get_global_rect()
+	pt.expect(r.end.x <= vs.x + 1 and r.end.y <= vs.y + 1, "ui: at the screen corner it stays on screen")
+	slot.mouse_exited.emit()
+	await pt.wait(0.2)
+	pt.expect(not ui.tooltip_panel.visible, "ui: leaving the piece dismisses it")
+	(inv as InventoryPanel)._cat_buttons["materials"].pressed.emit()
+	await pt.wait(0.3)
+	await _shot("ui_stores_materials")
+	await pt.close_panel()
+	# the hireling ledger
+	Events.open_panel.emit("hirelings", {})
+	await pt.wait(1.0)
+	var hp: Control = pt.panel()
+	pt.expect(hp is HirelingsPanel and hp.find_child("Assignments", true, false) != null and hp.find_child("WhoAndGear", true, false) != null,
+		"ui: the hireling card — who and gear, assignments and expeditions")
+	pt.expect(hp.find_child("SkillsBox", true, false) == null, "ui: the skills box is optional (closed)")
+	await _shot("ui_hirelings")
+	var tg := hp.find_child("SkillsToggle", true, false) as Button
+	if tg != null:
+		tg.pressed.emit()
+		await pt.wait(0.5)
+		pt.expect(pt.panel().find_child("SkillsBox", true, false) != null, "ui: the skills box opens on request")
+		await _shot("ui_hirelings_skills")
+	await pt.close_panel()

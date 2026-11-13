@@ -6,12 +6,18 @@ extends UIWindow
 ## A2 layout: a fixed window that fits 1920×1080 (and 1600×900, the same canvas scaled) however many pieces the stores
 ## hold — the grid and the details column scroll on their own, and the details column can be collapsed (the grid then
 ## widens; clicking a piece opens it again; a right-click still opens the full inspection).
-const WIN := Vector2(1440, 820)   # #47: was 1560×900
+const WIN := Vector2(1240, 760)   # #47: was 1560×900; v1.7 #69: 1440×820 → 1240×760 (details on demand)
 const SLOT := 72.0
 const GAP := 8
 const DETAIL_W := 400.0
-## Whether the details column is open (kept for the session).
-static var details_open := true
+## Whether the details column is open (kept for the session). v1.7 #69: closed at first — hovering a piece shows its
+## full description in the floating tooltip; clicking one opens the details and its actions.
+static var details_open := false
+## v1.7 #71: the store categories as icons (the label on hover): [key, hover label, icon ids, glyph]
+const CATEGORIES := [["all", "All — everything in the stores", [], "∞"], ["equipment", "Equipment — weapons, armour and shields", ["icons/sword_iron", "icons/shield_kite"], ""],
+	["materials", "Materials — ores, ingots, hides and cloth", ["icons/ore_iron"], ""], ["magic", "Runes & alchemy", ["icons/runestone_ember", "icons/potion_healing"], ""],
+	["relics", "Relics & curios", ["icons/relic_idol"], ""]]
+var _cat_buttons := {}
 
 var grid: GridContainer
 var detail: VBoxContainer
@@ -30,9 +36,8 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	var tabs := UIKit.hbox(8)
-	for f in [["all", "Everything"], ["equipment", "Equipment"], ["materials", "Materials"], ["magic", "Runes & Alchemy"], ["relics", "Relics"]]:
-		var key: String = f[0]
-		tabs.add_child(UIKit.button(f[1], func(): filter = key; _fill(), 0))
+	for f in CATEGORIES:
+		tabs.add_child(_cat_button(str(f[0]), str(f[1]), f[2], str(f[3])))
 	count_label = UIKit.label("", 19, "body_italic", Color("#5e421c"))
 	count_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -65,6 +70,43 @@ func _ready() -> void:
 	content.add_child(h)
 	Events.inventory_changed.connect(_fill)
 	set_details(details_open)
+
+
+## One category as an icon button (v1.7 #71): ∞ for all, a sword and shield, ore, a rune and a flask, a relic; the
+## words on hover; the chosen one stays pressed.
+func _cat_button(key: String, label: String, icons: Array, glyph: String) -> Button:
+	var b := Button.new()
+	b.name = "Cat_" + key
+	b.toggle_mode = true
+	b.button_pressed = key == filter
+	b.tooltip_text = label
+	b.custom_minimum_size = Vector2(46 + 34 * maxi(1, icons.size()), 50)
+	b.focus_mode = Control.FOCUS_NONE
+	var h := HBoxContainer.new()
+	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.set_anchors_preset(Control.PRESET_FULL_RECT)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if glyph != "":
+		var l := UIKit.label(glyph, 32, "heading")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		h.add_child(l)
+	for ic in icons:
+		var tr := TextureRect.new()
+		tr.texture = Assets.get_tex(str(ic))
+		tr.custom_minimum_size = Vector2(38, 38)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(tr)
+	b.add_child(h)
+	b.pressed.connect(func():
+		filter = key
+		for k in _cat_buttons:
+			(_cat_buttons[k] as Button).set_pressed_no_signal(k == key)
+		_fill())
+	_cat_buttons[key] = b
+	return b
 
 
 ## Opens or collapses the details column (the grid takes the room).

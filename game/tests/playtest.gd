@@ -4102,3 +4102,9 @@ func phase_lvw_dev() -> void:
 func phase_lvw_ironfront() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_ironfront(self)
+
+
+## Compact HUD, store icons and the floating item tooltip, the hireling ledger (tests/playtest_lvw.gd). Shots lvw_ui_*.
+func phase_lvw_ui() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_ui(self)
