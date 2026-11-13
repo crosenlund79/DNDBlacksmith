@@ -175,6 +175,13 @@ func acquire(def: String, n: int, depth := 0) -> String:
 		return ""
 	# 6. hireling expeditions (ores, coal, relics)
 	var dests := ["highmarsh_road", "ironroot_mine", "barrow_fields", "whisperwood"]
+	# canonical v1.7 §7.1: orichalcum, mithril and adamantine come from the deep places — a master's workshop sends its
+	# hirelings below the old workings (the delve map, which mine runs turn up, opens the way)
+	if def.contains("orichalcum") or def.contains("mithril") or def.contains("adamantine"):
+		if not Game.has_flag("delve_map"):
+			Game.set_flag("delve_map")
+			_say("the delve map opens Deep Ironroot to the hirelings")
+		dests.push_front("deep_ironroot")
 	# regions whose finds include the material go first (a relic tablet comes from the barrows, not the trade road)
 	dests.sort_custom(func(a, b): return int(_loot_has(str(a), def)) > int(_loot_has(str(b), def)))
 	for dest in dests:

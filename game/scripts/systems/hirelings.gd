@@ -540,8 +540,9 @@ static func _resolve(h: Dictionary) -> void:
 		if not success:
 			contents = contents.slice(0, max(1, contents.size() / 2))
 	# v1.7 (#70): now and then the smith's hireling brings a painted Ironfront card home in the haul
-	if success and not first_bag and randf() < Ironfront.FOUND_CHANCE * 1.5:
-		var hc := Ironfront.card_found(h, true)
+	var hkey := "%s|%d|card" % [str(h["id"]), Game.day()]
+	if success and not first_bag and Ironfront.roll(hkey) < Ironfront.FOUND_CHANCE * 1.5:
+		var hc := Ironfront.card_found(h, true, "", hkey)
 		if hc != "":
 			log_line(h, "found a painted Ironfront card: %s" % Ironfront.card(hc).get("name", hc))
 			Game.journal("%s brought a painted Ironfront card home from %s: %s." % [h["name"], d["name"], Ironfront.card(hc).get("name", hc)])

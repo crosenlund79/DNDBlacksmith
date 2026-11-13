@@ -1069,7 +1069,8 @@ func _village9() -> void:
 	for bid in ["herbalist", "barnaby_house", "ironfront_basement", "chandler", "stable", "cooperage", "house_fenn", "house_ashby", "net_loft"]:
 		check(bid in ids, "village9: building/area %s exists" % bid)
 	var sr: Array = DB.building("smithy")["rect"]
-	check(int(sr[0]) == 18 and int(sr[1]) == 34 and int(sr[2]) == 30 and int(sr[3]) == 23, "village9: the smithy rectangle is untouched")
+	# v1.7 (#64): the compact smithy — same corner, 19 × 18 (the freed ground is the millpond)
+	check(int(sr[0]) == 18 and int(sr[1]) == 34 and int(sr[2]) == 19 and int(sr[3]) == 18, "village9: the smithy keeps its corner, compact (19 × 18)")
 	var exits := []
 	for e in L.get("exits", []):
 		exits.append(str(e["id"]))
@@ -1484,7 +1485,8 @@ func _property() -> void:
 	Game.state["gold"] = 5000
 	check(Property.buy_unit("cellar") != "", "property: a room that does not adjoin cannot be bought")
 	check(Property.buy_unit("cobbler") == "" and Property.owns("cobbler") and Game.gold() == 5000 - Property.unit_price("cobbler"), "property: buying the cobblery")
-	check(Property.unit_state("cellar") == "available", "property: the vault adjoins once the cobblery is yours")
+	check(Property.unit_state("chandler") == "available" and Property.unit_state("cellar") == "unavailable", "property: v1.7 — the cellar can be dug from the start, the vault only after it")
+	check(Property.buy_unit("chandler") == "" and Property.unit_state("cellar") == "available", "property: the vault can be dug once the cellar is")
 	# a doorway that already existed between forge room and cobblery is now open
 	var opened := false
 	for d in Property.doors():

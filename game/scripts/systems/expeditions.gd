@@ -1233,8 +1233,9 @@ static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
 	if randf() < 0.2:
 		var standing := _standing(e)
 		if not standing.is_empty():
-			var finder := Adv.get_a(str(standing[randi() % standing.size()]))
-			var cid := Ironfront.card_found(finder, false, "special")
+			var bkey := "%s|boss|%s" % [str(e.get("id", "")), str(n.get("id", ""))]
+			var finder := Adv.get_a(str(standing[int(Ironfront.roll(bkey) * standing.size()) % standing.size()]))
+			var cid := Ironfront.card_found(finder, false, "special", bkey)
 			if cid != "":
 				_j(e, "Among the spoils: a strange painted card — %s. %s pockets it; Barnaby will want to see it." % [Ironfront.card(cid).get("name", cid), finder.get("name", "")], "loot")
 	var foe_kind: String = str(rec["enemies"][0]["kind"]) if not rec["enemies"].is_empty() else "beast"
@@ -1381,9 +1382,10 @@ static func finish(e: Dictionary) -> void:
 	if not alive.is_empty():
 		WorldSites.on_finish(e)
 	# v1.7 (#70): now and then a party carries a painted Ironfront card home (theirs, to sell to Barnaby)
-	if not alive.is_empty() and str(e.get("outcome", "")) != "wiped" and randf() < Ironfront.FOUND_CHANCE:
-		var cf := Adv.get_a(str(alive[randi() % alive.size()]))
-		var fid := Ironfront.card_found(cf)
+	var ckey := "%s|card" % str(e.get("id", ""))
+	if not alive.is_empty() and str(e.get("outcome", "")) != "wiped" and Ironfront.roll(ckey) < Ironfront.FOUND_CHANCE:
+		var cf := Adv.get_a(str(alive[int(Ironfront.roll(ckey + "|who") * alive.size()) % alive.size()]))
+		var fid := Ironfront.card_found(cf, false, "", ckey)
 		if fid != "":
 			_j(e, "%s found a painted Ironfront card on the road — %s." % [cf.get("name", ""), Ironfront.card(fid).get("name", fid)], "loot")
 	var share := int(e["gold"]) / maxi(1, alive.size())

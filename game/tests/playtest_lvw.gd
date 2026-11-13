@@ -274,3 +274,32 @@ func run_maps(p: Node) -> void:
 			await pt.tp(e["pos"] + Vector2(60, 40))
 			await pt.wait(1.0)
 			await _shot("map_minimap_loft")
+
+
+## lvw_oldsave: a real 0.14.6 save (golden fixture) loaded through the menu path into the compact smithy: it migrates
+## (step 8), the smith stands inside, every station stands or waits in storage, the Loft and the cellar as owned.
+func run_oldsave(p: Node) -> void:
+	pt = p
+	await pt.wait(0.5)
+	var f := FileAccess.open(Saves.path("lvw_oldsave"), FileAccess.WRITE)
+	f.store_string(FileAccess.get_file_as_string("res://tests/fixtures/saves/build-0.14.6.json"))
+	f.close()
+	pt.get_tree().root.get_node("Main").call("load_slot", "lvw_oldsave")
+	await pt.wait(3.0)
+	var w: VillageWorld = pt.W()
+	pt.expect(w != null, "oldsave: the world is up")
+	pt.expect(int(Game.state.get("version", 0)) == Game.SAVE_VERSION, "oldsave: migrated to schema %d" % Game.SAVE_VERSION)
+	var steps: Array = Saves.last_load.get("migration", {}).get("steps", [])
+	pt.expect(steps.has("the compact smithy"), "oldsave: the compact-smithy step ran (%s)" % str(steps))
+	var pp: Vector2 = w.player.position / 64.0
+	pt.expect(not Rect2(37, 34, 12, 24).has_point(pp), "oldsave: the smith is not standing in the millpond (%s)" % str(pp))
+	pt.expect(Property.validate(Property.plan_copy()) == "", "oldsave: the plan is valid")
+	pt.note("units %s, stations %d set up, %d stored" % [str(Property.st()["units"]), (Property.st()["stations"] as Dictionary).size(), (Property.st()["stored"] as Array).size()])
+	await pt.tp(w.spots["smithy_inside"] + Vector2(0, 120))
+	await pt.wait(1.0)
+	await _shot("oldsave_ground")
+	if w.spots.has("smithy_basement_inside") and Property.floor_owned("basement"):
+		await pt.tp(w.spots["smithy_basement_inside"])
+		await pt.wait(1.0)
+		await _shot("oldsave_cellar")
+	Saves.delete("lvw_oldsave")

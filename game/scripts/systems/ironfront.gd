@@ -1202,6 +1202,11 @@ const FOUND_CHANCE := 0.04       # a returning party carries a painted card home
 const TEACHING_SEED := 1918      # the teaching match's fixed deal (a real, winnable game)
 
 
+## A fixed chance for `key` in [0, 1) — the card-find rolls use it, so they never draw from the game's random numbers.
+static func roll(key: String) -> float:
+	return float(hash(key + "|ironfront") & 0xffffff) / 16777216.0
+
+
 static func lent(id: String) -> int:
 	return int(st()["lent"].get(id, 0))
 
@@ -1232,14 +1237,18 @@ static func sell_card(id: String) -> int:
 
 ## A painted card found on an expedition. `finder` is an adventurer (they keep it, to sell to Barnaby) or, with
 ## `smiths` true, the smith's own hireling (it comes home in the smith's haul). Returns the card id ("" = none).
-static func card_found(finder: Dictionary, smiths := false, rarity := "") -> String:
+static func card_found(finder: Dictionary, smiths := false, rarity := "", key := "") -> String:
+	# its own dice (seeded by `key`, e.g. the expedition): a find never shifts the game's other random draws
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key) if key != "" else randi()
 	var r := rarity
 	if r == "":
-		var x := randf()
+		var x := rng.randf()
 		r = "common" if x < 0.5 else "uncommon" if x < 0.8 else "rare" if x < 0.95 else "special"
-	var id := random_card(r)
-	if id == "":
+	var pool := all_cards().filter(func(c): return c["rarity"] == r)
+	if pool.is_empty():
 		return ""
+	var id := str(pool[rng.randi() % pool.size()]["id"])
 	if smiths:
 		grant_card(id, "hireling:" + str(finder.get("id", "")))
 	else:

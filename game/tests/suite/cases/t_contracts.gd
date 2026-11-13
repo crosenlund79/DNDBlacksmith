@@ -135,6 +135,9 @@ func test_letter_says_why_and_royal_when_earned() -> void:
 		var c := Contracts._build(Contracts.template(tpl), "")
 		c["outcome"] = "good"
 		Contracts.history().append(c)
+	# the world's own discoveries in the days waited above (rumours, an adventurer's find) can hang plaques too; this
+	# check is about orders without the smith's fame, so those are set aside
+	Game.state["hall_of_fame"] = (Game.state.get("hall_of_fame", []) as Array).filter(func(e): return str(e.get("kind", "")) != "discovery")
 	check(int(Contracts.standing()["tier"]) < 4, "orders alone are not enough without fame (%s)" % Contracts.tier_open(4))
 	for i in 4:
 		Recognition.record("craft", "Masterwork %d" % i, "test", {}, "t_ct_%d" % i)

@@ -4120,3 +4120,9 @@ func phase_lvw_layout() -> void:
 func phase_lvw_maps() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_maps(self)
+
+
+## A real 0.14.6 save loaded into the compact smithy (tests/playtest_lvw.gd). Shots lvw_oldsave_*.
+func phase_lvw_oldsave() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_oldsave(self)
