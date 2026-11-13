@@ -226,6 +226,15 @@ func _page_overview(a: Dictionary) -> void:
 	var gl := Living.goals(a)
 	if not gl.is_empty():
 		page.add_child(_icon_line("ui/stat_morale", "Goal: " + Living.goal_text(a, gl[0])))
+	# their life before the campaign (canonical v1.5 §8.1): written once, never changed; scrolls if it runs long
+	page.add_child(UIKit.divider())
+	page.add_child(_heading("Biography"))
+	var bio := UIKit.label(Biography.text(a), 20, "body")
+	bio.name = "BiographyText"
+	bio.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var bs := UIKit.scroll(bio, 190)
+	bs.name = "Biography"
+	page.add_child(bs)
 
 
 func _page_combat(a: Dictionary) -> void:

@@ -213,6 +213,7 @@ static func make_adventurer(id: String, r: RandomNumberGenerator, story: bool) -
 		a["planned_dest"] = "barrow_fields"
 	if id == "sigrun":
 		a["depart_day"] = 2
+	Biography.ensure(a)   # their pre-game history, written once now (canonical v1.5 §8.1; its own random generator)
 	return a
 
 
@@ -287,6 +288,7 @@ static func ensure(a: Dictionary) -> Dictionary:
 		a["trauma"] = 0.0
 	if not a.has("age"):
 		a["age"] = int(DB.character(str(a.get("id", ""))).get("age", 30))
+	Biography.ensure(a)   # older saves: written once on first meeting, then kept unchanged
 	return a
 
 
