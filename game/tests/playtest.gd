@@ -4089,3 +4089,10 @@ func phase_beyond_map() -> void:
 func phase_seasons() -> void:
 	var ph: RefCounted = load("res://tests/playtest_beyond.gd").new()
 	await ph.run_seasons(self)
+
+
+# ======================================================================= The Living Village & Workshop (canonical v1.7)
+## The in-game menu's Developer tools entry, the quick tools and the developer pace (tests/playtest_lvw.gd). Shots lvw_*.
+func phase_lvw_dev() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_dev(self)

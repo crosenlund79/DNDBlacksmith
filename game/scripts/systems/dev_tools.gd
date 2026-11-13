@@ -49,6 +49,7 @@ static func set_enabled(on: bool) -> void:
 	_on = on
 	if not on:
 		_bypass = false
+		set_sim_pace(1.0, true)   # #76: cheats off returns the simulation to normal speed
 	elif not Game.state.is_empty():
 		mark_game()
 	_update_indicator()
@@ -70,6 +71,7 @@ static func set_bypass(on: bool) -> void:
 static func end_session() -> void:
 	_on = false
 	_bypass = false
+	set_sim_pace(1.0, true)
 	_update_indicator()
 
 
@@ -89,7 +91,7 @@ static func used_in(state: Dictionary) -> bool:
 
 
 static func indicator_text() -> String:
-	return "CHEATS ON" + (" · skill checks bypassed" if _bypass else "") + " · F10"
+	return "CHEATS ON" + (" · skill checks bypassed" if _bypass else "") + (" · pace ×%d" % int(_pace) if _pace > 1.0 else "") + " · F10"
 
 
 ## Is the "CHEATS ON" banner showing?
@@ -235,3 +237,58 @@ static func add_money(amount: int) -> void:
 		return
 	Game.add_gold(amount, "dev", MAKER_NAME, "dev")
 	Events.toast.emit("Developer tools: %+d gold (now %d g)." % [amount, Game.gold()], "info")
+
+
+# ------------------------------------------------------------------ #75–76: a chosen skill, the simulation's pace
+## Raises (or, negative, lowers) one of the smith's skills by `levels`, through the same level record and signal as the
+## per-skill +/− buttons (clamped to the skill curve's maximum). Developer-only: the smith's normal limits are bypassed
+## knowingly, and only while cheats are on. Returns the new level (-1 when refused).
+static func raise_skill(skill: String, levels: int) -> int:
+	if _refuse() or Game.state.is_empty() or levels == 0:
+		return -1
+	var sset: Dictionary = Game.state["player"]["skills"]
+	if not sset.has(skill):
+		sset[skill] = {"lvl": 0, "xp": 0}
+	var lvl := clampi(int(sset[skill]["lvl"]) + levels, 0, int(DB.skill_curve.get("max_level", 20)))
+	sset[skill]["lvl"] = lvl
+	sset[skill]["xp"] = 0
+	Events.skill_level_up.emit("player", skill, lvl)
+	Events.toast.emit("Developer tools: %s is now level %d." % [skill, lvl], "info")
+	return lvl
+
+
+## Developer simulation speeds: the whole engine (Engine.time_scale — the clock, walking, work, travel, timers and
+## animations together, exactly as the steward's pace does), never one part on its own.
+const SIM_PACES := [1.0, 2.0, 4.0, 8.0, 16.0]
+static var _pace := 1.0
+static var _phys_steps := 0
+
+
+static func sim_pace() -> float:
+	return _pace
+
+
+## Sets the developer pace (1 = normal). Only while cheats are on and the steward is not running the forge (the
+## steward keeps its own pace). Physics may take several steps a frame so movement keeps up with the clock.
+static func set_sim_pace(p: float, quiet := false) -> bool:
+	if p > 1.0 and (_refuse() or Steward.is_active()):
+		if Steward.is_active() and _on:
+			Events.toast.emit("The steward keeps its own pace — leave Steward Mode first.", "bad")
+		return false
+	var want := p if SIM_PACES.has(p) else 1.0
+	if want == _pace:
+		return true
+	if _pace == 1.0 and want > 1.0:
+		_phys_steps = Engine.max_physics_steps_per_frame
+	_pace = want
+	Engine.time_scale = want
+	if want > 1.0:
+		Engine.max_physics_steps_per_frame = maxi(_phys_steps, int(ceil(want)) + 2)
+	elif _phys_steps > 0:
+		Engine.max_physics_steps_per_frame = _phys_steps
+		_phys_steps = 0
+	if not quiet:
+		Events.toast.emit("Developer pace: ×%d%s" % [int(want), " — normal speed" if want == 1.0 else ""], "info")
+	_update_indicator()
+	return true
+

@@ -97,3 +97,36 @@ func test_dev_items_earn_nothing() -> void:
 	give("leather_cured", 1)
 	var real := craft("iron_longsword", 92.0, {"edge": 12, "temper": 8, "fortune": 1})
 	check(Recognition.made_by_smith(real), "a forged sword is still the smith's work")
+
+
+## #75–76: a chosen skill raised by N levels and the simulation's pace — only while cheats are on, back to normal when
+## they go off, on a load or a new game; the steward keeps its own pace.
+func test_skill_levels_and_pace() -> void:
+	fresh_game()
+	DevTools.end_session()
+	var before := Game.player_level("smithing")
+	eq(DevTools.raise_skill("smithing", 3), -1, "cheats off: no skill raise")
+	eq(Game.player_level("smithing"), before, "…the level is unchanged")
+	check(not DevTools.set_sim_pace(4.0, true), "cheats off: no faster pace")
+	eq(Engine.time_scale, 1.0, "…normal speed")
+	DevTools.set_enabled(true)
+	eq(DevTools.raise_skill("smithing", 3), before + 3, "cheats on: smithing +3")
+	eq(DevTools.raise_skill("leatherworking", 2), Game.player_level("leatherworking"), "any chosen skill (leatherworking)")
+	eq(DevTools.raise_skill("smithing", 99), int(DB.skill_curve.get("max_level", 20)), "clamped to the curve's maximum")
+	var steps := Engine.max_physics_steps_per_frame
+	check(DevTools.set_sim_pace(8.0, true), "cheats on: ×8")
+	eq([Engine.time_scale, DevTools.sim_pace()], [8.0, 8.0], "the whole engine runs at ×8")
+	check(Engine.max_physics_steps_per_frame >= 10, "physics may take enough steps a frame to keep up")
+	check(not DevTools.set_sim_pace(3.0, true) or DevTools.sim_pace() == 1.0, "only the listed paces (×3 → normal)")
+	DevTools.set_sim_pace(16.0, true)
+	DevTools.set_sim_pace(1.0, true)
+	eq([Engine.time_scale, Engine.max_physics_steps_per_frame], [1.0, steps], "back to normal, physics as before")
+	DevTools.set_sim_pace(4.0, true)
+	DevTools.set_enabled(false)
+	eq(Engine.time_scale, 1.0, "switching cheats off returns to normal speed")
+	DevTools.set_enabled(true)
+	DevTools.set_sim_pace(4.0, true)
+	fresh_game()
+	DevTools.end_session()
+	eq([Engine.time_scale, DevTools.enabled()], [1.0, false], "a new game or a load: normal speed, cheats off")
+	check(not Game.state.has("dev_pace") and not JSON.stringify(Game.state).contains("time_scale"), "the pace is never saved")

@@ -5,7 +5,7 @@ extends UIWindow
 
 
 func _init() -> void:
-	super._init("Ember & Ash", 520, 760)
+	super._init("Ember & Ash", 520, 820)
 
 
 func _ready() -> void:
@@ -15,6 +15,7 @@ func _ready() -> void:
 			["Appearance", func(): Events.open_panel.emit("customize", {})],
 			["Settings", func(): Events.open_panel.emit("settings", {})],
 			["Difficulty — %s" % str(Expeditions.diff().get("name", "")), func(): Events.open_panel.emit("difficulty", {})],
+			["Developer tools (F10) — testing only", func(): close(); Events.open_panel.emit.call_deferred("dev_panel", {})],
 			["Return to main menu", func(): close(); get_tree().root.get_node("Main").call("to_menu")],
 			["Quit", func(): get_tree().quit()]]:
 		content.add_child(UIKit.button(e[0], e[1], 420))

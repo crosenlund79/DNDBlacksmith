@@ -36,6 +36,7 @@ func _ready() -> void:
 	out = UIKit.rich("", 19, true)
 	content.add_child(_cheat_bar())
 	body = UIKit.vbox(8)
+	_quick_tools()
 	_scenarios()
 	# UX iteration: the developer catalogue — every item, spawned with quantity / rarity / craftsmanship, and money
 	var cat := UIKit.vbox(4)
@@ -91,6 +92,62 @@ func _ready() -> void:
 	content.add_child(UIKit.scroll(body, 560))
 	content.add_child(out)
 	_lock()
+
+
+# ------------------------------------------------------------------ #75–76: the everyday developer tools, first
+## Gold by amount; any item and quantity (the searchable catalogue); a chosen skill raised by N levels; the whole
+## simulation at a chosen pace, and back to normal. All through DevTools (cheats on, this session only).
+func _quick_tools() -> void:
+	var box := UIKit.vbox(6)
+	box.name = "QuickTools"
+	box.add_child(UIKit.label("Quick tools", 24, "heading", UIKit.GILT))
+	var r1 := UIKit.hbox(8)
+	var gold := SpinBox.new()
+	gold.name = "QuickGold"
+	gold.min_value = -1000000
+	gold.max_value = 1000000
+	gold.step = 50
+	gold.value = 1000
+	gold.custom_minimum_size = Vector2(170, 0)
+	r1.add_child(gold)
+	r1.add_child(UIKit.button("Add gold", func(): DevTools.add_money(int(gold.value)); _say("%+d g" % int(gold.value)), 0))
+	r1.add_child(UIKit.button("Item & quantity… (catalogue)", func():
+		close()
+		Events.open_panel.emit.call_deferred("dev_catalogue", {}), 0))
+	box.add_child(r1)
+	var r2 := UIKit.hbox(8)
+	var sk := OptionButton.new()
+	sk.name = "QuickSkill"
+	for s in DB.skill_list:
+		sk.add_item(str(s.get("name", s["id"])))
+		sk.set_item_metadata(sk.item_count - 1, str(s["id"]))
+	r2.add_child(sk)
+	var lv := SpinBox.new()
+	lv.name = "QuickLevels"
+	lv.min_value = -20
+	lv.max_value = 20
+	lv.value = 1
+	r2.add_child(lv)
+	r2.add_child(UIKit.button("Raise skill by levels", func():
+		var id := str(sk.get_item_metadata(sk.selected))
+		var n := DevTools.raise_skill(id, int(lv.value))
+		if n >= 0:
+			_say("%s → %d" % [id, n]), 0))
+	box.add_child(r2)
+	var r3 := UIKit.hbox(8)
+	var pl := UIKit.rich("[color=#e8d8b0]Simulation pace:[/color]", 20, false)
+	pl.custom_minimum_size = Vector2(170, 0)
+	r3.add_child(pl)
+	for pv in DevTools.SIM_PACES:
+		var pp: float = pv
+		var b := UIKit.button("Normal (×1)" if pp == 1.0 else "×%d" % int(pp), func():
+			if DevTools.set_sim_pace(pp):
+				_say("Pace ×%d" % int(pp)), 0)
+		b.name = "Pace%d" % int(pp)
+		r3.add_child(b)
+	box.add_child(r3)
+	box.add_child(UIKit.rich("[i][color=#c8b898]The pace speeds the whole simulation together (clock, walking, work, travel); cheats off, a load or a new game return it to normal.[/color][/i]", 16, true))
+	body.add_child(box)
 
 
 # ------------------------------------------------------------------ S2: the cheat switch, the bypass and scenarios
