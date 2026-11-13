@@ -236,3 +236,41 @@ func run_layout(p: Node) -> void:
 	await pt.wait(1.0)
 	await _shot("layout_village_map")
 	await pt.close_panel()
+
+
+## lvw_maps: the illustrated village map (full and minimap) and the smithy's floor plans on the minimap (ground, Loft,
+## cellar), the shop medallions, people and exits still drawn and clickable. Shots lvw_map_*.
+func run_maps(p: Node) -> void:
+	pt = p
+	await pt.click("New Game")
+	await pt.wait(2.5)
+	Game.state["gold"] = 4000
+	Property.buy_unit("chandler")
+	pt.get_tree().root.get_node("Main").call("rebuild_world")
+	await pt.wait(2.0)
+	var w: VillageWorld = pt.W()
+	await pt.tp(w.spots["smithy_door_out"] + Vector2(0, -90))
+	await pt.wait(0.8)
+	await _shot("map_minimap_village")
+	await pt.press("panel_map")
+	await pt.wait(1.2)
+	var mp: Control = pt.panel()
+	pt.expect(mp is MapPanel, "maps: the village map opens")
+	var view := mp.find_children("*", "VillageMapView", true, false)
+	pt.expect(not view.is_empty(), "maps: it draws the village view")
+	if not view.is_empty():
+		var vv: VillageMapView = view[0]
+		pt.expect(not VillageMapView._geo.is_empty() and (VillageMapView._geo["trees"] as Array).size() > 80, "maps: woods, water and paths are drawn (%d trees)" % (VillageMapView._geo["trees"] as Array).size())
+		pt.expect(vv.venue_at(vv.m(VillageMapView.venue_world_pos(w, "forge"))) == "forge", "maps: the forge's medallion (at its door) is still clickable")
+	await _shot("map_full")
+	await pt.close_panel()
+	for spot in ["smithy_inside", "smithy_basement_inside"]:
+		if w.spots.has(spot):
+			await pt.tp(w.spots[spot] + (Vector2(0, 120) if spot == "smithy_inside" else Vector2.ZERO))
+			await pt.wait(1.0)
+			await _shot("map_minimap_" + spot)
+	for e in w.interactables:
+		if str(e["kind"]) == "bed" and str(e["id"]) == "cot":
+			await pt.tp(e["pos"] + Vector2(60, 40))
+			await pt.wait(1.0)
+			await _shot("map_minimap_loft")

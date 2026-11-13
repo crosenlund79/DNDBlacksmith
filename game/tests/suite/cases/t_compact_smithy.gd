@@ -133,4 +133,5 @@ func test_village_and_floors_in_the_world() -> void:
 	check(mp.distance_to(w.spots["smithy_door_out"]) < 1.0, "the forge's map marker is at its door")
 	var c := w.tp(DB.layout["millpond"]["center"])
 	check(not Rect2(w.brect(DB.building("smithy"))).has_point(c), "the millpond lies outside the smithy's walls")
-	w.queue_free()
+	w.get_parent().remove_child(w)
+	w.free()   # at once: a deferred free would leave the village in the tree for the next case

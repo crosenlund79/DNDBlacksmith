@@ -4114,3 +4114,9 @@ func phase_lvw_ui() -> void:
 func phase_lvw_layout() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_layout(self)
+
+
+## The illustrated village map, the minimaps and the smithy's three floors (tests/playtest_lvw.gd). Shots lvw_map_*.
+func phase_lvw_maps() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_maps(self)

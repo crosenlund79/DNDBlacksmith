@@ -146,7 +146,8 @@ func test_the_village_is_dressed() -> void:
 	var w := _world()
 	var sd := w.season_dressing
 	if not check(sd != null and is_instance_valid(sd), "the village has its season dressing"):
-		w.queue_free()
+		w.get_parent().remove_child(w)
+		w.free()   # at once: a deferred free would leave the village in the tree for the next case
 		return
 	var trees: Array = sd._veg.filter(func(e): return str(e[1]) in ["tree_oak_a", "tree_oak_b"])
 	var pines: Array = sd._veg.filter(func(e): return str(e[1]) == "tree_pine")
@@ -198,4 +199,5 @@ func test_the_village_is_dressed() -> void:
 	Game.state["day"] = day0
 	Game.state["minute"] = min0
 	eq(JSON.stringify(Game.state), snap, "dressing the village through every season wrote nothing to the game state")
-	w.queue_free()
+	w.get_parent().remove_child(w)
+	w.free()   # at once: a deferred free would leave the village in the tree for the next case
