@@ -371,7 +371,9 @@ func test_soak_90_days() -> void:
 	# one Lore event per life event: every retired adventurer has exactly one, every arrival exactly one
 	for a in Adv.all().values():
 		if str(a["status"]) in ["retired", "gone"]:
-			eq(_lore_kind("retired", str(a["id"])).size(), 1, "%s: one retirement event" % a["id"])
+			# the retiree is the event's first actor (a companion who inherits their gear is named in it too)
+			eq(_lore_kind("retired", str(a["id"])).filter(func(e): return str((e.get("actors", [""]) as Array)[0]) == str(a["id"])).size(), 1,
+				"%s: one retirement event" % a["id"])
 		if str(a.get("origin", "")) == "arrived":
 			eq(_lore_kind("arrival", str(a["id"])).size(), 1, "%s: one arrival event" % a["id"])
 	for c in Companies.list_all():

@@ -17,7 +17,8 @@ const REGROW := {"resource": 0.06, "chest": 0.025, "boss": 0.02}   # per day
 const TAKE := {"resource": 0.4, "chest": 0.7, "boss": 0.5}          # one visit's share
 const RUMOUR_CHANCE := 0.05                                          # per undiscovered site per day
 const TYPE_WORD := {"forest": "Forest", "mine": "Mine", "road": "Road", "barrow": "Ancient tomb", "deep": "Deep ruin",
-	"stronghold": "Bandit stronghold", "temple": "Sunken ruin", "crag": "Dangerous wilderness"}
+	"stronghold": "Bandit stronghold", "temple": "Sunken ruin", "crag": "Dangerous wilderness",
+	"observatory": "Ruined observatory", "fortress": "Haunted fortress", "rift": "Abyss"}   # v1.6 §8.1
 
 
 # ======================================================================= data & state
@@ -82,6 +83,11 @@ static func world_pos(id: String) -> Vector2:
 
 static func type_of(id: String) -> String:
 	return str(info(id).get("type", "forest"))
+
+
+## The site's picture on the world map: its own `icon` (an existing site picture, so new sites need no new art), else its type.
+static func icon_of(id: String) -> String:
+	return str(info(id).get("icon", type_of(id)))
 
 
 # ======================================================================= discovery
@@ -675,7 +681,7 @@ static func finds(id: String) -> Dictionary:
 	var comm := []
 	for w in weak:
 		comm.append("%s weapons (foes here fear %s)" % [str(w).capitalize(), w])
-	if type_of(id) in ["barrow", "temple", "deep"]:
+	if type_of(id) in ["barrow", "temple", "deep", "fortress"]:
 		comm.append("warded armour against the dead")
 	return {"materials": mats.keys(), "relics": relics.keys(), "equipment": equip, "creatures": creatures, "commissions": comm}
 

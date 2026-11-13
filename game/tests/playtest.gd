@@ -4074,3 +4074,11 @@ func phase_lw_stations() -> void:
 func phase_lw_emberwarden() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lw_production.gd").new()
 	await ph.run_emberwarden(self)
+
+
+# ======================================================================= Beyond the Safe Roads (canonical v1.6)
+## The world map with the three dangerous regions, their site pages and a party on the road to the Weeping Fortress
+## (tests/playtest_beyond.gd). Shots beyond_*.
+func phase_beyond_map() -> void:
+	var ph: RefCounted = load("res://tests/playtest_beyond.gd").new()
+	await ph.run_map(self)

@@ -324,5 +324,128 @@
     "resist": ""
    }
   ]
+ },
+ {
+  "id": "starfall_observatory",
+  "name": "The Starfall Observatory",
+  "exit": "east",
+  "kind": "relics",
+  "days": [
+   3,
+   4
+  ],
+  "danger": 5,
+  "skill": "relic_hunting",
+  "loot": "starfall",
+  "requires_flag": "site_starfall_observatory",
+  "desc": "An abandoned arcane observatory: constructs, unstable starlight, traps and the Astral Warden. Runestones, starstone and magical materials.",
+  "threats": [
+   {
+    "name": "orrery sentinels",
+    "kind": "construct",
+    "power": 31,
+    "dmg": 12,
+    "weak": "frost",
+    "resist": "fire"
+   },
+   {
+    "name": "starfall wisps",
+    "kind": "spirit",
+    "power": 24,
+    "dmg": 10,
+    "weak": "frost",
+    "resist": "physical"
+   },
+   {
+    "name": "raw starlight",
+    "kind": "hazard",
+    "power": 30,
+    "dmg": 13,
+    "weak": "",
+    "resist": ""
+   }
+  ]
+ },
+ {
+  "id": "weeping_fortress",
+  "name": "The Weeping Fortress",
+  "exit": "west",
+  "kind": "relics",
+  "days": [
+   3,
+   5
+  ],
+  "danger": 7,
+  "skill": "relic_hunting",
+  "loot": "fortress",
+  "requires_flag": "site_weeping_fortress",
+  "desc": "A haunted military fortress: elite undead soldiers, cursed armouries and the Weeping Commander. Historic arms, armour and relics.",
+  "threats": [
+   {
+    "name": "weeping legionaries",
+    "kind": "undead",
+    "power": 34,
+    "dmg": 13,
+    "weak": "fire",
+    "resist": "frost"
+   },
+   {
+    "name": "cursed harness",
+    "kind": "construct",
+    "power": 36,
+    "dmg": 14,
+    "weak": "magic",
+    "resist": "physical"
+   },
+   {
+    "name": "knights of the Weeping Banner",
+    "kind": "undead",
+    "power": 46,
+    "dmg": 17,
+    "weak": "fire",
+    "resist": "frost"
+   }
+  ]
+ },
+ {
+  "id": "blackglass_rift",
+  "name": "The Blackglass Rift",
+  "exit": "south",
+  "kind": "mining",
+  "days": [
+   4,
+   5
+  ],
+  "danger": 8,
+  "skill": "mining",
+  "loot": "rift",
+  "requires_flag": "site_blackglass_rift",
+  "desc": "A subterranean abyss of razor glass: dreadful creatures, deadly footing and the Blackglass Maw. Rare ores, unusual components, exceptional finds.",
+  "threats": [
+   {
+    "name": "blackglass crawlers",
+    "kind": "beast",
+    "power": 34,
+    "dmg": 14,
+    "weak": "frost",
+    "resist": ""
+   },
+   {
+    "name": "rift stalkers",
+    "kind": "beast",
+    "power": 46,
+    "dmg": 18,
+    "weak": "fire",
+    "resist": ""
+   },
+   {
+    "name": "razor-glass scree",
+    "kind": "hazard",
+    "power": 42,
+    "dmg": 18,
+    "weak": "",
+    "resist": ""
+   }
+  ]
  }
 ]

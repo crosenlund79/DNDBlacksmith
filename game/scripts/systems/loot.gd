@@ -66,6 +66,17 @@ static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
 		ait["crafted_by"] = "a smith of the barrow-kings' age"
 		ait["ancient"] = true
 		return ait
+	if category == "garrison":
+		# v1.6 §8.1, the Weeping Fortress: the garrison's old arms and armour — well made, historic, never common junk
+		var gdefs := _equip_defs("any")
+		var gid: String = gdefs.pick_random()
+		var gq := randf_range(82.0, 112.0)
+		var git := Items.make(gid, {"quality": gq, "dice": {"edge": randi_range(8, 20), "guard": randi_range(8, 20), "temper": randi_range(4, 12)}})
+		var gr := Items.rarity_from(gq, randi_range(30, 100), 8.0 + bias * 0.2)
+		Items.apply_rarity(git, "rare" if gr in ["common", "magic"] else gr)
+		git["crafted_by"] = "an armourer of the Weeping Garrison"
+		git["ancient"] = true
+		return git
 	if category == "legendary_demo":
 		var it := Items.make("sword_steel", {"quality": 112.0, "dice": {"edge": 18, "temper": 10}})
 		Items.apply_rarity(it, "legendary")

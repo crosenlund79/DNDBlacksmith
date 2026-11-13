@@ -238,7 +238,8 @@ func test_destination_respects_capability() -> void:
 	for id in WorldSites.ids():
 		if deadliest == "" or Expeditions.rating(str(id)) > Expeditions.rating(deadliest):
 			deadliest = str(id)
-	eq(deadliest, "drakes_crag", "Drake's Crag is the deadliest site")
+	# canonical v1.6 §8.1: the Blackglass Rift (danger 8) is now the deadliest; Drake's Crag stays out of a weak party's reach too
+	eq(deadliest, "blackglass_rift", "the Blackglass Rift is the deadliest site")
 	var weak := _heroes(1, 1)
 	var a: Dictionary = weak[0]
 	a["equipment"] = {"weapon": Items.make("dagger", {"quality": 60.0})} if not DB.item("dagger").is_empty() else {}
@@ -249,6 +250,7 @@ func test_destination_respects_capability() -> void:
 		picks[str(p.get("dest", ""))] = int(picks.get(str(p.get("dest", "")), 0)) + 1
 	check(not picks.has(deadliest), "a weak party never picks %s (%s)" % [deadliest, str(picks)])
 	check(not picks.has("deep_ironroot"), "nor the Dwarf-King's hall")
+	check(not picks.has("drakes_crag"), "nor Drake's Crag")
 	var strong := _heroes(4, 16)
 	var p0 := 0.0
 	for m in strong:

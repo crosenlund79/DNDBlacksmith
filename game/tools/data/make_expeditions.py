@@ -58,6 +58,25 @@ ENEMIES = [
     enemy("corvin", "Corvin Blackfeather", "humanoid", 36, 6, "1d10+3", 15, 80, power=36, desc="Maud's lieutenant, regrouping what is left of her band."),
     enemy("oracle_echo", "The Oracle's Echo", "spirit", 38, 6, "2d6+1", 14, 90, weak="magic", power=36, desc="What is left of the Oracle's voice in the water."),
     enemy("smoulderwing", "Smoulderwing, a Young Drake", "beast", 52, 7, "2d8+2", 16, 150, weak="frost", resist="fire", power=50, desc="Cinderjaw's last whelp, grown into the lair."),
+    # overnight build "Beyond the Safe Roads" (canonical v1.6 §8.1): three dangerous regions. Danger comes from the
+    # foes' own numbers (hit points, attack, damage, armour), which the expedition combat uses — power only rates them.
+    # the Starfall Observatory (danger 5): constructs, unstable starlight, the Astral Warden
+    enemy("star_wisp", "Starfall Wisp", "spirit", 22, 7, "1d10+3", 15, 30, weak="frost", resist="physical", power=22, desc="A shard of fallen starlight. Blades find little to cut; frost puts it out."),
+    enemy("orrery_sentinel", "Orrery Sentinel", "construct", 44, 7, "2d6+4", 17, 52, weak="frost", resist="fire", power=34, desc="Brass and starstone, still keeping the observatory's hours."),
+    enemy("astral_warden", "The Astral Warden", "construct", 120, 9, "2d10+5", 18, 250, weak="frost", resist="fire", power=72, desc="Built to guard the great lens; it measures intruders the way it once measured stars."),
+    enemy("warden_shard", "A Shard of the Warden", "construct", 64, 8, "2d6+4", 17, 130, weak="frost", resist="fire", power=46, desc="What the Warden left in the dome: smaller, slower, still sworn."),
+    # the Weeping Fortress (danger 7): elite undead soldiers, cursed armouries, the Weeping Commander
+    enemy("weeping_legionary", "Weeping Legionary", "undead", 38, 8, "1d10+4", 17, 50, weak="fire", resist="frost", power=36, desc="A soldier of a garrison that never stood down. They still keep formation."),
+    enemy("hollow_harness", "Hollow Harness", "construct", 44, 7, "2d6+4", 19, 54, weak="magic", resist="physical", power=38, desc="An empty suit of cursed plate that walks the armoury. Steel rings off it; spells do not."),
+    enemy("weeping_knight", "Knight of the Weeping Banner", "undead", 64, 9, "2d8+5", 18, 90, weak="fire", resist="frost", power=56, desc="Their tears are salt and their oaths are older than the village."),
+    enemy("weeping_commander", "Marshal Ysolde, the Weeping Commander", "undead", 210, 11, "2d12+7", 19, 400, weak="fire", resist="frost", power=118, desc="She held the fortress for a king who never came back, and holds it still."),
+    enemy("weeping_captain", "Captain Orrin of the Weeping Banner", "undead", 80, 9, "2d8+5", 18, 170, weak="fire", resist="frost", power=66, desc="The Marshal's captain, keeping her last order."),
+    # the Blackglass Rift (danger 8): creatures of the abyss, razor glass, the Blackglass Maw
+    enemy("glass_crawler", "Blackglass Crawler", "beast", 44, 9, "1d12+4", 17, 58, weak="frost", power=38, desc="Many-legged, glass-shelled; its bite cuts like a shard."),
+    enemy("rift_stalker", "Rift Stalker", "beast", 60, 10, "2d8+6", 17, 86, weak="fire", power=58, desc="Blind, patient, and drawn to the sound of breathing."),
+    enemy("abyssal_horror", "Abyssal Horror", "spirit", 84, 10, "2d8+7", 17, 120, weak="magic", resist="physical", power=68, desc="A shape the rift's darkness takes when it is hungry."),
+    enemy("blackglass_maw", "The Blackglass Maw", "beast", 320, 12, "3d10+6", 19, 560, weak="frost", power=150, desc="The thing at the bottom of the rift. The glass grows from its breath."),
+    enemy("maw_brood", "A Maw-Brood", "beast", 96, 9, "2d10+4", 18, 210, weak="frost", power=80, desc="The Maw's offspring, grown fat on what falls into the dark."),
 ]
 
 # 1280 x 720 parchment map coordinates; the village gate is the first node (entry)
@@ -150,6 +169,42 @@ REGIONS = {
             node("vents", "Ash vents", "encounter", 960, 270, ["hoard"], enemies=[["drakeling", 2]], loot="beast_wyvern", tier=3),
             node("hoard", "Cinderjaw's lair", "boss", 650, 120, [], enemies=[["cinderjaw", 1], ["drakeling", 1]], loot="deep_boss", tier=3),
         ]},
+    # overnight build "Beyond the Safe Roads" (canonical v1.6 §8.1)
+    "starfall_observatory": {"name": "The Starfall Observatory", "travel_h": [4, 5], "theme": "an abandoned arcane observatory: constructs, unstable starlight, a guardian",
+        "nodes": [
+            node("gate", "The switchback stair", "entry", 640, 660, ["court"]),
+            node("court", "Overgrown courtyard", "path", 640, 540, ["lens_house", "orrery"], dc=13),
+            node("lens_house", "Collapsed lens-house", "resource", 320, 470, ["library"], loot="starfall", tier=2, desc="Shattered lenses and starstone dust under the fallen roof."),
+            node("orrery", "The great orrery", "encounter", 930, 480, ["flux", "library"], enemies=[["orrery_sentinel", 2]], tier=2),
+            node("library", "The star library", "chest", 360, 280, ["astrolabe", "dome"], dc=14, loot="starfall", tier=2, desc="Sealed instrument cases and charts of skies nobody has seen for centuries."),
+            node("flux", "The unstable gallery", "trap", 990, 300, ["wisp_stair"], dc=15, desc="Raw starlight arcs between the brass rails; it burns whoever touches the wrong one."),
+            node("wisp_stair", "The wisp stair", "encounter", 880, 170, ["dome"], enemies=[["star_wisp", 3]], loot="starfall", tier=3),
+            node("astrolabe", "The sealed astrolabe", "puzzle", 560, 210, ["dome"], dc=15, desc="The dome's door turns when the rings are set to the right night."),
+            node("dome", "The observing dome", "boss", 640, 90, [], enemies=[["astral_warden", 1], ["star_wisp", 1]], loot="starfall_boss", tier=3),
+        ]},
+    "weeping_fortress": {"name": "The Weeping Fortress", "travel_h": [5, 6], "theme": "a haunted military fortress: elite undead, cursed armouries, a commander",
+        "nodes": [
+            node("gate", "The broken barbican", "entry", 640, 670, ["bailey"]),
+            node("bailey", "The outer bailey", "encounter", 640, 540, ["chapel", "armoury"], enemies=[["weeping_legionary", 2]], tier=2),
+            node("chapel", "The weeping chapel", "shrine", 300, 470, ["ossuary"], desc="Salt tears run down the saint's face; the wounded find a little rest here."),
+            node("armoury", "The cursed armoury", "encounter", 960, 470, ["muster"], enemies=[["hollow_harness", 2], ["weeping_legionary", 1]], loot="fortress", tier=3),
+            node("ossuary", "The ossuary stair", "trap", 320, 300, ["ward_room"], dc=15, desc="The stair gives way under the unwary, into the bones below."),
+            node("ward_room", "The quartermaster's ward", "chest", 520, 260, ["keep"], dc=15, loot="fortress", tier=3, desc="Pay-chests, banners and the garrison's best arms, under the Marshal's seal."),
+            node("muster", "The muster yard", "encounter", 980, 280, ["keep", "ward_room"], enemies=[["weeping_knight", 2]], tier=3),
+            node("keep", "The weeping keep", "boss", 640, 100, [], enemies=[["weeping_commander", 1], ["weeping_legionary", 1]], loot="fortress_boss", tier=3),
+        ]},
+    "blackglass_rift": {"name": "The Blackglass Rift", "travel_h": [5, 6], "theme": "a subterranean abyss: dreadful creatures, razor glass, the Maw",
+        "nodes": [
+            node("gate", "The rim of the rift", "entry", 640, 660, ["descent"]),
+            node("descent", "The glass descent", "trap", 640, 540, ["ore_shelf", "warren"], dc=16, desc="Razor-glass scree: one slip opens a leg to the bone."),
+            node("ore_shelf", "The ore shelf", "resource", 320, 490, ["chasm"], loot="rift", tier=3, desc="Veins of adamantine and orichalcum split open by the rift."),
+            node("warren", "The crawler warren", "encounter", 930, 470, ["ledge"], enemies=[["glass_crawler", 3]], tier=3),
+            node("chasm", "The echoing chasm", "puzzle", 300, 290, ["pool"], dc=16, desc="The way across is a bridge of fallen glass that sings when it bears weight."),
+            node("ledge", "The stalkers' ledge", "encounter", 960, 290, ["pool", "garden"], enemies=[["rift_stalker", 2]], tier=3),
+            node("garden", "The glass garden", "chest", 780, 370, ["maw"], dc=16, loot="rift", tier=3, desc="Glass grown like coral around the bones of earlier delvers — and their packs."),
+            node("pool", "The black pool", "encounter", 560, 230, ["maw"], enemies=[["abyssal_horror", 1], ["glass_crawler", 2]], tier=3),
+            node("maw", "The Maw", "boss", 640, 90, [], enemies=[["blackglass_maw", 1], ["glass_crawler", 1]], loot="rift_boss", tier=3),
+        ]},
 }
 
 # ------------------------------------------------------------------ world sites (iteration 011)
@@ -216,6 +271,28 @@ SITES = {
         folk=["harpies", "goatherds who will not go above the treeline"],
         cond=dict(growing="Drakelings hatch in the ash vents.", regroup="Harpies are back on the nests.",
                   cleared="Cinderjaw's lair is cold; its hoard is gone.", successor="A young drake has taken the old lair.")),
+    # overnight build "Beyond the Safe Roads" (canonical v1.6 §8.1). icon: an existing site picture (no new art).
+    "starfall_observatory": dict(type="observatory", icon="temple", pos=[1310, 760], known=False, near=["barrow_fields", "ravens_hold"],
+        boss="dome", successor=[["warden_shard", 1], ["star_wisp", 1]], successor_days=[40, 60], growth=0.04,
+        likes=dict(cls=["Wizard", "Cleric", "Bard"], trait=["cautious", "devout"]),
+        desc="An abandoned arcane observatory on a crag south-east of the Highmarsh road; its great lens still turns at night.",
+        folk=["orrery sentinels", "stargazers who camp below and never climb"],
+        cond=dict(growing="Wisps gather thicker in the dome each night.", regroup="The orrery is turning again.",
+                  cleared="The great lens is dark; the Astral Warden lies in pieces.", successor="A shard of the Warden keeps the dome.")),
+    "weeping_fortress": dict(type="fortress", icon="stronghold", pos=[150, 320], known=False, near=["drakes_crag", "sunken_temple"],
+        boss="keep", successor=[["weeping_captain", 1], ["weeping_legionary", 2]], successor_days=[45, 70], growth=0.05,
+        likes=dict(cls=["Paladin", "Cleric", "Fighter"], trait=["brave", "devout"]),
+        desc="A haunted fortress in the far western hills, still garrisoned by soldiers who died at their posts.",
+        folk=["the Weeping Garrison", "pilgrims who leave salt at the gate"],
+        cond=dict(growing="More of the garrison stands to arms each night.", regroup="Drums again on the weeping walls.",
+                  cleared="The Marshal has fallen; the keep is silent at last.", successor="Captain Orrin has taken up the Marshal's watch.")),
+    "blackglass_rift": dict(type="rift", icon="deep", pos=[1090, 920], known=False, near=["starfall_observatory"],
+        boss="maw", successor=[["maw_brood", 1], ["glass_crawler", 1]], successor_days=[55, 85], growth=0.04,
+        likes=dict(cls=["Barbarian", "Ranger", "Rogue"], trait=["reckless", "greedy", "brave"]),
+        desc="A black abyss in the southern badlands, its walls grown with razor glass. Few who go down come back with their packs.",
+        folk=["glass crawlers", "prospectors who listen at the rim"],
+        cond=dict(growing="The crawlers swarm higher up the walls.", regroup="Something large moves in the deep again.",
+                  cleared="The Maw is dead; the glass has stopped growing.", successor="A Maw-Brood has grown fat in the deep.")),
 }
 
 ARCHETYPES = {

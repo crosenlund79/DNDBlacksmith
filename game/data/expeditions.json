@@ -489,6 +489,202 @@
    "resist": "fire",
    "power": 50,
    "desc": "Cinderjaw's last whelp, grown into the lair."
+  },
+  {
+   "id": "star_wisp",
+   "name": "Starfall Wisp",
+   "kind": "spirit",
+   "hp": 22,
+   "atk": 7,
+   "dmg": "1d10+3",
+   "ac": 15,
+   "xp": 30,
+   "weak": "frost",
+   "resist": "physical",
+   "power": 22,
+   "desc": "A shard of fallen starlight. Blades find little to cut; frost puts it out."
+  },
+  {
+   "id": "orrery_sentinel",
+   "name": "Orrery Sentinel",
+   "kind": "construct",
+   "hp": 44,
+   "atk": 7,
+   "dmg": "2d6+4",
+   "ac": 17,
+   "xp": 52,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 34,
+   "desc": "Brass and starstone, still keeping the observatory's hours."
+  },
+  {
+   "id": "astral_warden",
+   "name": "The Astral Warden",
+   "kind": "construct",
+   "hp": 120,
+   "atk": 9,
+   "dmg": "2d10+5",
+   "ac": 18,
+   "xp": 250,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 72,
+   "desc": "Built to guard the great lens; it measures intruders the way it once measured stars."
+  },
+  {
+   "id": "warden_shard",
+   "name": "A Shard of the Warden",
+   "kind": "construct",
+   "hp": 64,
+   "atk": 8,
+   "dmg": "2d6+4",
+   "ac": 17,
+   "xp": 130,
+   "weak": "frost",
+   "resist": "fire",
+   "power": 46,
+   "desc": "What the Warden left in the dome: smaller, slower, still sworn."
+  },
+  {
+   "id": "weeping_legionary",
+   "name": "Weeping Legionary",
+   "kind": "undead",
+   "hp": 38,
+   "atk": 8,
+   "dmg": "1d10+4",
+   "ac": 17,
+   "xp": 50,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 36,
+   "desc": "A soldier of a garrison that never stood down. They still keep formation."
+  },
+  {
+   "id": "hollow_harness",
+   "name": "Hollow Harness",
+   "kind": "construct",
+   "hp": 44,
+   "atk": 7,
+   "dmg": "2d6+4",
+   "ac": 19,
+   "xp": 54,
+   "weak": "magic",
+   "resist": "physical",
+   "power": 38,
+   "desc": "An empty suit of cursed plate that walks the armoury. Steel rings off it; spells do not."
+  },
+  {
+   "id": "weeping_knight",
+   "name": "Knight of the Weeping Banner",
+   "kind": "undead",
+   "hp": 64,
+   "atk": 9,
+   "dmg": "2d8+5",
+   "ac": 18,
+   "xp": 90,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 56,
+   "desc": "Their tears are salt and their oaths are older than the village."
+  },
+  {
+   "id": "weeping_commander",
+   "name": "Marshal Ysolde, the Weeping Commander",
+   "kind": "undead",
+   "hp": 210,
+   "atk": 11,
+   "dmg": "2d12+7",
+   "ac": 19,
+   "xp": 400,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 118,
+   "desc": "She held the fortress for a king who never came back, and holds it still."
+  },
+  {
+   "id": "weeping_captain",
+   "name": "Captain Orrin of the Weeping Banner",
+   "kind": "undead",
+   "hp": 80,
+   "atk": 9,
+   "dmg": "2d8+5",
+   "ac": 18,
+   "xp": 170,
+   "weak": "fire",
+   "resist": "frost",
+   "power": 66,
+   "desc": "The Marshal's captain, keeping her last order."
+  },
+  {
+   "id": "glass_crawler",
+   "name": "Blackglass Crawler",
+   "kind": "beast",
+   "hp": 44,
+   "atk": 9,
+   "dmg": "1d12+4",
+   "ac": 17,
+   "xp": 58,
+   "weak": "frost",
+   "resist": "",
+   "power": 38,
+   "desc": "Many-legged, glass-shelled; its bite cuts like a shard."
+  },
+  {
+   "id": "rift_stalker",
+   "name": "Rift Stalker",
+   "kind": "beast",
+   "hp": 60,
+   "atk": 10,
+   "dmg": "2d8+6",
+   "ac": 17,
+   "xp": 86,
+   "weak": "fire",
+   "resist": "",
+   "power": 58,
+   "desc": "Blind, patient, and drawn to the sound of breathing."
+  },
+  {
+   "id": "abyssal_horror",
+   "name": "Abyssal Horror",
+   "kind": "spirit",
+   "hp": 84,
+   "atk": 10,
+   "dmg": "2d8+7",
+   "ac": 17,
+   "xp": 120,
+   "weak": "magic",
+   "resist": "physical",
+   "power": 68,
+   "desc": "A shape the rift's darkness takes when it is hungry."
+  },
+  {
+   "id": "blackglass_maw",
+   "name": "The Blackglass Maw",
+   "kind": "beast",
+   "hp": 320,
+   "atk": 12,
+   "dmg": "3d10+6",
+   "ac": 19,
+   "xp": 560,
+   "weak": "frost",
+   "resist": "",
+   "power": 150,
+   "desc": "The thing at the bottom of the rift. The glass grows from its breath."
+  },
+  {
+   "id": "maw_brood",
+   "name": "A Maw-Brood",
+   "kind": "beast",
+   "hp": 96,
+   "atk": 9,
+   "dmg": "2d10+4",
+   "ac": 18,
+   "xp": 210,
+   "weak": "frost",
+   "resist": "",
+   "power": 80,
+   "desc": "The Maw's offspring, grown fat on what falls into the dark."
   }
  ],
  "regions": {
@@ -1694,6 +1890,502 @@
      "desc": ""
     }
    ]
+  },
+  "starfall_observatory": {
+   "name": "The Starfall Observatory",
+   "travel_h": [
+    4,
+    5
+   ],
+   "theme": "an abandoned arcane observatory: constructs, unstable starlight, a guardian",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The switchback stair",
+     "kind": "entry",
+     "x": 640,
+     "y": 660,
+     "links": [
+      "court"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "court",
+     "name": "Overgrown courtyard",
+     "kind": "path",
+     "x": 640,
+     "y": 540,
+     "links": [
+      "lens_house",
+      "orrery"
+     ],
+     "enemies": [],
+     "dc": 13,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "lens_house",
+     "name": "Collapsed lens-house",
+     "kind": "resource",
+     "x": 320,
+     "y": 470,
+     "links": [
+      "library"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "starfall",
+     "tier": 2,
+     "desc": "Shattered lenses and starstone dust under the fallen roof."
+    },
+    {
+     "id": "orrery",
+     "name": "The great orrery",
+     "kind": "encounter",
+     "x": 930,
+     "y": 480,
+     "links": [
+      "flux",
+      "library"
+     ],
+     "enemies": [
+      [
+       "orrery_sentinel",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "library",
+     "name": "The star library",
+     "kind": "chest",
+     "x": 360,
+     "y": 280,
+     "links": [
+      "astrolabe",
+      "dome"
+     ],
+     "enemies": [],
+     "dc": 14,
+     "loot": "starfall",
+     "tier": 2,
+     "desc": "Sealed instrument cases and charts of skies nobody has seen for centuries."
+    },
+    {
+     "id": "flux",
+     "name": "The unstable gallery",
+     "kind": "trap",
+     "x": 990,
+     "y": 300,
+     "links": [
+      "wisp_stair"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "",
+     "tier": 1,
+     "desc": "Raw starlight arcs between the brass rails; it burns whoever touches the wrong one."
+    },
+    {
+     "id": "wisp_stair",
+     "name": "The wisp stair",
+     "kind": "encounter",
+     "x": 880,
+     "y": 170,
+     "links": [
+      "dome"
+     ],
+     "enemies": [
+      [
+       "star_wisp",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "starfall",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "astrolabe",
+     "name": "The sealed astrolabe",
+     "kind": "puzzle",
+     "x": 560,
+     "y": 210,
+     "links": [
+      "dome"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "",
+     "tier": 1,
+     "desc": "The dome's door turns when the rings are set to the right night."
+    },
+    {
+     "id": "dome",
+     "name": "The observing dome",
+     "kind": "boss",
+     "x": 640,
+     "y": 90,
+     "links": [],
+     "enemies": [
+      [
+       "astral_warden",
+       1
+      ],
+      [
+       "star_wisp",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "starfall_boss",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "weeping_fortress": {
+   "name": "The Weeping Fortress",
+   "travel_h": [
+    5,
+    6
+   ],
+   "theme": "a haunted military fortress: elite undead, cursed armouries, a commander",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The broken barbican",
+     "kind": "entry",
+     "x": 640,
+     "y": 670,
+     "links": [
+      "bailey"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "bailey",
+     "name": "The outer bailey",
+     "kind": "encounter",
+     "x": 640,
+     "y": 540,
+     "links": [
+      "chapel",
+      "armoury"
+     ],
+     "enemies": [
+      [
+       "weeping_legionary",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 2,
+     "desc": ""
+    },
+    {
+     "id": "chapel",
+     "name": "The weeping chapel",
+     "kind": "shrine",
+     "x": 300,
+     "y": 470,
+     "links": [
+      "ossuary"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": "Salt tears run down the saint's face; the wounded find a little rest here."
+    },
+    {
+     "id": "armoury",
+     "name": "The cursed armoury",
+     "kind": "encounter",
+     "x": 960,
+     "y": 470,
+     "links": [
+      "muster"
+     ],
+     "enemies": [
+      [
+       "hollow_harness",
+       2
+      ],
+      [
+       "weeping_legionary",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "fortress",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "ossuary",
+     "name": "The ossuary stair",
+     "kind": "trap",
+     "x": 320,
+     "y": 300,
+     "links": [
+      "ward_room"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "",
+     "tier": 1,
+     "desc": "The stair gives way under the unwary, into the bones below."
+    },
+    {
+     "id": "ward_room",
+     "name": "The quartermaster's ward",
+     "kind": "chest",
+     "x": 520,
+     "y": 260,
+     "links": [
+      "keep"
+     ],
+     "enemies": [],
+     "dc": 15,
+     "loot": "fortress",
+     "tier": 3,
+     "desc": "Pay-chests, banners and the garrison's best arms, under the Marshal's seal."
+    },
+    {
+     "id": "muster",
+     "name": "The muster yard",
+     "kind": "encounter",
+     "x": 980,
+     "y": 280,
+     "links": [
+      "keep",
+      "ward_room"
+     ],
+     "enemies": [
+      [
+       "weeping_knight",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "keep",
+     "name": "The weeping keep",
+     "kind": "boss",
+     "x": 640,
+     "y": 100,
+     "links": [],
+     "enemies": [
+      [
+       "weeping_commander",
+       1
+      ],
+      [
+       "weeping_legionary",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "fortress_boss",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
+  },
+  "blackglass_rift": {
+   "name": "The Blackglass Rift",
+   "travel_h": [
+    5,
+    6
+   ],
+   "theme": "a subterranean abyss: dreadful creatures, razor glass, the Maw",
+   "nodes": [
+    {
+     "id": "gate",
+     "name": "The rim of the rift",
+     "kind": "entry",
+     "x": 640,
+     "y": 660,
+     "links": [
+      "descent"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "",
+     "tier": 1,
+     "desc": ""
+    },
+    {
+     "id": "descent",
+     "name": "The glass descent",
+     "kind": "trap",
+     "x": 640,
+     "y": 540,
+     "links": [
+      "ore_shelf",
+      "warren"
+     ],
+     "enemies": [],
+     "dc": 16,
+     "loot": "",
+     "tier": 1,
+     "desc": "Razor-glass scree: one slip opens a leg to the bone."
+    },
+    {
+     "id": "ore_shelf",
+     "name": "The ore shelf",
+     "kind": "resource",
+     "x": 320,
+     "y": 490,
+     "links": [
+      "chasm"
+     ],
+     "enemies": [],
+     "dc": 12,
+     "loot": "rift",
+     "tier": 3,
+     "desc": "Veins of adamantine and orichalcum split open by the rift."
+    },
+    {
+     "id": "warren",
+     "name": "The crawler warren",
+     "kind": "encounter",
+     "x": 930,
+     "y": 470,
+     "links": [
+      "ledge"
+     ],
+     "enemies": [
+      [
+       "glass_crawler",
+       3
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "chasm",
+     "name": "The echoing chasm",
+     "kind": "puzzle",
+     "x": 300,
+     "y": 290,
+     "links": [
+      "pool"
+     ],
+     "enemies": [],
+     "dc": 16,
+     "loot": "",
+     "tier": 1,
+     "desc": "The way across is a bridge of fallen glass that sings when it bears weight."
+    },
+    {
+     "id": "ledge",
+     "name": "The stalkers' ledge",
+     "kind": "encounter",
+     "x": 960,
+     "y": 290,
+     "links": [
+      "pool",
+      "garden"
+     ],
+     "enemies": [
+      [
+       "rift_stalker",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "garden",
+     "name": "The glass garden",
+     "kind": "chest",
+     "x": 780,
+     "y": 370,
+     "links": [
+      "maw"
+     ],
+     "enemies": [],
+     "dc": 16,
+     "loot": "rift",
+     "tier": 3,
+     "desc": "Glass grown like coral around the bones of earlier delvers — and their packs."
+    },
+    {
+     "id": "pool",
+     "name": "The black pool",
+     "kind": "encounter",
+     "x": 560,
+     "y": 230,
+     "links": [
+      "maw"
+     ],
+     "enemies": [
+      [
+       "abyssal_horror",
+       1
+      ],
+      [
+       "glass_crawler",
+       2
+      ]
+     ],
+     "dc": 12,
+     "loot": "",
+     "tier": 3,
+     "desc": ""
+    },
+    {
+     "id": "maw",
+     "name": "The Maw",
+     "kind": "boss",
+     "x": 640,
+     "y": 90,
+     "links": [],
+     "enemies": [
+      [
+       "blackglass_maw",
+       1
+      ],
+      [
+       "glass_crawler",
+       1
+      ]
+     ],
+     "dc": 12,
+     "loot": "rift_boss",
+     "tier": 3,
+     "desc": ""
+    }
+   ]
   }
  },
  "archetypes": {
@@ -2353,6 +3045,159 @@
     "regroup": "Harpies are back on the nests.",
     "cleared": "Cinderjaw's lair is cold; its hoard is gone.",
     "successor": "A young drake has taken the old lair."
+   }
+  },
+  "starfall_observatory": {
+   "type": "observatory",
+   "icon": "temple",
+   "pos": [
+    1310,
+    760
+   ],
+   "known": false,
+   "near": [
+    "barrow_fields",
+    "ravens_hold"
+   ],
+   "boss": "dome",
+   "successor": [
+    [
+     "warden_shard",
+     1
+    ],
+    [
+     "star_wisp",
+     1
+    ]
+   ],
+   "successor_days": [
+    40,
+    60
+   ],
+   "growth": 0.04,
+   "likes": {
+    "cls": [
+     "Wizard",
+     "Cleric",
+     "Bard"
+    ],
+    "trait": [
+     "cautious",
+     "devout"
+    ]
+   },
+   "desc": "An abandoned arcane observatory on a crag south-east of the Highmarsh road; its great lens still turns at night.",
+   "folk": [
+    "orrery sentinels",
+    "stargazers who camp below and never climb"
+   ],
+   "cond": {
+    "growing": "Wisps gather thicker in the dome each night.",
+    "regroup": "The orrery is turning again.",
+    "cleared": "The great lens is dark; the Astral Warden lies in pieces.",
+    "successor": "A shard of the Warden keeps the dome."
+   }
+  },
+  "weeping_fortress": {
+   "type": "fortress",
+   "icon": "stronghold",
+   "pos": [
+    150,
+    320
+   ],
+   "known": false,
+   "near": [
+    "drakes_crag",
+    "sunken_temple"
+   ],
+   "boss": "keep",
+   "successor": [
+    [
+     "weeping_captain",
+     1
+    ],
+    [
+     "weeping_legionary",
+     2
+    ]
+   ],
+   "successor_days": [
+    45,
+    70
+   ],
+   "growth": 0.05,
+   "likes": {
+    "cls": [
+     "Paladin",
+     "Cleric",
+     "Fighter"
+    ],
+    "trait": [
+     "brave",
+     "devout"
+    ]
+   },
+   "desc": "A haunted fortress in the far western hills, still garrisoned by soldiers who died at their posts.",
+   "folk": [
+    "the Weeping Garrison",
+    "pilgrims who leave salt at the gate"
+   ],
+   "cond": {
+    "growing": "More of the garrison stands to arms each night.",
+    "regroup": "Drums again on the weeping walls.",
+    "cleared": "The Marshal has fallen; the keep is silent at last.",
+    "successor": "Captain Orrin has taken up the Marshal's watch."
+   }
+  },
+  "blackglass_rift": {
+   "type": "rift",
+   "icon": "deep",
+   "pos": [
+    1090,
+    920
+   ],
+   "known": false,
+   "near": [
+    "starfall_observatory"
+   ],
+   "boss": "maw",
+   "successor": [
+    [
+     "maw_brood",
+     1
+    ],
+    [
+     "glass_crawler",
+     1
+    ]
+   ],
+   "successor_days": [
+    55,
+    85
+   ],
+   "growth": 0.04,
+   "likes": {
+    "cls": [
+     "Barbarian",
+     "Ranger",
+     "Rogue"
+    ],
+    "trait": [
+     "reckless",
+     "greedy",
+     "brave"
+    ]
+   },
+   "desc": "A black abyss in the southern badlands, its walls grown with razor glass. Few who go down come back with their packs.",
+   "folk": [
+    "glass crawlers",
+    "prospectors who listen at the rim"
+   ],
+   "cond": {
+    "growing": "The crawlers swarm higher up the walls.",
+    "regroup": "Something large moves in the deep again.",
+    "cleared": "The Maw is dead; the glass has stopped growing.",
+    "successor": "A Maw-Brood has grown fat in the deep."
    }
   }
  }

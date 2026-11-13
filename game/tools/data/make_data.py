@@ -199,7 +199,17 @@ W("destinations.json", [
   "threats": [T("drowned acolytes", "undead", 22, 8, "fire", "frost"), T("a temple serpent", "beast", 26, 10, "frost"), T("the Oracle's voice", "spirit", 30, 10, "magic")]},
  {"id": "drakes_crag", "name": "Drake's Crag", "exit": "north", "kind": "mining", "days": [3, 4], "danger": 6, "skill": "mining", "loot": "mine", "requires_flag": "site_drakes_crag",
   "desc": "A smoking crag in the north-western mountains: obsidian, ore cracked by drake-fire, and a drake.",
-  "threats": [T("crag harpies", "beast", 20, 8, "fire"), T("ashen drakelings", "beast", 30, 12, "frost", "fire"), T("drake-fire", "hazard", 36, 16)]}
+  "threats": [T("crag harpies", "beast", 20, 8, "fire"), T("ashen drakelings", "beast", 30, 12, "frost", "fire"), T("drake-fire", "hazard", 36, 16)]},
+ # overnight build "Beyond the Safe Roads" (canonical v1.6 §8.1): three dangerous regions, found by adventurers
+ {"id": "starfall_observatory", "name": "The Starfall Observatory", "exit": "east", "kind": "relics", "days": [3, 4], "danger": 5, "skill": "relic_hunting", "loot": "starfall", "requires_flag": "site_starfall_observatory",
+  "desc": "An abandoned arcane observatory: constructs, unstable starlight, traps and the Astral Warden. Runestones, starstone and magical materials.",
+  "threats": [T("orrery sentinels", "construct", 31, 12, "frost", "fire"), T("starfall wisps", "spirit", 24, 10, "frost", "physical"), T("raw starlight", "hazard", 30, 13)]},
+ {"id": "weeping_fortress", "name": "The Weeping Fortress", "exit": "west", "kind": "relics", "days": [3, 5], "danger": 7, "skill": "relic_hunting", "loot": "fortress", "requires_flag": "site_weeping_fortress",
+  "desc": "A haunted military fortress: elite undead soldiers, cursed armouries and the Weeping Commander. Historic arms, armour and relics.",
+  "threats": [T("weeping legionaries", "undead", 34, 13, "fire", "frost"), T("cursed harness", "construct", 36, 14, "magic", "physical"), T("knights of the Weeping Banner", "undead", 46, 17, "fire", "frost")]},
+ {"id": "blackglass_rift", "name": "The Blackglass Rift", "exit": "south", "kind": "mining", "days": [4, 5], "danger": 8, "skill": "mining", "loot": "rift", "requires_flag": "site_blackglass_rift",
+  "desc": "A subterranean abyss of razor glass: dreadful creatures, deadly footing and the Blackglass Maw. Rare ores, unusual components, exceptional finds.",
+  "threats": [T("blackglass crawlers", "beast", 34, 14, "frost"), T("rift stalkers", "beast", 46, 18, "fire"), T("razor-glass scree", "hazard", 42, 18)]}
 ])
 W("suppliers.json", {
  "_doc": "What a trade run can buy once a supplier is known (flag), at base prices; travelling skill haggles them down.",
@@ -225,6 +235,13 @@ W("loot_tables.json", {
  "beast_deep": {"rolls": [1, 2], "entries": [["troll_hide", 40, [1, 1]], ["wyvern_hide", 20, [1, 1]], ["ore_orichalcum", 25, [1, 1]], ["leather_hide", 15, [1, 2]]]},
  "herbs_wild": {"rolls": [2, 3], "entries": [["herb_bloodroot", 35, [1, 3]], ["herb_frostcap", 25, [1, 2]], ["herb_silverleaf", 20, [1, 2]], ["herb_emberleaf", 10, [1, 2]], ["herb_moonwort", 10, [1, 2]]]},
  "deep_boss": {"rolls": [4, 6], "entries": [["ore_mithril", 30, [1, 3]], ["ore_adamantine", 12, [1, 2]], ["ore_orichalcum", 14, [1, 2]], ["runestone_blank", 12, [1, 2]], ["gem_starstone", 5, [1, 1]], ["starmetal_fragment", 5, [1, 1]], ["equip:weapon", 8, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["reagent_wyrm_ash", 7, [1, 2]], ["dragon_scale", 1, [1, 1]], ["dragon_bone", 0.6, [1, 1]]], "rarity_bias": 30},
+ # overnight build "Beyond the Safe Roads" (canonical v1.6 §8.1): the new regions' finds (existing items only)
+ "starfall": {"rolls": [3, 5], "entries": [["runestone_blank", 22, [1, 2]], ["runestone_ember", 6, [1, 1]], ["runestone_ward", 6, [1, 1]], ["runestone_frost", 6, [1, 1]], ["gem_starstone", 10, [1, 1]], ["starmetal_fragment", 9, [1, 1]], ["reagent_aether_dust", 14, [1, 2]], ["thread_ethereal", 10, [1, 2]], ["curio_star_chart", 5, [1, 1]], ["relic_unknown_tablet", 6, [1, 1]], ["ore_mithril", 6, [1, 1]], ["equip:jewel", 4, [1, 1]]], "rarity_bias": 20},
+ "starfall_boss": {"rolls": [4, 6], "entries": [["gem_starstone", 18, [1, 2]], ["starmetal_fragment", 16, [1, 2]], ["infusion_aether", 10, [1, 1]], ["reagent_aether_dust", 14, [1, 3]], ["runestone_blank", 14, [1, 3]], ["curio_star_chart", 8, [1, 1]], ["relic_unknown_tablet", 8, [1, 1]], ["equip:jewel", 6, [1, 1]]], "rarity_bias": 30},
+ "fortress": {"rolls": [3, 5], "entries": [["equip:garrison", 18, [1, 1]], ["equip:weapon", 14, [1, 1]], ["equip:any", 14, [1, 1]], ["relic_unknown_arms", 14, [1, 1]], ["relic_coin", 14, [1, 3]], ["relic_idol", 6, [1, 1]], ["relic_crown_shard", 3, [1, 1]], ["ingot_steel", 10, [1, 2]], ["runestone_ward", 4, [1, 1]]], "rarity_bias": 25},
+ "fortress_boss": {"rolls": [4, 6], "entries": [["equip:garrison", 30, [1, 1]], ["equip:weapon", 14, [1, 1]], ["relic_unknown_arms", 16, [1, 1]], ["relic_unknown_reliquary", 10, [1, 1]], ["relic_crown_shard", 8, [1, 1]], ["relic_coin", 12, [2, 4]], ["runestone_ward", 6, [1, 1]]], "rarity_bias": 35},
+ "rift": {"rolls": [4, 6], "entries": [["ore_adamantine", 16, [1, 2]], ["ore_orichalcum", 16, [1, 2]], ["ore_mithril", 16, [1, 3]], ["gem_sapphire", 8, [1, 1]], ["gem_starstone", 5, [1, 1]], ["spider_silk", 8, [1, 2]], ["reagent_wyrm_ash", 8, [1, 2]], ["troll_hide", 3, [1, 1]], ["wyvern_hide", 3, [1, 1]], ["dragon_bone", 1, [1, 1]], ["starmetal_fragment", 4, [1, 1]]], "rarity_bias": 25},
+ "rift_boss": {"rolls": [5, 7], "entries": [["ore_adamantine", 20, [1, 3]], ["ore_orichalcum", 18, [1, 3]], ["gem_starstone", 10, [1, 1]], ["starmetal_fragment", 10, [1, 2]], ["dragon_bone", 3, [1, 1]], ["dragon_scale", 2, [1, 1]], ["reagent_wyrm_ash", 10, [1, 2]], ["relic_crown_shard", 5, [1, 1]], ["curio_star_chart", 4, [1, 1]], ["equip:weapon", 6, [1, 1]]], "rarity_bias": 35},
  "start_bag": {"rolls": [5, 5], "entries": [["ore_iron", 30, [4, 4]], ["coal", 30, [3, 3]], ["leather_hide", 20, [2, 2]], ["ore_silver", 10, [2, 2]], ["equip:legendary_demo", 10, [1, 1]]]}
 })
 print("data ok")

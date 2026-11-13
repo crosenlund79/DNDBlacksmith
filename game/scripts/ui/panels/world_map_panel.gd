@@ -80,7 +80,7 @@ func _overview() -> void:
 		if not WorldSites.is_discovered(sid):
 			continue
 		var h := UIKit.hbox(8)
-		h.add_child(UIKit.icon("ui/world/site_" + WorldSites.type_of(sid), 44))
+		h.add_child(UIKit.icon("ui/world/site_" + WorldSites.icon_of(sid), 44))
 		var b := UIKit.button(WorldSites.name_of(sid), func(): select(sid), 230)
 		h.add_child(b)
 		h.add_child(UIKit.rich("[i]%s · %s[/i]" % [WorldSites.status_word(sid), WorldSites.danger_word(sid)], 17))
@@ -311,7 +311,7 @@ class WorldView extends Control:
 				draw_circle(p + Vector2(0, -16) * k, 70.0 * k, Color(1.0, 0.9, 0.6, 0.35 if sel else 0.2))
 			if st == "threatened":
 				draw_arc(p + Vector2(0, -16) * k, 66.0 * k, 0, TAU, 40, Color(0.55, 0.1, 0.06, 0.8), 3.0)
-			var tex := Assets.get_tex("ui/world/site_" + WorldSites.type_of(sid), Vector2i(160, 140))
+			var tex := Assets.get_tex("ui/world/site_" + WorldSites.icon_of(sid), Vector2i(160, 140))
 			var sz := Vector2(160, 140) * k * 0.95
 			draw_texture_rect(tex, Rect2(p - Vector2(sz.x * 0.5, sz.y * 0.82), sz), false)
 			if st == "cleared":
