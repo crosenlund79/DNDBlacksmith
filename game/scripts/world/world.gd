@@ -40,6 +40,7 @@ var room := ""
 var _marker: Sprite2D
 var solid_rects: Array[Rect2] = []   # every static footprint (walls, props, trees, water): the animals' walkability grid
 var _animal_nav: AnimalNav
+var season_dressing: SeasonDressing
 
 
 
@@ -84,6 +85,9 @@ func _ready() -> void:
 	add_child(ApprenticeActors.new())  # iteration 012: workshop apprentices at their stations
 	add_child(ContractWorld.new())     # The Living Realm: crates of a major contract beside the Project Bench
 	add_child(StewardSmithActor.new()) # S2: the smith at work under the steward (walks, works, rests, sleeps)
+	season_dressing = SeasonDressing.new()   # canonical v1.6 §11: the seasons and the weather (visual and audio only)
+	add_child(season_dressing)
+	season_dressing.setup(self)
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
 	Events.time_changed.connect(func(_d, _m): _sync_family_counter())   # pilot 004: show the spouse where she serves
 	Events.adventurer_departed.connect(_on_departed)
@@ -488,6 +492,12 @@ func _sway_material(id: String) -> ShaderMaterial:
 	return _sway_mats[k]
 
 
+## Plants are tagged with their kind, so the seasons can dress them (SeasonDressing; canonical v1.6 §11, visual only).
+func _tag_plant(s: CanvasItem, id: String) -> void:
+	if SWAY.has(id) or id.begins_with("tree"):
+		s.set_meta("veg", id)
+
+
 func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 	var info: Dictionary = DB.props.get(id, {"size": [64, 64], "solid": true})
 	var size := Vector2(float(info["size"][0]), float(info["size"][1]))
@@ -496,6 +506,7 @@ func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 		fs.rotation = rot
 		if SWAY.has(id):
 			fs.material = _sway_material(id)
+		_tag_plant(fs, id)
 		return fs
 	var quarter := int(round(rot / (PI / 2))) % 2 != 0
 	var ext := Vector2(size.y, size.x) if quarter else size
@@ -507,6 +518,7 @@ func _prop(id: String, pos: Vector2, rot := 0.0) -> Node2D:
 	s.rotation = rot
 	if SWAY.has(id):
 		s.material = _sway_material(id)
+	_tag_plant(s, id)
 	holder.add_child(s)
 	ysort.add_child(holder)
 	var foot := ext * Vector2(0.75, 0.55)
@@ -1353,6 +1365,7 @@ func _veg_prop(id: String, pos: Vector2, solid := true) -> void:
 	s.position = Vector2(0, -h * 0.3)
 	if SWAY.has(id):
 		s.material = _sway_material(id)
+	_tag_plant(s, id)
 	holder.add_child(s)
 	ysort.add_child(holder)
 
@@ -3031,6 +3044,8 @@ func _update_light(force: bool) -> void:
 	var h := m / 60.0
 	var night_f := night_amount(h)
 	var c := sky_color(h)
+	if season_dressing != null:
+		c *= season_dressing.light_tint()   # the season's daylight and the weather's grey (visual only)
 	if area != "village":
 		# interiors are lit by hearths and candles; at night they stay warm and readable
 		c = c.lerp(Color(0.92, 0.84, 0.74), 0.55 + 0.2 * night_f)

@@ -4082,3 +4082,10 @@ func phase_lw_emberwarden() -> void:
 func phase_beyond_map() -> void:
 	var ph: RefCounted = load("res://tests/playtest_beyond.gd").new()
 	await ph.run_map(self)
+
+
+## The four seasons and their weather over the village, the turn into winter, a winter evening and the weather seen
+## from inside the smithy (tests/playtest_beyond.gd). Shots season_*.
+func phase_seasons() -> void:
+	var ph: RefCounted = load("res://tests/playtest_beyond.gd").new()
+	await ph.run_seasons(self)

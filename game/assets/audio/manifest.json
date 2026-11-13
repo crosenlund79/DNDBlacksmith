@@ -9,6 +9,11 @@
     "duration": 30.0,
     "loop": true
   },
+  "amb/rain_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
   "amb/tavern_loop": {
     "bus": "Ambience",
     "duration": 30.0,
@@ -20,6 +25,11 @@
     "loop": true
   },
   "amb/village_night_loop": {
+    "bus": "Ambience",
+    "duration": 30.0,
+    "loop": true
+  },
+  "amb/wind_loop": {
     "bus": "Ambience",
     "duration": 30.0,
     "loop": true

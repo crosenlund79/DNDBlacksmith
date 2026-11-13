@@ -92,6 +92,7 @@ func _build_hud() -> void:
 	var v := UIKit.vbox(2)
 	clock_label = UIKit.label("", 26, "heading")
 	clock_label.name = "HudClock"
+	clock_label.mouse_filter = Control.MOUSE_FILTER_PASS   # its tooltip names the season and the weather (v1.6 §11)
 	gold_label = UIKit.label("", 24, "body_bold", UIKit.RUBRIC)
 	gold_label.name = "HudGold"
 	objective_label = UIKit.rich("", 20)
@@ -246,6 +247,7 @@ func _refresh_hud() -> void:
 		return
 	clock_label.text = "Day %d · %s · %s%s" % [Game.day(), Game.weekday_name(), Game.time_string(),
 		"  ‖ paused" if Game.paused else ("  ▸×%d" % Game.speed if Game.speed > 1 else "")]
+	clock_label.tooltip_text = Seasons.describe(Game.day(), int(Game.state.get("minute", 0)))   # canonical v1.6 §11
 	gold_label.text = "%s gold" % UIKit.num(Game.gold())   # #43: grouped digits; the plate sizes itself to the text
 	var cm: Variant = Game.state.get("commerce", {})   # read without creating state (Commerce.st() fills keys in)
 	var cv: Dictionary = (cm as Dictionary).get("caravan", {}) if cm is Dictionary else {}
