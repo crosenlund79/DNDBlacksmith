@@ -75,6 +75,7 @@ func _ask() -> void:
 		await pt.click("help at the shop counter", pt.panel())
 		await pt.wait(0.6)
 		pt.expect(bool(_fam("helps")), "lw_family: she agrees")
+		pt.expect(not bool(_fam("at_counter")), "lw_family: just agreed — not behind the counter yet (her walk is simulation time)")
 		await _shot("02_she_agrees")
 	await pt.close_panel()
 
@@ -122,9 +123,10 @@ func _counter() -> void:
 	Shop.customers().append({"npc": "sigrun", "want": "browse", "arrived": now, "seated": now, "seat": 0, "present": true,
 		"budget": int(a["gold"]), "looking_for": "", "slot": Items.slot(it)})
 	w._update_schedules(true)
-	# she walks over from her morning place (real time; at most ~40 s) — and serves nobody until she is there
+	# pilot 004: her walk over is simulation time (Family.COUNTER_WALK from the round her duty began), the same with or
+	# without a world; by 10:00 it is done and the world shows her figure behind the counter
 	if fam != null:
-		pt.expect(bool(_fam("on_duty")) and not bool(_fam("at_counter")), "lw_family: on duty but still on her way: she serves nobody yet")
+		pt.expect(bool(_fam("on_duty")) and bool(_fam("at_counter")), "lw_family: by 10:00 her walk over is done (simulation state, not the figure)")
 	var rn: NPCActor = w.npcs.get("roisin")
 	var cb: Vector2 = w.spots.get("smithy_counter_back", Vector2.ZERO)
 	var waited := 0.0

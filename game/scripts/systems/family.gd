@@ -4,7 +4,9 @@
 ##     between you (WILLING), and stops on her own if that cools far enough (QUIT_MARGIN). In her hours — the shop's
 ##     opening hours, 9:00–18:00, with the midday hour off — and only while she is home (not on the road, not hurt, not
 ##     waiting at the counter herself) she stands behind the shop counter (world spot "smithy_counter_back") and, once
-##     her figure is there (at_counter; headless: by the schedule), serves one waiting customer every 15 game minutes: an adventurer browsing the display, a villager wanting goods. She sells
+##     she has walked there (at_counter: COUNTER_WALK game minutes after her stretch of duty began — the simulation's own
+##     clock, the same with or without a world; the world then shows her figure there, VillageWorld._sync_family_counter),
+##     serves one waiting customer every 15 game minutes: an adventurer browsing the display, a villager wanting goods. She sells
 ##     through the shop's own sale path (Shop.sell_to / Shop.sell_goods) at the display price — less at most the
 ##     discount the player allows her (discount_cap, 0–25 %, default 0 %): she gives only as much off as the buyer needs
 ##     to agree, never more than the cap, and the cap is enforced in the sale path itself (Shop.counter_price_reason).
@@ -47,6 +49,10 @@ const DEFAULT_DISCOUNT := 0
 const LOG_CAP := 40
 ## The world spot behind the shop counter (Venues "shop": smithy_counter_back).
 const COUNTER_SPOT := "smithy_counter_back"
+## Game minutes from the start of a stretch of duty (09:00, 13:00, or whenever she is free again) until she stands behind
+## the counter and serves. Simulation state decides this, never the rendered figure: headless and rendered games make the
+## same sales (Engineering pilot 004). Half an hour: a walk across the village and opening up.
+const COUNTER_WALK := 30
 ## How warm she must be towards the smith to agree (Social affection), by her own character: Róisín keeps a shop's
 ## hours gladly; Kestra likes coin and company; Sigrun between the roads; Elowen only if she is fond enough; Mira would
 ## "rather die out there than behind a counter" — unless she is devoted.
@@ -188,21 +194,27 @@ static func on_duty() -> bool:
 	return duty_reason() == ""
 
 
-## Is she standing behind the counter? With a world, her figure must have arrived there (the world walks her over at the
-## hour); headless runs (no world) go by the schedule alone — one engine for play and tests, like the steward's smith.
+## Is she standing behind the counter? On duty, and COUNTER_WALK game minutes have passed since this stretch of duty
+## began (duty_since, kept by tick()). Decided by simulation state alone — never by a rendered figure — so a game with a
+## world and a headless game make the same decision; the world shows her figure where this says she is.
 static func at_counter(npc := "") -> bool:
 	var who := npc if npc != "" else helper()
-	var tree := Engine.get_main_loop() as SceneTree
-	var w: Node = tree.get_first_node_in_group("world") if tree != null else null
-	if w == null:
-		return true
-	var n: Variant = (w.get("npcs") as Dictionary).get(who, null) if w.get("npcs") is Dictionary else null
-	var sp: Variant = (w.get("spots") as Dictionary).get(COUNTER_SPOT, null) if w.get("spots") is Dictionary else null
-	if not n is Node2D or not sp is Vector2:
-		return true   # no figure or no counter in this world: the schedule decides
-	var fig: Node2D = n
-	var walking: bool = fig.get("path") is PackedVector2Array and not (fig.get("path") as PackedVector2Array).is_empty()
-	return fig.visible and not walking and fig.position.distance_to(sp as Vector2) < 80.0
+	if who == "" or who != helper() or not on_duty():
+		return false
+	var since := int(_fam().get("duty_since", -1))
+	return since >= 0 and Game.now() - since >= COUNTER_WALK
+
+
+## tick(): when a stretch of duty begins her walk to the counter starts (duty_since); off duty, it ends.
+static func _note_duty() -> void:
+	var f := _fam()
+	if f.is_empty():
+		return
+	if on_duty():
+		if int(f.get("duty_since", -1)) < 0:
+			f["duty_since"] = Game.now()
+	elif int(f.get("duty_since", -1)) >= 0:
+		f["duty_since"] = -1
 
 
 ## world.spot_for: behind the shop counter while on duty ("" = her ordinary routine).
@@ -239,6 +251,7 @@ static func release(why := "") -> void:
 		return
 	var npc := str(st()["helper"])
 	st()["helper"] = ""
+	st()["duty_since"] = -1
 	_log(why if why != "" else "%s no longer minds the shop counter." % Talk.npc_name(npc))
 	Events.customers_changed.emit()
 
@@ -290,6 +303,7 @@ static func tick() -> void:
 		release("%s has stopped minding the shop counter — things between you are not what they were." % Talk.npc_name(npc))
 		Game.journal("%s has stopped minding the shop counter." % Talk.npc_name(npc))
 		return
+	_note_duty()
 	if not on_duty() or not at_counter(npc):
 		return   # off duty, or still on her way to the counter
 	for c in Shop.waiting().duplicate():

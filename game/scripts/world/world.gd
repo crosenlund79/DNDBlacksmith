@@ -85,6 +85,7 @@ func _ready() -> void:
 	add_child(ContractWorld.new())     # The Living Realm: crates of a major contract beside the Project Bench
 	add_child(StewardSmithActor.new()) # S2: the smith at work under the steward (walks, works, rests, sleeps)
 	Events.hour_passed.connect(func(_d, _h): _update_schedules())
+	Events.time_changed.connect(func(_d, _m): _sync_family_counter())   # pilot 004: show the spouse where she serves
 	Events.adventurer_departed.connect(_on_departed)
 	Events.hireling_departed.connect(_on_departed)
 	Events.adventurer_returned.connect(_on_returned)
@@ -1894,6 +1895,24 @@ func spot_for(id: String) -> String:
 		"celeste":
 			return "lantern_2"
 	return ""
+
+
+## Engineering pilot 004: the simulation decides when the smith's spouse stands behind the counter (Family.at_counter —
+## the same headless and rendered); the figure only shows it. If her walk over has not brought her there by then (a long
+## path, a slow frame, a paused walk), she is placed behind the counter, as instant schedule updates place people.
+func _sync_family_counter() -> void:
+	var who := Family.helper()
+	if who == "" or not npcs.has(who) or not spots.has(Family.COUNTER_SPOT) or not Family.at_counter(who):
+		return
+	var n: NPCActor = npcs[who]
+	var p := stand_point(who, Family.COUNTER_SPOT)
+	if n.visible and n.path.is_empty() and n.position.distance_to(p) < 80.0:
+		return
+	n.path = PackedVector2Array()
+	n.target_spot = Family.COUNTER_SPOT
+	n.hidden_after_arrival = false
+	n.position = p
+	n.visible = true
 
 
 func _update_schedules(instant := false) -> void:

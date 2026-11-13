@@ -31,6 +31,12 @@ func _at(h: int, m := 0) -> void:
 	Game.state["minute"] = h * 60 + m
 
 
+## The sale tests start with her already behind the counter: her stretch of duty began Family.COUNTER_WALK minutes ago
+## (pilot 004: the simulation, not a rendered figure, decides when she has walked over; test_counter_walk checks the walk).
+func _walked_over() -> void:
+	Family.st()["duty_since"] = Game.now() - Family.COUNTER_WALK
+
+
 ## A buyer in town (not the spouse), browsing.
 func _buyer(skip := "") -> Dictionary:
 	for id in ["sigrun", "kestra", "elowen", "mira"]:
@@ -154,6 +160,7 @@ func test_sale_at_display_price_cap_zero() -> void:
 	eq(Family.spot("roisin"), "smithy_counter_back", "behind the shop counter")
 	var gold0 := Game.gold()
 	var purse0 := int(a["gold"])
+	_walked_over()
 	Family.tick()
 	var mine := Game.find_uid(int(it["uid"]))
 	check(mine.is_empty(), "the piece left the stores")
@@ -210,6 +217,7 @@ func test_discount_cap_enforced_in_sale_path() -> void:
 	a["gold"] = short
 	_seat(str(a["id"]))
 	var gold0 := Game.gold()
+	_walked_over()
 	Family.tick()
 	check(Game.find_uid(int(it["uid"])).is_empty(), "sold with a discount within the cap")
 	eq(Game.gold() - gold0, short, "for exactly what the buyer could pay (≥ the floor)")
@@ -248,6 +256,7 @@ func test_goods_within_budget_and_cap() -> void:
 	_at(10)
 	var gold0 := Game.gold()
 	var n0 := Game.count("potion_healing")
+	_walked_over()
 	Family.tick()
 	eq(Game.count("potion_healing"), n0 - 1, "one draught sold")
 	eq(Game.gold() - gold0, budget, "at the villager's budget, within 15 %")
@@ -311,12 +320,14 @@ func test_through_the_clock_and_the_steward_counts_her_work() -> void:
 	Steward.protect(int(it["uid"]), false)
 	a["gold"] = Shop.price_of(it) + 1
 	var xp0 := JSON.stringify(Game.player_skills())
-	_at(9, 50)
+	_at(9, 20)
 	eq(Steward.activate(), "", "the steward takes over")
 	Steward.set_orders({"duties": {"sales": false}})   # her counter, not the steward's own sales duty
 	_seat(str(a["id"]))
-	Game.advance_minutes(10)   # 10:00 — her tick runs with the clock (Game.advance_minutes)
-	check(Game.find_uid(int(it["uid"])).is_empty(), "she sold it at the 10:00 tick")
+	Game.advance_minutes(25)   # 09:45 — her duty began at the 09:30 round: still walking over
+	check(not Game.find_uid(int(it["uid"])).is_empty(), "nothing sold while she walks over (09:45)")
+	Game.advance_minutes(15)   # 10:00 — her tick runs with the clock (Game.advance_minutes)
+	check(Game.find_uid(int(it["uid"])).is_empty(), "she sold it at the 10:00 tick, once she had walked over")
 	var sold: Array = Steward.st()["acc"]["sold"]
 	check(not sold.is_empty() and str(sold[-1].get("by", "")) != "", "the steward's report counts her sale (%s)" % str(sold))
 	var r := Steward.deactivate()
@@ -463,3 +474,80 @@ func test_npc_walk_same_game_minutes_at_any_step() -> void:
 		n.free()
 	check(absf(float(res[40]) - 200.0) < 0.5, "small steps walk 200 px (%.1f)" % float(res[40]))
 	check(absf(float(res[4]) - 200.0) < 0.5, "big steps walk the same 200 px (%.1f)" % float(res[4]))
+
+
+# ------------------------------------------------------------------ pilot 004: one decision, with or without a world
+## Her walk to the counter is simulation time: COUNTER_WALK minutes from the round her duty begins (09:00, again after
+## the midday hour), through the real clock; off duty and released she is not there.
+func test_counter_walk_by_simulation_time() -> void:
+	_game()
+	_helping("roisin")
+	_at(8, 50)
+	Game.advance_minutes(10)   # the 09:00 round: her duty begins, she sets off
+	check(Family.on_duty() and not Family.at_counter(), "09:00: on duty, on her way")
+	Game.advance_minutes(15)
+	check(not Family.at_counter(), "09:15: still on her way")
+	Game.advance_minutes(15)
+	check(Family.at_counter(), "09:30: behind the counter (%d minutes' walk)" % Family.COUNTER_WALK)
+	Game.advance_minutes(150)   # 12:00: the midday hour
+	check(not Family.on_duty() and not Family.at_counter(), "12:00: the midday hour, not at the counter")
+	Game.advance_minutes(60)    # 13:00: back on duty, walking over again
+	check(Family.on_duty() and not Family.at_counter(), "13:00: on duty again, on her way back")
+	Game.advance_minutes(30)
+	check(Family.at_counter(), "13:30: behind the counter again")
+	Family.release()
+	check(not Family.at_counter(), "released: not at the counter")
+
+
+## A stand-in for the rendered world (group "world") with her figure hidden, far from the counter and still walking —
+## what the old check read. The decision and every sale must be the same as in a headless game.
+func _stand_in_world() -> Node2D:
+	var scr := GDScript.new()
+	scr.source_code = "extends Node2D\nvar npcs := {}\nvar spots := {}\n"
+	scr.reload()
+	var w: Node2D = scr.new()
+	var fig := Node2D.new()
+	fig.position = Vector2(4000, 4000)
+	fig.visible = false
+	fig.set_meta("walking", true)
+	w.add_child(fig)
+	w.set("npcs", {"roisin": fig})
+	w.set("spots", {Family.COUNTER_SPOT: Vector2.ZERO})
+	w.add_to_group("world")
+	var root := (Engine.get_main_loop() as SceneTree).root
+	root.get_child(root.get_child_count() - 1).add_child(w)   # the suite's own node (the root is busy setting up)
+	check(Engine.get_main_loop().get_first_node_in_group("world") == w, "the stand-in world is in the scene tree")
+	return w
+
+
+func _morning(with_world: bool) -> Array:
+	_game(4242)
+	_helping("roisin")
+	var a := _buyer()
+	var it := _piece_for(a)
+	if it.is_empty():
+		return ["no piece"]
+	a["gold"] = Shop.price_of(it) + 5
+	_at(8, 45)
+	_seat(str(a["id"]))
+	var w: Node2D = _stand_in_world() if with_world else null
+	var out := []
+	for i in 6:   # 08:45 → 10:15, round by round
+		Game.advance_minutes(15)
+		out.append("%s at_counter=%s sold=%s gold=%d" % [Game.time_string(), Family.at_counter(),
+			Game.find_uid(int(it["uid"])).is_empty(), Game.gold()])
+	if w != null:
+		w.get_parent().remove_child(w)
+		w.free()
+	out.append(JSON.stringify((Game.state["ledger"] as Array).slice(-3)))
+	return out
+
+
+func test_same_decisions_with_or_without_a_world() -> void:
+	var headless := _morning(false)
+	var with_world := _morning(true)
+	note("headless: " + " | ".join(headless.slice(0, 6)))
+	eq(with_world, headless, "the same rounds, the same sale, the same ledger with a rendered world as without one")
+	check(headless.any(func(l): return str(l).contains("sold=true")), "she did sell that morning (once she had walked over)")
+	check(str(headless[0]).contains("at_counter=false") and str(headless[1]).contains("at_counter=false"),
+		"not at the counter at 09:00 and 09:15 (walking over)")
