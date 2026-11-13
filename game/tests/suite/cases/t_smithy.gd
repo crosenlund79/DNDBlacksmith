@@ -237,7 +237,8 @@ func test_lift_and_stairs() -> void:
 	check(Property.lift_reason().contains("Arcane"), "the ley-stone needs an Arcane Foundry: %s" % Property.lift_reason())
 	check(Property.buy_lift() != "" and not Property.has_lift(), "refused without it")
 	Property.buy_unit("cobbler")
-	eq(Property.buy_unit("cellar"), "", "buy the Old Dye-Works (the Arcane Foundry)")
+	Property.buy_unit("chandler")   # v1.7: the cellar dig leads down to the vault
+	eq(Property.buy_unit("cellar"), "", "dig the Deep Vault (the Arcane Foundry)")
 	var g0 := Game.gold()
 	eq(Property.buy_lift(), "", "rig the lift")
 	check(Property.has_lift() and Game.gold() == g0 - Property.lift_price(), "it is running and was paid for")
@@ -379,7 +380,8 @@ func test_old_saves() -> void:
 	for r in s["rooms"]:
 		(r as Dictionary).erase("disc")
 	check(Property.room_by_id(Property.rooms(), "loft_weaving").size() > 0, "an old save gains the Loft's rooms")
-	check(not Property.owns("loft") and not Property.floor_owned("loft"), "but does not own them")
+	check(not Property.owns("loft") and not Property.owns("garret"), "but does not own Ilse's loft or the garret")
+	check(Property.room_owned(_room("study")) and Property.floor_owned("loft"), "v1.7: the quarters under the roof are his (the start unit)")
 	eq(Property.planned_discipline(_room("rune_room")), "runecraft", "rooms without a stored craft read it from the data")
 	eq(Property.validate(Property.plan_copy()), "", "the old layout is still valid")
 	check(Property.owns("cobbler"), "and keeps what he bought")

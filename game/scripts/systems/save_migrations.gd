@@ -32,6 +32,8 @@ const STEPS := [
 		"what": "The Living Workshop B2: every Skill Tree node the save has learned — secret nodes and their discoveries included — becomes the workshop's knowledge: its Designs, stations and techniques, recorded as learned through the smith on the day the tree noted. The tree, every flag and discovery, every level and every item stay exactly as they were; nothing is removed (WorkshopKnowledge.migrate_state)."},
 	{"to": 7, "name": "station instances and work orders",
 		"what": "The Living Workshop #37 and C1: every station already in the workshop becomes instance #1 of its type under the same id (layouts, storage, wear and the stations' history unchanged; a station both set up and listed in storage is kept set up once); every open apprentice task that makes a Design becomes a staged work order — its operations grouped into stages by station discipline, the stages already worked marked done by whoever worked them, the current stage with its worker — and an open order for equipment reserves the uid its piece will carry. Materials in hand, progress, workers and finished pieces are kept (Property.migrate_instances, Apprentices.migrate_work_orders)."},
+	{"to": 8, "name": "the compact smithy",
+		"what": "Canonical v1.7 (#64–66): the ground floor is the compact 19 × 18 smithy; the quarters and the household rooms are in the Loft, the material store and the arcane foundry in the dug-out basement. Each moved room keeps its id, unit and stations (same place within the room); a room the player made in the removed part of the old ground floor is dropped and its stations go to storage; doorways for moved rooms come from the data; a save that owned the foundry also owns the cellar dig that leads to it; a plan that would not validate stores the moved rooms' stations to re-place; the smith, if he stood where the millpond now lies, is set down inside the front door. Units, upgrades, items and stations are never removed (Property.migrate_layout_v17)."},
 ]
 
 
@@ -91,6 +93,10 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			migrate_workshop_knowledge(data)
 		7:
 			_migrate_station_instances_and_work_orders(data)
+		8:
+			var rep := Property.migrate_layout_v17(data)
+			if rep != "":
+				Log.info("  the compact smithy: " + rep)
 		_:
 			return false
 	return true

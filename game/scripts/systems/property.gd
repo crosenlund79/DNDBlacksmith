@@ -46,7 +46,7 @@ static func ensure() -> void:
 		return
 	var all_units := []
 	for u in data().get("units", []):
-		if str(u.get("floor", "ground")) == "ground":   # the Loft came later: old saves do not own it
+		if not str(u["id"]) in ["loft", "garret"]:   # the Loft came later: old saves do not own Ilse's loft or the garret
 			all_units.append(u["id"])
 	Game.state["property"] = _fresh(all_units, DB.stations.keys())
 	Game.state["property"]["legacy"] = true
@@ -147,12 +147,16 @@ static func station_floor(station_id: String) -> String:
 	return floor_of_point(pos_of(station_id))
 
 
-## Does he own any part of this floor (the ground floor always)?
+## Does he own any part of this floor (the ground floor always)? v1.7: by the rooms he owns there (the start unit holds
+## the Loft's landing and quarters; a unit's rooms may lie on another floor than its own "floor").
 static func floor_owned(fid: String) -> bool:
 	if fid == "ground":
 		return true
 	for u in units():
 		if str(u.get("floor", "ground")) == fid and owns(str(u["id"])):
+			return true
+	for r in rooms():
+		if room_owned(r) and floor_of_room(r) == fid:
 			return true
 	return false
 
@@ -249,6 +253,26 @@ static func drop_spots(n: int, near := Vector2.INF) -> Array:
 			x += DROP_STEP.x
 		y += DROP_STEP.y
 	cands.sort_custom(func(a: Vector2, b: Vector2): return a.distance_squared_to(near) < b.distance_squared_to(near))
+	# v1.7: the compact stock hall fills up sooner — the next drops go to the nearest other owned rooms on the same
+	# floor (clear floor only), before any piles have to share a place
+	if cands.size() < n:
+		var fl := floor_of_point(near)
+		var more := []
+		for rm in rooms():
+			if rm == host or not room_owned(rm) or floor_of_room(rm) != fl or str(rm.get("kind", "")) in ["shop", "home"]:
+				continue
+			var ra := rect(rm)
+			var yy := ra.position.y + DROP_HALF.y + 0.3
+			while yy <= ra.end.y - DROP_HALF.y - 0.3:
+				var xx := ra.position.x + DROP_HALF.x + 0.3
+				while xx <= ra.end.x - DROP_HALF.x - 0.3:
+					var q := Vector2(xx, yy)
+					if drop_problem(q) == "" and not cands.has(q):
+						more.append(q)
+					xx += DROP_STEP.x
+				yy += DROP_STEP.y
+		more.sort_custom(func(a: Vector2, b: Vector2): return a.distance_squared_to(near) < b.distance_squared_to(near))
+		cands.append_array(more)
 	for i in n:
 		if cands.is_empty():
 			out.append(near)
@@ -361,7 +385,8 @@ static func buy_unit(uid: String) -> String:
 	if not adjacent(uid):
 		var req := str(u.get("requires", ""))
 		if req != "":
-			return "First buy %s — the way up is through there." % unit(req).get("name", req)
+			var below := bool(floor_def(str(u.get("floor", "ground"))).get("below", false))
+			return "First %s %s — the way %s is through there." % ["dig" if below else "buy", unit(req).get("name", req), "down" if below else "up"]
 		return "You can only buy rooms next to what you already own."
 	var price := unit_price(uid)
 	if not Game.can_afford(price):
@@ -1003,11 +1028,34 @@ static func door_center(plan: Dictionary, d: Dictionary) -> Vector2:
 ## floor from the head of its stair (every room, every station, the lift). Uses a half-tile walk grid per floor with
 ## walls, doorways and station footprints.
 static func validate(plan: Dictionary) -> String:
+	_bed_reached = false
 	for f in floors():
 		var why := _validate_floor(plan, f)
 		if why != "":
 			return why
+	if not _bed_reached:
+		return "You could no longer reach a bed."
 	return ""
+
+
+static var _bed_reached := false
+
+
+## Every bed of the smithy in PLAN coordinates (v1.7: the cot and the beds are in the Loft; an area's positions are
+## its own, so its plan offset is added).
+static func beds() -> Array:
+	var out := []
+	for it in data().get("interact", []):
+		if str(it["kind"]) == "bed":
+			out.append(Vector2(float(it["pos"][0]), float(it["pos"][1])))
+	for a in DB.layout.get("areas", []):
+		if str(a.get("floor_of", "")) != BID:
+			continue
+		var off: Array = a.get("plan_offset", [0, 0])
+		for it in a.get("interact", []):
+			if str(it["kind"]) == "bed":
+				out.append(Vector2(float(it["pos"][0]) + float(off[0]), float(it["pos"][1]) + float(off[1])))
+	return out
 
 
 static func _validate_floor(plan: Dictionary, fl: Dictionary) -> String:
@@ -1120,6 +1168,12 @@ static func _validate_floor(plan: Dictionary, fl: Dictionary) -> String:
 			var at := Vector2(float(f2[pr[0]][0]), float(f2[pr[0]][1]))
 			if fr.has_point(at) and not _reachable_near(at, 1.4, seen, w, h, o):
 				return "You could no longer reach %s." % pr[1]
+	# a bed on this floor that he owns and can walk up to
+	for bp: Vector2 in beds():
+		if fr.has_point(bp):
+			var bhost := room_at_tile(rooms_arr, bp)
+			if not bhost.is_empty() and room_owned(bhost) and _reachable_near(bp, 1.9, seen, w, h, o):
+				_bed_reached = true
 	if not ground:
 		return ""
 	for need in [["counter", data().get("interact", [])]]:
@@ -1128,15 +1182,6 @@ static func _validate_floor(plan: Dictionary, fl: Dictionary) -> String:
 				var ip: Array = it["pos"]
 				if not _reachable_near(Vector2(float(ip[0]), float(ip[1])), 2.2, seen, w, h, o):
 					return "The shop counter would be cut off."
-	var bed_ok := false
-	for it2 in data().get("interact", []):
-		if it2["kind"] == "bed":
-			var bp: Array = it2["pos"]
-			var host := room_at_tile(rooms_arr, Vector2(float(bp[0]), float(bp[1])))
-			if not host.is_empty() and room_owned(host) and _reachable_near(Vector2(float(bp[0]), float(bp[1])), 1.9, seen, w, h, o):
-				bed_ok = true
-	if not bed_ok:
-		return "You could no longer reach a bed."
 	return ""
 
 
@@ -1254,3 +1299,155 @@ static func dev_grant_unit(uid: String) -> void:
 
 static func dev_reset_new() -> void:
 	init_new()
+
+
+# ------------------------------------------------------------------ v1.7 (#64–66): the compact smithy (save step 8)
+## The rooms that left the old 30 × 23 ground floor: the quarters and the household rooms went up to the Loft, the
+## material store and the arcane foundry down to the basement (same ids, new plan rects; tools/data/smithy_layout.py).
+const MOVED_V17 := ["study", "living", "bedroom", "storage", "pantry", "material_store", "arcane_room"]
+const OLD_GROUND := Rect2(0, 0, 30, 23)
+const OLD_SMITHY_WORLD := Rect2(18, 34, 30, 23)   # tiles
+
+
+## Converts a save's property plan to the v1.7 layout in place. Moved rooms take their new place and their stations
+## go with them (same place within the room); a room the player made in the removed part of the old ground floor is
+## dropped and its stations go to storage (never lost); every room's unit follows the data; doorways touching moved or
+## new rooms come from the data; a save that owned the foundry also owns the cellar dig that now leads to it. If the
+## result does not validate, the moved rooms' stations go to storage. The smith, if he stood in what is now the
+## millpond, is set down inside the front door. Safe to run twice. Returns a one-line report ("" = nothing to do).
+static func migrate_layout_v17(save: Dictionary) -> String:
+	var out := []
+	_rescue_player_v17(save, out)
+	var p: Variant = save.get("property")
+	if not p is Dictionary:
+		return " · ".join(out)
+	var s: Dictionary = p
+	if int(s.get("layout_v", 0)) >= 17:
+		return " · ".join(out)
+	var drooms := {}
+	for r in data().get("rooms", []):
+		drooms[str(r["id"])] = r
+	var unit_of := {}
+	for u in data().get("units", []):
+		for rid in u["rooms"]:
+			unit_of[str(rid)] = str(u["id"])
+	var ground := Rect2(0, 0, float(data().get("rect", [0, 0, 19, 18])[2]), float(data().get("rect", [0, 0, 19, 18])[3]))
+	var stations: Dictionary = s.get("stations", {})
+	var stored: Array = s.get("stored", [])
+	var to_store := []
+	var kept := []
+	var moved := 0
+	var dropped := 0
+	for r in s.get("rooms", []):
+		var rid := str(r["id"])
+		var rr := rect(r)
+		var was_ground := OLD_GROUND.encloses(rr)
+		if was_ground and MOVED_V17.has(rid) and drooms.has(rid):
+			var nr: Dictionary = drooms[rid]
+			var nrect := rect(nr)
+			var delta := nrect.position - rr.position
+			for sid in stations:
+				var e: Dictionary = stations[sid]
+				var sp := Vector2(float(e["pos"][0]), float(e["pos"][1]))
+				if rr.has_point(sp):
+					var np := sp + delta
+					if nrect.has_point(np):
+						e["pos"] = [np.x, np.y]
+					else:
+						to_store.append(str(sid))
+			r["rect"] = (nr["rect"] as Array).duplicate()
+			r["name"] = nr["name"]
+			kept.append(r)
+			moved += 1
+		elif was_ground and not ground.encloses(rr):
+			if drooms.has(rid) and ground.encloses(rect(drooms[rid])):
+				var back := rect(drooms[rid])
+				for sid in stations:
+					var sp2 := Vector2(float(stations[sid]["pos"][0]), float(stations[sid]["pos"][1]))
+					if rr.has_point(sp2) and not back.has_point(sp2):
+						to_store.append(str(sid))
+				r["rect"] = (drooms[rid]["rect"] as Array).duplicate()
+				kept.append(r)
+			else:
+				for sid in stations:
+					if rr.has_point(Vector2(float(stations[sid]["pos"][0]), float(stations[sid]["pos"][1]))):
+						to_store.append(str(sid))
+				dropped += 1
+		else:
+			kept.append(r)
+	var have := {}
+	for r in kept:
+		have[str(r["id"])] = true
+	var added := {}
+	for rid in drooms:
+		if not have.has(rid):
+			var nr2: Dictionary = (drooms[rid] as Dictionary).duplicate(true)
+			nr2["kind"] = str(data().get("room_kinds", {}).get(rid, "workshop"))
+			nr2["disc"] = str(data().get("room_disciplines", {}).get(rid, ""))
+			kept.append(nr2)
+			added[rid] = true
+			have[rid] = true
+	for r in kept:
+		if unit_of.has(str(r["id"])):
+			r["unit"] = unit_of[str(r["id"])]
+	s["rooms"] = kept
+	# doorways: the player's own between rooms that stayed; the data's for every moved or new room
+	var fresh := {}
+	for rid in MOVED_V17:
+		fresh[rid] = true
+	for rid in added:
+		fresh[rid] = true
+	var doors := []
+	for d in s.get("doors", []):
+		var pair: Array = d["between"]
+		if have.has(str(pair[0])) and have.has(str(pair[1])) and not fresh.has(str(pair[0])) and not fresh.has(str(pair[1])):
+			doors.append(d)
+	for d in data().get("room_doors", []):
+		var pair2: Array = d["between"]
+		if (fresh.has(str(pair2[0])) or fresh.has(str(pair2[1]))) and have.has(str(pair2[0])) and have.has(str(pair2[1])):
+			doors.append((d as Dictionary).duplicate(true))
+	s["doors"] = doors
+	for sid in to_store:
+		stations.erase(sid)
+		if not stored.has(sid):
+			stored.append(sid)
+	s["stored"] = stored
+	var units: Array = s.get("units", [])
+	if units.has("cellar") and not units.has("chandler"):
+		units.append("chandler")   # the foundry he owned is now reached through the cellar dig
+		out.append("the foundry's cellar dig included")
+	s["layout_v"] = 17
+	s["floors_v"] = 1
+	# a plan that no longer validates: the moved rooms' stations go to storage (never lost), then everything off the
+	# ground floor's own rooms
+	var why := ""
+	SaveMigrations._with_state(save, func(): why = validate(s))
+	if why != "":
+		for sid in stations.keys():
+			var spos := Vector2(float(stations[sid]["pos"][0]), float(stations[sid]["pos"][1]))
+			if not ground.has_point(spos):
+				stations.erase(sid)
+				if not stored.has(sid):
+					stored.append(sid)
+				to_store.append(str(sid))
+		SaveMigrations._with_state(save, func(): why = validate(s))
+		out.append("stations off the ground floor stored to re-place (%s)" % why if why != "" else "stations off the ground floor stored to re-place")
+	out.push_front("%d room%s moved to the Loft or the cellar, %d dropped, %d station%s stored" % [moved, "" if moved == 1 else "s", dropped,
+		to_store.size(), "" if to_store.size() == 1 else "s"])
+	return " · ".join(out)
+
+
+static func _rescue_player_v17(save: Dictionary, out: Array) -> void:
+	var pl: Variant = save.get("player")
+	if not pl is Dictionary or not (pl as Dictionary).has("pos"):
+		return
+	var pp: Array = pl["pos"]
+	if pp.size() < 2:
+		return
+	var t := Vector2(float(pp[0]), float(pp[1])) / 64.0
+	var now := Rect2(OLD_SMITHY_WORLD.position, Vector2(float(data().get("rect", [18, 34, 19, 18])[2]), float(data().get("rect", [18, 34, 19, 18])[3])))
+	if OLD_SMITHY_WORLD.has_point(t) and not now.has_point(t):
+		var inside: Array = data().get("spots", {}).get("smithy_inside", [14.0, 1.4])
+		pl["pos"] = [(OLD_SMITHY_WORLD.position.x + float(inside[0])) * 64.0, (OLD_SMITHY_WORLD.position.y + float(inside[1])) * 64.0]
+		pl["area"] = BID
+		out.append("the smith set down inside the front door")

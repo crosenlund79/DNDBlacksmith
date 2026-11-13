@@ -42,13 +42,8 @@ SMITHY_ROOMS = [
     room("rune_room", "Runecrafting Room", [0, 10, 7, 8], "floor_slate", [0.92, 0.95, 1.0], "wall_stone"),
     room("alchemy_room", "Alchemy Room", [7, 10, 6, 8], "floor_herb", [0.95, 1.0, 0.92]),
     room("leather_room", "Leatherworking & Stitching", [13, 10, 6, 8], "floor_wood", [1.0, 0.96, 0.9]),
-    room("arcane_room", "Arcane Foundry", [0, 18, 12, 5], "floor_arcane", [0.92, 0.88, 1.0], "wall_stone"),
-    room("material_store", "Material Store", [12, 18, 7, 5], "floor_stone"),
-    room("living", "Living & Dining Room", [19, 0, 11, 7], "floor_wood", None, "wall_plaster"),
-    room("study", "Back Room — your quarters", [19, 7, 5, 6], "floor_wood", None, "wall_plaster"),
-    room("bedroom", "Bedroom", [24, 7, 6, 9], "floor_wood", None, "wall_plaster"),
-    room("storage", "Personal Storage", [19, 13, 5, 10], "floor_wood", None, "wall_plaster"),
-    room("pantry", "Pantry & Washroom", [24, 16, 6, 7], "floor_stone", None, "wall_plaster"),
+    # v1.7 (#64–66): the arcane foundry and the material store are in the basement, the quarters and the apartment in
+    # the Loft (tools/data/smithy_layout.py) — the ground floor is the compact 19 × 18 smithy and shopfront
 ]
 SMITHY_DOORS = [
     door("shop", "stock_hall", 15),              # staff door behind the counter
@@ -56,13 +51,6 @@ SMITHY_DOORS = [
     door("stock_hall", "alchemy_room", 11),
     door("stock_hall", "leather_room", 15),
     door("forge_room", "rune_room", 3),
-    door("rune_room", "arcane_room", 3),
-    door("leather_room", "material_store", 15),
-    door("stock_hall", "study", 8),               # private wing entrance (through the study)
-    door("living", "study", 20),
-    door("living", "bedroom", 25),
-    door("study", "storage", 20),
-    door("bedroom", "pantry", 26),
 ]
 SMITHY_STATIONS = {
     # A — traditional smithing (forge on the west wall under the chimney)
@@ -138,9 +126,9 @@ SMITHY_FURNITURE = [
 SMITHY_SPOTS = {
     "smithy_counter_front": [14.5, 2.0], "smithy_counter_back": [14.5, 4.9], "smithy_inside": [14.0, 1.4],
     "smithy_bag": [14.6, 7.6],   # S2: clear of the Loft stairwell (Property.drop_spots keeps every drop clear)
-    "work_mining": [15.6, 20.4], "work_smithing": [6.8, 6.8], "work_alchemy": [10.0, 12.8], "work_runecraft": [3.6, 13.6],
-    "work_travelling": [11.6, 4.8], "work_relic_hunting": [16.4, 8.0],
-    "quarters_table": [23.6, 2.4], "quarters_bed": [27.0, 11.4],
+    "work_mining": [12.0, 9.2], "work_smithing": [6.8, 6.8], "work_alchemy": [10.0, 12.8], "work_runecraft": [3.6, 13.6],
+    "work_travelling": [11.6, 4.8], "work_relic_hunting": [15.2, 8.6],
+    # v1.7: quarters_table and quarters_bed are in the Loft (smithy_layout.py)
 }
 # ---- the building is shared: the smith starts with the shopfront, the smithing hall, the stock hall and a back
 # room; the neighbours' rooms can be bought as the business grows (only next to what he already owns).
@@ -162,15 +150,8 @@ SMITHY_UNITS = [
 ]
 
 SMITHY_INTERACT = [
-    dict(kind="bed", id="player_bed", pos=[28.6, 9.6], r=120, label="Your bed — sleep until morning (autosave)"),
-    dict(kind="bed", id="cot", pos=[20.4, 11.0], r=100, label="Your cot — sleep until morning (autosave)"),
-    dict(kind="property", id="deeds", pos=[23.0, 12.4], r=100, label="Deeds, plans & workshop equipment"),
-    dict(kind="customize", id="mirror", pos=[20.4, 7.9], r=90, label="Mirror — change your appearance"),
+    # v1.7: the beds, the deeds, the ledger desk, the mirrors, the vase and the hearth chair are in the Loft
     dict(kind="hall_of_fame", id="smithy", pos=[11.5, 3.4], r=110, label="The Hall of Fame — the smithy's proudest work"),
-    dict(kind="vase", id="quarters", pos=[23.4, 7.9], r=80, label="The vase"),
-    dict(kind="customize", id="bedroom_mirror", pos=[25.0, 15.4], r=90, label="Mirror — change your appearance"),
-    dict(kind="bed", id="armchair", pos=[26.6, 1.9], r=90, label="Sit by the hearth — rest"),
-    dict(kind="ledger", id="study_desk", pos=[22.8, 9.8], r=110, label="Your ledger — accounts, journal & upgrades"),
     dict(kind="counter", id="smithy", pos=[14.5, 3.6], r=150, label="Shop counter — stock, customers & ledger"),
 ]
 
@@ -247,7 +228,9 @@ layout = json.load(open(os.path.join(D, "layout.json")))
 by_id = {b["id"]: b for b in layout["buildings"]}
 
 s = by_id["smithy"]
-s.update(rect=[18, 34, 30, 23], doors=[{"side": "n", "at": 13, "w": 2}], chimneys=[[1, 1], [27, 0], [11, 15]],
+# v1.7 (#64): the ground floor is 19 × 18 (342 of the old 690 tiles); the freed ground holds the millpond
+SMITHY_FURNITURE = [f for f in SMITHY_FURNITURE if f[1] < 19.0 and f[2] < 18.0]
+s.update(rect=[18, 34, 19, 18], doors=[{"side": "n", "at": 13, "w": 2}], chimneys=[[1, 1], [11, 15]],
          rooms=SMITHY_ROOMS, room_doors=SMITHY_DOORS, furniture=SMITHY_FURNITURE, spots=SMITHY_SPOTS,
          interact=SMITHY_INTERACT, station_pos=SMITHY_STATIONS, customer_rooms=["shop"], units=SMITHY_UNITS,
          locked_rooms=["shop"], entrance=[14.0, 0.6],
@@ -296,6 +279,9 @@ village_layout.apply(layout, by_id, room, door, F, home)
 
 import smithy_layout  # noqa: E402  (The Living Realm: discipline areas, the Loft, the stair and the aetheric lift)
 smithy_layout.apply(layout, by_id["smithy"], room, door, FT, F)
+
+import millpond_layout  # noqa: E402  (v1.7 #65–66: the millpond, its stream and the watermill on the freed ground)
+millpond_layout.apply(layout)
 
 json.dump(layout, open(os.path.join(D, "layout.json"), "w"), indent=1)
 print("layout ok")

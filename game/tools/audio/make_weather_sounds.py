@@ -3,6 +3,7 @@
 make_audio.py toolkit (numpy only, deterministic, rendered circularly so the whole file is the loop):
     amb/rain_loop   steady rain: a soft broadband hiss, patter on leaves and roofs, the odd drip from the eaves
     amb/wind_loop   winter wind: a hollow, gusting moan with a dry hiss of blown snow
+    amb/watermill_loop  (v1.7) the watermill by the millpond: spilling water, paddles, the axle's knock
 Output: 22050 Hz mono 16-bit WAV in game/assets/audio/amb/ plus their manifest.json entries.
 Played on the "weather" ambience layer by scripts/world/season_dressing.gd; a creator may replace either file through
 the usual audio override/inbox (scripts/autoload/audio.gd).
@@ -50,6 +51,24 @@ def wind(rng):
     return reverb(y, 0.2, circular=True, t60=1.4)
 
 
+def watermill(rng):
+    """v1.7 (#65–66): the watermill — water spilling off the paddles, the wheel's slow wooden knock and creak."""
+    L = N(24.0)
+    t = tt(L)
+    spill = ffilt(rng.standard_normal(L), lambda f: r_lp(f, 2600, 2) * r_hp(f, 180, 1), circular=True)
+    rev = 24.0 / 6.0                                   # one turn every four seconds
+    y = 0.09 * spill / np.std(spill) * (0.75 + 0.25 * np.sin(TAU * t / rev * 12) ** 2)
+    ev = np.zeros(L)
+    for k in range(int(24.0 / rev * 12)):              # each paddle slaps the water
+        add_circ(ev, 0.035 * bubble(rng.uniform(320, 520), 0.05, rise=0.2), N(k * rev / 12 + rng.uniform(0, 0.03)))
+    for k in range(int(24.0 / rev)):                   # the axle's knock once a turn
+        m = N(0.16)
+        knock = rng.standard_normal(m) * np.exp(-tt(m) / 0.03)
+        add_circ(ev, 0.12 * ffilt(knock, lambda f: r_bp(f, 240, 2.5)) / 3.0, N(k * rev + 0.4))
+    ev = reverb(ev, 0.3, circular=True, t60=0.9)
+    return y + ev
+
+
 def write(sid, y, peak_db=-8.0):
     y = norm(y, dbg(peak_db))
     path = A.OUT / (sid + ".wav")
@@ -68,7 +87,7 @@ def write(sid, y, peak_db=-8.0):
 
 
 if __name__ == "__main__":
-    for sid, fn in (("amb/rain_loop", rain), ("amb/wind_loop", wind)):
+    for sid, fn in (("amb/rain_loop", rain), ("amb/wind_loop", wind), ("amb/watermill_loop", watermill)):
         if len(sys.argv) > 1 and not any(a in sid for a in sys.argv[1:]):
             continue
         write(sid, fn(rng_of(sid)))

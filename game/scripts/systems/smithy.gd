@@ -164,7 +164,9 @@ static func floor_hint(sid: String) -> String:
 	var f := Property.station_floor(sid)
 	if f == player_floor():
 		return ""
-	return "downstairs on the ground floor" if f == "ground" else "upstairs in %s" % Property.floor_name(f).replace("The ", "the ")
+	if f == "ground":
+		return "upstairs on the ground floor" if bool(Property.floor_def(player_floor()).get("below", false)) else "downstairs on the ground floor"
+	return ("downstairs in %s" if bool(Property.floor_def(f).get("below", false)) else "upstairs in %s") % Property.floor_name(f).replace("The ", "the ")
 
 
 static func _world() -> VillageWorld:

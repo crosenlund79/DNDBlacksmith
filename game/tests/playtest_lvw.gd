@@ -174,3 +174,65 @@ func run_ui(p: Node) -> void:
 		pt.expect(pt.panel().find_child("SkillsBox", true, false) != null, "ui: the skills box opens on request")
 		await _shot("ui_hirelings_skills")
 	await pt.close_panel()
+
+
+## lvw_layout: the compact smithy and the freed ground — the village by the smithy with the millpond, its dock and reeds,
+## the millstream and the turning watermill; the ground floor; walking up to the quarters in the Loft; digging the
+## cellar and going down; the forge's map marker at its door. Shots lvw_layout_*.
+func run_layout(p: Node) -> void:
+	pt = p
+	await pt.click("New Game")
+	await pt.wait(2.5)
+	var w: VillageWorld = pt.W()
+	var pond: Vector2 = w.tp(DB.layout["millpond"]["center"])
+	await pt.tp(pond + Vector2(-60, 360))
+	await pt.wait(1.0)
+	var r0 := w.mill_wheel.rotation
+	await pt.wait(0.8)
+	pt.expect(absf(w.mill_wheel.rotation - r0) > 0.05, "layout: the mill wheel turns")
+	await _shot("layout_millpond")
+	await pt.tp(w.tp([30.0, 47.0]))
+	await pt.wait(0.8)
+	await _shot("layout_smithy_outside")
+	# inside: the ground floor
+	await pt.tp(w.spots["smithy_inside"] + Vector2(0, 120))
+	await pt.wait(0.8)
+	pt.expect(w.area == "smithy", "layout: inside the smithy (%s)" % w.area)
+	await _shot("layout_ground_floor")
+	# walk up to the quarters: the route takes the stair
+	var nav := PlayerNav.of(w)
+	var bed: Vector2 = Vector2.INF
+	for e in w.interactables:
+		if str(e["kind"]) == "bed" and str(e["id"]) == "cot":
+			bed = e["pos"]
+	pt.expect(bed != Vector2.INF, "layout: the cot is in the Loft")
+	if bed != Vector2.INF:
+		var route := nav.route_to(bed)
+		pt.expect(not route.is_empty(), "layout: the smith can walk from the shop to his cot (%d min)" % int(route.get("minutes", -1)))
+		await pt.tp(bed + Vector2(60, 40))
+		await pt.wait(0.8)
+		pt.expect(w.area == "smithy_loft", "layout: the cot is up in the Loft (%s)" % w.area)
+		await _shot("layout_loft_quarters")
+	# dig the cellar, then go down
+	Game.state["gold"] = 4000
+	pt.expect(Property.buy_unit("chandler") == "", "layout: the cellar is dug")
+	pt.get_tree().root.get_node("Main").call("rebuild_world")
+	await pt.wait(2.0)
+	w = pt.W()
+	var down := w.interactables.filter(func(e): return str(e["kind"]) == "stairs" and str(e["id"]) == "smithy_basement")
+	pt.expect(not down.is_empty(), "layout: a stair down to the cellar stands in the stock hall")
+	if not down.is_empty():
+		var nav2 := PlayerNav.of(w)
+		await pt.tp(w.spots["smithy_inside"] + Vector2(0, 120))
+		var rt := nav2.route_to(w.spots.get("smithy_basement_inside", Vector2.INF))
+		pt.expect(not rt.is_empty(), "layout: the cellar can be walked to")
+		await pt.tp(w.spots["smithy_basement_inside"])
+		await pt.wait(0.8)
+		pt.expect(w.area == "smithy_basement", "layout: in the cellar (%s)" % w.area)
+		await _shot("layout_cellar")
+	# the village map: the forge's marker at its door
+	await pt.tp(w.spots["smithy_door_out"] + Vector2(0, -60))
+	await pt.press("panel_map")
+	await pt.wait(1.0)
+	await _shot("layout_village_map")
+	await pt.close_panel()

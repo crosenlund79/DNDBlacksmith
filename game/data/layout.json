@@ -519,8 +519,8 @@
    "rect": [
     18,
     34,
-    30,
-    23
+    19,
+    18
    ],
    "roof": "slate",
    "ridge": "h",
@@ -536,10 +536,6 @@
     [
      1,
      1
-    ],
-    [
-     27,
-     0
     ],
     [
      11,
@@ -640,54 +636,25 @@
      ]
     },
     {
-     "id": "arcane_room",
-     "name": "Arcane Foundry",
+     "id": "study",
+     "name": "Your quarters \u2014 under the roof",
      "rect": [
-      0,
+      119,
       18,
-      12,
-      5
-     ],
-     "floor": "floor_arcane",
-     "wall": "wall_stone",
-     "tint": [
-      0.92,
-      0.88,
-      1.0
-     ]
-    },
-    {
-     "id": "material_store",
-     "name": "Material Store",
-     "rect": [
-      12,
-      18,
-      7,
-      5
-     ],
-     "floor": "floor_stone",
-     "wall": "wall_timber"
-    },
-    {
-     "id": "living",
-     "name": "Living & Dining Room",
-     "rect": [
-      19,
-      0,
-      11,
-      7
+      5,
+      6
      ],
      "floor": "floor_wood",
      "wall": "wall_plaster"
     },
     {
-     "id": "study",
-     "name": "Back Room \u2014 your quarters",
+     "id": "living",
+     "name": "Living & Dining Room",
      "rect": [
-      19,
-      7,
-      5,
-      6
+      124,
+      18,
+      6,
+      7
      ],
      "floor": "floor_wood",
      "wall": "wall_plaster"
@@ -696,8 +663,8 @@
      "id": "bedroom",
      "name": "Bedroom",
      "rect": [
-      24,
-      7,
+      124,
+      25,
       6,
       9
      ],
@@ -708,10 +675,10 @@
      "id": "storage",
      "name": "Personal Storage",
      "rect": [
-      19,
-      13,
+      119,
+      24,
       5,
-      10
+      5
      ],
      "floor": "floor_wood",
      "wall": "wall_plaster"
@@ -720,10 +687,10 @@
      "id": "pantry",
      "name": "Pantry & Washroom",
      "rect": [
-      24,
-      16,
-      6,
-      7
+      119,
+      29,
+      5,
+      5
      ],
      "floor": "floor_stone",
      "wall": "wall_plaster"
@@ -790,6 +757,57 @@
       0.95,
       1.0
      ]
+    },
+    {
+     "id": "cellar_stair",
+     "name": "Cellar Stair",
+     "rect": [
+      100,
+      40,
+      5,
+      8
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_stone",
+     "tint": [
+      0.9,
+      0.88,
+      0.86
+     ]
+    },
+    {
+     "id": "material_store",
+     "name": "Material Store",
+     "rect": [
+      105,
+      40,
+      7,
+      8
+     ],
+     "floor": "floor_stone",
+     "wall": "wall_stone",
+     "tint": [
+      0.94,
+      0.92,
+      0.88
+     ]
+    },
+    {
+     "id": "arcane_room",
+     "name": "Arcane Foundry",
+     "rect": [
+      112,
+      40,
+      12,
+      8
+     ],
+     "floor": "floor_arcane",
+     "wall": "wall_stone",
+     "tint": [
+      0.92,
+      0.88,
+      1.0
+     ]
     }
    ],
    "sign": "sign_smithy",
@@ -836,62 +854,6 @@
     },
     {
      "between": [
-      "rune_room",
-      "arcane_room"
-     ],
-     "at": 3,
-     "w": 2
-    },
-    {
-     "between": [
-      "leather_room",
-      "material_store"
-     ],
-     "at": 15,
-     "w": 2
-    },
-    {
-     "between": [
-      "stock_hall",
-      "study"
-     ],
-     "at": 8,
-     "w": 2
-    },
-    {
-     "between": [
-      "living",
-      "study"
-     ],
-     "at": 20,
-     "w": 2
-    },
-    {
-     "between": [
-      "living",
-      "bedroom"
-     ],
-     "at": 25,
-     "w": 2
-    },
-    {
-     "between": [
-      "study",
-      "storage"
-     ],
-     "at": 20,
-     "w": 2
-    },
-    {
-     "between": [
-      "bedroom",
-      "pantry"
-     ],
-     "at": 26,
-     "w": 2
-    },
-    {
-     "between": [
       "loft_landing",
       "loft_weaving"
      ],
@@ -920,6 +882,62 @@
       "loft_scriptorium"
      ],
      "at": 30,
+     "w": 2
+    },
+    {
+     "between": [
+      "loft_landing",
+      "study"
+     ],
+     "at": 20,
+     "w": 2
+    },
+    {
+     "between": [
+      "study",
+      "living"
+     ],
+     "at": 20,
+     "w": 2
+    },
+    {
+     "between": [
+      "living",
+      "bedroom"
+     ],
+     "at": 127,
+     "w": 2
+    },
+    {
+     "between": [
+      "study",
+      "storage"
+     ],
+     "at": 121,
+     "w": 2
+    },
+    {
+     "between": [
+      "storage",
+      "pantry"
+     ],
+     "at": 121,
+     "w": 2
+    },
+    {
+     "between": [
+      "cellar_stair",
+      "material_store"
+     ],
+     "at": 43,
+     "w": 2
+    },
+    {
+     "between": [
+      "material_store",
+      "arcane_room"
+     ],
+     "at": 43,
      "w": 2
     }
    ],
@@ -1009,12 +1027,6 @@
      0
     ],
     [
-     "barrel",
-     18.4,
-     6.7,
-     0
-    ],
-    [
      "rune_shelf",
      6.55,
      13.7,
@@ -1085,187 +1097,10 @@
      "ws:stitching"
     ],
     [
-     "arcane_glyph_decal",
-     5.4,
-     20.6,
-     0,
-     "ws:arcane"
-    ],
-    [
-     "arcane_rack",
-     3.4,
-     22.3,
-     0,
-     "ws:arcane"
-    ],
-    [
-     "coal_pile",
-     13.4,
-     19.0,
-     0,
-     "own"
-    ],
-    [
-     "ore_pile",
-     15.0,
-     22.2,
-     0,
-     "own"
-    ],
-    [
-     "barrel",
-     18.3,
-     18.8,
-     0
-    ],
-    [
-     "barrel",
-     18.3,
-     19.8,
-     0
-    ],
-    [
-     "crate",
-     17.0,
-     22.2,
-     0,
-     "own"
-    ],
-    [
-     "woodpile",
-     17.4,
-     20.6,
-     0,
-     "own"
-    ],
-    [
-     "grain_sacks",
-     13.4,
-     22.0,
-     0,
-     "own"
-    ],
-    [
-     "ingredient_crates",
-     13.4,
-     20.6,
-     0,
-     "own"
-    ],
-    [
-     "leather_bundle",
-     18.2,
-     22.2,
-     0,
-     "own"
-    ],
-    [
-     "dining_table",
-     23.6,
-     3.8,
-     0
-    ],
-    [
-     "chair",
-     21.6,
-     3.8,
-     0
-    ],
-    [
-     "chair",
-     25.6,
-     3.8,
-     0
-    ],
-    [
-     "chair",
-     23.0,
-     5.0,
-     0
-    ],
-    [
-     "chair",
-     24.3,
-     5.0,
-     0
-    ],
-    [
-     "fireplace",
-     27.8,
-     0.7,
-     0
-    ],
-    [
-     "rug_red",
-     27.6,
-     3.4,
-     90
-    ],
-    [
-     "trophy_wall",
-     21.5,
-     0.55,
-     0
-    ],
-    [
-     "cupboard",
-     29.2,
-     3.6,
-     90
-    ],
-    [
-     "candle",
-     23.6,
-     3.6,
-     0
-    ],
-    [
-     "desk_ledger",
-     22.8,
-     9.8,
-     90
-    ],
-    [
-     "bookshelf",
-     23.0,
-     12.4,
-     0
-    ],
-    [
-     "candle",
-     22.8,
-     9.6,
-     0
-    ],
-    [
-     "bed",
-     20.4,
-     11.0,
-     0
-    ],
-    [
-     "dresser",
-     20.4,
-     7.75,
-     0
-    ],
-    [
-     "chair",
-     26.6,
-     1.9,
-     0
-    ],
-    [
      "hall_of_fame_board",
      10.85,
      3.4,
      90
-    ],
-    [
-     "vase",
-     23.4,
-     7.6,
-     0
     ],
     [
      "workbench",
@@ -1394,76 +1229,6 @@
      "occ"
     ],
     [
-     "crate",
-     13.5,
-     19.2,
-     0,
-     "occ"
-    ],
-    [
-     "crate",
-     14.7,
-     19.2,
-     0,
-     "occ"
-    ],
-    [
-     "sack",
-     13.5,
-     21.8,
-     0,
-     "occ"
-    ],
-    [
-     "shelf",
-     16.0,
-     18.55,
-     0,
-     "occ"
-    ],
-    [
-     "barrel",
-     2.0,
-     19.6,
-     0,
-     "occ"
-    ],
-    [
-     "barrel",
-     2.0,
-     20.8,
-     0,
-     "occ"
-    ],
-    [
-     "washtub",
-     5.0,
-     20.4,
-     0,
-     "occ"
-    ],
-    [
-     "washtub",
-     7.6,
-     20.4,
-     0,
-     "occ"
-    ],
-    [
-     "crate",
-     10.4,
-     21.8,
-     0,
-     "occ"
-    ],
-    [
-     "woodpile",
-     10.6,
-     19.4,
-     0,
-     "occ"
-    ],
-    [
      "sack",
      2.0,
      11.4,
@@ -1483,121 +1248,6 @@
      16.8,
      0,
      "bare"
-    ],
-    [
-     "sack",
-     1.6,
-     21.8,
-     0,
-     "bare"
-    ],
-    [
-     "bed_double",
-     28.6,
-     9.6,
-     0
-    ],
-    [
-     "nightstand",
-     26.9,
-     9.6,
-     0
-    ],
-    [
-     "dresser",
-     25.0,
-     15.4,
-     0
-    ],
-    [
-     "wardrobe",
-     29.3,
-     13.6,
-     90
-    ],
-    [
-     "rug_brown",
-     27.2,
-     12.6,
-     0
-    ],
-    [
-     "candle",
-     26.9,
-     9.5,
-     0
-    ],
-    [
-     "chest",
-     23.2,
-     14.6,
-     0
-    ],
-    [
-     "chest",
-     23.2,
-     16.0,
-     0
-    ],
-    [
-     "wardrobe",
-     19.6,
-     18.0,
-     90
-    ],
-    [
-     "barrel",
-     23.2,
-     21.8,
-     0
-    ],
-    [
-     "crate",
-     22.0,
-     21.8,
-     0
-    ],
-    [
-     "sack",
-     20.2,
-     21.9,
-     0
-    ],
-    [
-     "bath_tub",
-     28.6,
-     21.6,
-     0
-    ],
-    [
-     "washtub",
-     25.2,
-     21.8,
-     0
-    ],
-    [
-     "kitchen_stove",
-     25.0,
-     16.9,
-     0
-    ],
-    [
-     "shelf",
-     29.4,
-     19.0,
-     90
-    ],
-    [
-     "produce_crate",
-     25.0,
-     19.2,
-     0
-    ],
-    [
-     "sack",
-     17.7,
-     6.65,
-     0
     ]
    ],
    "spots": {
@@ -1618,8 +1268,8 @@
      7.6
     ],
     "work_mining": [
-     15.6,
-     20.4
+     12.0,
+     9.2
     ],
     "work_smithing": [
      6.8,
@@ -1638,59 +1288,11 @@
      4.8
     ],
     "work_relic_hunting": [
-     16.4,
-     8.0
-    ],
-    "quarters_table": [
-     23.6,
-     2.4
-    ],
-    "quarters_bed": [
-     27.0,
-     11.4
+     15.2,
+     8.6
     ]
    },
    "interact": [
-    {
-     "kind": "bed",
-     "id": "player_bed",
-     "pos": [
-      28.6,
-      9.6
-     ],
-     "r": 120,
-     "label": "Your bed \u2014 sleep until morning (autosave)"
-    },
-    {
-     "kind": "bed",
-     "id": "cot",
-     "pos": [
-      20.4,
-      11.0
-     ],
-     "r": 100,
-     "label": "Your cot \u2014 sleep until morning (autosave)"
-    },
-    {
-     "kind": "property",
-     "id": "deeds",
-     "pos": [
-      23.0,
-      12.4
-     ],
-     "r": 100,
-     "label": "Deeds, plans & workshop equipment"
-    },
-    {
-     "kind": "customize",
-     "id": "mirror",
-     "pos": [
-      20.4,
-      7.9
-     ],
-     "r": 90,
-     "label": "Mirror \u2014 change your appearance"
-    },
     {
      "kind": "hall_of_fame",
      "id": "smithy",
@@ -1700,46 +1302,6 @@
      ],
      "r": 110,
      "label": "The Hall of Fame \u2014 the smithy's proudest work"
-    },
-    {
-     "kind": "vase",
-     "id": "quarters",
-     "pos": [
-      23.4,
-      7.9
-     ],
-     "r": 80,
-     "label": "The vase"
-    },
-    {
-     "kind": "customize",
-     "id": "bedroom_mirror",
-     "pos": [
-      25.0,
-      15.4
-     ],
-     "r": 90,
-     "label": "Mirror \u2014 change your appearance"
-    },
-    {
-     "kind": "bed",
-     "id": "armchair",
-     "pos": [
-      26.6,
-      1.9
-     ],
-     "r": 90,
-     "label": "Sit by the hearth \u2014 rest"
-    },
-    {
-     "kind": "ledger",
-     "id": "study_desk",
-     "pos": [
-      22.8,
-      9.8
-     ],
-     "r": 110,
-     "label": "Your ledger \u2014 accounts, journal & upgrades"
     },
     {
      "kind": "counter",
@@ -1842,32 +1404,32 @@
      17.2
     ],
     "loom": [
-     14.0,
-     20.6
+     107.0,
+     42.6
     ],
     "cutting_table": [
-     17.4,
-     20.6
+     110.4,
+     42.6
     ],
     "arcane_crucible": [
-     1.6,
-     20.6
+     113.6,
+     42.6
     ],
     "spellbinding_array": [
-     5.4,
-     20.6
+     117.4,
+     42.6
     ],
     "leyline_conductor": [
-     8.0,
-     19.7
+     120.0,
+     41.7
     ],
     "arcane_anvil": [
-     10.3,
-     21.6
+     122.3,
+     43.6
     ],
     "aetheric_stabilizer": [
-     10.6,
-     19.4
+     122.6,
+     41.4
     ]
    },
    "customer_rooms": [
@@ -1881,11 +1443,12 @@
       "shop",
       "forge_room",
       "stock_hall",
+      "loft_landing",
       "study"
      ],
      "price": 0,
      "occupant": "Brannoc Ironhand",
-     "desc": "A modest shopfront, a smoky smithing hall, a narrow stock hall and a back room with a cot."
+     "desc": "A modest shopfront, a smoky smithing hall and a narrow stock hall \u2014 and up the stair, a small room under the roof with a cot."
     },
     {
      "id": "cobbler",
@@ -1922,29 +1485,34 @@
     },
     {
      "id": "chandler",
-     "name": "Chandler's Storeroom",
+     "name": "The Cellar Dig",
      "rooms": [
+      "cellar_stair",
       "material_store"
      ],
-     "price": 240,
-     "occupant": "Pell's chandlery (storage)",
-     "desc": "Dry, with a loading door to the yard. Room for ore, coal and hides.",
-     "becomes": "a material store"
+     "price": 300,
+     "floor": "basement",
+     "requires": "start",
+     "occupant": "solid earth under the stock hall",
+     "desc": "Dig out a dry cellar under the smithy: a stair down from the stock hall and a store-room for ore, coal and hides.",
+     "becomes": "a cellar store, reached by a stair from the stock hall"
     },
     {
      "id": "cellar",
-     "name": "The Old Dye-Works",
+     "name": "The Deep Vault",
      "rooms": [
       "arcane_room"
      ],
      "price": 950,
-     "occupant": "nobody \u2014 sealed since the dye-works closed",
-     "desc": "A long stone vault with old vats and strange stains. Thick walls, fit to hold arcane energies.",
+     "floor": "basement",
+     "requires": "chandler",
+     "occupant": "the old dye-works' foundations",
+     "desc": "Dig on under the cellar into the old dye-works' foundations: a long vault with thick stone walls, fit to hold arcane energies.",
      "becomes": "an arcane foundry"
     },
     {
      "id": "apartment",
-     "name": "The Ashby Apartment",
+     "name": "The Household Wing",
      "rooms": [
       "living",
       "bedroom",
@@ -1952,15 +1520,15 @@
       "pantry"
      ],
      "price": 700,
-     "occupant": "the Ashby family",
-     "desc": "A proper home: a living room with a hearth, a bedroom, storage and a pantry with a bath.",
+     "floor": "loft",
+     "occupant": "the Ashby family's old rooms under the roof",
+     "desc": "The rest of the roof space beside your quarters: a living room with a hearth, a bedroom, storage and a pantry with a bath.",
      "becomes": "your home"
     },
     {
      "id": "loft",
      "name": "Ilse's Loft",
      "rooms": [
-      "loft_landing",
       "loft_weaving"
      ],
      "price": 650,
@@ -1979,6 +1547,7 @@
      ],
      "price": 480,
      "floor": "loft",
+     "requires": "loft",
      "occupant": "the reeve's archive (old tithe rolls nobody reads)",
      "desc": "Two quiet rooms under the west roof: one warm over the forge, one cool over the stone rune room.",
      "becomes": "a drying loft for herbs and a rune scriptorium"
@@ -2015,7 +1584,8 @@
     "loft_landing": "store",
     "loft_weaving": "workshop",
     "loft_drying": "workshop",
-    "loft_scriptorium": "workshop"
+    "loft_scriptorium": "workshop",
+    "cellar_stair": "store"
    },
    "sign_side": -1,
    "room_disciplines": {
@@ -2036,8 +1606,8 @@
      "rect": [
       0,
       0,
-      30,
-      23
+      19,
+      18
      ],
      "entrance": [
       14.0,
@@ -2051,7 +1621,7 @@
      "rect": [
       100,
       18,
-      19,
+      30,
       16
      ],
      "entrance": [
@@ -2088,7 +1658,40 @@
      ],
      "units": [
       "loft",
-      "garret"
+      "garret",
+      "apartment"
+     ]
+    },
+    {
+     "id": "basement",
+     "name": "The Cellar",
+     "area": "smithy_basement",
+     "rect": [
+      100,
+      40,
+      24,
+      8
+     ],
+     "below": true,
+     "entrance": [
+      102.5,
+      43.2
+     ],
+     "stairs": [
+      102.5,
+      41.4
+     ],
+     "down_stairs": [
+      17.7,
+      8.1
+     ],
+     "arrive_down": [
+      16.2,
+      8.4
+     ],
+     "units": [
+      "chandler",
+      "cellar"
      ]
     }
    ],
@@ -2116,6 +1719,18 @@
      30.85,
      1.5,
      1.5
+    ],
+    [
+     16.849999999999998,
+     7.0,
+     1.7,
+     2.2
+    ],
+    [
+     101.65,
+     40.3,
+     1.7,
+     2.2
     ]
    ],
    "lift": {
@@ -6080,7 +5695,7 @@
    "rect": [
     118,
     52,
-    19,
+    30,
     16
    ],
    "floor": "floor_wood",
@@ -6154,18 +5769,406 @@
      15.5,
      0,
      "own"
+    ],
+    [
+     "bed",
+     20.2,
+     3.6,
+     0
+    ],
+    [
+     "desk_ledger",
+     23.3,
+     2.6,
+     90
+    ],
+    [
+     "bookshelf",
+     21.8,
+     0.55,
+     0
+    ],
+    [
+     "dresser",
+     22.6,
+     5.3,
+     0
+    ],
+    [
+     "candle",
+     23.3,
+     2.4,
+     0
+    ],
+    [
+     "vase",
+     19.6,
+     0.7,
+     0
+    ],
+    [
+     "dining_table",
+     27.0,
+     3.6,
+     0
+    ],
+    [
+     "chair",
+     25.4,
+     3.6,
+     0
+    ],
+    [
+     "chair",
+     28.6,
+     3.6,
+     0
+    ],
+    [
+     "fireplace",
+     28.0,
+     0.7,
+     0
+    ],
+    [
+     "cupboard",
+     29.4,
+     5.4,
+     90
+    ],
+    [
+     "trophy_wall",
+     25.6,
+     0.55,
+     0
+    ],
+    [
+     "chair",
+     25.2,
+     1.6,
+     0
+    ],
+    [
+     "candle",
+     27.0,
+     3.4,
+     0
+    ],
+    [
+     "bed_double",
+     28.6,
+     9.6,
+     0
+    ],
+    [
+     "nightstand",
+     26.9,
+     9.6,
+     0
+    ],
+    [
+     "dresser",
+     25.0,
+     14.8,
+     0
+    ],
+    [
+     "wardrobe",
+     29.3,
+     13.6,
+     90
+    ],
+    [
+     "rug_brown",
+     27.2,
+     12.6,
+     0
+    ],
+    [
+     "candle",
+     26.9,
+     9.5,
+     0
+    ],
+    [
+     "chest",
+     23.2,
+     7.4,
+     0
+    ],
+    [
+     "chest",
+     20.0,
+     9.9,
+     0
+    ],
+    [
+     "wardrobe",
+     19.6,
+     7.6,
+     90
+    ],
+    [
+     "bath_tub",
+     22.6,
+     14.6,
+     0
+    ],
+    [
+     "kitchen_stove",
+     20.2,
+     11.9,
+     0
+    ],
+    [
+     "shelf",
+     23.4,
+     12.6,
+     90
+    ],
+    [
+     "produce_crate",
+     20.2,
+     14.8,
+     0
     ]
    ],
    "spots": {
     "smithy_loft_inside": [
      14.5,
      3.6
+    ],
+    "quarters_table": [
+     27.0,
+     2.4
+    ],
+    "quarters_bed": [
+     27.0,
+     11.4
+    ]
+   },
+   "interact": [
+    {
+     "kind": "bed",
+     "id": "cot",
+     "pos": [
+      20.2,
+      3.6
+     ],
+     "r": 100,
+     "label": "Your cot \u2014 sleep until morning (autosave)"
+    },
+    {
+     "kind": "ledger",
+     "id": "study_desk",
+     "pos": [
+      23.3,
+      2.6
+     ],
+     "r": 110,
+     "label": "Your ledger \u2014 accounts, journal & upgrades"
+    },
+    {
+     "kind": "property",
+     "id": "deeds",
+     "pos": [
+      21.8,
+      0.9
+     ],
+     "r": 100,
+     "label": "Deeds, plans & workshop equipment"
+    },
+    {
+     "kind": "customize",
+     "id": "mirror",
+     "pos": [
+      22.6,
+      5.0
+     ],
+     "r": 90,
+     "label": "Mirror \u2014 change your appearance"
+    },
+    {
+     "kind": "vase",
+     "id": "quarters",
+     "pos": [
+      19.6,
+      1.0
+     ],
+     "r": 80,
+     "label": "The vase"
+    },
+    {
+     "kind": "bed",
+     "id": "player_bed",
+     "pos": [
+      28.6,
+      9.6
+     ],
+     "r": 120,
+     "label": "Your bed \u2014 sleep until morning (autosave)"
+    },
+    {
+     "kind": "customize",
+     "id": "bedroom_mirror",
+     "pos": [
+      25.0,
+      14.8
+     ],
+     "r": 90,
+     "label": "Mirror \u2014 change your appearance"
+    },
+    {
+     "kind": "bed",
+     "id": "armchair",
+     "pos": [
+      25.2,
+      1.6
+     ],
+     "r": 90,
+     "label": "Sit by the hearth \u2014 rest"
+    }
+   ],
+   "plan_offset": [
+    100,
+    18
+   ],
+   "floor_of": "smithy"
+  },
+  {
+   "id": "smithy_basement",
+   "name": "The Cellar \u2014 Ironhand Forge",
+   "rect": [
+    118,
+    74,
+    24,
+    8
+   ],
+   "floor": "floor_stone",
+   "furniture": [
+    [
+     "stone_blocks",
+     3.0,
+     5.5,
+     0,
+     "occ"
+    ],
+    [
+     "stone_blocks",
+     8.5,
+     4.0,
+     0,
+     "occ"
+    ],
+    [
+     "sack",
+     6.0,
+     6.8,
+     0,
+     "occ"
+    ],
+    [
+     "stone_blocks",
+     15.0,
+     4.0,
+     0,
+     "occ"
+    ],
+    [
+     "stone_blocks",
+     20.0,
+     5.0,
+     0,
+     "occ"
+    ],
+    [
+     "crate",
+     18.0,
+     6.8,
+     0,
+     "occ"
+    ],
+    [
+     "coal_pile",
+     6.0,
+     6.8,
+     0,
+     "own"
+    ],
+    [
+     "ore_pile",
+     8.0,
+     7.2,
+     0,
+     "own"
+    ],
+    [
+     "barrel",
+     11.3,
+     0.8,
+     0,
+     "own"
+    ],
+    [
+     "crate",
+     9.6,
+     7.2,
+     0,
+     "own"
+    ],
+    [
+     "grain_sacks",
+     11.2,
+     6.9,
+     0,
+     "own"
+    ],
+    [
+     "ingredient_crates",
+     6.0,
+     5.4,
+     0,
+     "own"
+    ],
+    [
+     "leather_bundle",
+     11.2,
+     5.4,
+     0,
+     "own"
+    ],
+    [
+     "candle",
+     1.0,
+     0.6,
+     0,
+     "own"
+    ],
+    [
+     "arcane_glyph_decal",
+     17.4,
+     2.6,
+     0,
+     "ws:arcane"
+    ],
+    [
+     "arcane_rack",
+     15.4,
+     7.3,
+     0,
+     "ws:arcane"
+    ]
+   ],
+   "spots": {
+    "smithy_basement_inside": [
+     2.5,
+     4.5
     ]
    },
    "interact": [],
    "plan_offset": [
     100,
-    18
+    40
    ],
    "floor_of": "smithy"
   }
@@ -6522,6 +6525,12 @@
     0.5,
     32.5,
     8,
+    8
+   ],
+   [
+    41,
+    58,
+    6,
     8
    ]
   ]
@@ -8460,5 +8469,133 @@
    58.0,
    36.4
   ]
- ]
+ ],
+ "millpond": {
+  "center": [
+   42.6,
+   42.6
+  ],
+  "radius": [
+   4.4,
+   3.3
+  ],
+  "wobble": 0.13,
+  "seed": 9,
+  "dock": [
+   37.6,
+   41.6,
+   2.2,
+   1.0
+  ],
+  "reeds": [
+   [
+    38.6,
+    39.6
+   ],
+   [
+    39.6,
+    38.9
+   ],
+   [
+    44.6,
+    38.9
+   ],
+   [
+    46.4,
+    39.9
+   ],
+   [
+    47.2,
+    41.6
+   ],
+   [
+    47.0,
+    44.2
+   ],
+   [
+    45.6,
+    46.0
+   ],
+   [
+    38.4,
+    44.9
+   ],
+   [
+    39.4,
+    46.0
+   ],
+   [
+    41.6,
+    46.6
+   ]
+  ],
+  "lilies": [
+   [
+    41.0,
+    41.8
+   ],
+   [
+    44.4,
+    43.6
+   ],
+   [
+    42.8,
+    40.4
+   ]
+  ],
+  "ducks": [
+   [
+    42.0,
+    42.0
+   ],
+   [
+    43.8,
+    41.0
+   ]
+  ]
+ },
+ "millstream": {
+  "width": 1.25,
+  "points": [
+   [
+    43.4,
+    45.6
+   ],
+   [
+    44.0,
+    48.6
+   ],
+   [
+    43.4,
+    51.6
+   ],
+   [
+    44.4,
+    54.8
+   ],
+   [
+    43.8,
+    58.4
+   ],
+   [
+    44.6,
+    61.6
+   ],
+   [
+    44.2,
+    65.5
+   ]
+  ]
+ },
+ "watermill": {
+  "pos": [
+   47.2,
+   52.6
+  ],
+  "wheel": [
+   45.1,
+   52.8
+  ],
+  "label": "The watermill \u2014 its wheel turning in the millstream"
+ }
 }

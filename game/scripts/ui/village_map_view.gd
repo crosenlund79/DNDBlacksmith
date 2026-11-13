@@ -249,6 +249,10 @@ static func venue_world_pos(w: VillageWorld, id: String) -> Vector2:
 	var v := Venues.get_v(id)
 	var bid := str(v.get("building", ""))
 	if bid != "" and w.buildings.has(bid) and not w.buildings[bid].get("area", false):
+		# v1.7 #67: at the building's real entrance (its doorstep), not the middle of its south wall — the smithy's
+		# door is in its north wall, so the old marker sat at the back of the building
+		if w.spots.has(bid + "_door_out"):
+			return w.spots[bid + "_door_out"]
 		var r: Rect2 = w.buildings[bid]["rect"]
 		return Vector2(r.get_center().x, r.end.y - 8.0)
 	return w.spots.get(str(v.get("spot", "")), Vector2.INF)

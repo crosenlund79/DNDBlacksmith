@@ -29,6 +29,11 @@
     "duration": 30.0,
     "loop": true
   },
+  "amb/watermill_loop": {
+    "bus": "Ambience",
+    "duration": 24.0,
+    "loop": true
+  },
   "amb/wind_loop": {
     "bus": "Ambience",
     "duration": 30.0,

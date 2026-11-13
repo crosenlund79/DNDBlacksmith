@@ -89,7 +89,7 @@ func _build() -> void:
 		tabs_row.add_child(UIKit.label("Floor:", 19, "body_italic", UIKit.INK))
 		for f in Property.floors():
 			var fid := str(f["id"])
-			var fb := UIKit.button(str(f.get("name", fid)) + ("" if Property.floor_owned(fid) else " (for sale)"), func(): set_floor(fid), 0)
+			var fb := UIKit.button(str(f.get("name", fid)) + ("" if Property.floor_owned(fid) else (" (to dig)" if bool(f.get("below", false)) else " (for sale)")), func(): set_floor(fid), 0)
 			fb.disabled = floor_id == fid
 			fb.name = "Floor_" + fid
 			tabs_row.add_child(fb)
@@ -128,12 +128,14 @@ func _side_property() -> void:
 			("\nIt would make %s." % u.get("becomes", "")) if stt != "owned" and u.get("becomes", "") != "" else ""], 19))
 		if stt == "available":
 			var price := Property.unit_price(selected_unit)
-			var b := UIKit.button("Buy for %d gold" % price, func(): _buy_unit(selected_unit), 320)
+			var dig := bool(Property.floor_def(str(Property.unit(selected_unit).get("floor", "ground"))).get("below", false))
+			var b := UIKit.button(("Dig it out for %d gold" if dig else "Buy for %d gold") % price, func(): _buy_unit(selected_unit), 320)
 			b.disabled = not Game.can_afford(price)
 			side.add_child(b)
 		elif stt == "unavailable":
 			var req := str(u.get("requires", ""))
-			side.add_child(UIKit.label(("Buy %s first — the way up is through there." % Property.unit(req).get("name", req)) if req != "" else "Not next to anything you own yet.", 19, "body_italic"))
+			var below := bool(Property.floor_def(str(Property.unit(selected_unit).get("floor", "ground"))).get("below", false))
+			side.add_child(UIKit.label(("%s %s first — the way %s is through there." % ["Dig" if below else "Buy", Property.unit(req).get("name", req), "down" if below else "up"]) if req != "" else "Not next to anything you own yet.", 19, "body_italic"))
 	if Property.floors().size() > 1 and (show_lift or Property.floor_owned("loft")):
 		side.add_child(UIKit.divider())
 		side.add_child(_lift_box())

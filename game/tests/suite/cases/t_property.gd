@@ -16,7 +16,8 @@ func test_expand_and_persist() -> void:
 	Game.state["gold"] = 6000
 	check(Property.buy_unit("cellar") != "", "4. a room that does not adjoin cannot be bought")
 	eq(Property.buy_unit("cobbler"), "", "4. buy the cobblery")
-	eq(Property.buy_unit("cellar"), "", "4. then the vault behind it")
+	eq(Property.buy_unit("chandler"), "", "4. dig the cellar (v1.7: the basement is dug, not bought from a neighbour)")
+	eq(Property.buy_unit("cellar"), "", "4. then the vault beyond it")
 	var st_ok := Property.buy_station("rune_engraving_stand")
 	if st_ok != "":
 		note("rune engraving stand not purchasable yet: " + st_ok)
@@ -25,7 +26,7 @@ func test_expand_and_persist() -> void:
 	eq(Property.place(plan, "rune_engraving_stand", Vector2(3.5, 13.0)), "", "6. place a station in the bought room")
 	check(Property.place(plan, "anvil", Vector2(10.0, 4.0)) != "", "6. a station cannot straddle a wall")
 	eq(Property.place(plan, "grinding_wheel", Vector2(5.0, 15.5)), "", "6. relocate the grinding wheel into the new room")
-	eq(Property.split(plan, "arcane_room", true, 6), "", "5. a partition divides the vault")
+	eq(Property.split(plan, "arcane_room", true, 118), "", "5. a partition divides the vault (in the basement, plan x 118)")
 	eq(Property.add_door(plan, "forge_room", "rune_room", 6), "", "5. a second doorway is cut")
 	eq(Property.validate(plan), "", "5. the new layout keeps everything reachable")
 	eq(Property.commit(plan), "", "the plan is applied")

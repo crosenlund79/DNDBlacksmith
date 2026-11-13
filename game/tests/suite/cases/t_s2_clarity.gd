@@ -207,7 +207,10 @@ func test_floor_drops_keep_clear() -> void:
 		var bp: Vector2 = e["pos"]
 		check(not sp_rect.intersects(Rect2(bp - Vector2(32, 24), Vector2(64, 48))), "bag %s is not under the stair's picture" % str(e["id"]))
 		check(bp.distance_to(stair_e["pos"]) > float(stair_e["r"]), "bag %s does not compete with the stair for [E] (%.0f px)" % [str(e["id"]), bp.distance_to(stair_e["pos"])])
-		eq(w.room_at("smithy", bp), "stock_hall", "bag %s lies in the stock hall" % str(e["id"]))
+		# v1.7: the compact stock hall (with the cellar stair) holds fewer piles; the rest go to the nearest workroom —
+		# never the shopfront or the household's rooms
+		check(w.room_at("smithy", bp) in ["stock_hall", "forge_room", "rune_room", "alchemy_room", "leather_room"],
+			"bag %s lies in the stock hall or the next workroom (%s)" % [str(e["id"]), w.room_at("smithy", bp)])
 	eq(bags, 6, "all six returns are drawn")
 	_unmount(w)
 	# the Project Bench's crates keep the same rule
@@ -455,7 +458,7 @@ func test_forge_night_light() -> void:
 # ------------------------------------------------------------------ OBS-21: apprentices at their stations
 ## The room [id, world rect] holding `pos`, on the ground floor or the Loft.
 func _room_of(w: VillageWorld, pos: Vector2) -> Array:
-	for bid in ["smithy", "smithy_loft"]:
+	for bid in ["smithy", "smithy_loft", "smithy_basement"]:   # v1.7: the basement is a floor too
 		for rm in w.buildings.get(bid, {}).get("rooms", []):
 			if (rm["rect"] as Rect2).has_point(pos):
 				return [str(rm["id"]), rm["rect"]]

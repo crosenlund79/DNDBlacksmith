@@ -993,6 +993,8 @@ func _build_outdoors() -> void:
 	for name in DB.layout.get("outdoor_spots", {}):
 		spots[name] = tp(DB.layout["outdoor_spots"][name])
 	_build_pond()
+	_build_pond("millpond")   # v1.7 (#65): the natural millpond on the ground the compact smithy freed
+	_build_millstream()       # …its outflow off the map, and the watermill (scenery and sound only)
 	_build_harbour()
 	_build_outdoor_props()
 	Village10.build_outdoors(self)   # iteration 010: overhead bunting, venue interactables, the caravan camp
@@ -1094,22 +1096,24 @@ func _plank_deck(r: Rect2, vertical: bool) -> void:
 var _ducks: Array = []
 
 
-func _build_pond() -> void:
-	var pd: Dictionary = DB.layout.get("pond", {})
+func _build_pond(key := "pond") -> void:
+	var pd: Dictionary = DB.layout.get(key, {})
 	if pd.is_empty():
 		return
 	var c := tp(pd["center"])
 	var rad := tp(pd["radius"])
-	_water_body(_ellipse_poly(c, rad, 40, 0.06, 5))
-	var jr: Array = pd.get("jetty", [])
+	var wob := float(pd.get("wobble", 0.06))
+	var seed_ := int(pd.get("seed", 5))
+	_water_body(_ellipse_poly(c, rad, 48, wob, seed_))
+	var jr: Array = pd.get("jetty", pd.get("dock", []))
 	var jetty := Rect2()
 	if jr.size() == 4:
 		jetty = Rect2(tp([jr[0], jr[1]]), Vector2(float(jr[2]), float(jr[3])) * T)
-		_plank_deck(jetty, true)
+		_plank_deck(jetty, pd.has("jetty"))
 		for py in [jetty.position.y + 10, jetty.position.y + jetty.size.y * 0.5]:
 			for px in [jetty.position.x - 4, jetty.end.x + 4]:
 				_sprite("props/mooring_post", Vector2(px, py), floor_layer).scale = Vector2(0.6, 0.6)
-	_water_collision(_ellipse_poly(c, rad * 0.9, 40, 0.06, 5), [jetty.grow(-6)])
+	_water_collision(_ellipse_poly(c, rad * 0.9, 48, wob, seed_), [jetty.grow(-6)])
 	for p in pd.get("lilies", []):
 		_prop("lily_pads", tp(p))
 	for p in pd.get("reeds", []):
@@ -1140,6 +1144,80 @@ func _build_pond() -> void:
 			tw.tween_interval(rng.randf_range(1.5, 4.0))
 			prev = nxt
 		_ducks.append(duck)
+
+
+# ----------------------------------------------------------------------- v1.7 (#65–66): the millstream and the watermill
+var mill_wheel: Sprite2D
+
+
+## The millpond's outflow: banks, water and a ripple line running south past the mill and off the map (no crossing
+## needed: nothing lies beyond it but the woods); and the watermill on its east bank, its wheel turning in the stream
+## and its sound by the water. Scenery and sound only — no milling, fishing or water supply.
+func _build_millstream() -> void:
+	var ms: Dictionary = DB.layout.get("millstream", {})
+	if ms.is_empty():
+		return
+	var pts := _smooth(ms["points"])
+	var wpx := float(ms["width"]) * T
+	VillageGround.soft_strip(ground_layer, pts, wpx * 0.5 + 6.0, wpx * 0.5 + 64.0, Color(0.46, 0.36, 0.22, 0.42))
+	VillageGround.soft_strip(ground_layer, pts, wpx * 0.5, wpx * 0.5 + 20.0, Color(0.3, 0.23, 0.14, 0.5), false)
+	var bank := Line2D.new()
+	bank.points = pts
+	bank.width = wpx + 10
+	bank.default_color = INK
+	ground_layer.add_child(bank)
+	var water := Line2D.new()
+	water.points = pts
+	water.width = wpx
+	water.texture = Assets.get_tex("textures/water", Vector2i(256, 256))
+	water.texture_mode = Line2D.LINE_TEXTURE_TILE
+	water.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	ground_layer.add_child(water)
+	# the water cannot be walked: a thin polygon along the stream
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	for i in pts.size():
+		var a := pts[maxi(0, i - 1)]
+		var b := pts[mini(pts.size() - 1, i + 1)]
+		var n := (b - a).normalized().orthogonal() * wpx * 0.45
+		left.append(pts[i] + n)
+		right.append(pts[i] - n)
+	right.reverse()
+	_water_collision(left + right, [])
+	for p in pts:
+		_veg_mark(p, wpx * 0.5 + T * 0.9, 3)
+	var wm: Dictionary = DB.layout.get("watermill", {})
+	if wm.is_empty():
+		return
+	var mp := tp(wm["pos"])
+	var house := Node2D.new()
+	house.name = "Watermill"
+	house.position = mp + Vector2(0, 60)
+	var hs := Sprite2D.new()
+	hs.texture = Assets.get_tex("props/watermill", Vector2i(192, 176))
+	hs.position = Vector2(0, -60)
+	house.add_child(hs)
+	ysort.add_child(house)
+	_solid(Rect2(mp - Vector2(80, 66), Vector2(160, 132)))
+	_veg_mark(mp, T * 2.4, 3)
+	mill_wheel = Sprite2D.new()
+	mill_wheel.name = "MillWheel"
+	mill_wheel.texture = Assets.get_tex("props/mill_wheel", Vector2i(120, 120))
+	mill_wheel.position = tp(wm["wheel"])
+	mill_wheel.z_index = 2
+	add_child(mill_wheel)
+	var tw := mill_wheel.create_tween().set_loops()
+	tw.tween_property(mill_wheel, "rotation", TAU, 8.0).from(0.0)
+	var snd := AudioStreamPlayer2D.new()
+	snd.name = "MillSound"
+	snd.stream = Audio.get_stream("amb/watermill_loop")
+	snd.bus = "Ambience"
+	snd.max_distance = 1100.0
+	snd.attenuation = 1.6
+	snd.volume_db = -4.0
+	snd.position = mp
+	snd.autoplay = true
+	add_child(snd)
 
 
 # ----------------------------------------------------------------------- the harbour
@@ -2521,14 +2599,16 @@ func _smithy_view(src: Dictionary, fid := "ground") -> Dictionary:
 		open.append(d2)
 	b["room_doors"] = open
 	b["furniture"] = _smithy_furniture(src, fid)
+	# interactables only in rooms he owns — on every floor (v1.7: the quarters and the household wing are in the Loft;
+	# an area's positions are its own, so the floor's plan offset finds the room)
+	var inter := []
+	for it in src.get("interact", []):
+		var ip: Array = it["pos"]
+		var host := Property.room_at_tile(Property.rooms(), Vector2(float(ip[0]), float(ip[1])) + (off if fid != "ground" else Vector2.ZERO))
+		if not host.is_empty() and Property.room_owned(host):
+			inter.append(it)
+	b["interact"] = inter
 	if fid == "ground":
-		var inter := []
-		for it in src.get("interact", []):
-			var ip: Array = it["pos"]
-			var host := Property.room_at_tile(Property.rooms(), Vector2(float(ip[0]), float(ip[1])))
-			if not host.is_empty() and Property.room_owned(host):
-				inter.append(it)
-		b["interact"] = inter
 		b["spots"] = _smithy_spots(src)
 	return b
 
@@ -2798,7 +2878,9 @@ func _smithy_overlays(r: Rect2, fid := "ground") -> void:
 		var u := Property.unit(str(rm.get("unit", "")))
 		var rr := Property.rect(rm)
 		var lab := Label.new()
-		lab.text = "%s\n%s" % [u.get("name", "Private"), ("For sale — %d g (see Property & Workshop)" % Property.unit_price(str(u.get("id", "")))) if Property.unit_state(str(u.get("id", ""))) == "available" else "Private"]
+		var dig := bool(Property.floor_def(str(u.get("floor", "ground"))).get("below", false))   # v1.7: the basement is dug, not bought
+		lab.text = "%s\n%s" % [u.get("name", "Private"), ("%s — %d g (see Property & Workshop)" % ["To dig" if dig else "For sale", Property.unit_price(str(u.get("id", "")))])
+			if Property.unit_state(str(u.get("id", ""))) == "available" else ("Solid earth" if dig else "Private")]
 		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lab.add_theme_font_override("font", Assets.font("heading_italic"))
 		lab.add_theme_font_size_override("font_size", 22)
@@ -2962,10 +3044,12 @@ func _floor_links(fid: String) -> void:
 		var sk := "down_stairs" if here_ground else "stairs"
 		if f.has(sk):
 			var sp := bpos(Property.BID, float(f[sk][0]), float(f[sk][1]))
-			var spr := _sprite("props/stairs_up" if here_ground else "props/stairs_down", sp, floor_layer)
+			var below := bool(f.get("below", false))   # v1.7: the basement lies under the stock hall
+			var spr := _sprite("props/stairs_up" if here_ground != below else "props/stairs_down", sp, floor_layer)
 			spr.z_index = 1
+			var fname := Property.floor_name(up).replace("The ", "the ")
 			_add_interactable(sp, 80.0, "stairs", area_id if here_ground else Property.BID,
-				"Stair — up to %s" % Property.floor_name(up).replace("The ", "the ") if here_ground else "Stair — down to the stock hall")
+				("Stair — %s to %s" % ["down" if below else "up", fname]) if here_ground else ("Stair — %s to the stock hall" % ("up" if below else "down")))
 			var ak := "arrive_down" if here_ground else "entrance"
 			spots["stairs_" + (Property.BID if here_ground else area_id)] = bpos(Property.BID, float(f[ak][0]), float(f[ak][1]))
 		var lk := "down_lift" if here_ground else "lift"

@@ -1067,7 +1067,8 @@ func test_h_schema4_save_with_apprentices_tasks_and_stations() -> void:
 	check(save_as_version("lwacc_v4", 4), "written as a schema-4 save")
 	check(Saves.load_slot("lwacc_v4"), "it loads through the real loader")
 	Saves.delete("lwacc_v4")
-	eq(Saves.last_load.get("migration", {}).get("steps", []), ["worker professions", "workshop knowledge", "station instances and work orders"], "steps 5, 6 and 7 run, once each")
+	eq(Saves.last_load.get("migration", {}).get("steps", []), ["worker professions", "workshop knowledge", "station instances and work orders", "the compact smithy"],
+		"steps 5, 6, 7 and (v1.7) 8 run, once each")
 	for a in Apprentices.staff():
 		check(Workers.PROFESSIONS.has(str(a.get("profession", ""))), "%s has a profession again (%s)" % [a["name"], a.get("profession", "")])
 	check(WorkshopKnowledge.knows_design(EMBER), "the workshop knows its Designs again")

@@ -204,13 +204,13 @@ func test_migration_station_instances_golden_saves() -> void:
 		var data := _golden_data(g)
 		if not check(not data.is_empty(), "%s loads as data" % g):
 			continue
-		SaveMigrations.run(data, Game.SAVE_VERSION - 1)
+		SaveMigrations.run(data, 6)   # the schema before station instances (step 7; v1.7 added step 8 after it)
 		var before := JSON.stringify(data.get("property", {}), "", true)
-		SaveMigrations.apply_step(Game.SAVE_VERSION, data)
+		SaveMigrations.apply_step(7, data)
 		var after := JSON.stringify(data.get("property", {}), "", true)
 		eq(after, before, "%s: the layout is unchanged — every station is instance #1 under its own id" % g)
 		var again := JSON.stringify(data, "", true)
-		SaveMigrations.apply_step(Game.SAVE_VERSION, data)
+		SaveMigrations.apply_step(7, data)
 		eq(JSON.stringify(data, "", true), again, "%s: the step is idempotent" % g)
 	# a doubled storage entry is tidied once
 	_workshop()
@@ -467,7 +467,7 @@ func test_migration_work_orders() -> void:
 	for k in ["stages", "stages_for", "uid", "handoff"]:
 		t.erase(k)
 	var taken := JSON.stringify(t["taken"])
-	check(save_as_version("suite_lw_wo5", Game.SAVE_VERSION - 1), "written as the previous schema")
+	check(save_as_version("suite_lw_wo5", 6), "written as schema 6 (before work orders)")
 	check(Saves.load_slot("suite_lw_wo5"), "it loads")
 	Saves.delete("suite_lw_wo5")
 	var t2 := Apprentices.task(tid)

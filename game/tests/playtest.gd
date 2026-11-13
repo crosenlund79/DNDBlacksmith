@@ -4108,3 +4108,9 @@ func phase_lvw_ironfront() -> void:
 func phase_lvw_ui() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_ui(self)
+
+
+## The compact smithy, the Loft quarters, the dug cellar and the millpond with its watermill (tests/playtest_lvw.gd).
+func phase_lvw_layout() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_layout(self)
