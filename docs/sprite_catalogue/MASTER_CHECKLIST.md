@@ -1,0 +1,995 @@
+# Ember & Ash — Master drawing checklist
+
+Every picture to draw, by category (canonical priority order) and then by drawing priority: **A (missing)** → **A** → **B** → **C**. Unused templates are left out. Tick a box when your file is saved as the given path under `game/assets/sprites/`. Reference numbers match [the catalogue](SPRITE_ARTIST_CATALOGUE.md), the contact sheets and `sprite_inventory.csv`.
+
+Masks (`*_mask`) are listed with their layer; station bases are optional (generated).
+
+## 1. Characters, NPCs, adventurers & hirelings (162)
+
+### Priority A (48)
+
+- [ ] **1.001** `chars/player` — The blacksmith (player), default look · 768×512 · 6×4 sheet
+- [ ] **1.002** `chars/aldric` — Aldric Pell — Grocer · 768×512 · 6×4 sheet
+- [ ] **1.003** `chars/barnaby` — Barnaby Quill — Ironfront enthusiast and host of the basement war-room · 768×512 · 6×4 sheet
+- [ ] **1.004** `chars/caravan_master` — Ottavio Brask — Caravan Master · 768×512 · 6×4 sheet
+- [ ] **1.005** `chars/eda` — Eda Rook — Washerwoman · 768×512 · 6×4 sheet
+- [ ] **1.006** `chars/hale_elder` — Bram Hale — Keeper of Beasts · 768×512 · 6×4 sheet
+- [ ] **1.007** `chars/hale_younger` — Ellery Hale — Keeper of Curious Creatures · 768×512 · 6×4 sheet
+- [ ] **1.008** `chars/harbourmaster` — Captain Hal Brackwater — Harbourmaster · 768×512 · 6×4 sheet
+- [ ] **1.009** `chars/herbalist` — Maud Fennimore — Herbalist · 768×512 · 6×4 sheet
+- [ ] **1.010** `chars/hilde` — Hilde Brask — Innkeeper of the Tipsy Wyvern · 768×512 · 6×4 sheet
+- [ ] **1.011** `chars/jory` — Jory Thatch — Farmer · 768×512 · 6×4 sheet
+- [ ] **1.012** `chars/martha` — Old Martha — Widow · 768×512 · 6×4 sheet
+- [ ] **1.013** `chars/oswin` — Father Oswin — Priest of the Dawn · 768×512 · 6×4 sheet
+- [ ] **1.014** `chars/pawnbroker` — Silas Quell — Pawnbroker · 768×512 · 6×4 sheet
+- [ ] **1.015** `chars/rival_smith` — Maren Tallowgate — Smith of the Salt Anvil · 768×512 · 6×4 sheet
+- [ ] **1.016** `chars/tobin` — Tobin Dunmore — Carpenter · 768×512 · 6×4 sheet
+- [ ] **1.017** `chars/wenna` — Wenna — Barmaid · 768×512 · 6×4 sheet
+- [ ] **1.018** `chars/applicant_0` — Hireling look 0 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.019** `chars/applicant_1` — Hireling look 1 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.020** `chars/applicant_2` — Hireling look 2 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.021** `chars/applicant_3` — Hireling look 3 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.022** `chars/applicant_4` — Hireling look 4 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.023** `chars/applicant_5` — Hireling look 5 (applicant / hireling / apprentice / steward) · 768×512 · 6×4 sheet
+- [ ] **1.024** `chars/borin` — Borin Flintbeard — Miner & procurer · 768×512 · 6×4 sheet
+- [ ] **1.053** `portraits/aldric` — Portrait — Aldric Pell · 256×256
+- [ ] **1.054** `portraits/applicant_0` — Portrait — hireling look 0 · 256×256
+- [ ] **1.055** `portraits/applicant_1` — Portrait — hireling look 1 · 256×256
+- [ ] **1.056** `portraits/applicant_2` — Portrait — hireling look 2 · 256×256
+- [ ] **1.057** `portraits/applicant_3` — Portrait — hireling look 3 · 256×256
+- [ ] **1.058** `portraits/applicant_4` — Portrait — hireling look 4 · 256×256
+- [ ] **1.059** `portraits/applicant_5` — Portrait — hireling look 5 · 256×256
+- [ ] **1.060** `portraits/barnaby` — Portrait — Barnaby Quill · 256×256
+- [ ] **1.061** `portraits/borin` — Portrait — Borin Flintbeard · 256×256
+- [ ] **1.062** `portraits/caravan_master` — Portrait — Ottavio Brask · 256×256
+- [ ] **1.063** `portraits/eda` — Portrait — Eda Rook · 256×256
+- [ ] **1.064** `portraits/hale_elder` — Portrait — Bram Hale · 256×256
+- [ ] **1.065** `portraits/hale_younger` — Portrait — Ellery Hale · 256×256
+- [ ] **1.066** `portraits/harbourmaster` — Portrait — Captain Hal Brackwater · 256×256
+- [ ] **1.067** `portraits/herbalist` — Portrait — Maud Fennimore · 256×256
+- [ ] **1.068** `portraits/hilde` — Portrait — Hilde Brask · 256×256
+- [ ] **1.069** `portraits/jory` — Portrait — Jory Thatch · 256×256
+- [ ] **1.070** `portraits/martha` — Portrait — Old Martha · 256×256
+- [ ] **1.071** `portraits/oswin` — Portrait — Father Oswin · 256×256
+- [ ] **1.072** `portraits/pawnbroker` — Portrait — Silas Quell · 256×256
+- [ ] **1.073** `portraits/player` — Portrait — Brannoc Ironhand · 256×256
+- [ ] **1.074** `portraits/rival_smith` — Portrait — Maren Tallowgate · 256×256
+- [ ] **1.075** `portraits/tobin` — Portrait — Tobin Dunmore · 256×256
+- [ ] **1.076** `portraits/wenna` — Portrait — Wenna · 256×256
+
+### Priority B (56)
+
+- [ ] **1.025** `chars/celeste` — Celeste — Companion · 768×512 · 6×4 sheet
+- [ ] **1.026** `chars/lysa` — Lysa — Companion · 768×512 · 6×4 sheet
+- [ ] **1.027** `chars/roisin` — Róisín — Companion at the Velvet Lantern · 768×512 · 6×4 sheet
+- [ ] **1.028** `chars/rosalind` — Madam Rosalind — Keeper of the Velvet Lantern · 768×512 · 6×4 sheet
+- [ ] **1.029** `chars/elowen` — Elowen Vey · 768×512 · 6×4 sheet
+- [ ] **1.030** `chars/garrick` — Garrick Stone · 768×512 · 6×4 sheet
+- [ ] **1.031** `chars/kestra` — Kestra Dunmore · 768×512 · 6×4 sheet
+- [ ] **1.032** `chars/mira` — Mira Pell · 768×512 · 6×4 sheet
+- [ ] **1.033** `chars/pip` — Pip Underbough · 768×512 · 6×4 sheet
+- [ ] **1.034** `chars/rv_aldous` — Aldous Brack · 768×512 · 6×4 sheet
+- [ ] **1.035** `chars/rv_brenna` — Brenna Thorn · 768×512 · 6×4 sheet
+- [ ] **1.036** `chars/rv_corwin` — Corwin Ashby · 768×512 · 6×4 sheet
+- [ ] **1.037** `chars/rv_dagny` — Dagny Ironvein · 768×512 · 6×4 sheet
+- [ ] **1.038** `chars/rv_ewan` — Ewan Greyleaf · 768×512 · 6×4 sheet
+- [ ] **1.039** `chars/rv_fen` — Fen Marlow · 768×512 · 6×4 sheet
+- [ ] **1.040** `chars/rv_galen` — Galen Voss · 768×512 · 6×4 sheet
+- [ ] **1.041** `chars/rv_hesper` — Hesper Quill · 768×512 · 6×4 sheet
+- [ ] **1.042** `chars/rv_ivo` — Ivo Kettle · 768×512 · 6×4 sheet
+- [ ] **1.043** `chars/rv_juno` — Juno Sable · 768×512 · 6×4 sheet
+- [ ] **1.044** `chars/rv_korvak` — Korvak Redmaw · 768×512 · 6×4 sheet
+- [ ] **1.045** `chars/rv_liesl` — Liesl Harrow · 768×512 · 6×4 sheet
+- [ ] **1.046** `chars/rv_mattias` — Brother Mattias · 768×512 · 6×4 sheet
+- [ ] **1.047** `chars/rv_nell` — Nell Ashgrove · 768×512 · 6×4 sheet
+- [ ] **1.048** `chars/rv_oskar` — Oskar Fiddle · 768×512 · 6×4 sheet
+- [ ] **1.049** `chars/rv_perrin` — Perrin Lark · 768×512 · 6×4 sheet
+- [ ] **1.050** `chars/sigrun` — Sigrun Halvard · 768×512 · 6×4 sheet
+- [ ] **1.051** `chars/tomas` — Brother Tomas · 768×512 · 6×4 sheet
+- [ ] **1.052** `chars/varn` — Varn Ashfang · 768×512 · 6×4 sheet
+- [ ] **1.077** `portraits/celeste` — Portrait — Celeste · 256×256
+- [ ] **1.078** `portraits/elowen` — Portrait — Elowen Vey · 256×256
+- [ ] **1.079** `portraits/garrick` — Portrait — Garrick Stone · 256×256
+- [ ] **1.080** `portraits/kestra` — Portrait — Kestra Dunmore · 256×256
+- [ ] **1.081** `portraits/lysa` — Portrait — Lysa · 256×256
+- [ ] **1.082** `portraits/mira` — Portrait — Mira Pell · 256×256
+- [ ] **1.083** `portraits/pip` — Portrait — Pip Underbough · 256×256
+- [ ] **1.084** `portraits/roisin` — Portrait — Róisín · 256×256
+- [ ] **1.085** `portraits/rosalind` — Portrait — Madam Rosalind · 256×256
+- [ ] **1.086** `portraits/rv_aldous` — Portrait — Aldous Brack · 256×256
+- [ ] **1.087** `portraits/rv_brenna` — Portrait — Brenna Thorn · 256×256
+- [ ] **1.088** `portraits/rv_corwin` — Portrait — Corwin Ashby · 256×256
+- [ ] **1.089** `portraits/rv_dagny` — Portrait — Dagny Ironvein · 256×256
+- [ ] **1.090** `portraits/rv_ewan` — Portrait — Ewan Greyleaf · 256×256
+- [ ] **1.091** `portraits/rv_fen` — Portrait — Fen Marlow · 256×256
+- [ ] **1.092** `portraits/rv_galen` — Portrait — Galen Voss · 256×256
+- [ ] **1.093** `portraits/rv_hesper` — Portrait — Hesper Quill · 256×256
+- [ ] **1.094** `portraits/rv_ivo` — Portrait — Ivo Kettle · 256×256
+- [ ] **1.095** `portraits/rv_juno` — Portrait — Juno Sable · 256×256
+- [ ] **1.096** `portraits/rv_korvak` — Portrait — Korvak Redmaw · 256×256
+- [ ] **1.097** `portraits/rv_liesl` — Portrait — Liesl Harrow · 256×256
+- [ ] **1.098** `portraits/rv_mattias` — Portrait — Brother Mattias · 256×256
+- [ ] **1.099** `portraits/rv_nell` — Portrait — Nell Ashgrove · 256×256
+- [ ] **1.100** `portraits/rv_oskar` — Portrait — Oskar Fiddle · 256×256
+- [ ] **1.101** `portraits/rv_perrin` — Portrait — Perrin Lark · 256×256
+- [ ] **1.102** `portraits/sigrun` — Portrait — Sigrun Halvard · 256×256
+- [ ] **1.103** `portraits/tomas` — Portrait — Brother Tomas · 256×256
+- [ ] **1.104** `portraits/varn` — Portrait — Varn Ashfang · 256×256
+
+### Priority C (58)
+
+- [ ] **1.105** `chars/player_l_base` — Player appearance layer: base · 768×512 · 6×4 sheet
+- [ ] **1.106** `chars/player_l_base_mask` — Player appearance layer: base — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.107** `chars/player_l_beard_braided` — Player appearance layer: beard braided · 768×512 · 6×4 sheet
+- [ ] **1.108** `chars/player_l_beard_braided_mask` — Player appearance layer: beard braided — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.109** `chars/player_l_beard_long` — Player appearance layer: beard long · 768×512 · 6×4 sheet
+- [ ] **1.110** `chars/player_l_beard_long_mask` — Player appearance layer: beard long — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.111** `chars/player_l_beard_short` — Player appearance layer: beard short · 768×512 · 6×4 sheet
+- [ ] **1.112** `chars/player_l_beard_short_mask` — Player appearance layer: beard short — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.113** `chars/player_l_beard_stubble` — Player appearance layer: beard stubble · 768×512 · 6×4 sheet
+- [ ] **1.114** `chars/player_l_beard_stubble_mask` — Player appearance layer: beard stubble — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.115** `chars/player_l_hair_bald_fringe` — Player appearance layer: hair bald fringe · 768×512 · 6×4 sheet
+- [ ] **1.116** `chars/player_l_hair_bald_fringe_mask` — Player appearance layer: hair bald fringe — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.117** `chars/player_l_hair_cropped` — Player appearance layer: hair cropped · 768×512 · 6×4 sheet
+- [ ] **1.118** `chars/player_l_hair_cropped_mask` — Player appearance layer: hair cropped — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.119** `chars/player_l_hair_long` — Player appearance layer: hair long · 768×512 · 6×4 sheet
+- [ ] **1.120** `chars/player_l_hair_long_mask` — Player appearance layer: hair long — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.121** `chars/player_l_hair_ponytail` — Player appearance layer: hair ponytail · 768×512 · 6×4 sheet
+- [ ] **1.122** `chars/player_l_hair_ponytail_mask` — Player appearance layer: hair ponytail — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.123** `chars/player_l_hair_short` — Player appearance layer: hair short · 768×512 · 6×4 sheet
+- [ ] **1.124** `chars/player_l_hair_short_mask` — Player appearance layer: hair short — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.125** `chars/player_l_x_eyepatch` — Player appearance layer: x eyepatch · 768×512 · 6×4 sheet
+- [ ] **1.126** `chars/player_l_x_eyepatch_mask` — Player appearance layer: x eyepatch — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.127** `chars/player_l_x_headscarf` — Player appearance layer: x headscarf · 768×512 · 6×4 sheet
+- [ ] **1.128** `chars/player_l_x_headscarf_mask` — Player appearance layer: x headscarf — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.129** `chars/player_l_x_scalp_scar` — Player appearance layer: x scalp scar · 768×512 · 6×4 sheet
+- [ ] **1.130** `chars/player_l_x_scalp_scar_mask` — Player appearance layer: x scalp scar — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.131** `chars/player_l_x_spectacles` — Player appearance layer: x spectacles · 768×512 · 6×4 sheet
+- [ ] **1.132** `chars/player_l_x_spectacles_mask` — Player appearance layer: x spectacles — colour-region MASK · 768×512 · 6×4 sheet
+- [ ] **1.133** `portraits/player_l_base` — Player portrait layer: base · 256×256
+- [ ] **1.134** `portraits/player_l_base_mask` — Player portrait layer: base — colour-region MASK · 256×256
+- [ ] **1.135** `portraits/player_l_beard_braided` — Player portrait layer: beard braided · 256×256
+- [ ] **1.136** `portraits/player_l_beard_braided_mask` — Player portrait layer: beard braided — colour-region MASK · 256×256
+- [ ] **1.137** `portraits/player_l_beard_long` — Player portrait layer: beard long · 256×256
+- [ ] **1.138** `portraits/player_l_beard_long_mask` — Player portrait layer: beard long — colour-region MASK · 256×256
+- [ ] **1.139** `portraits/player_l_beard_short` — Player portrait layer: beard short · 256×256
+- [ ] **1.140** `portraits/player_l_beard_short_mask` — Player portrait layer: beard short — colour-region MASK · 256×256
+- [ ] **1.141** `portraits/player_l_beard_stubble` — Player portrait layer: beard stubble · 256×256
+- [ ] **1.142** `portraits/player_l_beard_stubble_mask` — Player portrait layer: beard stubble — colour-region MASK · 256×256
+- [ ] **1.143** `portraits/player_l_hair_bald` — Player portrait layer: hair bald · 256×256
+- [ ] **1.144** `portraits/player_l_hair_bald_fringe` — Player portrait layer: hair bald fringe · 256×256
+- [ ] **1.145** `portraits/player_l_hair_bald_fringe_mask` — Player portrait layer: hair bald fringe — colour-region MASK · 256×256
+- [ ] **1.146** `portraits/player_l_hair_bald_mask` — Player portrait layer: hair bald — colour-region MASK · 256×256
+- [ ] **1.147** `portraits/player_l_hair_cropped` — Player portrait layer: hair cropped · 256×256
+- [ ] **1.148** `portraits/player_l_hair_cropped_mask` — Player portrait layer: hair cropped — colour-region MASK · 256×256
+- [ ] **1.149** `portraits/player_l_hair_long` — Player portrait layer: hair long · 256×256
+- [ ] **1.150** `portraits/player_l_hair_long_mask` — Player portrait layer: hair long — colour-region MASK · 256×256
+- [ ] **1.151** `portraits/player_l_hair_ponytail` — Player portrait layer: hair ponytail · 256×256
+- [ ] **1.152** `portraits/player_l_hair_ponytail_mask` — Player portrait layer: hair ponytail — colour-region MASK · 256×256
+- [ ] **1.153** `portraits/player_l_hair_short` — Player portrait layer: hair short · 256×256
+- [ ] **1.154** `portraits/player_l_hair_short_mask` — Player portrait layer: hair short — colour-region MASK · 256×256
+- [ ] **1.155** `portraits/player_l_x_eyepatch` — Player portrait layer: x eyepatch · 256×256
+- [ ] **1.156** `portraits/player_l_x_eyepatch_mask` — Player portrait layer: x eyepatch — colour-region MASK · 256×256
+- [ ] **1.157** `portraits/player_l_x_headscarf` — Player portrait layer: x headscarf · 256×256
+- [ ] **1.158** `portraits/player_l_x_headscarf_mask` — Player portrait layer: x headscarf — colour-region MASK · 256×256
+- [ ] **1.159** `portraits/player_l_x_scalp_scar` — Player portrait layer: x scalp scar · 256×256
+- [ ] **1.160** `portraits/player_l_x_scalp_scar_mask` — Player portrait layer: x scalp scar — colour-region MASK · 256×256
+- [ ] **1.161** `portraits/player_l_x_spectacles` — Player portrait layer: x spectacles · 256×256
+- [ ] **1.162** `portraits/player_l_x_spectacles_mask` — Player portrait layer: x spectacles — colour-region MASK · 256×256
+
+## 2. Workshop stations, tools, furniture & interiors (171)
+
+### Priority A (70)
+
+- [ ] **2.001** `stations/anvil` — The Anvil · 112×80
+- [ ] **2.002** `stations/bellows` — Bellows · 96×96
+- [ ] **2.003** `stations/crucible` — Crucible · 96×96
+- [ ] **2.004** `stations/forge` — Forge / Hearth · 160×128
+- [ ] **2.005** `stations/grinding_wheel` — Grinding Wheel · 96×96
+- [ ] **2.006** `stations/project_bench` — Project Bench · 128×96
+- [ ] **2.007** `stations/quench_trough` — Quenching Trough · 128×64
+- [ ] **2.061** `props/arcane_glyph_decal` — Arcane glyph decal · 192×192
+- [ ] **2.062** `props/arcane_rack` — Arcane rack · 112×56
+- [ ] **2.063** `props/armor_stand` — Armor stand · 72×88
+- [ ] **2.064** `props/barrel` — Barrel · 56×56
+- [ ] **2.065** `props/bath_tub` — Bath tub · 128×80
+- [ ] **2.066** `props/bed` — Bed · 96×160
+- [ ] **2.067** `props/bed_double` — Bed double · 128×160
+- [ ] **2.068** `props/bookshelf` — Bookshelf · 128×40
+- [ ] **2.069** `props/bottle_shelf` — Bottle shelf · 128×48
+- [ ] **2.070** `props/candle` — Candle · 24×24
+- [ ] **2.071** `props/chair` — Chair · 40×40
+- [ ] **2.072** `props/chest` — Chest · 72×56
+- [ ] **2.073** `props/coal_pile` — Coal pile · 80×64
+- [ ] **2.074** `props/crate` — Crate · 56×56
+- [ ] **2.075** `props/cupboard` — Cupboard · 112×48
+- [ ] **2.076** `props/desk_ledger` — Desk ledger · 144×80
+- [ ] **2.077** `props/dining_table` — Dining table · 192×96
+- [ ] **2.078** `props/display_table` — Display table · 128×80
+- [ ] **2.079** `props/dresser` — Dresser · 96×48
+- [ ] **2.080** `props/fireplace` — Fireplace · 128×72
+- [ ] **2.081** `props/grain_sacks` — Grain sacks · 80×64
+- [ ] **2.082** `props/hall_of_fame_board` — Hall of fame board · 192×96
+- [ ] **2.083** `props/herb_garlands` — Herb garlands · 192×48
+- [ ] **2.084** `props/herb_rack` — Herb rack · 160×48
+- [ ] **2.085** `props/hide_rack` — Hide rack · 128×96
+- [ ] **2.086** `props/ingredient_crates` — Ingredient crates · 96×80
+- [ ] **2.087** `props/iron_bars` — Iron bars · 96×64
+- [ ] **2.088** `props/kitchen_stove` — Kitchen stove · 112×80
+- [ ] **2.089** `props/leather_bundle` — Leather bundle · 80×56
+- [ ] **2.090** `props/nightstand` — Nightstand · 48×48
+- [ ] **2.091** `props/ore_pile` — Ore pile · 80×64
+- [ ] **2.092** `props/pattern_board` — Pattern board · 128×40
+- [ ] **2.093** `props/produce_crate` — Produce crate · 64×64
+- [ ] **2.094** `props/rug_brown` — Rug brown · 160×112
+- [ ] **2.095** `props/rug_red` — Rug red · 192×128
+- [ ] **2.096** `props/rune_glyph_decal` — Rune glyph decal · 160×160
+- [ ] **2.097** `props/rune_shelf` — Rune shelf · 128×48
+- [ ] **2.098** `props/sack` — Sack · 48×48
+- [ ] **2.099** `props/shelf` — Shelf · 128×40
+- [ ] **2.100** `props/shop_counter` — Shop counter · 256×64
+- [ ] **2.101** `props/soot_decal` — Soot decal · 192×160
+- [ ] **2.102** `props/spill_decal` — Spill decal · 96×72
+- [ ] **2.103** `props/stone_blocks` — Stone blocks · 80×72
+- [ ] **2.104** `props/table_round` — Table round · 96×96
+- [ ] **2.105** `props/thread_spools` — Thread spools · 72×56
+- [ ] **2.106** `props/tool_wall` — Tool wall · 160×48
+- [ ] **2.107** `props/trophy_wall` — Trophy wall · 128×40
+- [ ] **2.108** `props/vase` — Vase · 48×64
+- [ ] **2.109** `props/wardrobe` — Wardrobe · 112×48
+- [ ] **2.110** `props/washtub` — Washtub · 72×72
+- [ ] **2.111** `props/weapon_rack` — Weapon rack · 160×56
+- [ ] **2.112** `props/woodpile` — Woodpile · 96×64
+- [ ] **2.113** `props/workbench` — Workbench · 160×64
+- [ ] **2.120** `textures/floor_arcane` — Tiling texture — floor arcane · 256×256
+- [ ] **2.121** `textures/floor_herb` — Tiling texture — floor herb · 256×256
+- [ ] **2.122** `textures/floor_slate` — Tiling texture — floor slate · 256×256
+- [ ] **2.123** `textures/floor_soot` — Tiling texture — floor soot · 256×256
+- [ ] **2.124** `textures/floor_stone` — Tiling texture — floor stone · 256×256
+- [ ] **2.125** `textures/floor_tavern` — Tiling texture — floor tavern · 256×256
+- [ ] **2.126** `textures/floor_wood` — Tiling texture — floor wood · 256×256
+- [ ] **2.127** `textures/wall_plaster` — Tiling texture — wall plaster · 256×256
+- [ ] **2.128** `textures/wall_stone` — Tiling texture — wall stone · 256×256
+- [ ] **2.129** `textures/wall_timber` — Tiling texture — wall timber · 256×256
+
+### Priority B (71)
+
+- [ ] **2.008** `stations/aetheric_stabilizer` — Aetheric Stabilizer · 112×112
+- [ ] **2.009** `stations/alembic` — Alembic · 112×96
+- [ ] **2.010** `stations/arcane_anvil` — Arcane Imprinting Anvil · 128×96
+- [ ] **2.011** `stations/arcane_crucible` — Arcane Crucible · 128×128
+- [ ] **2.012** `stations/cauldron` — Alchemical Cauldron · 112×112
+- [ ] **2.013** `stations/cutting_table` — Pattern Cutting Table · 128×80
+- [ ] **2.014** `stations/embroidery_frame` — Arcane Embroidery Frame · 112×112
+- [ ] **2.015** `stations/fitting_mannequin` — Enchanted Fitting Mannequin · 80×96
+- [ ] **2.016** `stations/infusion_rack` — Infusion Rack · 128×64
+- [ ] **2.017** `stations/leather_vat` — Leather Treatment Vat · 112×112
+- [ ] **2.018** `stations/leyline_conductor` — Leyline Conductor · 96×128
+- [ ] **2.019** `stations/loom` — Weaving Loom · 128×112
+- [ ] **2.020** `stations/mortar_station` — Mortar & Pestle Station · 96×80
+- [ ] **2.021** `stations/reagent_table` — Reagent Separation Table · 128×80
+- [ ] **2.022** `stations/resonance_pedestal` — Resonance Pedestal · 96×96
+- [ ] **2.023** `stations/rune_cleansing_basin` — Runic Cleansing Basin · 96×96
+- [ ] **2.024** `stations/rune_cutting_bench` — Runestone Cutting Bench · 128×80
+- [ ] **2.025** `stations/rune_engraving_stand` — Rune Engraving Stand · 96×96
+- [ ] **2.026** `stations/rune_polishing_wheel` — Runestone Polishing Wheel · 96×96
+- [ ] **2.027** `stations/spellbinding_array` — Spellbinding Array · 160×160
+- [ ] **2.028** `stations/stitching_table` — Enchanted Stitching Table · 128×80
+- [ ] **2.029** `stations/tailors_bench` — Tailor's Bench · 112×80
+- [ ] **2.030** `stations/thread_spinner` — Ethereal Thread Spinner · 112×96
+- [ ] **2.114** `props/banner_alchemy` — Room banner — alchemy craft · 64×80
+- [ ] **2.115** `props/banner_arcane` — Room banner — arcane craft · 64×80
+- [ ] **2.116** `props/banner_classic` — Room banner — classic craft · 64×80
+- [ ] **2.117** `props/banner_gilt` — Room banner — gilt craft · 64×80
+- [ ] **2.118** `props/banner_runecraft` — Room banner — runecraft craft · 64×80
+- [ ] **2.119** `props/banner_stitching` — Room banner — stitching craft · 64×80
+- [ ] **2.130** `props/door_mat` — Door mat · 96×40
+- [ ] **2.131** `props/lift_platform` — Lift platform · 96×96
+- [ ] **2.132** `props/stairs_down` — Stairs down · 96×128
+- [ ] **2.133** `props/stairs_up` — Stairs up · 96×128
+- [ ] **2.134** `props/altar` — Altar · 128×64
+- [ ] **2.135** `props/bar_counter` — Bar counter · 320×64
+- [ ] **2.136** `props/bar_shelf` — Bar shelf · 192×40
+- [ ] **2.137** `props/barrel_stack` — Barrel stack · 112×96
+- [ ] **2.138** `props/bed_fancy` — Bed fancy · 112×160
+- [ ] **2.139** `props/bestiary_desk` — Bestiary desk · 128×56
+- [ ] **2.140** `props/candle_rack` — Candle rack · 128×40
+- [ ] **2.141** `props/card_binders` — Card binders · 128×40
+- [ ] **2.142** `props/card_cabinet` — Card cabinet · 128×44
+- [ ] **2.143** `props/creature_cages` — Creature cages · 128×48
+- [ ] **2.144** `props/curio_shelf` — Curio shelf · 128×40
+- [ ] **2.145** `props/diagram_board` — Diagram board · 128×40
+- [ ] **2.146** `props/diorama_table` — Diorama table · 160×96
+- [ ] **2.147** `props/display_case` — Display case · 96×56
+- [ ] **2.148** `props/felt_table` — Felt table · 288×176
+- [ ] **2.149** `props/herb_baskets` — Herb baskets · 96×72
+- [ ] **2.150** `props/herb_counter` — Herb counter · 256×64
+- [ ] **2.151** `props/hoop_pile` — Hoop pile · 64×64
+- [ ] **2.152** `props/horse` — Horse · 72×144
+- [ ] **2.153** `props/jar_shelf` — Jar shelf · 128×40
+- [ ] **2.154** `props/keg` — Keg · 56×56
+- [ ] **2.155** `props/most_wanted_board` — Most wanted board · 192×96
+- [ ] **2.156** `props/paint_desk` — Paint desk · 128×64
+- [ ] **2.157** `props/pawn_counter` — Pawn counter · 192×56
+- [ ] **2.158** `props/pew` — Pew · 160×40
+- [ ] **2.159** `props/potting_bench` — Potting bench · 128×56
+- [ ] **2.160** `props/rival_anvil` — Rival anvil · 80×48
+- [ ] **2.161** `props/rival_counter` — Rival counter · 160×56
+- [ ] **2.162** `props/rival_display` — Rival display · 160×40
+- [ ] **2.163** `props/rival_forge` — Rival forge · 128×96
+- [ ] **2.164** `props/saddle_rack` — Saddle rack · 128×40
+- [ ] **2.165** `props/standing_lamp` — Standing lamp · 40×40
+- [ ] **2.166** `props/stave_bundle` — Stave bundle · 112×48
+- [ ] **2.167** `props/stool` — Stool · 32×32
+- [ ] **2.168** `props/table_long` — Table long · 192×80
+- [ ] **2.169** `props/tank_shelf` — Tank shelf · 128×40
+- [ ] **2.170** `props/war_map_wall` — War map wall · 192×40
+- [ ] **2.171** `props/wax_vat` — Wax vat · 80×80
+
+### Priority C (30)
+
+- [ ] **2.031** `stations/bases/aetheric_stabilizer` — Painted tabletop base under the Aetheric Stabilizer · 157×96
+- [ ] **2.032** `stations/bases/alembic` — Painted tabletop base under the Alembic · 157×89
+- [ ] **2.033** `stations/bases/anvil` — Painted tabletop base under the The Anvil · 157×81
+- [ ] **2.034** `stations/bases/arcane_anvil` — Painted tabletop base under the Arcane Imprinting Anvil · 175×89
+- [ ] **2.035** `stations/bases/arcane_crucible` — Painted tabletop base under the Arcane Crucible · 175×105
+- [ ] **2.036** `stations/bases/bellows` — Painted tabletop base under the Bellows · 140×88
+- [ ] **2.037** `stations/bases/cauldron` — Painted tabletop base under the Alchemical Cauldron · 157×96
+- [ ] **2.038** `stations/bases/crucible` — Painted tabletop base under the Crucible · 140×88
+- [ ] **2.039** `stations/bases/cutting_table` — Painted tabletop base under the Pattern Cutting Table · 175×82
+- [ ] **2.040** `stations/bases/embroidery_frame` — Painted tabletop base under the Arcane Embroidery Frame · 157×96
+- [ ] **2.041** `stations/bases/fitting_mannequin` — Painted tabletop base under the Enchanted Fitting Mannequin · 122×88
+- [ ] **2.042** `stations/bases/forge` — Painted tabletop base under the Forge / Hearth · 211×106
+- [ ] **2.043** `stations/bases/grinding_wheel` — Painted tabletop base under the Grinding Wheel · 140×88
+- [ ] **2.044** `stations/bases/infusion_rack` — Painted tabletop base under the Infusion Rack · 175×82
+- [ ] **2.045** `stations/bases/leather_vat` — Painted tabletop base under the Leather Treatment Vat · 157×96
+- [ ] **2.046** `stations/bases/leyline_conductor` — Painted tabletop base under the Leyline Conductor · 140×103
+- [ ] **2.047** `stations/bases/loom` — Painted tabletop base under the Weaving Loom · 175×97
+- [ ] **2.048** `stations/bases/mortar_station` — Painted tabletop base under the Mortar & Pestle Station · 140×80
+- [ ] **2.049** `stations/bases/project_bench` — Painted tabletop base under the Project Bench · 175×89
+- [ ] **2.050** `stations/bases/quench_trough` — Painted tabletop base under the Quenching Trough · 175×82
+- [ ] **2.051** `stations/bases/reagent_table` — Painted tabletop base under the Reagent Separation Table · 175×82
+- [ ] **2.052** `stations/bases/resonance_pedestal` — Painted tabletop base under the Resonance Pedestal · 140×88
+- [ ] **2.053** `stations/bases/rune_cleansing_basin` — Painted tabletop base under the Runic Cleansing Basin · 140×88
+- [ ] **2.054** `stations/bases/rune_cutting_bench` — Painted tabletop base under the Runestone Cutting Bench · 175×82
+- [ ] **2.055** `stations/bases/rune_engraving_stand` — Painted tabletop base under the Rune Engraving Stand · 140×88
+- [ ] **2.056** `stations/bases/rune_polishing_wheel` — Painted tabletop base under the Runestone Polishing Wheel · 140×88
+- [ ] **2.057** `stations/bases/spellbinding_array` — Painted tabletop base under the Spellbinding Array · 211×121
+- [ ] **2.058** `stations/bases/stitching_table` — Painted tabletop base under the Enchanted Stitching Table · 175×82
+- [ ] **2.059** `stations/bases/tailors_bench` — Painted tabletop base under the Tailor's Bench · 157×81
+- [ ] **2.060** `stations/bases/thread_spinner` — Painted tabletop base under the Ethereal Thread Spinner · 157×89
+
+## 3. Buildings, village scenery, terrain & vegetation (124)
+
+### Priority A (22)
+
+- [ ] **3.001** `textures/cobble` — Tiling texture — cobble · 256×256
+- [ ] **3.002** `textures/dirt_road` — Tiling texture — dirt road · 256×256
+- [ ] **3.003** `textures/grass` — Tiling texture — grass · 256×256
+- [ ] **3.004** `textures/water` — Tiling texture — water · 256×256
+- [ ] **3.005** `roofs/grocery` — Roof of Pell's Provisions · 704×576
+- [ ] **3.006** `roofs/inn` — Roof of The Tipsy Wyvern · 1280×896
+- [ ] **3.007** `roofs/smithy` — Roof of Ironhand Forge · 1920×1472
+- [ ] **3.025** `props/mill_wheel` — Mill wheel · 120×120
+- [ ] **3.026** `props/watermill` — Watermill · 192×176
+- [ ] **3.027** `props/bush` — Bush · 80×80
+- [ ] **3.028** `props/bush_flower` — Bush flower · 80×80
+- [ ] **3.029** `props/tree_oak_a` — Tree oak a · 224×224
+- [ ] **3.030** `props/tree_oak_b` — Tree oak b · 192×192
+- [ ] **3.031** `props/tree_pine` — Tree pine · 176×176
+- [ ] **3.032** `props/tree_small` — Tree small · 128×128
+- [ ] **3.047** `props/fence_h` — Fence h · 64×24
+- [ ] **3.048** `props/market_stall` — Market stall · 192×128
+- [ ] **3.049** `props/notice_board` — Notice board · 144×72
+- [ ] **3.050** `props/rock_a` — Rock a · 64×48
+- [ ] **3.051** `props/rock_b` — Rock b · 88×64
+- [ ] **3.052** `props/street_lamp` — Street lamp · 64×128
+- [ ] **3.053** `props/well` — Well · 112×112
+
+### Priority B (102)
+
+- [ ] **3.008** `roofs/barnaby_house` — Roof of Barnaby's House · 640×448
+- [ ] **3.009** `roofs/chandler` — Roof of Wick & Tallow Chandlery · 576×448
+- [ ] **3.010** `roofs/cooperage` — Roof of Coopers' Workshop · 448×384
+- [ ] **3.011** `roofs/hale_cottage` — Roof of The Hales' Cottage · 448×320
+- [ ] **3.012** `roofs/herbalist` — Roof of Fennimore's Simples · 576×448
+- [ ] **3.013** `roofs/house_ashby` — Roof of Ashby Cottage · 448×384
+- [ ] **3.014** `roofs/house_eda` — Roof of Eda's House · 512×448
+- [ ] **3.015** `roofs/house_fenn` — Roof of Fenn Cottage · 512×384
+- [ ] **3.016** `roofs/house_jory` — Roof of Jory's Farmhouse · 640×512
+- [ ] **3.017** `roofs/house_martha` — Roof of Martha's Cottage · 576×512
+- [ ] **3.018** `roofs/house_oswin` — Roof of Chapel of the Dawn · 640×576
+- [ ] **3.019** `roofs/house_tobin` — Roof of Tobin's Workshop · 576×512
+- [ ] **3.020** `roofs/house_wenna` — Roof of Cooper's Row · 576×448
+- [ ] **3.021** `roofs/net_loft` — Roof of Net Loft · 384×256
+- [ ] **3.022** `roofs/pawnshop` — Roof of The Three Brass Balls · 448×320
+- [ ] **3.023** `roofs/rival_forge` — Roof of The Salt Anvil · 576×384
+- [ ] **3.024** `roofs/stable` — Roof of Brindle Stable · 384×320
+- [ ] **3.033** `props/crop_rows` — Crop rows · 192×128
+- [ ] **3.034** `props/fern` — Fern · 56×48
+- [ ] **3.035** `props/flower_patch_a` — Flower patch a · 48×48
+- [ ] **3.036** `props/flower_patch_b` — Flower patch b · 48×48
+- [ ] **3.037** `props/flowers` — Flowers · 64×64
+- [ ] **3.038** `props/hedge_h` — Hedge h · 128×40
+- [ ] **3.039** `props/hedge_v` — Hedge v · 40×128
+- [ ] **3.040** `props/herb_garden` — Herb garden · 128×96
+- [ ] **3.041** `props/lily_pads` — Lily pads · 96×64
+- [ ] **3.042** `props/moss_decal` — Moss decal · 96×40
+- [ ] **3.043** `props/reeds` — Reeds · 64×64
+- [ ] **3.044** `props/stump` — Stump · 48×48
+- [ ] **3.045** `props/undergrowth` — Undergrowth · 112×80
+- [ ] **3.046** `props/wildflowers_bundle` — Wildflowers bundle · 48×40
+- [ ] **3.054** `props/arcane_enclosure` — Arcane enclosure · 176×128
+- [ ] **3.055** `props/beer_table` — Beer table · 128×96
+- [ ] **3.056** `props/bunting` — Bunting · 384×56
+- [ ] **3.057** `props/campfire` — Campfire · 72×72
+- [ ] **3.058** `props/caravan_pennant` — Caravan pennant · 80×40
+- [ ] **3.059** `props/caravan_wagon` — Caravan wagon · 224×144
+- [ ] **3.060** `props/cart` — Cart · 128×96
+- [ ] **3.061** `props/chicken_coop` — Chicken coop · 112×96
+- [ ] **3.062** `props/craft_display` — Craft display · 192×96
+- [ ] **3.063** `props/duck` — Duck · 32×28
+- [ ] **3.064** `props/dummy_target` — Dummy target · 64×64
+- [ ] **3.065** `props/feed_scatter` — Feed scatter · 64×48
+- [ ] **3.066** `props/fence_gate_h` — Fence gate h · 64×24
+- [ ] **3.067** `props/fence_gate_v` — Fence gate v · 24×64
+- [ ] **3.068** `props/grave_plot` — Grave plot · 72×48
+- [ ] **3.069** `props/gravestone` — Gravestone · 40×48
+- [ ] **3.070** `props/harbour_booth` — Harbour booth · 128×112
+- [ ] **3.071** `props/hay_rack` — Hay rack · 80×48
+- [ ] **3.072** `props/headstone_hireling` — Headstone hireling · 64×80
+- [ ] **3.073** `props/lantern_post` — Lantern post · 48×48
+- [ ] **3.074** `props/log_seat` — Log seat · 96×40
+- [ ] **3.075** `props/loot_pile` — Loot pile · 64×48
+- [ ] **3.076** `props/mooring_post` — Mooring post · 32×40
+- [ ] **3.077** `props/net_rack` — Net rack · 128×56
+- [ ] **3.078** `props/podium_board` — Podium board · 128×64
+- [ ] **3.079** `props/puddle` — Puddle · 96×56
+- [ ] **3.080** `props/rabbit_hutch` — Rabbit hutch · 96×72
+- [ ] **3.081** `props/refuse_heap` — Refuse heap · 80×64
+- [ ] **3.082** `props/rowboat` — Rowboat · 112×48
+- [ ] **3.083** `props/square_stage` — Square stage · 352×208
+- [ ] **3.084** `props/stone_wall_h` — Stone wall h · 128×32
+- [ ] **3.085** `props/stone_wall_v` — Stone wall v · 32×128
+- [ ] **3.086** `props/tether_post` — Tether post · 32×32
+- [ ] **3.087** `props/vase_flowers` — Vase flowers · 48×64
+- [ ] **3.088** `props/waiting_awning` — Waiting awning · 192×64
+- [ ] **3.089** `props/waiting_seat` — Waiting seat · 64×64
+- [ ] **3.090** `props/anchor` — Anchor · 72×72
+- [ ] **3.091** `props/bench` — Bench · 160×36
+- [ ] **3.092** `props/broken_crate` — Broken crate · 64×56
+- [ ] **3.093** `props/chopping_block` — Chopping block · 48×52
+- [ ] **3.094** `props/crate_stack` — Crate stack · 96×96
+- [ ] **3.095** `props/fence_v` — Fence v · 24×64
+- [ ] **3.096** `props/haybale` — Haybale · 64×64
+- [ ] **3.097** `props/lobster_pots` — Lobster pots · 64×48
+- [ ] **3.098** `props/mud_patch` — Mud patch · 128×80
+- [ ] **3.099** `props/net_pile` — Net pile · 72×48
+- [ ] **3.100** `props/rope_coil` — Rope coil · 48×48
+- [ ] **3.101** `props/water_trough` — Water trough · 112×44
+- [ ] **3.102** `props/sign_barnaby` — Hanging sign — barnaby · 80×48
+- [ ] **3.103** `props/sign_carpenter` — Hanging sign — carpenter · 80×48
+- [ ] **3.104** `props/sign_chandler` — Hanging sign — chandler · 80×48
+- [ ] **3.105** `props/sign_chapel` — Hanging sign — chapel · 80×48
+- [ ] **3.106** `props/sign_cooper` — Hanging sign — cooper · 80×48
+- [ ] **3.107** `props/sign_cottage_a` — Hanging sign — cottage a · 80×48
+- [ ] **3.108** `props/sign_cottage_b` — Hanging sign — cottage b · 80×48
+- [ ] **3.109** `props/sign_farm` — Hanging sign — farm · 80×48
+- [ ] **3.110** `props/sign_grocer` — Hanging sign — grocer · 80×48
+- [ ] **3.111** `props/sign_harbour` — Hanging sign — harbour · 80×48
+- [ ] **3.112** `props/sign_herbalist` — Hanging sign — herbalist · 80×48
+- [ ] **3.113** `props/sign_inn` — Hanging sign — inn · 80×48
+- [ ] **3.114** `props/sign_laundry` — Hanging sign — laundry · 80×48
+- [ ] **3.115** `props/sign_menagerie` — Hanging sign — menagerie · 80×48
+- [ ] **3.116** `props/sign_netloft` — Hanging sign — netloft · 80×48
+- [ ] **3.117** `props/sign_pawn` — Hanging sign — pawn · 80×48
+- [ ] **3.118** `props/sign_rival` — Hanging sign — rival · 80×48
+- [ ] **3.119** `props/sign_smithy` — Hanging sign — smithy · 80×48
+- [ ] **3.120** `props/sign_stable` — Hanging sign — stable · 80×48
+- [ ] **3.121** `props/ship_barge` — Merchant ship — barge · 512×192
+- [ ] **3.122** `props/ship_flag` — Merchant ship — flag · 48×96
+- [ ] **3.123** `props/ship_spice` — Merchant ship — spice · 512×192
+- [ ] **3.124** `props/ship_whaler` — Merchant ship — whaler · 512×192
+
+## 4. Equipment, inventory icons & crafting materials (179)
+
+### Priority A (missing) (2)
+
+- [ ] **4.175** `icons/rune` — Awakened-item rune icon · 64×64
+- [ ] **4.176** `icons/skull` — Threat / danger icon · 64×64
+
+### Priority B (167)
+
+- [ ] **4.001** `icons/bear_pelt` — Bear Pelt · 64×64
+- [ ] **4.002** `icons/bread_cheese` — Bread & Cheese · 64×64
+- [ ] **4.003** `icons/canvas_oiled` — Oiled Canvas · 64×64
+- [ ] **4.004** `icons/cloth_ethereal` — Ethereal-thread Cloth · 64×64
+- [ ] **4.005** `icons/cloth_linen` — Linen Cloth · 64×64
+- [ ] **4.006** `icons/cloth_moonweave` — Moonweave · 64×64
+- [ ] **4.007** `icons/cloth_silk` — Silk Cloth · 64×64
+- [ ] **4.008** `icons/cloth_spidersilk` — Spidersilk Cloth · 64×64
+- [ ] **4.009** `icons/cloth_warded` — Warded Cloth · 64×64
+- [ ] **4.010** `icons/cloth_wool` — Woollen Cloth · 64×64
+- [ ] **4.011** `icons/coal` — Coal · 64×64
+- [ ] **4.012** `icons/dragon_bone` — Dragon Bone · 64×64
+- [ ] **4.013** `icons/dragon_scale` — Dragon Scale · 64×64
+- [ ] **4.014** `icons/felt_wool` — Felted Wool · 64×64
+- [ ] **4.015** `icons/flax_bundle` — Flax · 64×64
+- [ ] **4.016** `icons/flowers_remembrance` — Wildflowers · 64×64
+- [ ] **4.017** `icons/gem_garnet` — Garnet · 64×64
+- [ ] **4.018** `icons/gem_moonstone` — Moonstone · 64×64
+- [ ] **4.019** `icons/gem_sapphire` — Sapphire · 64×64
+- [ ] **4.020** `icons/gem_starstone` — Starstone · 64×64
+- [ ] **4.021** `icons/herb_bloodroot` — Bloodroot · 64×64
+- [ ] **4.022** `icons/herb_emberleaf` — Emberleaf · 64×64
+- [ ] **4.023** `icons/herb_frostcap` — Frostcap · 64×64
+- [ ] **4.024** `icons/herb_moonwort` — Moonwort · 64×64
+- [ ] **4.025** `icons/herb_silverleaf` — Silverleaf · 64×64
+- [ ] **4.026** `icons/ingot_adamantine` — Charged Adamantine Ingot · 64×64
+- [ ] **4.027** `icons/ingot_iron` — Iron Ingot · 64×64
+- [ ] **4.028** `icons/ingot_mithril` — Charged Mithril Ingot · 64×64
+- [ ] **4.029** `icons/ingot_orichalcum` — Orichalcum Ingot · 64×64
+- [ ] **4.030** `icons/ingot_steel` — Steel Ingot · 64×64
+- [ ] **4.031** `icons/leather_bear` — Bear Leather · 64×64
+- [ ] **4.032** `icons/leather_cured` — Cured Leather · 64×64
+- [ ] **4.033** `icons/leather_hide` — Raw Hide · 64×64
+- [ ] **4.034** `icons/leather_wyrm` — Wyrm Leather · 64×64
+- [ ] **4.035** `icons/ore_adamantine` — Adamantine Ore · 64×64
+- [ ] **4.036** `icons/ore_copper` — Copper Ore · 64×64
+- [ ] **4.037** `icons/ore_iron` — Iron Ore · 64×64
+- [ ] **4.038** `icons/ore_mithril` — Mithril Ore · 64×64
+- [ ] **4.039** `icons/ore_orichalcum` — Orichalcum Ore · 64×64
+- [ ] **4.040** `icons/ore_silver` — Silver Ore · 64×64
+- [ ] **4.041** `icons/padding_quilted` — Quilted Padding · 64×64
+- [ ] **4.042** `icons/reagent_aether_dust` — Aether Dust · 64×64
+- [ ] **4.043** `icons/reagent_quintessence` — Silverleaf Quintessence · 64×64
+- [ ] **4.044** `icons/reagent_salt` — Quicksalt · 64×64
+- [ ] **4.045** `icons/reagent_wyrm_ash` — Wyrm Ash · 64×64
+- [ ] **4.046** `icons/silk_raw` — Raw Silk · 64×64
+- [ ] **4.047** `icons/spider_silk` — Giant Spider Silk · 64×64
+- [ ] **4.048** `icons/starmetal_fragment` — Starmetal Fragment · 64×64
+- [ ] **4.049** `icons/thread_ethereal` — Ethereal Thread · 64×64
+- [ ] **4.050** `icons/thread_linen` — Linen Thread · 64×64
+- [ ] **4.051** `icons/troll_hide` — Troll Hide · 64×64
+- [ ] **4.052** `icons/wool_fleece` — Wool Fleece · 64×64
+- [ ] **4.053** `icons/wyvern_hide` — Wyvern Hide · 64×64
+- [ ] **4.054** `icons/yarn_wool` — Wool Yarn · 64×64
+- [ ] **4.055** `icons/yew_stave` — Yew Stave · 64×64
+- [ ] **4.056** `icons/comp_fell_pony` — Fell Pony · 64×64
+- [ ] **4.057** `icons/comp_glimmer_fox` — Glimmer-Fox · 64×64
+- [ ] **4.058** `icons/comp_hunting_falcon` — Hunting Falcon · 64×64
+- [ ] **4.059** `icons/comp_moon_moth` — Moon-Moth · 64×64
+- [ ] **4.060** `icons/comp_mouser_cat` — Mouser Cat · 64×64
+- [ ] **4.061** `icons/comp_pack_mule` — Pack Mule · 64×64
+- [ ] **4.062** `icons/comp_pocket_drake` — Pocket Drake · 64×64
+- [ ] **4.063** `icons/comp_stone_toad` — Stone-Toad Familiar · 64×64
+- [ ] **4.064** `icons/comp_war_hound` — War Hound · 64×64
+- [ ] **4.068** `icons/amulet_sapphire` — Sapphire Amulet · 64×64
+- [ ] **4.069** `icons/amulet_silver` — Silver Amulet · 64×64
+- [ ] **4.070** `icons/gambeson` — Quilted Gambeson · 64×64
+- [ ] **4.071** `icons/robe_archmage` — Archmage's Robe · 64×64
+- [ ] **4.072** `icons/robe_novice` — Novice's Robe · 64×64
+- [ ] **4.073** `icons/robe_scholar` — Scholar's Robe · 64×64
+- [ ] **4.074** `icons/tunic_linen` — Linen Tunic · 64×64
+- [ ] **4.075** `icons/armor_hide` — Hide Armour · 64×64
+- [ ] **4.076** `icons/armor_studded` — Studded Leather · 64×64
+- [ ] **4.077** `icons/bearhide_brigandine` — Bearhide Brigandine · 64×64
+- [ ] **4.078** `icons/jerkin_leather` — Leather Jerkin · 64×64
+- [ ] **4.079** `icons/chainmail` — Chain Hauberk · 64×64
+- [ ] **4.080** `icons/cuirass_iron` — Iron Cuirass · 64×64
+- [ ] **4.081** `icons/cuirass_steel` — Steel Cuirass · 64×64
+- [ ] **4.082** `icons/dragonscale_armor` — Dragonscale Armour · 64×64
+- [ ] **4.083** `icons/mithril_plated_cuirass` — Mithril-plated Cuirass · 64×64
+- [ ] **4.084** `icons/plate_full` — Full Plate Harness · 64×64
+- [ ] **4.085** `icons/plate_half` — Steel Half-Plate · 64×64
+- [ ] **4.086** `icons/warplate_adamantine` — Adamantine Warplate · 64×64
+- [ ] **4.087** `icons/wyvernscale_pauldron` — Wyvernscale Pauldron · 64×64
+- [ ] **4.088** `icons/belt_leather` — Leather Belt · 64×64
+- [ ] **4.089** `icons/sash_silk` — Silk Sash · 64×64
+- [ ] **4.090** `icons/boots_leather` — Leather Boots · 64×64
+- [ ] **4.091** `icons/boots_ranger` — Ranger's Soft Boots · 64×64
+- [ ] **4.092** `icons/boots_wyrmleather` — Wyrmleather Boots · 64×64
+- [ ] **4.093** `icons/cloak_shadow` — Shadow Cloak · 64×64
+- [ ] **4.094** `icons/cloak_travel` — Travel Cloak · 64×64
+- [ ] **4.095** `icons/cloak_warded` — Warded Cloak · 64×64
+- [ ] **4.096** `icons/bag_traveller` — Traveller's Bag · 64×64
+- [ ] **4.097** `icons/chest_recovered` — Recovered Chest · 64×64
+- [ ] **4.098** `icons/package_reward` — Reward Package · 64×64
+- [ ] **4.099** `icons/purse_gift` — Gift Purse · 64×64
+- [ ] **4.100** `icons/satchel_relic` — Relic Hunter's Satchel · 64×64
+- [ ] **4.101** `icons/shipment_miner` — Miner's Shipment · 64×64
+- [ ] **4.102** `icons/curio_seer_glass` — Seer's Lens · 64×64
+- [ ] **4.103** `icons/curio_songbird` — Clockwork Songbird · 64×64
+- [ ] **4.104** `icons/curio_star_chart` — Southern Star Chart · 64×64
+- [ ] **4.105** `icons/curio_tide_compass` — Tide Compass · 64×64
+- [ ] **4.106** `icons/gloves_leather` — Leather Gloves · 64×64
+- [ ] **4.107** `icons/gloves_spellweaver` — Spellweaver's Gloves · 64×64
+- [ ] **4.108** `icons/gloves_warded` — Warded Gloves · 64×64
+- [ ] **4.109** `icons/helm_brinecap` — Brine-Cap Helm · 64×64
+- [ ] **4.110** `icons/helm_iron` — Iron Helm · 64×64
+- [ ] **4.111** `icons/hood_embroidered` — Embroidered Hood · 64×64
+- [ ] **4.112** `icons/hood_leather` — Leather Hood · 64×64
+- [ ] **4.113** `icons/hood_moonweave` — Moonweave Cowl · 64×64
+- [ ] **4.114** `icons/hood_wool` — Felted Hood · 64×64
+- [ ] **4.115** `icons/ale_mug` — Tankard of Ale · 64×64
+- [ ] **4.116** `icons/coating_flame` — Flame Coating · 64×64
+- [ ] **4.117** `icons/coating_frost` — Frost Coating · 64×64
+- [ ] **4.118** `icons/coating_wyrmfire` — Wyrmfire Coating · 64×64
+- [ ] **4.119** `icons/infusion_aether` — Aether Infusion · 64×64
+- [ ] **4.120** `icons/oil_whetstone` — Whetstone Oil · 64×64
+- [ ] **4.121** `icons/potion_healing` — Healing Draught · 64×64
+- [ ] **4.122** `icons/recipe_scroll` — Forgotten Design · 64×64
+- [ ] **4.123** `icons/relic_coin` — Drowned King's Coin · 64×64
+- [ ] **4.124** `icons/relic_crown_shard` — Crown Shard · 64×64
+- [ ] **4.125** `icons/relic_idol` — Barrow Idol · 64×64
+- [ ] **4.126** `icons/relic_map` — Faded Delve Map · 64×64
+- [ ] **4.127** `icons/relic_unknown_arms` — Corroded Ancient Arms · 64×64
+- [ ] **4.128** `icons/relic_unknown_reliquary` — Sealed Reliquary · 64×64
+- [ ] **4.129** `icons/relic_unknown_tablet` — Weathered Rune Tablet · 64×64
+- [ ] **4.130** `icons/ring_garnet` — Garnet Ring · 64×64
+- [ ] **4.131** `icons/ring_silver` — Silver Band · 64×64
+- [ ] **4.132** `icons/runestone_blank` — Raw Runestone · 64×64
+- [ ] **4.133** `icons/runestone_concord` — Concord Runestone · 64×64
+- [ ] **4.134** `icons/runestone_ember` — Ember Runestone · 64×64
+- [ ] **4.135** `icons/runestone_frost` — Frost Runestone · 64×64
+- [ ] **4.136** `icons/runestone_original` — Smith's Own Rune · 64×64
+- [ ] **4.137** `icons/runestone_ward` — Ward Runestone · 64×64
+- [ ] **4.138** `icons/buckler_seabronze` — Sea-Bronze Buckler · 64×64
+- [ ] **4.139** `icons/shield_buckler` — Buckler · 64×64
+- [ ] **4.140** `icons/shield_kite` — Kite Shield · 64×64
+- [ ] **4.141** `icons/shield_round` — Round Shield · 64×64
+- [ ] **4.142** `icons/shield_tower` — Steel Tower Shield · 64×64
+- [ ] **4.143** `icons/axe_battle` — Steel Battle Axe · 64×64
+- [ ] **4.144** `icons/axe_great` — Steel Great Axe · 64×64
+- [ ] **4.145** `icons/axe_hand` — Hand Axe · 64×64
+- [ ] **4.146** `icons/axe_hatchet` — Hatchet · 64×64
+- [ ] **4.147** `icons/bow_hunting` — Hunting Bow · 64×64
+- [ ] **4.148** `icons/bow_recurve` — Recurve Bow · 64×64
+- [ ] **4.149** `icons/bow_short` — Shortbow · 64×64
+- [ ] **4.150** `icons/bow_warbow` — Silverleaf Warbow · 64×64
+- [ ] **4.151** `icons/bow_yew` — Yew Longbow · 64×64
+- [ ] **4.152** `icons/cutlass_seabronze` — Sea-Bronze Cutlass · 64×64
+- [ ] **4.153** `icons/dagger` — Dagger · 64×64
+- [ ] **4.154** `icons/grimhold` — Grimhold, the Last Hammer · 64×64
+- [ ] **4.155** `icons/hammer_war` — Steel Warhammer · 64×64
+- [ ] **4.156** `icons/harpoon_barbed` — Barbed Harpoon-Spear · 64×64
+- [ ] **4.157** `icons/mace_flanged` — Flanged Mace · 64×64
+- [ ] **4.158** `icons/sabre_ripple` — Ripple-Steel Sabre · 64×64
+- [ ] **4.159** `icons/sword_cutlass` — Steel Cutlass · 64×64
+- [ ] **4.160** `icons/sword_emberwarden` — Emberwarden Longsword · 64×64
+- [ ] **4.161** `icons/sword_great` — Steel Greatsword · 64×64
+- [ ] **4.162** `icons/sword_iron` — Iron Longsword · 64×64
+- [ ] **4.163** `icons/sword_mithril` — Mithril Runeblade · 64×64
+- [ ] **4.164** `icons/sword_rapier` — Steel Rapier · 64×64
+- [ ] **4.165** `icons/sword_short` — Shortsword · 64×64
+- [ ] **4.166** `icons/sword_starsteel` — Starsteel Blade · 64×64
+- [ ] **4.167** `icons/sword_steel` — Steel Longsword / Steel Bastard Sword · 64×64
+- [ ] **4.177** `icons/gold` — Gold · 32×32
+- [ ] **4.178** `icons/lock` — Lock · 32×32
+- [ ] **4.179** `icons/star` — Star · 32×32
+
+### Priority C (10)
+
+- [ ] **4.065** `contracts/crate_goods` — Crate goods · 64×56
+- [ ] **4.066** `contracts/crate_patron` — Crate patron · 64×56
+- [ ] **4.067** `contracts/letter` — Letter · 96×80
+- [ ] **4.168** `marks/apprentice` — Maker's mark — apprentice · 32×32
+- [ ] **4.169** `marks/barrow` — Maker's mark — barrow · 32×32
+- [ ] **4.170** `marks/hand` — Maker's mark — hand · 32×32
+- [ ] **4.171** `marks/ironhand` — Maker's mark — ironhand · 32×32
+- [ ] **4.172** `marks/ironroot` — Maker's mark — ironroot · 32×32
+- [ ] **4.173** `marks/salt_anvil` — Maker's mark — salt anvil · 32×32
+- [ ] **4.174** `marks/unknown` — Maker's mark — unknown · 32×32
+
+## 5. Creatures, companions & expeditions (66)
+
+### Priority A (missing) (14)
+
+- [ ] **5.045** `enemies/abyssal_horror` — Abyssal Horror · 256×128 · 2 frames
+- [ ] **5.046** `enemies/astral_warden` — The Astral Warden · 384×192 · 2 frames
+- [ ] **5.047** `enemies/blackglass_maw` — The Blackglass Maw · 384×192 · 2 frames
+- [ ] **5.048** `enemies/glass_crawler` — Blackglass Crawler · 256×128 · 2 frames
+- [ ] **5.049** `enemies/hollow_harness` — Hollow Harness · 256×128 · 2 frames
+- [ ] **5.050** `enemies/maw_brood` — A Maw-Brood · 256×128 · 2 frames
+- [ ] **5.051** `enemies/orrery_sentinel` — Orrery Sentinel · 256×128 · 2 frames
+- [ ] **5.052** `enemies/rift_stalker` — Rift Stalker · 256×128 · 2 frames
+- [ ] **5.053** `enemies/star_wisp` — Starfall Wisp · 256×128 · 2 frames
+- [ ] **5.054** `enemies/warden_shard` — A Shard of the Warden · 256×128 · 2 frames
+- [ ] **5.055** `enemies/weeping_captain` — Captain Orrin of the Weeping Banner · 256×128 · 2 frames
+- [ ] **5.056** `enemies/weeping_commander` — Marshal Ysolde, the Weeping Commander · 384×192 · 2 frames
+- [ ] **5.057** `enemies/weeping_knight` — Knight of the Weeping Banner · 256×128 · 2 frames
+- [ ] **5.058** `enemies/weeping_legionary` — Weeping Legionary · 256×128 · 2 frames
+
+### Priority B (52)
+
+- [ ] **5.001** `creatures/fell_pony` — fell pony · 128×64 · 2 frames
+- [ ] **5.002** `creatures/glimmer_fox` — glimmer fox · 128×64 · 2 frames
+- [ ] **5.003** `creatures/hunting_falcon` — hunting falcon · 128×64 · 2 frames
+- [ ] **5.004** `creatures/moon_moth` — moon moth · 128×64 · 2 frames
+- [ ] **5.005** `creatures/mouser_cat` — mouser cat · 128×64 · 2 frames
+- [ ] **5.006** `creatures/pack_mule` — pack mule · 128×64 · 2 frames
+- [ ] **5.007** `creatures/pocket_drake` — pocket drake · 128×64 · 2 frames
+- [ ] **5.008** `creatures/stone_toad` — stone toad · 128×64 · 2 frames
+- [ ] **5.009** `creatures/war_hound` — war hound · 128×64 · 2 frames
+- [ ] **5.010** `enemies/bandit` — Road Bandit · 256×128 · 2 frames
+- [ ] **5.011** `enemies/bandit_archer` — Hold Crossbowman · 256×128 · 2 frames
+- [ ] **5.012** `enemies/bear` — Whisperwood Cave Bear · 256×128 · 2 frames
+- [ ] **5.013** `enemies/boar` — Tusked Boar · 256×128 · 2 frames
+- [ ] **5.014** `enemies/bog_wraith` — Bog Wraith · 256×128 · 2 frames
+- [ ] **5.015** `enemies/drakeling` — Ashen Drakeling · 256×128 · 2 frames
+- [ ] **5.016** `enemies/drowned` — Drowned Acolyte · 256×128 · 2 frames
+- [ ] **5.017** `enemies/goblin` — Tunnel Goblin · 256×128 · 2 frames
+- [ ] **5.018** `enemies/harpy` — Crag Harpy · 256×128 · 2 frames
+- [ ] **5.019** `enemies/shadow` — Shadow Crawler · 256×128 · 2 frames
+- [ ] **5.020** `enemies/skeleton` — Skeleton Warden · 256×128 · 2 frames
+- [ ] **5.021** `enemies/spider` — Cave Spider · 256×128 · 2 frames
+- [ ] **5.022** `enemies/temple_serpent` — Temple Serpent · 256×128 · 2 frames
+- [ ] **5.023** `enemies/troll` — Marsh Troll · 256×128 · 2 frames
+- [ ] **5.024** `enemies/war_hound` — Hold War-hound · 256×128 · 2 frames
+- [ ] **5.025** `enemies/wight` — Barrow Wight · 256×128 · 2 frames
+- [ ] **5.026** `enemies/wolf` — Grey Wolf · 256×128 · 2 frames
+- [ ] **5.027** `enemies/wyvern` — Barrow Wyvern · 256×128 · 2 frames
+- [ ] **5.028** `enemies/bandit_captain` — Captain Vell of the Toll Bridge · 384×192 · 2 frames
+- [ ] **5.029** `enemies/barrow_lord` — The Barrow Wight-Lord · 384×192 · 2 frames
+- [ ] **5.030** `enemies/black_maud` — Black Maud, Warlord of Raven's Hold · 384×192 · 2 frames
+- [ ] **5.031** `enemies/brood_daughter` — A Brood-Daughter · 384×192 · 2 frames
+- [ ] **5.032** `enemies/brood_mother` — The Brood Mother · 384×192 · 2 frames
+- [ ] **5.033** `enemies/cinderjaw` — Cinderjaw, the Old Drake · 384×192 · 2 frames
+- [ ] **5.034** `enemies/corvin` — Corvin Blackfeather · 384×192 · 2 frames
+- [ ] **5.035** `enemies/drowned_oracle` — The Drowned Oracle · 384×192 · 2 frames
+- [ ] **5.036** `enemies/golem` — Stone Golem · 384×192 · 2 frames
+- [ ] **5.037** `enemies/hollow_warden` — The Hollow Warden · 384×192 · 2 frames
+- [ ] **5.038** `enemies/oracle_echo` — The Oracle's Echo · 384×192 · 2 frames
+- [ ] **5.039** `enemies/revenant` — The Dwarf-King's Revenant · 384×192 · 2 frames
+- [ ] **5.040** `enemies/smoulderwing` — Smoulderwing, a Young Drake · 384×192 · 2 frames
+- [ ] **5.041** `enemies/toll_sergeant` — Sergeant Hask of the Toll · 384×192 · 2 frames
+- [ ] **5.042** `enemies/wight_steward` — The Wight-Steward · 384×192 · 2 frames
+- [ ] **5.043** `enemies/wolf_alpha` — The Whisperwood Alpha · 384×192 · 2 frames
+- [ ] **5.044** `enemies/young_alpha` — Greyfang, the Young Alpha · 384×192 · 2 frames
+- [ ] **5.059** `chars/animal_cat_1` — Village cat (variant 1) · 768×512 · 6×4 sheet
+- [ ] **5.060** `chars/animal_cat_2` — Village cat (variant 2) · 768×512 · 6×4 sheet
+- [ ] **5.061** `chars/animal_cow_1` — Village cow (variant 1) · 768×512 · 6×4 sheet
+- [ ] **5.062** `chars/animal_cow_2` — Village cow (variant 2) · 768×512 · 6×4 sheet
+- [ ] **5.063** `chars/animal_dog_1` — Village dog (variant 1) · 768×512 · 6×4 sheet
+- [ ] **5.064** `chars/animal_dog_2` — Village dog (variant 2) · 768×512 · 6×4 sheet
+- [ ] **5.065** `chars/animal_horse_1` — Village horse (variant 1) · 768×512 · 6×4 sheet
+- [ ] **5.066** `chars/animal_horse_2` — Village horse (variant 2) · 768×512 · 6×4 sheet
+
+## 6. UI, maps & decorative elements (217)
+
+### Priority A (missing) (3)
+
+- [ ] **6.042** `ui/maps/map_blackglass_rift` — Expedition map — The Blackglass Rift · 1920×1080
+- [ ] **6.043** `ui/maps/map_starfall_observatory` — Expedition map — The Starfall Observatory · 1920×1080
+- [ ] **6.044** `ui/maps/map_weeping_fortress` — Expedition map — The Weeping Fortress · 1920×1080
+
+### Priority A (33)
+
+- [ ] **6.020** `ui/button_disabled` — Button disabled · 192×56
+- [ ] **6.021** `ui/button_hover` — Button hover · 192×56
+- [ ] **6.022** `ui/button_normal` — Button normal · 192×56
+- [ ] **6.023** `ui/button_pressed` — Button pressed · 192×56
+- [ ] **6.154** `ui/menu_background` — Menu background · 1920×1080
+- [ ] **6.171** `ui/panel_dark` — Panel dark · 256×256
+- [ ] **6.172** `ui/panel_parchment` — Panel parchment · 256×256
+- [ ] **6.174** `ui/qt_barnaby` — Qt barnaby · 96×96
+- [ ] **6.175** `ui/qt_caravan` — Qt caravan · 96×96
+- [ ] **6.176** `ui/qt_chapel` — Qt chapel · 96×96
+- [ ] **6.177** `ui/qt_creatures` — Qt creatures · 96×96
+- [ ] **6.178** `ui/qt_harbour` — Qt harbour · 96×96
+- [ ] **6.179** `ui/qt_herbalist` — Qt herbalist · 96×96
+- [ ] **6.180** `ui/qt_inn` — Qt inn · 96×96
+- [ ] **6.181** `ui/qt_market` — Qt market · 96×96
+- [ ] **6.182** `ui/qt_pawn` — Qt pawn · 96×96
+- [ ] **6.183** `ui/qt_pond` — Qt pond · 96×96
+- [ ] **6.184** `ui/qt_rival` — Qt rival · 96×96
+- [ ] **6.185** `ui/qt_smithy` — Qt smithy · 96×96
+- [ ] **6.186** `ui/qt_square` — Qt square · 96×96
+- [ ] **6.206** `ui/toolbar_bar` — Toolbar bar · 512×128
+- [ ] **6.207** `ui/tb_adventurers` — Tb adventurers · 96×96
+- [ ] **6.208** `ui/tb_designer` — Tb designer · 96×96
+- [ ] **6.209** `ui/tb_help` — Tb help · 96×96
+- [ ] **6.210** `ui/tb_hirelings` — Tb hirelings · 96×96
+- [ ] **6.211** `ui/tb_inventory` — Tb inventory · 96×96
+- [ ] **6.212** `ui/tb_ledger` — Tb ledger · 96×96
+- [ ] **6.213** `ui/tb_map` — Tb map · 96×96
+- [ ] **6.214** `ui/tb_orders` — Tb orders · 96×96
+- [ ] **6.215** `ui/tb_property` — Tb property · 96×96
+- [ ] **6.216** `ui/tb_skilltree` — Tb skilltree · 96×96
+- [ ] **6.217** `ui/tb_socket` — Tb socket · 96×96
+- [ ] **6.218** `ui/tb_wanted` — Tb wanted · 96×96
+
+### Priority B (118)
+
+- [ ] **6.001** `ui/act_bandage` — Act bandage · 64×64
+- [ ] **6.002** `ui/act_candle` — Act candle · 64×64
+- [ ] **6.003** `ui/act_hammer` — Act hammer · 64×64
+- [ ] **6.004** `ui/act_road` — Act road · 64×64
+- [ ] **6.005** `ui/act_zzz` — Act zzz · 64×64
+- [ ] **6.006** `ui/cls_barbarian` — Cls barbarian · 96×96
+- [ ] **6.007** `ui/cls_bard` — Cls bard · 96×96
+- [ ] **6.008** `ui/cls_cleric` — Cls cleric · 96×96
+- [ ] **6.009** `ui/cls_fighter` — Cls fighter · 96×96
+- [ ] **6.010** `ui/cls_paladin` — Cls paladin · 96×96
+- [ ] **6.011** `ui/cls_ranger` — Cls ranger · 96×96
+- [ ] **6.012** `ui/cls_rogue` — Cls rogue · 96×96
+- [ ] **6.013** `ui/cls_wizard` — Cls wizard · 96×96
+- [ ] **6.014** `ui/attr_con` — Attr con · 96×96
+- [ ] **6.015** `ui/attr_dex` — Attr dex · 96×96
+- [ ] **6.016** `ui/attr_int` — Attr int · 96×96
+- [ ] **6.017** `ui/attr_str` — Attr str · 96×96
+- [ ] **6.018** `ui/attr_wis` — Attr wis · 96×96
+- [ ] **6.019** `ui/pin` — Pin · 32×32
+- [ ] **6.024** `ui/need_attack` — Need attack · 64×64
+- [ ] **6.025** `ui/need_deadline` — Need deadline · 64×64
+- [ ] **6.026** `ui/need_dispute` — Need dispute · 64×64
+- [ ] **6.027** `ui/need_magic` — Need magic · 64×64
+- [ ] **6.028** `ui/need_protection` — Need protection · 64×64
+- [ ] **6.029** `ui/dice_d12` — Dice d12 · 96×96
+- [ ] **6.030** `ui/dice_d20` — Dice d20 · 96×96
+- [ ] **6.031** `ui/dice_d6` — Dice d6 · 96×96
+- [ ] **6.032** `ui/dossier` — Dossier · 1200×800
+- [ ] **6.033** `ui/ic_family` — Ic family · 96×96
+- [ ] **6.034** `ui/ic_history` — Ic history · 96×96
+- [ ] **6.035** `ui/ic_home` — Ic home · 96×96
+- [ ] **6.036** `ui/ic_memory` — Ic memory · 96×96
+- [ ] **6.037** `ui/ic_sheet` — Ic sheet · 96×96
+- [ ] **6.038** `ui/ic_standing` — Ic standing · 96×96
+- [ ] **6.039** `ui/ic_talk` — Ic talk · 96×96
+- [ ] **6.040** `ui/ic_travel` — Ic travel · 96×96
+- [ ] **6.041** `ui/ic_work` — Ic work · 96×96
+- [ ] **6.045** `ui/maps/map_barrow_fields` — Expedition map — Barrow Fields · 1280×720
+- [ ] **6.046** `ui/maps/map_deep_ironroot` — Expedition map — Deep Ironroot · 1280×720
+- [ ] **6.047** `ui/maps/map_drakes_crag` — Expedition map — Drake's Crag · 1280×720
+- [ ] **6.048** `ui/maps/map_highmarsh_road` — Expedition map — Highmarsh Road · 1280×720
+- [ ] **6.049** `ui/maps/map_ironroot_mine` — Expedition map — Ironroot Mine · 1280×720
+- [ ] **6.050** `ui/maps/map_ravens_hold` — Expedition map — Raven's Hold · 1280×720
+- [ ] **6.051** `ui/maps/map_sunken_temple` — Expedition map — The Sunken Temple · 1280×720
+- [ ] **6.052** `ui/maps/map_whisperwood` — Expedition map — Whisperwood · 1280×720
+- [ ] **6.053** `ui/maps/world_map` — World map (full) · 1600×1000
+- [ ] **6.054** `ui/guide_knowledge` — Guide knowledge · 96×96
+- [ ] **6.055** `ui/guide_locked` — Guide locked · 96×96
+- [ ] **6.056** `ui/guide_obtainable` — Guide obtainable · 96×96
+- [ ] **6.057** `ui/guide_ready` — Guide ready · 96×96
+- [ ] **6.058** `ui/guide_unavailable` — Guide unavailable · 96×96
+- [ ] **6.134** `ui/warn_broken` — Warn broken · 96×96
+- [ ] **6.135** `ui/warn_worn` — Warn worn · 96×96
+- [ ] **6.136** `ui/story_battle` — Story battle · 96×96
+- [ ] **6.137** `ui/story_commission` — Story commission · 96×96
+- [ ] **6.138** `ui/story_discovery` — Story discovery · 96×96
+- [ ] **6.139** `ui/story_enchanted` — Story enchanted · 96×96
+- [ ] **6.140** `ui/story_epic` — Story epic · 96×96
+- [ ] **6.141** `ui/story_forged` — Story forged · 96×96
+- [ ] **6.142** `ui/story_found` — Story found · 96×96
+- [ ] **6.143** `ui/story_inherited` — Story inherited · 96×96
+- [ ] **6.144** `ui/story_lost` — Story lost · 96×96
+- [ ] **6.145** `ui/story_named` — Story named · 96×96
+- [ ] **6.146** `ui/story_note` — Story note · 96×96
+- [ ] **6.147** `ui/story_reforged` — Story reforged · 96×96
+- [ ] **6.148** `ui/story_repaired` — Story repaired · 96×96
+- [ ] **6.149** `ui/story_reunion` — Story reunion · 96×96
+- [ ] **6.150** `ui/story_sale` — Story sale · 96×96
+- [ ] **6.151** `ui/story_sharpened` — Story sharpened · 96×96
+- [ ] **6.152** `ui/story_survived` — Story survived · 96×96
+- [ ] **6.153** `ui/story_treated` — Story treated · 96×96
+- [ ] **6.155** `ui/map_marker` — Map marker · 48×48
+- [ ] **6.156** `ui/station_marker` — Station marker · 48×48
+- [ ] **6.157** `ui/skillcheck_ring` — Skillcheck ring · 384×384
+- [ ] **6.158** `ui/tut_align` — Tut align · 360×260
+- [ ] **6.159** `ui/tut_edge` — Tut edge · 360×260
+- [ ] **6.160** `ui/tut_eye` — Tut eye · 64×64
+- [ ] **6.161** `ui/tut_key` — Tut key · 64×64
+- [ ] **6.162** `ui/tut_multihit` — Tut multihit · 360×260
+- [ ] **6.163** `ui/tut_ring` — Tut ring · 360×260
+- [ ] **6.164** `ui/tut_rings` — Tut rings · 360×260
+- [ ] **6.165** `ui/tut_rune` — Tut rune · 360×260
+- [ ] **6.166** `ui/tut_star` — Tut star · 64×64
+- [ ] **6.167** `ui/divider` — Divider · 512×24
+- [ ] **6.173** `ui/paperdoll` — Paperdoll · 360×560
+- [ ] **6.187** `ui/recipe_plaque` — Recipe plaque · 44×44
+- [ ] **6.188** `ui/renown` — Renown · 96×96
+- [ ] **6.189** `ui/wax_seal` — Wax seal · 64×64
+- [ ] **6.190** `ui/slot` — Slot · 72×72
+- [ ] **6.191** `ui/slot_companion` — Slot companion · 96×96
+- [ ] **6.193** `ui/stat_damage` — Stat damage · 96×96
+- [ ] **6.194** `ui/stat_defence` — Stat defence · 96×96
+- [ ] **6.195** `ui/stat_fatigue` — Stat fatigue · 96×96
+- [ ] **6.196** `ui/stat_fire` — Stat fire · 96×96
+- [ ] **6.197** `ui/stat_frost` — Stat frost · 96×96
+- [ ] **6.198** `ui/stat_gear` — Stat gear · 96×96
+- [ ] **6.199** `ui/stat_hp` — Stat hp · 96×96
+- [ ] **6.200** `ui/stat_magic` — Stat magic · 96×96
+- [ ] **6.201** `ui/stat_morale` — Stat morale · 96×96
+- [ ] **6.202** `ui/stat_tohit` — Stat tohit · 96×96
+- [ ] **6.203** `ui/stat_ward` — Stat ward · 96×96
+- [ ] **6.204** `ui/stamp_fallen` — Stamp fallen · 220×80
+- [ ] **6.205** `ui/stamp_missing` — Stamp missing · 220×80
+- [ ] **6.219** `ui/wanted_board` — Wanted board · 1600×900
+- [ ] **6.220** `ui/wanted_sheet` — Wanted sheet · 300×400
+- [ ] **6.221** `ui/world/cleared` — World map — cleared · 64×64
+- [ ] **6.222** `ui/world/fog` — World map — fog · 220×150
+- [ ] **6.223** `ui/world/party` — World map — party · 48×72
+- [ ] **6.224** `ui/world/seal` — World map — seal · 64×64
+- [ ] **6.225** `ui/world/site_barrow` — World map — site barrow · 160×140
+- [ ] **6.226** `ui/world/site_crag` — World map — site crag · 160×140
+- [ ] **6.227** `ui/world/site_deep` — World map — site deep · 160×140
+- [ ] **6.228** `ui/world/site_forest` — World map — site forest · 160×140
+- [ ] **6.229** `ui/world/site_mine` — World map — site mine · 160×140
+- [ ] **6.230** `ui/world/site_road` — World map — site road · 160×140
+- [ ] **6.231** `ui/world/site_stronghold` — World map — site stronghold · 160×140
+- [ ] **6.232** `ui/world/site_temple` — World map — site temple · 160×140
+- [ ] **6.233** `ui/world/village` — World map — village · 200×150
+
+### Priority C (63)
+
+- [ ] **6.059** `ironfront/back` — Ironfront — back · 360×520
+- [ ] **6.060** `ironfront/board` — Ironfront — board · 1920×1080
+- [ ] **6.061** `ironfront/gem_off` — Ironfront — gem off · 64×64
+- [ ] **6.062** `ironfront/gem_on` — Ironfront — gem on · 64×64
+- [ ] **6.063** `ironfront/helmet` — Ironfront — helmet · 256×256
+- [ ] **6.064** `ironfront/row_air` — Ironfront — row air · 128×128
+- [ ] **6.065** `ironfront/row_arm` — Ironfront — row arm · 128×128
+- [ ] **6.066** `ironfront/row_inf` — Ironfront — row inf · 128×128
+- [ ] **6.079** `cards/air_superiority` — Air Superiority (neutral tactic) · 360×520
+- [ ] **6.080** `cards/airborne` — Airborne Paratroopers (allies unit) · 360×520
+- [ ] **6.081** `cards/barrage` — Rolling Barrage (neutral tactic) · 360×520
+- [ ] **6.082** `cards/bf109` — Messerschmitt Bf 109 (axis unit) · 360×520
+- [ ] **6.083** `cards/churchill` — Churchill (allies unit) · 360×520
+- [ ] **6.084** `cards/codebreakers` — Bletchley Park Codebreakers (neutral tactic) · 360×520
+- [ ] **6.085** `cards/combat_medic` — Combat Medic (allies unit) · 360×520
+- [ ] **6.086** `cards/commandos` — Commandos (allies unit) · 360×520
+- [ ] **6.087** `cards/dakota` — C-47 Dakota (allies unit) · 360×520
+- [ ] **6.088** `cards/doctrine` — Blitzkrieg Doctrine (neutral tactic) · 360×520
+- [ ] **6.089** `cards/enigma` — Enigma Machine (neutral tactic) · 360×520
+- [ ] **6.090** `cards/fallschirmjager` — Fallschirmjäger (axis unit) · 360×520
+- [ ] **6.091** `cards/field_nurse` — Field Nurse (soviet unit) · 360×520
+- [ ] **6.092** `cards/field_surgeon` — Field Surgeon (axis unit) · 360×520
+- [ ] **6.093** `cards/flak88` — 88 mm Flak (axis unit) · 360×520
+- [ ] **6.094** `cards/fog` — Channel Fog (neutral tactic) · 360×520
+- [ ] **6.095** `cards/fortitude` — Operation Fortitude (neutral tactic) · 360×520
+- [ ] **6.096** `cards/forward_observer` — Forward Observer (allies unit) · 360×520
+- [ ] **6.097** `cards/frost` — Hard Frost (neutral tactic) · 360×520
+- [ ] **6.098** `cards/grenadiers` — Grenadiers (axis unit) · 360×520
+- [ ] **6.099** `cards/guards` — Guards Rifles (soviet unit) · 360×520
+- [ ] **6.100** `cards/halftrack` — Sd.Kfz. 251 Half-track (axis unit) · 360×520
+- [ ] **6.101** `cards/il2` — Il-2 Sturmovik (soviet unit) · 360×520
+- [ ] **6.102** `cards/is2` — IS-2 (soviet unit) · 360×520
+- [ ] **6.103** `cards/jeep` — Willys Jeep (allies unit) · 360×520
+- [ ] **6.104** `cards/ju52` — Ju 52 Transport (axis unit) · 360×520
+- [ ] **6.105** `cards/katyusha` — Katyusha (soviet unit) · 360×520
+- [ ] **6.106** `cards/kv1` — KV-1 (soviet unit) · 360×520
+- [ ] **6.107** `cards/lancaster` — Avro Lancaster (allies unit) · 360×520
+- [ ] **6.108** `cards/m7_priest` — M7 Priest (allies unit) · 360×520
+- [ ] **6.109** `cards/me262` — Me 262 (axis unit) · 360×520
+- [ ] **6.110** `cards/mg42` — MG 42 Team (axis unit) · 360×520
+- [ ] **6.111** `cards/mosquito` — de Havilland Mosquito (allies unit) · 360×520
+- [ ] **6.112** `cards/mud` — Mud Season (neutral tactic) · 360×520
+- [ ] **6.113** `cards/mustang` — P-51 Mustang (allies unit) · 360×520
+- [ ] **6.114** `cards/panther` — Panther (axis unit) · 360×520
+- [ ] **6.115** `cards/panzer_iv` — Panzer IV (axis unit) · 360×520
+- [ ] **6.116** `cards/panzerfaust` — Panzerfaust Troop (axis unit) · 360×520
+- [ ] **6.117** `cards/pincer` — Pincer Movement (neutral tactic) · 360×520
+- [ ] **6.118** `cards/rangers` — Rangers (allies unit) · 360×520
+- [ ] **6.119** `cards/razvedchiki` — Razvedchiki Scouts (soviet unit) · 360×520
+- [ ] **6.120** `cards/rifle_company` — Rifle Company (soviet unit) · 360×520
+- [ ] **6.121** `cards/rifle_squad` — Rifle Squad (allies unit) · 360×520
+- [ ] **6.122** `cards/sherman` — Sherman M4 (allies unit) · 360×520
+- [ ] **6.123** `cards/smoke` — Smoke Screen (neutral tactic) · 360×520
+- [ ] **6.124** `cards/snipers` — Sniper Pair (soviet unit) · 360×520
+- [ ] **6.125** `cards/spitfire` — Spitfire Mk IX (allies unit) · 360×520
+- [ ] **6.126** `cards/studebaker` — Studebaker Truck (soviet unit) · 360×520
+- [ ] **6.127** `cards/stug` — StuG III (axis unit) · 360×520
+- [ ] **6.128** `cards/stuka` — Ju 87 Stuka (axis unit) · 360×520
+- [ ] **6.129** `cards/t34` — T-34/85 (soviet unit) · 360×520
+- [ ] **6.130** `cards/tiger` — Tiger I (axis unit) · 360×520
+- [ ] **6.131** `cards/tiger2` — Tiger II (axis unit) · 360×520
+- [ ] **6.132** `cards/tommies` — Tommy Section (allies unit) · 360×520
+- [ ] **6.133** `cards/yak3` — Yak-3 (soviet unit) · 360×520
+
+## 7. Weather, particles & effects (2)
+
+### Priority C (2)
+
+- [ ] **7.001** `props/eggs_splat` — Eggs splat · 96×64
+- [ ] **7.002** `props/street_lamp_glow` — Street lamp glow · 64×128
+
