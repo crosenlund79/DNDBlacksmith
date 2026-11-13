@@ -4096,3 +4096,9 @@ func phase_seasons() -> void:
 func phase_lvw_dev() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_dev(self)
+
+
+## Barnaby's Ironfront introduction, teaching match, Field Manual and shelf (tests/playtest_lvw.gd). Shots lvw_if_*.
+func phase_lvw_ironfront() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_ironfront(self)

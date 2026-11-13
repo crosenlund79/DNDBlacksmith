@@ -539,6 +539,12 @@ static func _resolve(h: Dictionary) -> void:
 		contents = Loot.roll_table(d["loot"], lvl * 2.0 + trait_mult(h, "haul") + (0.0 if success else -25.0), lvl)
 		if not success:
 			contents = contents.slice(0, max(1, contents.size() / 2))
+	# v1.7 (#70): now and then the smith's hireling brings a painted Ironfront card home in the haul
+	if success and not first_bag and randf() < Ironfront.FOUND_CHANCE * 1.5:
+		var hc := Ironfront.card_found(h, true)
+		if hc != "":
+			log_line(h, "found a painted Ironfront card: %s" % Ironfront.card(hc).get("name", hc))
+			Game.journal("%s brought a painted Ironfront card home from %s: %s." % [h["name"], d["name"], Ironfront.card(hc).get("name", hc)])
 	var bag_def := "shipment_miner" if d["kind"] == "mining" else ("satchel_relic" if d["kind"] == "relics" else "bag_traveller")
 	Game.state["returns"].append(Loot.make_container(bag_def, contents, h["name"],
 		"%s's haul from %s." % [h["name"], d["name"]]))

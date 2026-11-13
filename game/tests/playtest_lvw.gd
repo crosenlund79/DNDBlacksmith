@@ -69,3 +69,46 @@ func run_dev(p: Node) -> void:
 	DevTools.set_enabled(false)
 	pt.expect(not DevTools.enabled() and Engine.time_scale == 1.0, "dev: cheats off")
 	pt.expect(Game.player_level("smithing") >= l0, "dev: levels kept")
+
+
+## lvw_ironfront: Barnaby's in-character introduction (paged), the teaching match with his suggestion and ability notes,
+## the Field Manual (lessons, every card explained), Barnaby's shelf with a found card and the sell list.
+func run_ironfront(p: Node) -> void:
+	pt = p
+	await pt.click("New Game")
+	await pt.wait(2.5)
+	Events.open_panel.emit("ironfront", {"id": "barnaby", "tutorial": true})
+	await pt.wait(1.2)
+	var ip: Control = pt.panel()
+	pt.expect(ip is IronfrontPanel and ip.find_child("IntroText", true, false) != null, "ironfront: Barnaby's introduction opens first")
+	await _shot("if_intro_1")
+	for i in 3:
+		await pt.click("Go on…", ip)
+		await pt.wait(0.4)
+	await _shot("if_intro_4")
+	pt.expect(await pt.click("Deal me in", ip), "ironfront: the teaching match is dealt")
+	await pt.wait(1.5)
+	var board: IronfrontBoard = (ip as IronfrontPanel).board if ip is IronfrontPanel else null
+	pt.expect(board != null and int(board.m["seed"]) == Ironfront.TEACHING_SEED, "ironfront: the fixed teaching deal")
+	if board != null and int(board.m["turn"]) != 0:
+		await pt.wait(3.0)
+	if board != null:
+		board._refresh()
+		await pt.wait(0.3)
+		pt.expect(board.coach_box.visible and str(board.coach_label.text).contains("Barnaby suggests"), "ironfront: Barnaby suggests a move and why")
+		pt.note("coach: " + str(board.coach_label.text).left(240))
+		await _shot("if_teaching_board")
+	# the Field Manual and the shelf
+	await pt.close_panel()
+	await pt.wait(0.5)
+	var a: Dictionary = Adv.in_town()[0]
+	Ironfront.card_found(a, false, "special")
+	Ironfront.on_day()
+	Events.open_panel.emit("ironfront", {"page": "manual"})
+	await pt.wait(1.0)
+	await _shot("if_manual")
+	(pt.panel() as IronfrontPanel)._show("shop")
+	await pt.wait(0.8)
+	pt.expect(not Ironfront.found_shelf().is_empty(), "ironfront: a card %s found on the road is on Barnaby's shelf" % a.get("name", ""))
+	await _shot("if_shop")
+	await pt.close_panel()

@@ -1042,6 +1042,24 @@
   "bf109": 1,
   "frost": 1
  },
+ "teaching_deck": {
+  "name": "Barnaby's teaching box",
+  "faction": "axis",
+  "commander": "field_marshal",
+  "cards": {
+   "grenadiers": 4,
+   "mg42": 2,
+   "field_surgeon": 1,
+   "panzer_iv": 3,
+   "stug": 2,
+   "halftrack": 2,
+   "bf109": 3,
+   "ju52": 2,
+   "mud": 1,
+   "fog": 1,
+   "frost": 1
+  }
+ },
  "opponents": [
   {
    "id": "jory",

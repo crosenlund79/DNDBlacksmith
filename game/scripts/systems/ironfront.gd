@@ -109,7 +109,23 @@ static func st() -> Dictionary:
 			s[k] = []
 	if not s.has("active"):
 		s["active"] = 0
+	if not s.has("lent"):
+		s["lent"] = _lent_for(s)   # v1.7: Barnaby's loaner deck is lent (older saves: what of it is still held)
+	if not s.has("shelf"):
+		s["shelf"] = []
 	return s
+
+
+## The loaner deck's cards (data "starter_deck"), as far as the collection still holds them.
+static func _lent_for(s: Dictionary) -> Dictionary:
+	var out := {}
+	var col: Dictionary = s.get("collection", {})
+	var starter: Dictionary = data().get("starter_deck", {}).get("cards", {})
+	for id: String in starter:
+		var n := mini(int(starter[id]), int(col.get(id, 0)))
+		if n > 0:
+			out[id] = n
+	return out
 
 
 static func _new_state() -> Dictionary:
@@ -1085,7 +1101,11 @@ static func finish_reward(m: Dictionary) -> Dictionary:
 	var res := "win" if w == 0 else "loss" if w == 1 else "draw"
 	var out := {"cards": [], "gold": 0, "result": res, "unlocked": []}
 	if m.get("tutorial", false):
-		out["gold"] = 10 if res == "win" else 0
+		# v1.7: the teaching match is replayable, but Barnaby's welcome purse is paid once (never cards)
+		out["gold"] = 10 if res == "win" and not bool(st().get("tutorial_rewarded", false)) else 0
+		if res == "win":
+			st()["tutorial_rewarded"] = true
+			st()["tutorial_won"] = true
 	elif res == "win":
 		out["gold"] = int(rw.get("gold_win", [0, 20, 35, 55])[tier])
 		var n := int(rw.get("cards_win", [0, 1, 1, 2])[tier])
@@ -1167,3 +1187,216 @@ static func _close_invite() -> void:
 		TalkMarkers.clear("barnaby")
 		Chronicle.add("social", "Brannoc played his first game of Ironfront in Barnaby's basement.", {"npc": "barnaby"}, true)
 		Social.change("barnaby", 8.0, 10.0, "ironfront_intro", "The smith accepted my invitation and played Ironfront with me!")
+
+
+# =========================================================================== v1.7 (#70): Barnaby's introduction & trade
+## Canonical v1.7 §11. The loaner deck is Barnaby's (lent, never sold back); Barnaby buys the smith's spare cards at a
+## modest price and sells, besides his daily shelf, the cards adventurers found on the road and sold him; a party now and
+## then carries a painted card home from an expedition (a hireling's find is the smith's haul; an adventurer's is theirs
+## until they sell it to Barnaby). The Field Manual explains every card, a few lessons at a time; the teaching match is
+## a fixed, winnable deal with Barnaby's suggestions.
+const SELL_PRICE := {"common": 6, "uncommon": 14, "rare": 36, "special": 110}
+const SHELF_SPECIAL_PRICE := 240
+const SHELF_MAX := 8
+const FOUND_CHANCE := 0.04       # a returning party carries a painted card home
+const TEACHING_SEED := 1918      # the teaching match's fixed deal (a real, winnable game)
+
+
+static func lent(id: String) -> int:
+	return int(st()["lent"].get(id, 0))
+
+
+## Copies the smith may sell: owned, less the lent loaner copies and what the active deck uses.
+static func spare(id: String) -> int:
+	var in_deck := int(active_deck().get("cards", {}).get(id, 0))
+	return maxi(0, owned(id) - maxi(lent(id), in_deck))
+
+
+static func sell_price(id: String) -> int:
+	return int(SELL_PRICE.get(str(card(id).get("rarity", "common")), 6))
+
+
+## Sells one spare copy to Barnaby; returns the gold paid (0 = refused).
+static func sell_card(id: String) -> int:
+	if card(id).is_empty() or spare(id) <= 0:
+		return 0
+	var col: Dictionary = st()["collection"]
+	col[id] = int(col[id]) - 1
+	if int(col[id]) <= 0:
+		col.erase(id)
+	var price := sell_price(id)
+	Game.add_gold(price, "ironfront", "Sold an Ironfront card to Barnaby: %s" % card(id)["name"], "barnaby")
+	st()["sold"] = int(st().get("sold", 0)) + 1
+	return price
+
+
+## A painted card found on an expedition. `finder` is an adventurer (they keep it, to sell to Barnaby) or, with
+## `smiths` true, the smith's own hireling (it comes home in the smith's haul). Returns the card id ("" = none).
+static func card_found(finder: Dictionary, smiths := false, rarity := "") -> String:
+	var r := rarity
+	if r == "":
+		var x := randf()
+		r = "common" if x < 0.5 else "uncommon" if x < 0.8 else "rare" if x < 0.95 else "special"
+	var id := random_card(r)
+	if id == "":
+		return ""
+	if smiths:
+		grant_card(id, "hireling:" + str(finder.get("id", "")))
+	else:
+		if not finder.has("ironfront_cards"):
+			finder["ironfront_cards"] = []
+		(finder["ironfront_cards"] as Array).append(id)
+	return id
+
+
+## Daily: adventurers in Brindlewick who carry cards sell them to Barnaby (paid from his till into their purse); they
+## join his "found on the road" shelf. The shelf holds SHELF_MAX — the oldest goes to a collector.
+static func on_day() -> void:
+	if not Game.state.has("ironfront"):
+		return
+	var shelf: Array = st()["shelf"]
+	for a in Adv.all().values():
+		var cards: Array = a.get("ironfront_cards", [])
+		if cards.is_empty() or str(a.get("status", "")) != "in_town":
+			continue
+		for id in cards:
+			var price := sell_price(str(id))
+			a["gold"] = int(a.get("gold", 0)) + price
+			shelf.append({"id": str(id), "from": str(a["id"]), "name": str(a.get("name", "")), "day": Game.day()})
+			Game.journal("%s sold Barnaby a painted Ironfront card found on the road: %s." % [a.get("name", ""), card(str(id)).get("name", id)])
+		a["ironfront_cards"] = []
+	while shelf.size() > SHELF_MAX:
+		shelf.pop_front()
+
+
+static func shelf_price(id: String) -> int:
+	return SHELF_SPECIAL_PRICE if bool(card(id).get("special", false)) else single_price(id)
+
+
+static func found_shelf() -> Array:
+	return st()["shelf"]
+
+
+static func buy_found(index: int) -> bool:
+	var shelf: Array = st()["shelf"]
+	if index < 0 or index >= shelf.size():
+		return false
+	var e: Dictionary = shelf[index]
+	var price := shelf_price(str(e["id"]))
+	if not Game.can_afford(price):
+		return false
+	Game.add_gold(-price, "ironfront", "Ironfront card from Barnaby's found shelf: %s" % card(str(e["id"])).get("name", ""), "barnaby")
+	grant_card(str(e["id"]), "shelf:" + str(e.get("from", "")))
+	shelf.remove_at(index)
+	return true
+
+
+# ---------------------------------------------------------------- the Field Manual: every card, a few lessons at a time
+## Lessons in order: the loaner deck, the other Allies, the Axis, the Soviets, the tactics, the rare finds. Every
+## defined card is in exactly one lesson. Lesson 1 is open from the start, lesson 2 after the teaching match, then one
+## more each new day the smith sits at Barnaby's table (Ironfront.visit_table).
+static func lessons() -> Array:
+	var starter: Dictionary = data().get("starter_deck", {}).get("cards", {})
+	var out := [
+		{"title": "Lesson 1 — Your loaner deck", "intro": "\"These are the lads you'll command first. Learn them well.\"", "cards": []},
+		{"title": "Lesson 2 — The rest of the Allies", "intro": "\"Tea, tanks and nerve. More of them, and better.\"", "cards": []},
+		{"title": "Lesson 3 — The Axis", "intro": "\"Few, heavy and terrible. Know them before they know you.\"", "cards": []},
+		{"title": "Lesson 4 — The Soviets", "intro": "\"Endless companies and very hard frost.\"", "cards": []},
+		{"title": "Lesson 5 — Tactics", "intro": "\"Weather, deception and doctrine — any deck may carry them.\"", "cards": []},
+		{"title": "Lesson 6 — Rare finds", "intro": "\"Found only on the road. I'd give my second-best helmet for one.\"", "cards": []},
+	]
+	for c: Dictionary in all_cards():
+		var id := str(c["id"])
+		var i := 0
+		if c.get("special", false):
+			i = 5
+		elif starter.has(id):
+			i = 0
+		elif str(c.get("type", "")) == "tactic" or str(c.get("faction", "")) == "neutral":
+			i = 4
+		else:
+			i = {"allies": 1, "axis": 2, "soviet": 3}.get(str(c.get("faction", "")), 4)
+		(out[i]["cards"] as Array).append(id)
+	return out
+
+
+static func lessons_open() -> int:
+	var n := int(st().get("manual_open", 1))
+	if bool(st().get("tutorial_done", false)):
+		n = maxi(n, 2)
+	return clampi(n, 1, lessons().size())
+
+
+## The smith sits at Barnaby's table today: after the teaching match, one more lesson each new day.
+static func visit_table() -> void:
+	var s := st()
+	if not bool(s.get("tutorial_done", false)):
+		return
+	if int(s.get("manual_day", -1)) == Game.day():
+		return
+	s["manual_day"] = Game.day()
+	var was := lessons_open()
+	if int(s.get("manual_visits", 0)) > 0:
+		s["manual_open"] = mini(lessons().size(), was + 1)
+	else:
+		s["manual_open"] = was
+	s["manual_visits"] = int(s.get("manual_visits", 0)) + 1
+
+
+## Barnaby's explanation of one card: its front, strength, abilities in plain words, and whether the smith has it.
+static func explain(id: String) -> String:
+	var c := card(id)
+	if c.is_empty():
+		return ""
+	var head := "[b]%s[/b] — %s %s" % [c["name"], RARITY_NAMES.get(str(c.get("rarity", "")), ""),
+		"tactic" if str(c.get("type", "")) == "tactic" else "%s, strength %d" % [ROW_NAMES.get(str(c.get("row", "")), ""), int(c.get("str", 0))]]
+	var ab := ability_text(c)
+	var own := owned(id)
+	var where := ("you hold %d%s" % [own, " (lent)" if lent(id) > 0 else ""]) if own > 0 else ("found only on the road" if c.get("special", false) else "on my shelf some days, or in a pack")
+	return head + ("\n" + ab if ab != "" else "\nNo special ability — honest strength.") + "\n[i]%s · %s[/i]" % [str(c.get("flavor", "")), where]
+
+
+# ---------------------------------------------------------------- the teaching match
+## Barnaby's proud introduction, a page at a time (the in-character opening before the teaching match).
+const INTRO_PAGES := [
+	"\"Welcome, welcome — mind the step, mind the helmet! You are standing in the [b]war-room[/b] of Ironfront, the finest game ever played on felt, and I, Barnaby Quill, am its humble keeper.\"",
+	"\"Picture machines no wizard ever dreamed of: steel beetles that breathe thunder, iron birds that dive and shriek. Each card fights on one front — [b]Infantry[/b], [b]Armour[/b] or [b]Air[/b] — and adds its strength there.\"",
+	"\"You play one card, or you [b]pass[/b]. Once you pass you're out until the round ends. The bigger army wins the round; best of three. And cards don't come back — so win cheaply, lose cheaply. [i]Restraint![/i]\"",
+	"\"I'll lend you my own loaner deck — good honest lads, a commando or two. Sit, and I'll whisper the right move each turn and tell you why. Win this one, and the war-room is yours.\"",
+]
+
+
+## The best move for `side` and Barnaby's reason, in plain words (the coach's suggestion).
+static func suggest(m: Dictionary, side: int) -> Dictionary:
+	var keep: Variant = m["ai"][side] if m.get("ai", []) is Array and (m["ai"] as Array).size() > side else {}
+	m["ai"][side] = {"skill": 1.0, "bluff": 0.0, "greed": 0.5}
+	var rs := int(m.get("ai_rs", 1))
+	var mv := ai_move(m, side)
+	m["ai_rs"] = rs   # a suggestion never changes the game's own dice
+	m["ai"][side] = keep
+	if mv.is_empty():
+		return {}
+	var s: Dictionary = m["sides"][side]
+	var o: Dictionary = m["sides"][1 - side]
+	var lead := score(m, side) - score(m, 1 - side)
+	var why := ""
+	match str(mv["type"]):
+		"pass":
+			if bool(o["passed"]) and lead > 0:
+				why = "Barnaby has passed and you lead by %d — pass now and keep every card in your hand for the next round." % lead
+			elif lead > 0:
+				why = "You're ahead by %d. Pass, and make me spend my cards to catch up — or give the round up cheaply." % lead
+			else:
+				why = "This round isn't worth more cards. Pass, let me have it, and keep your strength for the next."
+		"commander":
+			why = "Your Commander's order — once per match. Now is the moment: %s" % str(commander(str(s["commander"])).get("text", "it turns the round."))
+		"play":
+			var hc := _hand_card(s, int(mv["uid"]))
+			var cc := card(str(hc.get("id", "")))
+			var abl := ability_text(cc)
+			why = "Play [b]%s[/b]%s. %s" % [cc.get("name", "it"), (" on " + ROW_NAMES.get(str(cc.get("row", "")), "") if str(cc.get("type", "")) != "tactic" else ""),
+				abl if abl != "" else "Its %d strength is what this front needs." % int(cc.get("str", 0))]
+			if bool(o["passed"]):
+				why += " I've passed — you only need to get ahead, then stop."
+	return {"move": mv, "why": why}
+

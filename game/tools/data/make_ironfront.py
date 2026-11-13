@@ -241,6 +241,12 @@ STARTER_DECK = deck("Barnaby's Loaner (Allies)", "allies", "supreme_commander", 
     "sherman": 3, "jeep": 2, "churchill": 1, "m7_priest": 1,
     "dakota": 2, "spitfire": 2,
     "mud": 1, "fog": 1, "smoke": 1})
+# v1.7 (#70): Barnaby's teaching box — the modest Axis deck he plays in the teaching match (a fixed deal,
+# Ironfront.TEACHING_SEED), so a newcomer following his suggestions wins a real game. Never in anyone's collection.
+TEACHING_DECK = {"name": "Barnaby's teaching box", "faction": "axis", "commander": "field_marshal",
+                 "cards": {"grenadiers": 4, "mg42": 2, "field_surgeon": 1, "panzer_iv": 3, "stug": 2, "halftrack": 2,
+                           "bf109": 3, "ju52": 2, "mud": 1, "fog": 1, "frost": 1}}
+
 STARTER_EXTRA = {"rifle_company": 3, "t34": 2, "yak3": 2, "razvedchiki": 1, "studebaker": 1, "field_nurse": 1,
                  "grenadiers": 2, "panzer_iv": 2, "bf109": 1, "frost": 1}
 
@@ -292,7 +298,7 @@ REWARDS = dict(gold_win=[0, 20, 35, 55], gold_loss=8, cards_win=[0, 1, 1, 2],
 BLITZ = dict(hand=8, plays=7, momentum_plays=2, momentum=2, assault_bonus=1)
 
 data = dict(cards=CARDS, commanders=COMMANDERS, factions=FACTIONS, deck_rules=DECK_RULES, starter_deck=STARTER_DECK,
-            starter_extra=STARTER_EXTRA, opponents=OPPONENTS, shop=SHOP, rewards=REWARDS, blitz=BLITZ, rules=RULES_TEXT)
+            starter_extra=STARTER_EXTRA, teaching_deck=TEACHING_DECK, opponents=OPPONENTS, shop=SHOP, rewards=REWARDS, blitz=BLITZ, rules=RULES_TEXT)
 
 if __name__ == "__main__":
     ids = [c["id"] for c in CARDS]

@@ -34,6 +34,7 @@ static func on_day(day: int) -> void:
 	Shop.expire_offers()
 	Trade.on_day()
 	Commerce.on_day()
+	Ironfront.on_day()   # v1.7: adventurers sell the painted cards they found on the road to Barnaby
 	ItemStory.on_day()   # earned names, fame commissions, the circulating pool
 	Apprentices.on_day()   # apprentice wages, loyalty, upkeep, independence, weekly applicants
 	Contracts.on_day()   # The Living Realm: patrons' letters, deadlines of major contracts

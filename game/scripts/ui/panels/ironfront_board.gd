@@ -319,6 +319,7 @@ func _refresh() -> void:
 	var w := minf(108.0, 1180.0 / maxf(1.0, float(n)) - 6.0)
 	for c: Dictionary in me["hand"]:
 		var v := IronfrontCard.new(c, w, false, int(c["str"]))
+		v.set_meta("uid", int(c["uid"]))
 		v.hovered.connect(_zoom)
 		v.clicked.connect(_on_hand_click)
 		v.set_selected.call_deferred(int(c["uid"]) == selected_uid)
@@ -652,3 +653,39 @@ func _coach() -> void:
 		_tip("round2", "Best of three rounds, and cards do not come back. Winning a round with fewer cards is the whole art. Your [b]Commander[/b] order works once per match.")
 	if m["over"]:
 		_tip("over", "That's the game! Win matches to earn cards, buy packs from my shelf and build your own deck. Merchants and expeditions turn up rare ones, too.")
+		if int(m.get("winner", -1)) == ME:
+			coach_label.text = "[b]A victory — and a fine one![/b] You won it the way generals do: strength where it mattered, cards kept back where it didn't. The war-room is yours; my Field Manual explains every card, a lesson at a time."
+		return
+	# v1.7 (#70): explain each ability the first time it appears on the table, then Barnaby's suggested move and why
+	var lines := []
+	for sd in [ME, FOE]:
+		for row in Ironfront.ROWS:
+			for c: Dictionary in m["sides"][sd]["rows"][row]:
+				_note_card(str(c["id"]), lines, sd == FOE)
+	if int(m["turn"]) == ME:
+		for c: Dictionary in me["hand"]:
+			_note_card(str(c["id"]), lines, false)
+		var sug := Ironfront.suggest(m, ME)
+		suggested_uid = int(sug.get("move", {}).get("uid", -1)) if str(sug.get("move", {}).get("type", "")) == "play" else -1
+		var head := "" if lines.is_empty() else "\n".join(lines.slice(0, 2)) + "\n\n"
+		coach_label.text = head + "[b]Barnaby suggests:[/b] " + str(sug.get("why", ""))
+		coach_box.visible = true
+		for v in hand_box.get_children():
+			if v is CanvasItem:
+				(v as CanvasItem).modulate = Color(1.12, 1.05, 0.8) if v.get_meta("uid", -1) == suggested_uid else Color.WHITE
+
+
+var suggested_uid := -1
+var explained := {}
+
+
+## A card met for the first time in the teaching match: one plain line on what it does.
+func _note_card(id: String, lines: Array, foe: bool) -> void:
+	if explained.has(id):
+		return
+	var c := Ironfront.card(id)
+	var ab := Ironfront.ability_text(c)
+	if ab == "":
+		return
+	explained[id] = true
+	lines.append("[i]%s%s:[/i] %s" % ["Barnaby's " if foe else "", c.get("name", id), ab.replace("\n", " ")])

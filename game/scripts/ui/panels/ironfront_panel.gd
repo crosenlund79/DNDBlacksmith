@@ -40,10 +40,8 @@ var _intro := false
 func _ready() -> void:
 	super._ready()
 	Ironfront.st()
-	_show(page)
-	if _intro:
-		# answering Barnaby's invitation: straight into the coached introductory match
-		call_deferred("_start", "barnaby", "standard", true)
+	Ironfront.visit_table()   # v1.7: after the teaching match, one more Field Manual lesson each new day at the table
+	_show("intro" if _intro else page)
 
 
 func close() -> void:
@@ -78,11 +76,13 @@ func _show(p: String) -> void:
 		"collection": _collection()
 		"shop": _shop()
 		"rules": _rules()
+		"manual": _manual()
+		"intro": _intro_page()
 
 
 func _nav() -> Control:
 	var h := UIKit.hbox(10)
-	for it in [["menu", "The Table"], ["decks", "Deck Builder"], ["collection", "Collection"], ["shop", "Barnaby's Shelf"], ["rules", "Rules & Tutorial"]]:
+	for it in [["menu", "The Table"], ["decks", "Deck Builder"], ["collection", "Collection"], ["shop", "Barnaby's Shelf"], ["manual", "Field Manual"], ["rules", "Rules & Tutorial"]]:
 		var id: String = it[0]
 		var b := UIKit.button(("❧ " if id == page else "") + str(it[1]), func(): _show(id), 0)
 		h.add_child(b)
@@ -153,7 +153,11 @@ func _menu() -> void:
 	right.add_child(UIKit.label(rec, 21, "body_italic"))
 	if not Ironfront.st().get("tutorial_done", false):
 		right.add_child(UIKit.rich("[i]New to the game? Barnaby will walk you through a first match.[/i]", 20))
-		right.add_child(UIKit.button("Play the tutorial match", func(): _start("barnaby", "standard", true), 0))
+		right.add_child(UIKit.button("Barnaby's teaching match", func(): _intro_step = 0; _show("intro"), 0))
+	else:
+		var rb := UIKit.button("Replay the teaching match (no rewards)", func(): _start("barnaby", "standard", true), 0)
+		rb.tooltip_text = "The same coached deal with Barnaby's loaner deck. Nothing is won twice."
+		right.add_child(rb)
 
 
 func _helmeted_portrait(id: String, sz: float) -> Control:
@@ -220,6 +224,7 @@ func _start(opp_id: String, mode: String, tutorial := false) -> void:
 	if tutorial:
 		d = Ironfront.data().get("starter_deck", {})
 	var errs := Ironfront.validate_deck(d, {} if tutorial else Ironfront.st()["collection"])
+	var fixed := tutorial   # v1.7: the teaching match is one fixed, winnable deal
 	if not errs.is_empty():
 		Events.toast.emit("Your deck is not ready: " + str(errs[0]), "bad")
 		_open_builder(int(Ironfront.st()["active"]))
@@ -231,9 +236,10 @@ func _start(opp_id: String, mode: String, tutorial := false) -> void:
 	var ai: Dictionary = o.get("ai", {}).duplicate()
 	if tutorial:
 		ai = {"skill": 0.3, "bluff": 0.0, "greed": 0.8}
-	var seed := int(Time.get_ticks_usec() % 1000003) + int(Game.state.get("day", 1)) * 7919
+	var seed := Ironfront.TEACHING_SEED if fixed else int(Time.get_ticks_usec() % 1000003) + int(Game.state.get("day", 1)) * 7919
 	var pname := str(DB.character("player").get("name", "Brannoc")).split(" ")[0]
-	var m := Ironfront.new_match(d, o.get("deck", {}), mode, seed, {"names": [pname, o.get("name", "Barnaby")], "opp": opp_id,
+	var opp_deck: Dictionary = Ironfront.data().get("teaching_deck", o.get("deck", {})) if fixed else o.get("deck", {})
+	var m := Ironfront.new_match(d, opp_deck, mode, seed, {"names": [pname, o.get("name", "Barnaby")], "opp": opp_id,
 		"ai": [{}, ai], "tutorial": tutorial})
 	if _prev_music == "":
 		var cur: Variant = Audio.get("_music_id")
@@ -515,6 +521,109 @@ func _shop() -> void:
 		grid.add_child(v)
 	right.add_child(grid)
 	right.add_child(UIKit.rich("[i]The shelf changes every morning.[/i]", 19))
+	# v1.7 (#70): cards adventurers found on the road and sold to Barnaby; and the smith's spare cards, sold to him
+	right.add_child(UIKit.divider())
+	var lower := UIKit.hbox(20)
+	var fv := UIKit.vbox(6)
+	fv.custom_minimum_size = Vector2(620, 0)
+	fv.add_child(UIKit.label("Found on the road", 26, "heading"))
+	var shelf := Ironfront.found_shelf()
+	if shelf.is_empty():
+		fv.add_child(UIKit.rich("[i]\"Nothing in from the road just now. Adventurers bring me what they dig up — ask again after the next party comes home.\"[/i]", 19))
+	var frow := HBoxContainer.new()
+	frow.add_theme_constant_override("separation", 10)
+	for i in shelf.size():
+		var e: Dictionary = shelf[i]
+		var v2 := UIKit.vbox(2)
+		v2.add_child(IronfrontCard.new({"id": str(e["id"])}, 110, false, -1))
+		var pr := Ironfront.shelf_price(str(e["id"]))
+		var bf := UIKit.button("%d g" % pr, func(): _buy_found(i), 110)
+		bf.disabled = not Game.can_afford(pr)
+		bf.tooltip_text = "Found by %s (day %d)" % [str(e.get("name", "")), int(e.get("day", 0))]
+		v2.add_child(bf)
+		frow.add_child(v2)
+	fv.add_child(frow)
+	lower.add_child(fv)
+	var sv := UIKit.vbox(6)
+	sv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sv.add_child(UIKit.label("Sell to Barnaby", 26, "heading"))
+	sv.add_child(UIKit.rich("[i]Spare copies only — never his loaner cards, never what your active deck needs.[/i]", 17))
+	var spares := []
+	for id: String in Ironfront.st()["collection"]:
+		if Ironfront.spare(id) > 0:
+			spares.append(id)
+	spares.sort_custom(func(a, b): return Ironfront.sell_price(a) > Ironfront.sell_price(b))
+	var sl := UIKit.vbox(2)
+	for id: String in spares:
+		var hrow := UIKit.hbox(8)
+		hrow.add_child(UIKit.label("%s ×%d spare" % [Ironfront.card(id)["name"], Ironfront.spare(id)], 18, "body"))
+		hrow.add_child(UIKit.button("Sell · %d g" % Ironfront.sell_price(id), func(): _sell(id), 0))
+		sl.add_child(hrow)
+	if spares.is_empty():
+		sl.add_child(UIKit.rich("[i]No spare cards to sell.[/i]", 18))
+	sv.add_child(UIKit.scroll(sl, 180))
+	lower.add_child(sv)
+	right.add_child(lower)
+
+
+# ====================================================================== v1.7: Barnaby's introduction and the Field Manual
+var _intro_step := 0
+
+
+func _intro_page() -> void:
+	var h := UIKit.hbox(24)
+	h.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(h)
+	h.add_child(_helmeted_portrait("portraits/barnaby", 260))
+	var v := UIKit.vbox(14)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(UIKit.title("Barnaby Quill introduces Ironfront", 36))
+	var pages: Array = Ironfront.INTRO_PAGES
+	var i := clampi(_intro_step, 0, pages.size() - 1)
+	var txt := UIKit.rich("[i]%s[/i]" % str(pages[i]), 26)
+	txt.name = "IntroText"
+	txt.custom_minimum_size = Vector2(1100, 0)
+	v.add_child(txt)
+	v.add_child(UIKit.label("%d / %d" % [i + 1, pages.size()], 18, "body_italic"))
+	var row := UIKit.hbox(12)
+	if i < pages.size() - 1:
+		row.add_child(UIKit.button("Go on…", func(): _intro_step = i + 1; _show("intro"), 260))
+	else:
+		row.add_child(UIKit.button("Deal me in — the teaching match", func(): _start("barnaby", "standard", true), 380))
+	row.add_child(UIKit.button("Later", func(): _show("menu"), 160))
+	v.add_child(row)
+	h.add_child(v)
+
+
+func _manual() -> void:
+	var open := Ironfront.lessons_open()
+	var all := Ironfront.lessons()
+	var head := UIKit.rich("[i]\"Every card in the war, explained — a few at a time, or your head will spin. Come back tomorrow for the next lesson.\"[/i]   Lessons open: %d of %d" % [open, all.size()], 20)
+	content.add_child(head)
+	var body := UIKit.vbox(10)
+	for li in all.size():
+		var les: Dictionary = all[li]
+		body.add_child(UIKit.label(str(les["title"]), 26, "heading"))
+		if li >= open:
+			body.add_child(UIKit.rich("[i]%s — Barnaby will teach this lesson %s.[/i]" % [str(les["intro"]), "after the teaching match" if li == 1 else "another day"], 18))
+			continue
+		body.add_child(UIKit.rich("[i]%s[/i]" % str(les["intro"]), 18))
+		var grid := GridContainer.new()
+		grid.columns = 3
+		grid.add_theme_constant_override("h_separation", 18)
+		grid.add_theme_constant_override("v_separation", 10)
+		for id: String in les["cards"]:
+			var cell := UIKit.hbox(8)
+			var cv := IronfrontCard.new({"id": id}, 84, false, -1)
+			if Ironfront.owned(id) <= 0:
+				cv.modulate = Color(0.78, 0.74, 0.7)
+			cell.add_child(cv)
+			var ex := UIKit.rich(Ironfront.explain(id), 15)
+			ex.custom_minimum_size = Vector2(440, 0)
+			cell.add_child(ex)
+			grid.add_child(cell)
+		body.add_child(grid)
+	content.add_child(_scroll(body, 820))
 
 
 func _buy_pack() -> void:
@@ -524,6 +633,19 @@ func _buy_pack() -> void:
 		return
 	_pack_reveal = ids
 	Audio.play("sfx/reveal_rare" if ids.any(func(i): return Ironfront.card(i)["rarity"] == "rare") else "sfx/reveal_common", -4.0)
+	_show("shop")
+
+
+func _sell(id: String) -> void:
+	var g := Ironfront.sell_card(id)
+	if g > 0:
+		Events.toast.emit("Barnaby buys your %s for %d g." % [Ironfront.card(id)["name"], g], "good")
+	_show("shop")
+
+
+func _buy_found(i: int) -> void:
+	if Ironfront.buy_found(i):
+		Events.toast.emit("Added to your collection — Barnaby wraps it in dispatch paper.", "good")
 	_show("shop")
 
 

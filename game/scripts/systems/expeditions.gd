@@ -1228,11 +1228,15 @@ static func _kill(e: Dictionary, a: Dictionary, where: String) -> void:
 
 
 static func _boss_down(e: Dictionary, n: Dictionary, rec: Dictionary) -> void:
-	# now and then a strange painted card turns up in a lair: the villagers' Ironfront craze reaches everywhere
+	# now and then a strange painted card turns up in a lair: the villagers' Ironfront craze reaches everywhere. The
+	# finder keeps it — and Barnaby will want to buy it (v1.7: real finds, sold on, never conjured into the smith's hands)
 	if randf() < 0.2:
-		var cid := Ironfront.random_card("special")
-		if cid != "" and Ironfront.grant_card(cid, "expedition"):
-			_j(e, "Among the spoils: a strange painted card — %s. Barnaby will want to see it." % Ironfront.card(cid).get("name", cid), "loot")
+		var standing := _standing(e)
+		if not standing.is_empty():
+			var finder := Adv.get_a(str(standing[randi() % standing.size()]))
+			var cid := Ironfront.card_found(finder, false, "special")
+			if cid != "":
+				_j(e, "Among the spoils: a strange painted card — %s. %s pockets it; Barnaby will want to see it." % [Ironfront.card(cid).get("name", cid), finder.get("name", "")], "loot")
 	var foe_kind: String = str(rec["enemies"][0]["kind"]) if not rec["enemies"].is_empty() else "beast"
 	var boss_name: String = str(rec["enemies"][0]["name"]) if not rec["enemies"].is_empty() else n["name"]
 	# whose blow felled it, and with what
@@ -1376,6 +1380,12 @@ static func finish(e: Dictionary) -> void:
 	# explorers may have spotted a new place nearby (WorldSites: discovery)
 	if not alive.is_empty():
 		WorldSites.on_finish(e)
+	# v1.7 (#70): now and then a party carries a painted Ironfront card home (theirs, to sell to Barnaby)
+	if not alive.is_empty() and str(e.get("outcome", "")) != "wiped" and randf() < Ironfront.FOUND_CHANCE:
+		var cf := Adv.get_a(str(alive[randi() % alive.size()]))
+		var fid := Ironfront.card_found(cf)
+		if fid != "":
+			_j(e, "%s found a painted Ironfront card on the road — %s." % [cf.get("name", ""), Ironfront.card(fid).get("name", fid)], "loot")
 	var share := int(e["gold"]) / maxi(1, alive.size())
 	var xp_each := int(e.get("xp", 0)) / maxi(1, alive.size())
 	for id in alive:
