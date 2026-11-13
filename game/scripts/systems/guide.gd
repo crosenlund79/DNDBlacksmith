@@ -354,9 +354,10 @@ static func _src_import(def: String, out: Array) -> void:
 	var lead: Array = info["lead"]
 	if Trade.knows(def):
 		_src(out, "import", def, "Special import", "Brindlewick Harbour",
-			"Order it from the harbourmaster (%d g each, %d%% deposit)" % [int(info["unit"]), int(round(float(info["deposit_share"]) * 100.0))],
+			"Order it from the harbourmaster (%d g each, %d%% deposit%s)" % [int(info["unit"]), int(round(float(info["deposit_share"]) * 100.0)),
+				", an exceptional favour: at most %d, one such cargo at a time" % Trade.EXCEPTIONAL_MAX if str(info["tier"]) == "exceptional" else ""],
 			"obtainable", "", "arrives %d–%d days after ordering" % [int(lead[0]), int(lead[1])], _map_link("harbour"), int(info["unit"]))
-	elif not str(info["tier"]) in ["exotic", "legendary"]:
+	elif not str(info["tier"]) in ["exotic", "legendary", "exceptional"]:
 		_src(out, "import", def, "Special import", "Brindlewick Harbour", "Order it from the harbourmaster", "locked",
 			"The harbourmaster only orders goods you know — hold or see it once, or learn a Design that uses it", "", _map_link("harbour"), int(info["unit"]))
 

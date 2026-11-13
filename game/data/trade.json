@@ -296,30 +296,30 @@
    "stock": [
     [
      "ore_orichalcum",
-     1.6,
+     2.6,
      [
       1,
-      3
+      1
      ],
-     0.8
+     0.04
     ],
     [
      "ore_mithril",
-     1.4,
+     2.4,
      [
-      2,
-      4
+      1,
+      1
      ],
-     0.9
+     0.05
     ],
     [
      "ore_adamantine",
-     1.5,
+     2.8,
      [
       1,
-      3
+      1
      ],
-     0.7
+     0.03
     ],
     [
      "ingot_steel",
@@ -657,22 +657,6 @@
    ],
    "mult": 1.6
   },
-  "ore_mithril": {
-   "tier": "rare",
-   "lead": [
-    4,
-    6
-   ],
-   "mult": 1.8
-  },
-  "ore_adamantine": {
-   "tier": "rare",
-   "lead": [
-    4,
-    6
-   ],
-   "mult": 1.8
-  },
   "reagent_aether_dust": {
    "tier": "rare",
    "lead": [
@@ -705,14 +689,6 @@
    ],
    "mult": 1.8
   },
-  "ore_orichalcum": {
-   "tier": "exotic",
-   "lead": [
-    6,
-    8
-   ],
-   "mult": 2.0
-  },
   "wyvern_hide": {
    "tier": "exotic",
    "lead": [
@@ -736,6 +712,30 @@
     8
    ],
    "mult": 2.0
+  },
+  "ore_mithril": {
+   "tier": "exceptional",
+   "lead": [
+    12,
+    18
+   ],
+   "mult": 2.8
+  },
+  "ore_adamantine": {
+   "tier": "exceptional",
+   "lead": [
+    12,
+    18
+   ],
+   "mult": 2.8
+  },
+  "ore_orichalcum": {
+   "tier": "exceptional",
+   "lead": [
+    12,
+    18
+   ],
+   "mult": 2.8
   },
   "dragon_scale": {
    "tier": "legendary",

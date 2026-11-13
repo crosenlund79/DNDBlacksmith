@@ -23,8 +23,8 @@ CARAVAN = {
     "stock": [
         ["thread_ethereal", 1.4, [2, 4], 0.7], ["gem_starstone", 1.35, [1, 1], 0.35], ["gem_moonstone", 1.3, [1, 3], 0.7],
         ["reagent_quintessence", 1.4, [1, 3], 0.6], ["leather_wyrm", 1.35, [1, 2], 0.5], ["starmetal_fragment", 1.4, [1, 2], 0.45],
-        ["ore_orichalcum", 1.3, [1, 3], 0.5], ["troll_hide", 1.3, [1, 2], 0.5], ["reagent_wyrm_ash", 1.35, [1, 2], 0.45],
-        ["dragon_scale", 1.25, [1, 1], 0.15], ["ingot_mithril", 1.3, [1, 2], 0.35], ["potion_healing", 1.2, [2, 5], 0.8],
+        ["ore_orichalcum", 2.6, [1, 1], 0.04], ["troll_hide", 1.3, [1, 2], 0.5], ["reagent_wyrm_ash", 1.35, [1, 2], 0.45],
+        ["dragon_scale", 1.25, [1, 1], 0.15], ["ingot_mithril", 2.8, [1, 1], 0.03], ["potion_healing", 1.2, [2, 5], 0.8],
     ],
     "equipment": [
         ["bow_yew", 1.35, 0.5], ["boots_ranger", 1.3, 0.55], ["hood_embroidered", 1.3, 0.4], ["amulet_sapphire", 1.35, 0.4],
@@ -83,8 +83,8 @@ RIVAL = {
         ["boots_ranger", 1.4, 0.5], ["cuirass_steel", 1.45, 0.4], ["bow_yew", 1.45, 0.35],
     ],
     "materials": [
-        ["ore_orichalcum", 1.5, [1, 2], 0.35], ["ingot_steel", 1.4, [3, 6], 0.7], ["wyvern_hide", 1.5, [1, 1], 0.2],
-        ["ingot_orichalcum", 1.5, [1, 1], 0.2], ["reagent_salt", 1.3, [3, 6], 0.6],
+        ["ingot_steel", 1.4, [3, 6], 0.7], ["wyvern_hide", 1.5, [1, 1], 0.2],
+        ["ingot_orichalcum", 2.8, [1, 1], 0.03], ["reagent_salt", 1.3, [3, 6], 0.6],
     ],
     # S2: plain everyday work for beginners — iron mail and leather boots, gloves and belts (she already sells boots), the
     # ordinary pieces a new Ironhand forge cannot make yet; ordinary craftsmanship at a small markup. Plain iron weapons,
@@ -127,7 +127,7 @@ RIVAL = {
             ],
         },
         "tips": [
-            {"text": "\"Want orichalcum? The dwarven ore barges carry it — ask the harbourmaster when one is due. Red-gold, rings like a bell; you'll know it.\"", "flag": "heard_ore_orichalcum"},
+            {"text": "\"Want orichalcum? It comes up out of the deep places — the halls under Ironroot, the rifts. Now and then a dwarven barge carries a nugget, at a price to make you weep. Red-gold, rings like a bell; you'll know it.\"", "flag": "heard_ore_orichalcum"},
             {"text": "\"Quench steel in brine, not water — cooler and kinder, fewer cracks. Your skill tree will tell you the same, when you've learned to read it.\"", "flag": ""},
             {"text": "\"Troll hide knits itself if you cut it slow. Cure it in salt first. The caravan from the east sometimes has some.\"", "flag": "heard_troll_hide"},
             {"text": "\"Wyrm ash in the quench makes steel remember fire. The southern spice ships bring it — by the pinch, and by the fortune.\"", "flag": "heard_reagent_wyrm_ash"},

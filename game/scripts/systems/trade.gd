@@ -72,7 +72,7 @@ static func knows(def_id: String) -> bool:
 	# a smith who has studied exotic monster materials knows to ask the harbourmaster for dragon parts
 	if def_id in ["dragon_scale", "dragon_bone"] and SkillTree.is_unlocked("l_exotic"):
 		return true
-	if tier in ["exotic", "legendary"]:
+	if tier in ["exotic", "legendary", "exceptional"]:
 		return false
 	if def_id == "ore_mithril" and Game.has_flag("found_mithril"):
 		return true
@@ -317,6 +317,7 @@ static func _ironfront_call(fn: String, args: Array) -> Variant:
 
 
 # ------------------------------------------------------------------ special imports
+const EXCEPTIONAL_MAX := 2
 static func import_info(def_id: String) -> Dictionary:
 	var c: Dictionary = cfg().get("imports", {}).get(def_id, {})
 	if c.is_empty():
@@ -355,6 +356,12 @@ static func place_import(def_id: String, qty := 1) -> String:
 	var open := imports().size()
 	if open >= int(cfg().get("harbour", {}).get("max_open", 4)):
 		return "The order book is full — collect or wait for earlier orders first."
+	# #74 (canonical v1.7 §7.1): mithril, adamantine and orichalcum are an exceptional favour — two at most, one such
+	# cargo at a time (their price and lead time come from the "exceptional" tier)
+	if str(info["tier"]) == "exceptional":
+		if imports().any(func(o): return str(o.get("tier", "")) == "exceptional"):
+			return "\"One cargo like that at a time — the dwarves part with it grudgingly. Collect the last one first.\""
+		qty = mini(qty, EXCEPTIONAL_MAX)
 	var total := int(info["unit"]) * qty
 	var deposit := int(ceil(total * float(info["deposit_share"])))
 	if not Game.can_afford(deposit):
@@ -391,7 +398,7 @@ static func collect_delivery(oid: String) -> String:
 		h.append(o)
 		while h.size() > 20:
 			h.pop_front()
-		Chronicle.add("trade", "Collected an import at the harbour: %d × %s." % [int(o["qty"]), nm], {"item": o["def"]}, str(o.get("tier", "")) in ["exotic", "legendary"])
+		Chronicle.add("trade", "Collected an import at the harbour: %d × %s." % [int(o["qty"]), nm], {"item": o["def"]}, str(o.get("tier", "")) in ["exotic", "legendary", "exceptional"])
 		Events.toast.emit("Collected %d × %s from the harbour." % [int(o["qty"]), nm], "good")
 		return ""
 	return "No such order."
