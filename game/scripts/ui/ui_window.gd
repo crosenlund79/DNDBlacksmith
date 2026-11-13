@@ -52,6 +52,17 @@ func _ready() -> void:
 	Audio.play("sfx/page_turn", -6.0)
 
 
+## v1.7 #69: a window whose content changes with its state (a caravan away / in camp) takes a new minimum size and is
+## centred again; content that needs more still grows it.
+func refit(min_size: Vector2) -> void:
+	if custom_minimum_size == min_size:
+		return
+	custom_minimum_size = min_size
+	reset_size()
+	if is_inside_tree():
+		set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("cancel"):
 		get_viewport().set_input_as_handled()

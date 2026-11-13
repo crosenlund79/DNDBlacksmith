@@ -28,7 +28,7 @@ var entries: Array = []
 func _init(k: String = "", i: String = "") -> void:
 	kind = k
 	id = i
-	super._init("History", 1180, 760)
+	super._init("History", 980, 680)   # v1.7 #69: was 1180×760
 
 
 func _ready() -> void:
@@ -37,7 +37,7 @@ func _ready() -> void:
 	tabs_row = UIKit.hbox(8)
 	content.add_child(tabs_row)
 	list = UIKit.vbox(6)
-	content.add_child(UIKit.scroll(list, 470))
+	content.add_child(UIKit.scroll(list, 420))
 	_collect()
 	_tabs()
 	_fill()

@@ -4126,3 +4126,9 @@ func phase_lvw_maps() -> void:
 func phase_lvw_oldsave() -> void:
 	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
 	await ph.run_oldsave(self)
+
+
+## Every major window measured against its content (#69) (tests/playtest_lvw.gd). Shots lvw_panel_*.
+func phase_lvw_panels() -> void:
+	var ph: RefCounted = load("res://tests/playtest_lvw.gd").new()
+	await ph.run_panels(self)

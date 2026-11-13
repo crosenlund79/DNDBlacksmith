@@ -5,7 +5,7 @@ extends UIWindow
 
 
 func _init() -> void:
-	super._init("Ember & Ash", 520, 820)
+	super._init("Ember & Ash", 520, 520)   # v1.7 #69: sized to its buttons (grows if they need more)
 
 
 func _ready() -> void:

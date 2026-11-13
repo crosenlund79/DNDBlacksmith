@@ -303,3 +303,52 @@ func run_oldsave(p: Node) -> void:
 		await pt.wait(1.0)
 		await _shot("oldsave_cellar")
 	Saves.delete("lvw_oldsave")
+
+
+## lvw_panels (#69): every major window opened in a fresh game, a mid game and with a busy store; each window's size
+## against its content's natural size (how much is wasted), with a screenshot. Notes "panel <route>: window WxH,
+## content WxH, used NN%".
+const PANEL_ROUTES := [["inventory", {}], ["shop", {}], ["hirelings", {}], ["adventurers", {}], ["orders", {}], ["skilltree", {}],
+	["property", {}], ["harbour", {}], ["herbalist", {"id": "herbalist"}], ["pawn", {}], ["rival_smith", {}], ["caravan", {}],
+	["creatures", {}], ["hall_of_fame", {}], ["history", {}], ["help", {}], ["map", {}], ["world_map", {}], ["wanted", {}],
+	["materials", {}], ["workshop", {}], ["contracts", {}], ["steward", {}], ["settings", {}], ["pause", {}], ["designer", {}],
+	["dossier", {"id": "sigrun"}], ["refine", {}], ["ironfront", {}]]
+
+
+func run_panels(p: Node) -> void:
+	pt = p
+	await pt.click("New Game")
+	await pt.wait(2.5)
+	Game.state["gold"] = 20000
+	var tag := OS.get_environment("LVW_PANELS")
+	if tag == "mid":
+		# a representative mid game: three workshop rooms, skills 6, ten lived days (history, customers, commissions)
+		for uid in ["cobbler", "laundry", "weaver"]:
+			Property.dev_grant_unit(uid)
+		Property.dev_install_in_owned()
+		for sk in DB.skill_list:
+			Game.player_skills()[str(sk["id"])] = {"lvl": maxi(Game.player_level(str(sk["id"])), 6), "xp": 0}
+		for d in 10:
+			Game.advance_minutes(1440)
+		pt.get_tree().root.get_node("Main").call("rebuild_world")
+		await pt.wait(2.0)
+	for d in ["sword_iron", "shield_kite", "ore_iron", "runestone_ember", "relic_idol", "potion_healing", "ingot_steel", "leather_cured"]:
+		Game.add_item(Items.make(d, {"quality": 90.0}))
+	for route in PANEL_ROUTES + [["caravan_present", {}]]:
+		if str(route[0]) == "caravan_present":
+			Commerce.dev_force_caravan()
+		Events.open_panel.emit("caravan" if str(route[0]) == "caravan_present" else str(route[0]), route[1])
+		await pt.wait(0.9)
+		var w: Control = pt.panel()
+		if w == null or not (w is UIWindow):
+			pt.note("panel %s: did not open here" % route[0])
+			await pt.close_panel()
+			continue
+		var win := w.size
+		var c: Control = (w as UIWindow).content
+		var need := c.get_combined_minimum_size()
+		var used := (need.x * need.y) / maxf(1.0, (win.x - 40.0) * (win.y - 110.0))
+		pt.note("panel %s%s: window %dx%d, content %dx%d, used %d%%" % [route[0], ("[" + tag + "]") if tag != "" else "", int(win.x), int(win.y), int(need.x), int(need.y), int(used * 100.0)])
+		await _shot("panel_" + tag + str(route[0]))
+		await pt.close_panel()
+		await pt.wait(0.2)

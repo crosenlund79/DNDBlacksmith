@@ -32,7 +32,7 @@ var plan_box: VBoxContainer
 
 
 func _init(_args := {}) -> void:
-	super._init("Equipment Designer", 1560, 900)
+	super._init("Equipment Designer", 1440, 860)   # v1.7 #69: was 1560×900
 
 
 func _ready() -> void:

@@ -15,7 +15,13 @@ static var skills_open := {}   # hireling id -> the optional skills & work-split
 static var compare := {}   # hireling id -> uid of the store piece being compared with what they wear
 
 
-func _init() -> void:
+## v1.7 #69: two tabs — your hands (their gear, assignments and expeditions) and sponsoring adventurers; kept for the session.
+static var tab := "hands"
+
+
+func _init(args := {}) -> void:
+	if args.has("tab"):
+		tab = str(args["tab"])
 	super._init("Hirelings — Ledger of Hands", 1500, 880)
 
 
@@ -39,9 +45,22 @@ func _build() -> void:
 	wb.tooltip_text = "Apprentices are a separate staff: they work at your stations on the work queue. %d of %d places taken." % [Apprentices.staff().size(), Apprentices.max_staff()] if Apprentices.unlocked() else Apprentices.unlock_reason()
 	top.add_child(wb)
 	body.add_child(top)
-	# The Living Realm: commission adventurers (Sponsor) beside sending hirelings
-	body.add_child(SponsorSection.new())
+	var tabs := UIKit.hbox(8)
+	tabs.name = "LedgerTabs"
+	for tb in [["hands", "Your hands (%d)" % Hire.alive_count()], ["sponsor", "Sponsor adventurers"]]:
+		var key: String = tb[0]
+		var b := UIKit.button(("❧ " if tab == key else "") + str(tb[1]), func(): tab = key; _build(), 0)
+		b.name = "Tab_" + key
+		b.disabled = tab == key
+		tabs.add_child(b)
+	body.add_child(tabs)
 	body.add_child(UIKit.divider())
+	if tab == "sponsor":
+		# The Living Realm: commission adventurers (Sponsor) beside sending hirelings
+		body.add_child(SponsorSection.new())
+		return
+	if Hire.list().is_empty():
+		body.add_child(UIKit.rich("[i]No hands yet — applicants appear on the village notice board each week.[/i]", 19))
 	for h in Hire.list():
 		body.add_child(_card(h))
 		body.add_child(UIKit.divider())

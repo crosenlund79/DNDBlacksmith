@@ -21,7 +21,7 @@ var _pending := false
 
 
 func _init(args := {}) -> void:
-	super._init("The Steward", 1560, 800)   # #47: was 930
+	super._init("The Steward", 1520, 700)   # #47: was 930; v1.7 #69: 1560×800 → 1520×700
 	tab = str(args.get("tab", "forge"))
 
 

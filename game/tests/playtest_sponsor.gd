@@ -13,7 +13,7 @@ func _section() -> SponsorSection:
 
 
 func _open_ledger(name: String) -> void:
-	Events.open_panel.emit("hirelings", {})
+	Events.open_panel.emit("hirelings", {"tab": "sponsor"})   # v1.7 #69: sponsoring is the ledger's second tab
 	await pt.wait(0.8)
 	pt.expect(pt.panel() is HirelingsPanel, "sponsor: the Hirelings ledger opens")
 	pt.expect(_section() != null, "sponsor: it has the Sponsor adventurers section")

@@ -31,7 +31,7 @@ func _init(args: Dictionary = {}) -> void:
 	var t := "Improve a piece"
 	if station != "":
 		t += " — " + str(DB.station(station).get("name", station))
-	super._init(t, 1640, 900)
+	super._init(t, 1480, 840)   # v1.7 #69: was 1640×900
 	name = "RefinePanel"
 
 

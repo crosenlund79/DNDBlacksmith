@@ -482,7 +482,7 @@ func _route(id: String, args: Dictionary) -> void:
 		"notice":
 			open(NoticePanel.new(str(args.get("tab", "board"))))
 		"hirelings":
-			open(HirelingsPanel.new())
+			open(HirelingsPanel.new(args))
 		"skills":
 			open(SkillsPanel.new())
 		"adventurers":

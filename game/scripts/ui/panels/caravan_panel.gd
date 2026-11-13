@@ -12,6 +12,9 @@ var tabs_row: HBoxContainer
 var body: VBoxContainer
 
 
+var body_scroll: ScrollContainer
+
+
 func _init(args: Dictionary = {}) -> void:
 	tab = str(args.get("tab", "wagons"))
 	super._init("The Travelling Caravan", 1500, 900)
@@ -24,7 +27,8 @@ func _ready() -> void:
 	tabs_row = UIKit.hbox(8)
 	content.add_child(tabs_row)
 	body = UIKit.vbox(10)
-	content.add_child(UIKit.scroll(body, 600))
+	body_scroll = UIKit.scroll(body, 600)
+	content.add_child(body_scroll)
 	Events.gold_changed.connect(func(_g): _build())
 	_build()
 
@@ -49,7 +53,11 @@ func _build() -> void:
 	UIKit.clear(body)
 	if not Commerce.caravan_present():
 		body.add_child(UIKit.rich("The caravan camp is empty: wheel-ruts, a cold fire-ring, a tassel caught on a thorn.\n\n[i]%s[/i]" % cc.get("desc", ""), 22))
+		body_scroll.custom_minimum_size.y = 120.0   # v1.7 #69: a compact window while the caravan is away
+		refit(Vector2(1000, 430))
 		return
+	body_scroll.custom_minimum_size.y = 600.0
+	refit(Vector2(1500, 900))
 	for t in [["wagons", "The Wagons"], ["wanted", "Goods Wanted"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tab = key; _build(), 0)

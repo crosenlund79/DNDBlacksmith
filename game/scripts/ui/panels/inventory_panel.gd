@@ -6,7 +6,7 @@ extends UIWindow
 ## A2 layout: a fixed window that fits 1920×1080 (and 1600×900, the same canvas scaled) however many pieces the stores
 ## hold — the grid and the details column scroll on their own, and the details column can be collapsed (the grid then
 ## widens; clicking a piece opens it again; a right-click still opens the full inspection).
-const WIN := Vector2(1240, 760)   # #47: was 1560×900; v1.7 #69: 1440×820 → 1240×760 (details on demand)
+const WIN := Vector2(1180, 640)   # #47: was 1560×900; v1.7 #69: 1440×820 → 1240×760 (details on demand)
 const SLOT := 72.0
 const GAP := 8
 const DETAIL_W := 400.0
