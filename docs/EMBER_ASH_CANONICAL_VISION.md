@@ -1,8 +1,8 @@
 <!--
-  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.6.docx (Design Baseline 1.6, 13 November 2026).
+  Markdown edition of docs/Ember_and_Ash_Canonical_Vision_and_Roadmap_v1.7.docx (Design Baseline 1.7, 13 November 2026).
   The .docx is the approved source; this file reproduces its text faithfully for use in the repository (generated from
   the .docx, so both share one revision history — see "Revision history" at the end). Only formatting was adapted for
-  Markdown (boxed callouts → blockquotes). The v1.5, v1.4, v1.3, v1.2, v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
+  Markdown (boxed callouts → blockquotes). The v1.6, v1.5, v1.4, v1.3, v1.2, v1.1 and v1.0 .docx files are kept as the dated historical copies. Revisions require
   explicit user approval, a version increment and matching updates to both files (CLAUDE.md §2.5).
 -->
 
@@ -16,7 +16,7 @@
 >
 > A blacksmith may create a sword, see it travel through generations, repair it when it returns, and discover that its history helped shape the fate of a realm. The smith need not become its hero.
 
-**DESIGN BASELINE 1.6**
+**DESIGN BASELINE 1.7**
 
 9 November 2026 · Authoritative creative direction
 
@@ -29,7 +29,7 @@ This document is the **single canonical map for the intended game**. It supersed
 | **Field**             | **Rule**                                                                                                                                                |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Document authority    | User-approved creative intent and gameplay boundaries; implementation design remains reviewable.                                                        |
-| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) v1.2 (editorial clarifications, 10 November 2026) v1.3 (Steward Mode: the working smith and its pace, 10 November 2026) v1.4 (the Living Workshop, 11 November 2026) v1.5 (adventurer biographies, 13 November 2026) and v1.6 (Legendary crafting, three dangerous regions, atmospheric seasons, 13 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
+| Status                | Design baseline locked as v1.0; revised to v1.1 (Steward Mode, 9 November 2026) v1.2 (editorial clarifications, 10 November 2026) v1.3 (Steward Mode: the working smith and its pace, 10 November 2026) v1.4 (the Living Workshop, 11 November 2026) v1.5 (adventurer biographies, 13 November 2026) v1.6 (Legendary crafting, three dangerous regions, atmospheric seasons, 13 November 2026) and v1.7 (the Living Village & Workshop, 13 November 2026). New gameplay scope requires explicit approval and a recorded revision. |
 | Code baseline at adoption | Claude read-only audit: commit 154d08a, release build-0.14.6, Godot 4.3 (9 November 2026). Later delivery status is tracked in the repository’s roadmap register, not here.                                                              |
 | Technical evidence    | Claude status audit, Extra High architecture report and the repository’s decision, roadmap and playtest-observation registers are evidence, not the game’s creative authority.                                                 |
 | What this does not do | Does not authorize coding, rewriting saves, building systems, or publishing releases.                                                                   |
@@ -133,6 +133,8 @@ The game reveals immediate actions and blockers first, practical next steps seco
 Begin with a rundown, spatially constrained smithy. Upgrade through **predefined, purchasable rooms and improvements**, retaining meaningful walkable layouts, stations, staff activity, multiple floors and convenient navigation. The building should visually become a beautiful, busy establishment rather than an industrial production hall.
 
 **Multiple instances of a station type are permitted**, but capacity is constrained by plausible room size, layout, staffing and operating needs. No infinite rows of anvils, unconstrained duplication or freeform industrial optimization. Exact room/station limits remain a balancing and architecture detail.
+
+**The smithy's layout (v1.7).** The ground floor holds the working smithy and its shopfront in a compact footprint; the household lives in the loft, beginning with a small living area that grows through the existing property upgrades; further production space comes from a basement that is excavated and expanded progressively — absent at the start. The freed village ground holds a natural pond with reeds and a small dock, and an outflowing stream that turns a watermill on its way off the map: scenery and sound only, with no milling, fishing or water-supply mechanics.
 
 ## 4.2 Three layers of competence
 
@@ -271,6 +273,8 @@ Keep **permission to restore** separate from **rightful ownership**. Record the 
 
 Finished goods can be stored, sold, traded, retained, commissioned or reworked. Trading an item transfers the **same identifiable object** with its provenance, not a fresh randomly generated replacement. Existing shop, pawnshop, caravan, harbor and rival-smith systems are foundations to extend, not replace without evidence.
 
+**Rare materials (v1.7).** Orichalcum, mithril and adamantine come chiefly from dangerous expeditions and meaningful discoveries. Routine early traders do not regularly stock them; exceptional trade access is very rare and appropriately expensive, and advanced Designs remain achievable.
+
 ## 7.2 Two kinds of orders
 
 | **Ordinary bulk contract**                                                                                                                                                                                                                   | **Prestigious commission**                                                                                                                                                                          |
@@ -358,6 +362,10 @@ Keep consequential history and item provenance permanently. As campaigns grow, *
 - Validate real Windows gameplay and screenshots as well as headless automation; CI smoke alone is not acceptance.
 
 - **Seasons and weather (v1.6).** Four atmospheric seasons of 21 days each — an 84-day cycle beginning in spring — with visual and audio weather only. They change nothing in crafting, combat, expeditions, movement, NPC behaviour, the economy, resources, health, fatigue, the calendar, ageing or chronology.
+
+- **Village presentation (v1.7).** The village map and the minimaps share the illustrated, hand-drawn style of the world map; panels are compact, with floating item tooltips, icon categories and a compact HUD; the hireling panel puts assignments and expeditions first, with skill allocation optional and secondary.
+
+- **Ironfront (v1.7).** Barnaby introduces his card wargame in character through a replayable guided teaching match that explains every card progressively; he lends a modest starter deck and buys and sells individual cards, and adventurers may bring collectible cards home as real expedition rewards. The tutorial grants nothing twice; ordinary matches stay unscripted.
 
 # 12 The canonical roadmap
 
@@ -492,6 +500,8 @@ The following records the eighteen architectural decisions (D1–D18) explicitly
 
 - **Beyond the safe roads (v1.6):** Legendary crafting limited to designated advanced Designs and exceptional work (§6.2); three dangerous expedition regions (§8.1); purely atmospheric seasons and weather (§11). Approved 13 November 2026.
 
+- **The Living Village & Workshop (v1.7):** a compact ground-floor smithy with living quarters in the loft and an excavatable basement, the pond, stream and watermill as scenery (§4.1); rare materials from expeditions and discoveries (§7.1); the illustrated village map, compact interface and hireling panel, and Barnaby's Ironfront introduction and card trade (§11). Approved 13 November 2026.
+
 # 15 Open details, not invitations to change direction
 
 | **Still to determine**                                                                 | **What is already fixed**                                                                                             |
@@ -510,7 +520,7 @@ Other mechanics that would meaningfully widen scope—full naval travel, family-
 
 ## 16.1 Authority and revision control
 
-- **Treat this document (v1.6) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
+- **Treat this document (v1.7) as the canonical game-design direction.** Store it with the project and retain a dated versioned copy.
 
 - Any new scope or reversal requires an explicit decision. Add a short change record: what changed, why, impacts and date.
 
@@ -549,3 +559,4 @@ Technical evidence: **EMBER_ASH_CURRENT_STATUS.md** and **EMBER_ASH_ARCHITECTURE
 | 1.4 — 11 November 2026 | Approved by the user in the Living Workshop brief (11 November 2026) and recorded as built: §4.2 professions (blacksmith, leatherworker and tailor, runesmith, alchemist and herbalist, arcanist), per-worker competence, the smith’s other crafts limited to a basic level (earned levels kept), workshop knowledge separate from personal skill; §4.3 a spouse’s voluntary counter work within a player-set discount (no employee slot, no second identity) and the smith’s pet at his side; §4.4 several stations of a type within room limits and staged work orders with one item identity and the Workshop Ledger; §4.5 an optional ~5× pace while the steward’s smith sleeps. D19, §14.1 and §15 updated. All other decisions unchanged. |
 | 1.5 — 13 November 2026 | Approved by the user (Pilot 003, 13 November 2026): §8.1 adds authored adventurer biographies — upbringing, personality, past experiences and early ambitions, about 100–150 words, written once when the adventurer is created (or first met in an older save) and never rewritten; established pre-game history that invents no current relationship, achievement or event and never contradicts simulation state or Lore. §14.1 lists it. §1.2 and §10.3 are unchanged and keep governing everything after the adventurer's arrival. All other decisions unchanged. |
 | 1.6 — 13 November 2026 | Approved by the user (overnight build "Beyond the Safe Roads", 13 November 2026, explicit approval under CLAUDE.md §2 and §16.1): §6.2 Legendary crafting — only designated advanced Designs and exceptional work (a master's skill in the craft, which a qualified specialist may provide; outstanding craftsmanship; an exceptional fortune; a high rarity score), ordinary Designs Rare at most, Masterwork a craftsmanship distinction, Epic still earned history, existing Legendary pieces kept; §8.1 three dangerous expedition regions (the Starfall Observatory, the Weeping Fortress, the Blackglass Rift); §11 four purely atmospheric seasons of 21 days (84-day cycle from spring) with visual/audio weather only. §14.1 lists them. The smith's non-smithing skill limit is unchanged. All other decisions unchanged. |
+| 1.7 — 13 November 2026 | Approved by the user ("The Living Village & Workshop Experience", observations #64–76, 13 November 2026, explicit approval of new scope): §4.1 the smithy's layout — a compact ground-floor smithy and shopfront, the household in the loft (small at first, growing through existing upgrades), an excavatable basement expanded progressively for production; the pond, an outflowing stream and a watermill as scenery and sound only (no milling, fishing or water supply); §7.1 rare materials chiefly from dangerous expeditions and discoveries, exceptional trade very rare and expensive; §11 the illustrated village map and minimaps, compact panels with floating tooltips, icon categories, a compact HUD and an assignments-first hireling panel, and Barnaby's Ironfront introduction (replayable guided match, lent starter deck, card trade, cards as expedition rewards, no duplicate rewards). §14.1 lists them. Developer tools remain testing aids outside the design. All other decisions unchanged. |
