@@ -10,10 +10,10 @@ const SMOKE := ["test_step_registry", "test_golden_0_14_6", "test_fresh_game_rou
 	"test_test_mode_refuses_real_saves"]
 const FIXTURES := "res://tests/fixtures/saves/"
 const GOLDEN := ["build-0.11.2", "build-0.12.4", "build-0.13.5", "build-0.14.6", "artifact-0.15", "artifact-0.16.19",
-	"artifact-0.16.21"]
+	"artifact-0.16.21", "artifact-0.17"]
 ## R1: the schema each golden save declares. Releases up to 0.14.6 wrote 1; the playtest artifacts 0.15 (S2),
-## 0.16.19 (the Living Workshop) and 0.16.21 (the Living Village & Workshop) wrote 4, 7 and 8.
-const SCHEMA := {"artifact-0.15": 4, "artifact-0.16.19": 7, "artifact-0.16.21": 8}
+## 0.16.19 (the Living Workshop), 0.16.21 (the Living Village & Workshop) and 0.17 (R1) wrote 4, 7, 8 and 9.
+const SCHEMA := {"artifact-0.15": 4, "artifact-0.16.19": 7, "artifact-0.16.21": 8, "artifact-0.17": 9}
 ## Top-level keys every save has carried since 0.11 (Game.new_game).
 const REQUIRED_KEYS := ["version", "day", "minute", "gold", "next_uid", "ledger", "journal", "flags", "upgrades", "player",
 	"hirelings", "applicants", "adventurers", "social", "orders", "customers", "craft", "returns", "world", "objectives",
@@ -249,6 +249,10 @@ func test_golden_artifact_0_16_21() -> void:
 	_golden("artifact-0.16.21")
 
 
+func test_golden_artifact_0_17() -> void:
+	_golden("artifact-0.17")
+
+
 func test_golden_provenance_documented() -> void:
 	var readme := FileAccess.get_file_as_string(FIXTURES + "README.md")
 	for g in GOLDEN:
@@ -310,6 +314,7 @@ func test_golden_saves_have_canonical_identity_after_migration() -> void:
 		eq((after["dup"] as Array).size(), 0, "%s: no uid held by two live holders after migration" % g)
 		eq((after["shared"] as Array).size(), 0, "%s: no item dict shared between containers after migration" % g)
 		eq(_distinct(_uids(data)), ids, "%s: the same identities survive" % g)
+		eq(Uniques.audit(data).size(), 0, "%s: no Unique held under two unregistered uids (R1)" % g)
 		eq(int(data.get("version", 0)), Game.SAVE_VERSION, "%s: now at schema %d" % [g, Game.SAVE_VERSION])
 
 

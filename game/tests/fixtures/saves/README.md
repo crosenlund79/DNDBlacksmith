@@ -17,6 +17,7 @@ row; do not regenerate the existing ones unless their release code is used again
 | `artifact-0.15.json` | playtest artifact 0.15 (S2, unpublished) | `b362877` | 4 | 32 | 5839 | `e863a3e806ed7fea7b54c4cbeec4dd399a49916cf1eb977bf711eaef93ccbc0f` |
 | `artifact-0.16.19.json` | playtest artifact 0.16.19 (the Living Workshop, unpublished) | `587399c` | 7 | 32 | 5113 | `e11130b194841b5048840b48297cbd509d4425ee07b44fdbc3655013d32f981f` |
 | `artifact-0.16.21.json` | playtest artifact 0.16.21 (the Living Village & Workshop, unpublished) | `65e70b5` | 8 | 32 | 5215 | `7820facb65aeea19244cd7607d7d2be5dc0b1c8407e9e58a66fde8ca93c52ac8` |
+| `artifact-0.17.json` | playtest artifact 0.17 (R1, unpublished — decision D-1) | `32b7be0` | 9 | 32 | 5215 | `656dcf4b0bcd64928769c096d88c93bd17d991b46cdea4086fc15212a339e1ec` |
 
 - **Produced:** 9 November 2026 (each file's `meta.saved_at` records the moment), Milestone A1 "Protect the
   Foundation".
@@ -74,6 +75,7 @@ row; do not regenerate the existing ones unless their release code is used again
 | artifact 0.15 | 135 crafted (44 smelts), 11 sold, 11 commissions, 94 repairs, 5 mining trips; apprentice Aerin Hollow hired with 5 tasks; contract `ct_1` accepted, 18 h worked, delivered. |
 | artifact 0.16.19 | 135 crafted (46 smelts), 10 sold, 8 commissions, 106 repairs, 5 mining trips; apprentice Ragna Rook with 4 tasks; `ct_1` delivered. |
 | artifact 0.16.21 | 116 crafted (41 smelts), 9 sold, 8 commissions, 111 repairs, 5 mining trips; apprentice Cedric Fairweather with 4 tasks; `ct_1` delivered. |
+| artifact 0.17 | 116 crafted (41 smelts), 9 sold, 8 commissions, 111 repairs, 5 mining trips; apprentice Cedric Fairweather with 4 tasks; `ct_1` delivered. Same play as 0.16.21 (the driver's path does not touch R1's changes), written at schema 9. |
 
 All four declare schema version 1 (`meta.version` and `data.version`): every release up to 0.14.6 wrote version 1.
 
