@@ -6,7 +6,7 @@ human playtest: [`R1_ACCEPTANCE_CHECKLIST.md`](R1_ACCEPTANCE_CHECKLIST.md).
 
 - **Branch:** `claude/r1-integration`, from `be92b9a`, which contains `65e70b5`.
 - **Recovery point:** `backup/pre-r1-20261117`.
-- **Final commit and installer:** see §5.
+- **Final commit and installer:** see §5 (verified code `af9683e`; private artifact EmberAndAsh-Windows-0.17.22).
 - **Classification:** ALIGNED (Gate A remainder; no new gameplay scope).
 
 ## 1. Decisions applied
@@ -87,7 +87,14 @@ over 84 days without a station.
 
 ## 5. Build
 
-*(Filled in once the private Windows installer workflow on this branch has finished.)*
+| Item | Value |
+|---|---|
+| Verified code commit | `af9683e` (branch `claude/r1-integration`); this report is committed on top of it |
+| Windows installer workflow | run **44184551104**: automated tests success · export & package success (incl. the Linux self-check) · **silent install & launch on a Windows runner success** · *Publish release* **skipped** (non-default branch) |
+| Private artifact | **EmberAndAsh-Windows-0.17.22** (installer + portable build; expires 15 Feb 2027): https://github.com/crosenlund79/DNDBlacksmith/actions/runs/44184551104/artifacts/14373804225 |
+| CI `tests.yml` on `af9683e` | success (run 44184551175) |
+| Releases and tags | unchanged — the latest release is still build-0.14.6; no tag was created |
+| Default branch | unchanged at `2e854af` (Run 0.1); nothing merged |
 
 ## 6. Open items
 
