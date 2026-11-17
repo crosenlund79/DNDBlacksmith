@@ -203,7 +203,7 @@ func run(p: Node) -> void:
 	pt.expect(str(Tutorial.current().get("id", "")) == "customer", "s2e: 'Serve a customer' is the tutorial step now")
 	Events.open_panel.emit("dialogue", {"npc": "aldric", "area": "village"})
 	await pt.wait(0.5)
-	Game.add_gold(5, "sales", "Borin Flintbeard sold horseshoes and nails", "market")   # what Hire._produce writes each hour
+	Game.add_gold(5, "trade", "Borin Flintbeard traded small goods", "market")   # what Hire._produce writes for field trade (R1 D-5)
 	await pt.wait(0.3)
 	await pt.close_panel()
 	await pt.wait(0.4)

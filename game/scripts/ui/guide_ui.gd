@@ -133,6 +133,7 @@ static func next_step_box(id: String, on_meta := Callable(), back := {}, step :=
 		var b := UIKit.button(action_caption(act), func(): do_action(act, back), 0)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.name = "NextStepAction"
+		StewardUI.guard_action(b, str(act.get("route", "")))   # R1 (STW-026): look, do not act, while away
 		h.add_child(b)
 	v.add_child(h)
 	if str(ns.get("why", "")) != "":

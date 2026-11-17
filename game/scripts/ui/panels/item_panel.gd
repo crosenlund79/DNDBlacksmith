@@ -235,12 +235,13 @@ func _overview(it: Dictionary) -> void:
 	row2.add_child(UIKit.button("Follow its owners", select_tab.bind("Owners"), 0))
 	if it.has("craft"):
 		var it2 := it
-		row2.add_child(UIKit.button("Craft record", func(): _go("craft_result", {"item": it2, "fresh": false}), 0))
+		row2.add_child(StewardUI.guard_action(UIKit.button("Craft record", func(): _go("craft_result", {"item": it2, "fresh": false}), 0), "craft_result"))
 	if not Game.find_uid(uid).is_empty():   # UX iteration: refine / rework / upgrade / reforge (RefinePanel)
 		var u := uid
 		var ib := UIKit.button("Improve it…", func(): _go("refine", {"uid": u}), 0)
 		ib.name = "ImproveIt"
 		ib.tooltip_text = "Refine, rework, upgrade or reforge it at the forge — the same piece, with one more line in its history."
+		StewardUI.guard_action(ib, "refine")   # R1 (STW-026): look, do not act, while away
 		row2.add_child(ib)
 	rv.add_child(row2)
 	rc.add_child(rv)

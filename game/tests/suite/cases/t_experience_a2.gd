@@ -92,16 +92,15 @@ func test_tutorial_waits_for_counter() -> void:
 	# no counter open (no UI in the suite) and no override: background income never counts
 	Tutorial.serving_override = null
 	check(not Tutorial.serving_at_counter(), "without a counter panel the smith is not serving")
-	_income(4, "sales", "Borin sold horseshoes and nails")
+	_income(4, "trade", "Borin traded small goods")
 	_income(12, "repairs", "Repaired Tobin's sword")
 	_income(30, "sales", "Mira bought a healing draught")
 	eq(str(Tutorial.current().get("id", "")), "customer", "background sales and repairs leave the selling step in place")
-	# the real hireling path: Borin smiths with no ore and sells horseshoes
+	# the real hireling path: Borin trades small goods on the roads (R1 D-5: no more horseshoes made off-station)
 	var borin := Hire.get_h("borin")
 	if not borin.is_empty():
-		borin["alloc"] = {"smithing": 100}
+		borin["alloc"] = {"travelling": 100}
 		borin["status"] = "working"
-		Game.remove_def("ore_iron", Game.count("ore_iron"))
 		var g0 := Game.gold()
 		var m := int(Game.state["minute"]) % 1440
 		Game.advance_minutes((10 * 60 - m + 1440) % 1440)   # into working hours
@@ -109,8 +108,8 @@ func test_tutorial_waits_for_counter() -> void:
 		for i in 12:
 			Hire.work_hour(10)
 			Tutorial._on_gold(Game.gold())
-		note("Borin earned %d g at the forge without the smith" % (Game.gold() - g0))
-		eq(str(Tutorial.current().get("id", "")), "customer", "Borin's horseshoe sales do not complete the step")
+		note("Borin earned %d g trading without the smith" % (Game.gold() - g0))
+		eq(str(Tutorial.current().get("id", "")), "customer", "Borin's trade income does not complete the step")
 	# the live status: nobody / on the way / waiting
 	var st := Tutorial.customer_status()
 	check(str(st.get("state", "")) in ["none", "closed"], "status with nobody about: %s" % st.get("state", "?"))

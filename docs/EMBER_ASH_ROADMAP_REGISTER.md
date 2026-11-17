@@ -2,7 +2,7 @@
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
 `fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`) and **in the Living Workshop** (11 November 2026,
-branch `claude/living-workshop`).
+branch `claude/living-workshop`) and **in R1** (17 November 2026, branch `claude/r1-integration`).
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -30,12 +30,22 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | **S2** The Living Smithy | v1.3 §4.5; OBS-11 … 16, 21, 22 … 36; Gate A (part) | Complete on its isolated branch; **not integrated** | branch `claude/s2-living-smithy` | No — Windows acceptance artifact (0.15) only | `t_s2_steward` (14), `t_s2_clarity` (9), `t_s2_early` (9), `t_s2_econdev` (8), `t_s2_lead` (2); rendered `s2_steward`, `s2_clarity`, `s2_early`, `s2_econdev`; soaks incl. a poor early game | No |
 | Canonical v1.4 (the Living Workshop) | §4.2–4.5, D19, §14.1, §15 | Done in the Living Workshop (approved in its brief) | `501f038` (LW branch) | — | DOCX and Markdown identical (6,925 words) | — |
 | **LW** The Living Workshop (B1 + B2 + C1 + playtest consolidation) | §4.2–4.5, §5, D1–D4, D6–D8, D19; OBS-37 … 61 | Complete on its isolated branch; **not integrated** (builds on S2) | branch `claude/living-workshop` | No — Windows acceptance artifact (0.16) only | `t_lw_foundation` (9), `t_lw_knowledge` (11), `t_lw_production` (14), `t_lw_emberwarden` (1), `t_lw_family` (10), `t_lw_reliability` (12), `t_lw_ui` (8), `t_lw_acceptance` (10); on the shipping code `d0d5362`: compile 260, suite 409/409, unit 390/390, 59/59 rendered phases, 365-day soak (`tests/lw_soak.tscn`, both set-ups: every invariant held), seeded skill-tree fuzz; Windows CI install-and-launch smoke, artifact `EmberAndAsh-Windows-0.16.19` (run 43073154275) | No |
+| Engineering pilots 001–002 (test runner quick/focus) | CLAUDE.md §4 tooling | Complete on branch; not integrated | `c76b984`, `d3dcc0a` | No | `run_tests.sh quick`, `focus <area>` | — |
+| Canonical v1.5 + Pilot 003 (adventurer biographies) | §8.1 | Complete on branch; not integrated | `eb9a116` | No | `t_biography` | No |
+| Pilot 004 (simulation consistency: the spouse at the counter) | §4.3 | Complete on branch; not integrated | `599cd83` | No | `t_lw_family` | No |
+| Canonical v1.6 "Beyond the Safe Roads" (Legendary crafting, three dangerous regions, seasons) | §6.2, §8.1, §11 | Complete on branch; not integrated | `774d5f6` | No | `t_legendary`, `t_regions`, `t_seasons`, rendered `beyond_map`, `seasons` | No |
+| Canonical v1.7 "The Living Village & Workshop" (OBS-64 … 76) | §4.1, §7.1, §11 | Complete on branch; not integrated | `65e70b5` | No — Windows artifact EmberAndAsh-Windows-0.16.21 (run 43475441787) only | `t_compact_smithy`, `t_rare_materials`, `t_ironfront_intro`; compile 272, suite 443/443, unit 392/392 re-run 17 Nov | No |
+| Final completion audit (docs) | CLAUDE.md §2 | Complete | `be92b9a` | — | `docs/final_completion/` | — |
+| **R1** Integration & Foundation Closure | Gate A (remainder); roadmap R1 | Complete on its isolated branch; **not integrated, not released** (decision D-1) | branch `claude/r1-integration` | No — private Windows artifact 0.17 only | `t_r1_identity` (9), `t_r1_workshop` (4), `t_steward_ui.test_look_only_buttons_disabled_away`, `t_saves` (+3 golden artifacts, schema 9); see the R1 report | Checklist `docs/final_completion/R1_ACCEPTANCE_CHECKLIST.md` — pending |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
 
-**What players have:** the latest release is still **build-0.14.6** (`game/RELEASE_VERSION` 0.14). No published build
-contains A1, S1 or A2, and none of them has been accepted by a person playing on Windows (REL-003, REL-004, REL-005).
+**What players have:** the latest release is still **build-0.14.6** (GitHub latest release; the default branch is at Run
+0.1, `2e854af`). No published build contains A1, S1, A2 or anything later; S2, the Living Workshop, the pilots, v1.5–v1.7
+and R1 exist on development branches and as private Windows artifacts (0.15, 0.16.19, 0.16.21, 0.17). None has a
+recorded human acceptance yet (REL-003, REL-004, REL-005); R1's checklist asks for it. The finish line and the remaining
+builds R2–R11 are in `docs/final_completion/`.
 
 **Residuals of delivered milestones** (approved, still partial; no milestone scheduled):
 - S1: "political commitments" have nothing to defer until G/H/I exist (STW-014); some look-only panels keep minor action
@@ -159,15 +169,15 @@ All A-REM entries:
 | TECH-019 | APPROVED | NOT STARTED | One common reputation entry point (facade) so no new code reads `Shop.reputation()` directly. |
 | TECH-020 | PROPOSED | NOT STARTED | Legacy expedition resolver removed (old saves' away adventurers migrated), docs updated. |
 | TECH-021 | APPROVED | NOT STARTED | A consultation must not silently redirect a sponsored party (respect sponsor objectives or make the conflict explicit). |
-| TECH-023 | APPROVED | NOT STARTED | Repository roadmap documents reconciled with the canonical phases (no "allegiance", World Recognition phase present, regional proof before … |
+| TECH-023 | APPROVED | IMPLEMENTED (R1) | Repository roadmap documents reconciled with the canonical phases (no "allegiance", World Recognition phase present, regional proof before … |
 | TECH-033 | APPROVED | PARTIAL | "Before B/C" gate: save migrations and canonical identity boundaries safe; |
 | REL-003 | PROPOSED | NOT STARTED | A Windows build containing the Gate A work (A1 + S1 + A2) is published, with a human playtest note attached. |
 | REL-004 | APPROVED | PARTIAL | Human Windows gameplay acceptance (real play, equipment UI, production routing, rendered screenshots); |
 | REL-005 | APPROVED | NOT STARTED | Player acceptance of Steward Mode on Windows (steward performance vs active play, welcome-back report, rarity of sealed letters). |
-| REL-010 | PROPOSED | NOT STARTED | A golden save from the next released build (schema 3, with steward and payment keys) is added the same authentic way. |
+| REL-010 | APPROVED | VERIFIED (R1) | A golden save from the next released build (schema 3, with steward and payment keys) is added the same authentic way. |
 | STW-027 | APPROVED | NOT STARTED | A human player accepts Steward Mode on Windows (steward performance against active play, how the report reads, how rare letters are). |
 | EQ-006 | PROPOSED | PARTIAL | One lookup used by every system. Today `find_uid_anywhere`, `History.find_item` and `ItemStory.find` go through the registry but keep their … |
-| EQ-007 | APPROVED | NOT STARTED | Identifying a relic keeps the identity chain. |
+| EQ-007 | APPROVED | VERIFIED (R1) | Identifying a relic keeps the identity chain. |
 | ADV-012 | APPROVED | NOT STARTED | Character sheets and talk show truthful plans: |
 | ADV-017 | APPROVED | PARTIAL | Consultation advice uses the same threat data adventurers actually fight. |
 | ADV-018 | APPROVED | NOT STARTED | Sponsored expeditions pursue the agreed objective: |
@@ -180,12 +190,12 @@ All A-REM entries:
 | UX-011 | APPROVED | PARTIAL | Validate real Windows gameplay and rendered screenshots as UX acceptance; |
 | UX-013 | APPROVED | PARTIAL | Panels fit and stay readable on the 1920×1080 canvas (1600×900 scaled) with no overflow and no hidden controls. |
 | LORE-015 | APPROVED | NOT STARTED | Tavern rumours and table talk come from real Lore and state, not invented template facts. |
-| BUG-017 | APPROVED | NOT STARTED | A dismissed hireling who leaves with gear in their name records a hand-over event. |
-| BUG-042 | APPROVED | NOT STARTED | Socketing a runestone must not overwrite a piece's name or silently change its rarity. |
-| BUG-049 | APPROVED | PARTIAL | Player, test and design documents describe the current build. |
+| BUG-017 | APPROVED | VERIFIED (R1) | A dismissed hireling who leaves with gear in their name records a hand-over event. |
+| BUG-042 | APPROVED | VERIFIED (R1) | Socketing a runestone must not overwrite a piece's name or silently change its rarity. |
+| BUG-049 | APPROVED | IMPLEMENTED (R1) | Player, test and design documents describe the current build. |
 | QST-015 | APPROVED | PARTIAL | Decided: "This Master Design / original phase numbering govern; |
 | QST-019 | UNDECIDED | NOT STARTED | Should all item lookups (`find_uid_anywhere`, `History.find_item`, `ItemStory.find`) search every holder? Affects Hall of Fame discovery … |
-| QST-027 | UNDECIDED | NOT STARTED | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 … |
+| QST-027 | APPROVED | VERIFIED (R1) | Which remaining Gate A items must close before B/C? CV §12.3 "Before B/C" names only migrations, identity boundaries and real 0.14.6 … |
 
 ### 4.2 B1 — worker capabilities and professions
 
@@ -212,7 +222,7 @@ specialist route rather than silent edits; A2's request-feasibility checks (`Sho
 | TECH-028 | PROPOSED | PARTIAL | Room tier derives from the room's specialists, stations and work, not the player's skill. |
 | WS-006 | PROPOSED | PARTIAL | Room tier derives from the room's specialists, stations and work done, not from the player's level; |
 | STAFF-002 | APPROVED | VERIFIED | A shared worker-profile foundation (profession, skills, progression, basic employment logic) for both families. |
-| STAFF-004 | PROPOSED | NOT STARTED | Route hireling workshop production through apprentice-style station tasks, or retire it, leaving hirelings as field/expedition staff. |
+| STAFF-004 | APPROVED | VERIFIED (R1) | Route hireling workshop production through apprentice-style station tasks, or retire it, leaving hirelings as field/expedition staff. |
 | STAFF-005 | APPROVED | VERIFIED | Workshop specialists perform suitable work at actual stations. |
 | STAFF-006 | APPROVED | VERIFIED | Specialists own their craft: high-end rune work, arcana, leatherwork and alchemy require qualified people, and staff are not limited to … |
 | STAFF-007 | APPROVED | VERIFIED | Each specialist has a personal profession with real ability (runesmith, arcanist, alchemist, leatherworker/tailor; |
@@ -591,3 +601,4 @@ relationship meters (HA-029).
 | 10 November 2026 | Run 0.1: milestone rows for canonical v1.2 and Run 0.1; D13, D14 and D18 items marked done; conflicts, at-risk items and decisions updated. |
 | 10 November 2026 | S2: rows for canonical v1.3 and S2; S2 decisions added. |
 | 11 November 2026 | Living Workshop: rows for canonical v1.4 and LW; B1, B2 and C1 marked delivered on the LW branch; LW decisions added. |
+| 17 November 2026 | R1: milestone rows for the pilots, v1.5, v1.6, v1.7, the final completion audit and R1; "what players have" corrected (latest release build-0.14.6; nothing later integrated or released); R1 deliveries marked in the A-REM/B1 tables. |

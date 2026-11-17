@@ -4,6 +4,30 @@
 
 > **Build status:** runs in Godot 4.3. It is covered by headless unit tests (`tests/test_runner.tscn`) and by rendered play-test phases (`tests/playtest.tscn`) that play the real game with synthetic input.
 
+> **Current build — 0.17 (R1 "Integration & Foundation Closure", private playtest artifact).** The game design is
+> `docs/EMBER_ASH_CANONICAL_VISION.md` (Design Baseline 1.7); what remains to finish it is `docs/final_completion/`.
+> This build contains, beyond the iteration notes below:
+> - **Steward Mode** (S1, S2): hand the running workshop to the steward and take it back (Y / the steward's plate); the
+>   steward plans production, buys within your limits, sells, and may set the smith to routine work at 1.5× pace (no
+>   experience for him); a truthful While You Were Away report and sealed letters for real deferred matters.
+> - **The Living Workshop** (B1, B2, C1): five professions with personal competence; the smith's other crafts stop at the
+>   basic level; workshop knowledge separate from personal skill; several stations of a kind; staged work orders (one
+>   item identity, every contributor recorded); the spouse at the counter within your discount limit; the pet at the
+>   smith's side.
+> - **Adventurer biographies** (v1.5); **Legendary only from advanced Designs and exceptional work**, three dangerous
+>   regions (Starfall Observatory, Weeping Fortress, Blackglass Rift) and four atmospheric seasons (v1.6).
+> - **The Living Village & Workshop** (v1.7): the compact ground-floor smithy, quarters in the Loft, a basement dug out
+>   over time; the millpond, stream and watermill (scenery); the illustrated village map and minimaps; compact panels
+>   with floating tooltips; the assignments-first hireling ledger; Barnaby's Ironfront teaching match and card trade;
+>   orichalcum, mithril and adamantine mainly from the dangerous places.
+> - **R1 identity rules** (canonical §6.1): a studied relic stays the same piece (same uid, its history kept); setting a
+>   rune never renames a piece, and a Common → Magic change is written into its history; a hireling who is let go
+>   leaves with their gear on record; merchant stock with a history is kept on record when it is replaced; a lost or
+>   destroyed piece keeps a permanent tombstone (save step 9).
+> - **R1 field hirelings** (decision D-5): hirelings do field work only — mining, gathering herbs and salt, quarrying
+>   runestone blanks, relic hunting and study, road trade. Potions, oils, runestones and ingots are made at stations by
+>   the smith and the workshop's specialists; smithing has no field work.
+
 ## The village of Brindlewick
 
 The village is about 96 × 64 tiles of 64 px each. It is built from modular sprites:
@@ -186,7 +210,7 @@ You can employ up to 3 hirelings alongside Brannoc. You start with **Borin Flint
 
 - Split working time (8:00–18:00) between the six skills; the split must total 100%.
 - One-click presets: focus on the best skill, split the two best, or an even spread.
-- Each hour employees work autonomously, gain experience and produce results: ore, ingots, herbs, runestone blanks, trade income or relics.
+- Each hour employees work autonomously in the field, gain experience and bring in results: ore and coal, herbs and salt, runestone blanks, relics (found and studied) or road-trade income. They do not process stored materials into potions, oils, runestones or ingots — that is station work for the smith and the workshop's specialists (R1, decision D-5); Smithing has no field work.
 - The ledger shows each employee's current activity with progress to the next result, their levels and experience bars, a short work log and their expedition history.
 - Wages are paid daily.
 
@@ -563,7 +587,7 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 
 **Screenshots:** `docs/screenshots/living_realm/`.
 
-## The Living Workshop — B1 professional foundations (in progress on `claude/living-workshop`)
+## The Living Workshop — professions, workshop knowledge, stations and work orders
 
 | What | How it works | Where |
 |---|---|---|

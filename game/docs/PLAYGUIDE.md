@@ -20,6 +20,7 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 | B | The MOST WANTED board |
 | P | Pause / resume time |
 | − / + | Time ×1, ×2, ×4, ×8 |
+| N | Steward Mode: hand the running workshop to the steward, or see the steward at work |
 | F10 | Developer Tools (testing only) |
 | Esc | Menu, save and load |
 
@@ -35,7 +36,9 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 
 ### 2. Put people to work (H)
 
-- Leave Borin mining. Use the presets, or split his time with the sliders.
+- Leave Borin mining. Use the presets, or split his time with the sliders. Hirelings are field staff: they mine, gather
+  herbs and salt, quarry runestone blanks, hunt and study relics and trade on the roads. Potions, oils, runestones and
+  ingots are made at the stations, by you and your workshop's specialists (Smithing has no field work for a hireling).
 - On day 2 or 3, send him to **Ironroot Mine**. The ledger shows the risk and odds before you commit.
 - He returns 1–2 days later. His bag waits on the workshop floor.
 - Open it: items are revealed one at a time, rarer finds more slowly, and legendaries flash orange with a star and their own sound.
@@ -296,6 +299,24 @@ figure, company, goals and bonds.
 may refuse. In the Hirelings ledger (H) you can **sponsor** a company to fetch a material, a relic or lost gear from a
 known site. Once your work is known, patrons write with **major contracts**: buy the **Project Bench** (Property ›
 Equipment) and work in blocks of hours; apprentices can help.
+
+## The current build (0.17): handing over, staged work and the village
+
+- **Steward Mode (N).** When you want the workshop to keep running without you, hand it to the steward. Set the
+  standing instructions first (spending limits, what may be sold, protected pieces and reserved materials). The steward
+  takes ordinary orders, plans the staff's work, buys and sells within your limits and may set you to routine work at
+  1.5× pace — you gain no experience from it. Unique, Epic and other weighty matters wait for you; some arrive as sealed
+  letters. Take the workshop back (N or the steward's plate) to read the While You Were Away report. While away you may
+  look at everything, but buttons that would act (improving a piece, learning a Skill Tree seal, a next-step action
+  into an acting panel) are greyed out with the reason.
+- **Professions and staged work.** Hire specialists (runesmith, alchemist, leatherworker, arcanist) at the notice board;
+  a Design of several crafts becomes a work order in stages in the Workshop Ledger (Q). Each stage goes to someone who
+  can do it — or claim it yourself. The piece keeps one identity, and everyone who worked on it is in its history.
+- **Your pieces keep their story.** A studied relic stays the same piece; a rune never renames a piece; a hireling you
+  let go leaves with their gear on record; a lost or destroyed piece keeps its tombstone in history.
+- **The village.** The compact smithy (shopfront and workshop below, your home in the Loft, a basement you dig out
+  later), the millpond and watermill, the illustrated village map (M), Barnaby's Ironfront (his house), and the three
+  dangerous places on the world map for the rarest metals.
 
 ## Quick evaluation with Developer Tools (F10)
 

@@ -23,7 +23,7 @@ const ICONS := {
 	"discovery": "icons/relic_map", "named": "icons/star", "epic": "icons/star", "deed": "icons/star", "awakened": "ui/ic_talk",
 	"lost": "ui/warn_broken", "destroyed": "ui/warn_broken", "death": "ui/act_candle", "returned": "ui/ic_home", "pawned": "icons/purse_gift",
 	"redeemed": "icons/purse_gift", "commission": "icons/recipe_scroll", "cleared": "icons/relic_map", "reunion": "ui/ic_home",
-	"note": "ui/ic_history", "threat": "ui/warn_worn", "arrival": "ui/act_road",
+	"note": "ui/ic_history", "threat": "ui/warn_worn", "arrival": "ui/act_road", "identified": "icons/relic_map", "departed": "ui/act_road",
 }
 
 

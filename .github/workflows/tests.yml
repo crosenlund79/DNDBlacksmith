@@ -1,0 +1,54 @@
+# Ember & Ash — automated tests on every development push (R1, TECH-014).
+# Runs the compile check, the regression & progression suite and the unit tests headless on every push to a
+# development branch (claude/**). It NEVER exports, packages, tags or publishes anything: releases stay with
+# windows-installer.yml, which publishes only from the default branch.
+# Rendered play-tests (tests/playtest.gd) need a GPU and run locally before a merge (game/docs/TESTING.md).
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "claude/**"
+
+permissions:
+  contents: read
+
+env:
+  GODOT_RELEASE: "4.3-stable"
+
+jobs:
+  tests:
+    name: Compile, suite, unit (headless)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot
+        run: |
+          set -e
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_RELEASE}_linux.x86_64.zip"
+          mv "Godot_v${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Import assets
+        run: godot --headless --path game --import || true
+
+      - name: Run the full test suite
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT=godot ./game/run_tests.sh full 2>&1 | tee test-output.log
+
+      - name: Keep the test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log-${{ github.run_number }}
+          path: |
+            test-output.log
+            game/.godot/test_logs/
+          if-no-files-found: ignore
+          retention-days: 14

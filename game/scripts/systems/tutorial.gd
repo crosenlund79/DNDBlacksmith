@@ -156,7 +156,7 @@ const COUNTER_PANELS := ["shop", "dialogue", "consult", "orders"]
 static var serving_override: Variant = null
 
 
-## Income counts as "serving a customer" only when the smith earned it himself at the counter: Borin's horseshoes, an
+## Income counts as "serving a customer" only when the smith earned it himself at the counter: Borin's road trade, an
 ## adventurer buying a draught or a piece off the display by themselves, an apprentice's repair or the steward's sales
 ## while the smith is away write the same ledger categories but teach the player nothing about selling (A2 observation
 ## 1: those background sales used to tick the step off before any customer had sat down).
@@ -183,7 +183,7 @@ static var served_override := ""
 
 
 ## Is `party` (a ledger payer) the person the smith is serving at the counter right now: seated at the counter, or the
-## one the open conversation, consultation or commission board is about? The market (Borin's horseshoes), the village
+## one the open conversation, consultation or commission board is about? The market (Borin's road trade), the village
 ## subsidy, a collector or a farm are never "a customer at the counter".
 static func party_served(party: String) -> bool:
 	if party == "" or (Adv.get_a(party).is_empty() and DB.character(party).is_empty()):

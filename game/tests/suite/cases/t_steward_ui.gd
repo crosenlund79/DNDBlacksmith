@@ -230,6 +230,39 @@ func test_away_look_but_do_not_act() -> void:
 	_ui_off(ui)
 
 
+## R1 (STW-026, BUG-003): panels the smith may still LOOK at while the steward runs the forge show their acting
+## buttons disabled with the reason — the item panel's "Improve it…", Help's next-step action, the Skill Tree's
+## "Learn" — and they work again once the workshop is taken back.
+func test_look_only_buttons_disabled_away() -> void:
+	_workshop()
+	var it := craft("iron_longsword", 90.0)
+	check(not it.is_empty(), "a longsword in the stores")
+	var ui := _ui()
+	eq(Steward.activate(), "", "the steward takes over")
+	var ip := _mount(ItemPanel.new(int(it["uid"]))) as Control
+	var imp := _named(ip, "ImproveIt") as Button
+	check(imp != null and imp.disabled and imp.tooltip_text == StewardUI.AWAY_ACTION_TIP, "away: 'Improve it…' is disabled, with the reason")
+	_unmount(ip)
+	var b := UIKit.button("Open the forge", func(): pass, 0)
+	StewardUI.guard_action(b, "station")
+	check(b.disabled, "away: a next-step action into an acting panel is disabled")
+	var look := UIKit.button("Look at the map", func(): pass, 0)
+	StewardUI.guard_action(look, "map")
+	check(not look.disabled, "away: a button into a look-only panel stays enabled")
+	var lb := UIKit.button("Learn", func(): pass, 0)
+	StewardUI.guard_direct(lb)
+	check(lb.disabled, "away: a direct action (learning a node) is disabled")
+	b.free()
+	look.free()
+	lb.free()
+	StewardUI.take_back()
+	var ip2 := _mount(ItemPanel.new(int(it["uid"]))) as Control
+	var imp2 := _named(ip2, "ImproveIt") as Button
+	check(imp2 != null and not imp2.disabled, "back at the forge 'Improve it…' works again")
+	_unmount(ip2)
+	_ui_off(ui)
+
+
 func test_report_builds_empty_real_and_full() -> void:
 	# minimal: activated and taken back at once — every empty section collapses
 	_workshop()

@@ -14,11 +14,20 @@ row; do not regenerate the existing ones unless their release code is used again
 | `build-0.12.4.json` | build-0.12.4 (0.12) | `2ffdaeb` | 1 | 31 | 4867 | `ed00dc3449ae5e153fdf10e2f2995e499f01888c210d10ec1b7c14dfee2d617c` |
 | `build-0.13.5.json` | build-0.13.5 (0.13) | `3d82c93` | 1 | 31 | 4608 | `5f2883c18546d077ac874cbede20b691f22c9c34d1a68980fa77e2dfff67eda8` |
 | `build-0.14.6.json` | build-0.14.6 (0.14) | `154d08a` | 1 | 32 | 4609 | `1e706fd6206511bf11611df9ed23812dc4060d0ebb7b48dec5d03a5b5489474d` |
+| `artifact-0.15.json` | playtest artifact 0.15 (S2, unpublished) | `b362877` | 4 | 32 | 5839 | `e863a3e806ed7fea7b54c4cbeec4dd399a49916cf1eb977bf711eaef93ccbc0f` |
+| `artifact-0.16.19.json` | playtest artifact 0.16.19 (the Living Workshop, unpublished) | `587399c` | 7 | 32 | 5113 | `e11130b194841b5048840b48297cbd509d4425ee07b44fdbc3655013d32f981f` |
+| `artifact-0.16.21.json` | playtest artifact 0.16.21 (the Living Village & Workshop, unpublished) | `65e70b5` | 8 | 32 | 5215 | `7820facb65aeea19244cd7607d7d2be5dc0b1c8407e9e58a66fde8ca93c52ac8` |
 
 - **Produced:** 9 November 2026 (each file's `meta.saved_at` records the moment), Milestone A1 "Protect the
   Foundation".
 - **Engine:** Godot `4.3.stable.official.77dcf97d8`, headless, Linux.
 - **Seed:** the driver calls `seed(20261109)` before `Game.new_game("journeyman")`.
+- **R1 additions (17 November 2026):** the three playtest artifacts that players may hold saves from — never published
+  as releases, so they have no tag; the commit is the artifact's exact source — were produced the same way, with the
+  same verbatim driver, seed and engine, from `git archive` of each commit. 0.15 hired Aerin Hollow and delivered
+  `ct_1`; 0.16.19 hired Ragna Rook and delivered `ct_1`; 0.16.21 hired Cedric Fairweather and delivered `ct_1`. No
+  run printed a script error. These saves declare their own schema (4, 7, 8), not 1; `t_saves` re-applies to them only
+  the migration steps they actually run, since a later build's native save never ran the earlier steps.
 
 ## How they were made (reproducible)
 
@@ -62,6 +71,9 @@ row; do not regenerate the existing ones unless their release code is used again
 | 0.12.4 | 100 crafted (35 smelts), 5 sold, 8 commissions, 98 repairs, 5 mining trips. Provenance and Lore present. |
 | 0.13.5 | 107 crafted (37 smelts), 6 sold, 9 commissions, 92 repairs, 5 mining trips; cobbler room bought (day 10); apprentice Krag Drummond hired (day 11) with 2 queued tasks. |
 | 0.14.6 | 130 crafted (44 smelts), 11 sold, 6 commissions, 90 repairs, 5 mining trips; apprentice Milo Wick hired (day 10) with 4 tasks; contract `ct_1` (drovers' kit) accepted day 6, 18 h worked, delivered day 16 (3 days late, outcome "good"); 25 finished expeditions. |
+| artifact 0.15 | 135 crafted (44 smelts), 11 sold, 11 commissions, 94 repairs, 5 mining trips; apprentice Aerin Hollow hired with 5 tasks; contract `ct_1` accepted, 18 h worked, delivered. |
+| artifact 0.16.19 | 135 crafted (46 smelts), 10 sold, 8 commissions, 106 repairs, 5 mining trips; apprentice Ragna Rook with 4 tasks; `ct_1` delivered. |
+| artifact 0.16.21 | 116 crafted (41 smelts), 9 sold, 8 commissions, 111 repairs, 5 mining trips; apprentice Cedric Fairweather with 4 tasks; `ct_1` delivered. |
 
 All four declare schema version 1 (`meta.version` and `data.version`): every release up to 0.14.6 wrote version 1.
 

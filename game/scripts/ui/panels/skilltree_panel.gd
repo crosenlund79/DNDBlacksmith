@@ -277,6 +277,7 @@ func _show(id: String, force: bool) -> void:
 		lb.name = "LearnButton"
 		lb.clip_text = true   # a long name never widens the side page (and the window)
 		lb.tooltip_text = lb.text
+		StewardUI.guard_direct(lb)   # R1 (STW-026): while the steward runs the forge the smith learns nothing
 		side.add_child(lb)
 		if not own and bearer != "":
 			var wl := UIKit.note("The workshop learns it through %s. Nobody's skills change." % WorkshopKnowledge.who_text(bearer), 17)
@@ -505,6 +506,9 @@ static func _nobody_text(rid: String) -> String:
 
 
 func _learn(id: String) -> void:
+	if Steward.smith_away():   # R1 (STW-026)
+		Events.toast.emit(StewardUI.AWAY_ACTION_TIP, "bad")
+		return
 	var why := SkillTree.unlock(id)
 	if why != "":
 		Events.toast.emit(why, "bad")

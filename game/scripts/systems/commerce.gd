@@ -193,6 +193,7 @@ static func _caravan_depart() -> void:
 	var c := st()
 	if c["caravan"].is_empty():
 		return
+	ItemRegistry.retire_stock(c["caravan"].get("stock", []), "caravan_master", "the Brask caravan")   # R1 (EQ-004)
 	c["caravan"] = {}
 	Chronicle.add("trade", "The Brask caravan packed up its wagons and took the east road out of Brindlewick.", {"npc": "caravan_master"})
 	Events.toast.emit("The caravan has left Brindlewick.", "info")
@@ -276,6 +277,7 @@ static func sell_wanted(uid: int, qty := 1) -> String:
 
 
 static func dev_force_caravan() -> void:
+	ItemRegistry.retire_stock(st()["caravan"].get("stock", []), "caravan_master", "the Brask caravan")
 	st()["caravan"] = {}
 	_caravan_arrive()
 
@@ -396,6 +398,7 @@ static func house_stock() -> Array:
 			Items.add_history(it, "Sat on Silas Quell's shelf, unredeemed.")
 			out.append({"def": str(e[0]), "item": it, "price": maxi(2, int(round(Items.value(it) * float(e[1]) * float(pawn_cfg().get("sale", 0.85)) * price_factor())))})
 		h["week"] = int((Game.day() - 1) / 7)
+		ItemRegistry.retire_stock(h.get("stock", []), "pawnbroker", "Silas Quell")   # R1 (EQ-004)
 		h["stock"] = out
 	return h["stock"]
 
@@ -463,6 +466,7 @@ static func rival_stock() -> Array:
 			var pe := _rival_piece(pit, float(e[1]), pf)
 			pe["plain"] = true
 			out.append(pe)
+		ItemRegistry.retire_stock(r.get("stock", []), "rival_smith", "Maren Tallowgate")   # R1 (EQ-004)
 		r["stock"] = out
 		r["day"] = Game.day()
 	return r["stock"]

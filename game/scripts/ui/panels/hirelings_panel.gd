@@ -213,7 +213,13 @@ func _skills_box(h: Dictionary) -> Control:
 			nm += " ▲"
 		elif m < 0.99:
 			nm += " ▼"
-		grid.add_child(UIKit.label(nm, 18))
+		var name_lab := UIKit.label(nm, 18)
+		if Hire.NO_FIELD_WORK.has(s):
+			# R1 (D-5): hirelings are field staff; workshop smithing is done at the stations by the workshop's people
+			name_lab.text = nm + " (no field work)"
+			name_lab.tooltip_text = "Hirelings are field staff: there is no smithing to do in the field. Hours given to it produce nothing — smelting and forging happen at the forge by the smith and the workshop's staff."
+			name_lab.mouse_filter = Control.MOUSE_FILTER_STOP
+		grid.add_child(name_lab)
 		grid.add_child(UIKit.label("Lv %d" % SkillSys.level(h["skills"], s), 18, "body_bold"))
 		grid.add_child(UIKit.bar(SkillSys.progress(h["skills"], s), 1.0, 100))
 		var sl := HSlider.new()

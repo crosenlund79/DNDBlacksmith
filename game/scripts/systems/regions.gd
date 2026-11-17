@@ -138,17 +138,65 @@ static func identify(uid: int, quality: float, by := "Brannoc") -> Dictionary:
 	for unused in found:
 		if unused != res:
 			Uniques.release(unused)   # rolls not kept never reach the world (D13: a Unique counts once it exists)
-	if int(it.get("qty", 1)) > 1:
-		it["qty"] = int(it["qty"]) - 1
-	else:
-		Game.inventory().erase(it)
-	res["found_note"] = "Identified by %s from %s." % [by, it["name"]]
-	Game.add_item(res, false)
-	Game.journal("%s studied %s: it was %s." % [by, it["name"], Items.display_name(res)])
+	var piece := _single_piece(it)
+	var was := {"def": str(piece["def"]), "name": str(piece["name"]), "day": Game.day(), "by": by,
+		"found_note": str(piece.get("found_note", ""))}
+	_become(piece, res, was)
+	Game.journal("%s studied %s: it was %s." % [by, was["name"], Items.display_name(piece)])
 	Events.inventory_changed.emit()
-	if res.get("rarity") == "legendary":
-		Events.legendary_found.emit(res)
-	return res
+	if piece.get("rarity") == "legendary":
+		Events.legendary_found.emit(piece)
+	return piece
+
+
+## R1 (EQ-007, decision D-2): one relic out of a stack, as its own piece. A single relic is itself; from a stack one
+## is split off (the stack keeps its uid, the split piece gets its own and a split note) so that the piece being
+## studied is one physical object whose history then continues.
+static func _single_piece(it: Dictionary) -> Dictionary:
+	if int(it.get("qty", 1)) <= 1:
+		return it
+	it["qty"] = int(it["qty"]) - 1
+	var one: Dictionary = it.duplicate(true)
+	one["qty"] = 1
+	one["uid"] = Game.new_uid()
+	one["split_from"] = int(it["uid"])
+	var inv := Game.inventory()
+	inv.insert(inv.find(it) + 1, one)   # beside its stack; not add_item, which would merge it straight back
+	return one
+
+
+## R1 (EQ-007, decision D-2): the studied relic BECOMES what it really was — same uid, so every Lore event that
+## names it (found on an expedition, carried home, studied) stays its own history. The revealed item's description
+## (def, name, rarity, stats, maker…) replaces the relic's; the rolled stand-in's own uid is never used. What it was
+## is kept in it["identified"], and an "identified" Lore event records the study.
+static func _become(piece: Dictionary, res: Dictionary, was: Dictionary) -> void:
+	var uid := int(piece["uid"])
+	var unique := Uniques.is_unique_def(str(res.get("def", "")))
+	if unique:
+		Uniques.release(res)   # registered under the stand-in's uid by the roll; re-registered under the relic's below
+	var keep := {}
+	for k in ["uid", "history", "split_from"]:
+		if piece.has(k):
+			keep[k] = piece[k]
+	piece.clear()
+	for k in res:
+		piece[k] = res[k] if not (res[k] is Dictionary or res[k] is Array) else res[k].duplicate(true)
+	for k in keep:
+		piece[k] = keep[k]
+	piece["uid"] = uid
+	piece["qty"] = 1 if not DB.item(str(piece["def"])).get("stack", false) else int(res.get("qty", 1))
+	piece["identified"] = was
+	piece["found_note"] = "Identified by %s from %s." % [was["by"], was["name"]]
+	if unique:
+		Uniques.register(piece, "identified")
+	if Provenance.applies(piece):
+		var ls := Lore.st()
+		for id in ls["order"]:   # the relic's earlier events (found, carried home) become the piece's story
+			if (ls["events"].get(id, {}).get("items", []) as Array).has(uid):
+				Provenance.link(piece, str(id))
+		Provenance.transfer(piece, Provenance.SMITH_ID, "found", "brindlewick")
+	Lore.record("identified", "%s studied %s and found it was %s." % [was["by"], was["name"], Items.display_name(piece)],
+		{"items": [piece], "importance": 1, "data": {"was_def": was["def"], "was_name": was["name"]}})
 
 
 ## Reading a forgotten recipe teaches it (sets its flag).

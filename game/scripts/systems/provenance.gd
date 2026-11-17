@@ -229,6 +229,8 @@ static func transfer(it: Dictionary, to_id: String, how: String, place := "", no
 	if from == to_id and how != "inherited":
 		return
 	_open_owner(it, to_id, how)
+	if how in ["recovered", "found", "looted", "returned"]:
+		ItemRegistry.note_recovered(it, how)   # R1 (EQ-012): a lost piece that comes back keeps its tombstone
 	var notable := is_notable(it)
 	var text := note if note != "" else "%s passed from %s to %s (%s)." % [Items.display_name(it), _who(from) if from != "" else "nobody",
 		_who(to_id), how]
@@ -284,14 +286,16 @@ static func lose(it: Dictionary, where: String, how: String, place := "") -> voi
 	if not applies(it):
 		return
 	st(it)["lost"] = {"day": Game.day(), "where": where, "how": how}
-	Lore.record("lost", "%s was lost — %s." % [Items.display_name(it), how], {"items": [it], "place": place, "importance": 2 if is_notable(it) else 0})
+	var ev := Lore.record("lost", "%s was lost — %s." % [Items.display_name(it), how], {"items": [it], "place": place, "importance": 2 if is_notable(it) else 0})
+	ItemRegistry.tombstone(it, "lost", how, where, place)["event"] = ev   # R1 (EQ-012)
 
 
 static func destroy(it: Dictionary, how: String) -> void:
 	if not applies(it):
 		return
 	st(it)["destroyed"] = {"day": Game.day(), "how": how}
-	Lore.record("destroyed", "%s was destroyed — %s." % [Items.display_name(it), how], {"items": [it], "importance": 2 if is_notable(it) else 0})
+	var ev := Lore.record("destroyed", "%s was destroyed — %s." % [Items.display_name(it), how], {"items": [it], "importance": 2 if is_notable(it) else 0})
+	ItemRegistry.tombstone(it, "destroyed", how)["event"] = ev   # R1 (EQ-012)
 
 
 ## Exceptional pieces get richer histories: named, Epic, legendary or unique, or with a famous deed.

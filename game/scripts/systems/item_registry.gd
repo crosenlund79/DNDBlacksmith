@@ -296,6 +296,128 @@ static func leave(it: Dictionary, to_id: String, to_name: String, how: String, n
 		ow[-1]["name"] = to_name
 
 
+## R1 (EQ-004): a merchant's unsold stock is replaced (a restock, a ship or caravan leaving). Stock a merchant rolled
+## for its own shelf never entered the world and needs no record. A piece WITH a history — the forge's own work, a
+## notable piece, or one with Lore events — never silently vanishes: it is kept whole in the holdings archive under
+## the merchant, with a Lore line. Returns how many pieces were kept. Non-equipment carries no identity history
+## (Provenance.applies), so it needs no record either.
+static func retire_stock(stock: Variant, holder_id: String, holder_name: String) -> int:
+	if not (stock is Array):
+		return 0
+	var kept := 0
+	for e in stock:
+		if not (e is Dictionary):
+			continue
+		var it: Variant = (e as Dictionary).get("item", {})
+		if not (it is Dictionary) or (it as Dictionary).is_empty() or is_ref(it) or not Provenance.applies(it):
+			continue
+		if not has_history(it):
+			continue
+		Lore.record("departed", "%s left Brindlewick unsold, with %s." % [Items.display_name(it), holder_name],
+			{"items": [it], "importance": 1 if Provenance.is_notable(it) else 0, "place": "brindlewick",
+				"data": {"holder": holder_id, "holder_name": holder_name, "how": "unsold"}})
+		archive(it, holder_id, holder_name, "unsold")
+		kept += 1
+	return kept
+
+
+## R1 (EQ-012, canonical §6.1 "a truly destroyed item may cease to be physically usable, but its Lore record must
+## remain"): a structured tombstone for a piece that is lost, buried or destroyed. The physical dict may vanish (a
+## shattered blade, a pack lost with a party), so the identity that made it this piece — uid, def, name, maker and
+## mark, owners, origin, earned names and Epic, its Lore event ids — is kept here permanently, never capped. A lost
+## piece that is later recovered keeps its tombstone with the day it came back.
+## Game.state["item_registry"]["tombstones"] = {"<uid>": {...}} (created on first write; reads are pure).
+const TOMB_KEYS := ["def", "name", "rarity", "quality", "epic", "title", "named", "star"]
+
+
+static func tombstone(it: Dictionary, cause: String, how: String, where := "", place := "") -> Dictionary:
+	if it.is_empty() or is_ref(it) or int(it.get("uid", -1)) <= 0:
+		return {}
+	if not Game.state.has("item_registry"):
+		Game.state["item_registry"] = {"holdings": []}
+	var r: Dictionary = Game.state["item_registry"]
+	if not r.has("tombstones"):
+		r["tombstones"] = {}
+	var t := {"uid": int(it["uid"]), "cause": cause, "how": how, "where": where, "place": place, "day": Game.day()}
+	for k in TOMB_KEYS:
+		if it.has(k):
+			t[k] = it[k].duplicate(true) if (it[k] is Dictionary or it[k] is Array) else it[k]
+	if it.has("prov"):
+		var p: Dictionary = it["prov"]
+		t["maker"] = (p.get("maker", {}) as Dictionary).duplicate(true)
+		t["origin"] = (p.get("origin", {}) as Dictionary).duplicate(true)
+		t["owners"] = (p.get("owners", []) as Array).duplicate(true)
+		t["events"] = (p.get("events", []) as Array).duplicate()
+		t["last_holder"] = Provenance.owner_id(it)
+	(r["tombstones"] as Dictionary)[str(t["uid"])] = t
+	return t
+
+
+## The tombstone of a uid, or {} (pure read).
+static func tombstone_of(uid: int) -> Dictionary:
+	return Game.state.get("item_registry", {}).get("tombstones", {}).get(str(uid), {})
+
+
+## Every tombstone (pure read).
+static func tombstones() -> Dictionary:
+	return Game.state.get("item_registry", {}).get("tombstones", {})
+
+
+## A lost piece that comes back keeps its tombstone, with the day of its return.
+static func note_recovered(it: Dictionary, how: String) -> void:
+	var t := tombstone_of(int(it.get("uid", -1)))
+	if not t.is_empty() and str(t.get("cause", "")) == "lost" and not t.has("recovered"):
+		t["recovered"] = {"day": Game.day(), "how": how}
+
+
+## Save step 9 (R1): tombstones for pieces that old saves record as lost or destroyed only in Lore — built from the
+## event (uid, cause, day, text) and, where the piece still exists physically (a lost blade still lying at a site),
+## from the piece itself. Identified relics from before R1 are marked as such (their relic's uid was never kept and
+## cannot be recovered). Idempotent: an existing tombstone or mark is never rewritten. Returns what it added.
+static func migrate_tombstones(state: Dictionary) -> int:
+	var added := 0
+	var lore: Dictionary = state.get("lore", {}) if state.get("lore") is Dictionary else {}
+	var events: Dictionary = lore.get("events", {}) if lore.get("events") is Dictionary else {}
+	var prev: Dictionary = Game.state
+	Game.state = state
+	for id in lore.get("order", []):
+		var e: Dictionary = events.get(id, {})
+		var kind := str(e.get("kind", ""))
+		if kind not in ["lost", "destroyed"]:
+			continue
+		for u in e.get("items", []):
+			var uid := int(u)
+			if uid <= 0 or not tombstone_of(uid).is_empty():
+				continue
+			var live := find(uid)
+			var t := {}
+			if not live.is_empty():
+				t = tombstone(live, kind, str(e.get("text", "")))
+			else:
+				t = tombstone({"uid": uid}, kind, str(e.get("text", "")))
+				t["name"] = str(e.get("text", "")).get_slice(" was ", 0)
+				t["reconstructed"] = true
+			t["day"] = int(e.get("day", 0))
+			t["event"] = str(id)
+			added += 1
+	for it in all_physical():
+		var note := str(it.get("found_note", ""))
+		if note.begins_with("Identified by ") and not it.has("identified"):
+			it["identified"] = {"legacy": true, "note": note}
+			added += 1
+	Game.state = prev
+	return added
+
+
+## A piece whose disappearance would lose something: the forge's work, a notable piece, or one with Lore events.
+static func has_history(it: Dictionary) -> bool:
+	if it.is_empty() or not Provenance.applies(it):
+		return false
+	if Provenance.is_workshop(it) or Provenance.is_notable(it):
+		return true
+	return it.has("prov") and not (it["prov"].get("events", []) as Array).is_empty()
+
+
 # ======================================================================= the holdings archive
 ## A piece leaves for a holder the world does not simulate (a patron's house): it is kept here with its full
 ## identity, outside any capped history. `via` names the occasion ("contract"), `data` links the record.

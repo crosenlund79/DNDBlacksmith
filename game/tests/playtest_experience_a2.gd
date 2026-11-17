@@ -77,7 +77,7 @@ func _tutorial() -> void:
 	Shop.customers().clear()
 	pt.expect(str(Tutorial.current().get("id", "")) == "customer", "a2 tutorial: 'Serve a customer' is the current step")
 	# Borin sells horseshoes and nails while the smith is elsewhere (the same ledger line hirelings.gd writes)
-	Game.add_gold(4, "sales", "Borin sold horseshoes and nails")
+	Game.add_gold(4, "trade", "Borin traded small goods")
 	await pt.wait(0.8)
 	pt.expect(str(Tutorial.current().get("id", "")) == "customer", "a2 tutorial: a background sale does not complete the selling step")
 	await _shot("tutorial_nobody_waiting")

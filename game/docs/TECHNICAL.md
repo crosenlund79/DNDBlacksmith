@@ -47,6 +47,22 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
   current schema is `Game.SAVE_VERSION`). Schema 4 (Run 0.1) adds `uniques`, the campaign's Unique-artifact registry
   (`uniques.gd`): each Unique definition is minted once per campaign (decision D13); saves from before it register the
   lowest-uid piece as authentic and keep any other pieces whole as recorded legacy copies.
+- Schemas 5–8 (the Living Workshop and v1.7): worker professions (5), workshop knowledge (6), station instances and
+  staged work orders (7), the compact smithy layout (8). **Schema 9 (R1)** adds permanent item **tombstones**
+  (`ItemRegistry.tombstone / tombstone_of / tombstones`, `Game.state.item_registry.tombstones`): a lost, buried or
+  destroyed piece keeps uid, def, name, maker, mark, owners, origin, earned names and Epic and its Lore event ids, and a
+  lost piece found again is marked `recovered`. Step 9 reconstructs tombstones from old saves' `lost`/`destroyed` Lore
+  events and marks pieces identified from relics before R1 (`identified.legacy`).
+- **R1 identity rules.** `Regions.identify` turns the studied relic into what it was **in place** (same uid; a stacked
+  relic is split first, `split_from`; `identified` records what it was; an `identified` Lore event; earlier Lore of the
+  relic is linked into the piece's provenance). `Crafting.socket` never renames a piece; a Common → Magic change is
+  written on the `enchanted` event (`rarity_from`/`rarity_to`). `Hire.dismiss` hands the hireling's gear over on record
+  (`departed` event, holdings archive). `ItemRegistry.retire_stock` keeps merchant stock that has a history (workshop
+  work, notable pieces, Lore events) on record when a stock is replaced or a ship or the caravan leaves.
+- **R1 field hirelings.** `Hire._produce` does field work only (gathering, quarrying blanks, relic hunting and study,
+  road trade); `Hire.NO_FIELD_WORK` (smithing) produces nothing. Workshop goods come only from station work.
+- **R1 Steward Mode look-only buttons.** `StewardUI.guard_action(button, route)` and `guard_direct(button)` disable an
+  acting button in a look-only panel while the steward runs the forge, with `StewardUI.AWAY_ACTION_TIP`.
 - A save from a newer schema is never loaded, migrated or overwritten; the player is told why (`Saves.newer_schema`).
 - JSON turns integers into floats; `Saves._restore_ints()` converts integral values back, except keys listed in `FLOAT_KEYS`.
 

@@ -40,12 +40,12 @@ const ORDINALS := ["", " the Second", " the Third", " the Fourth", " the Fifth"]
 const STORY_ICON := {"forged": "forged", "sold": "sale", "bought": "sale", "given": "sale", "pawned": "sale", "redeemed": "sale",
 	"found": "found", "looted": "found", "inherited": "inherited", "recovered": "inherited", "repaired": "repaired",
 	"reforged": "reforged", "refined": "sharpened", "reworked": "enchanted", "upgraded": "reforged", "enchanted": "enchanted", "treated": "treated", "sharpened": "sharpened", "battle": "battle",
-	"slew": "battle", "victory": "battle", "survived": "survived", "discovery": "discovery", "cleared": "discovery",
+	"slew": "battle", "victory": "battle", "survived": "survived", "discovery": "discovery", "cleared": "discovery", "identified": "discovery", "departed": "sale",
 	"named": "named", "epic": "epic", "deed": "epic", "lost": "lost", "destroyed": "lost", "death": "lost", "returned": "reunion",
 	"reunion": "reunion", "commission": "commission", "commissioned": "commission", "note": "note", "received": "found", "offered": "found"}
 const MARK_TEX := "marks/"
 ## Lore kinds that are only changes of hands (shown in the journey, not as achievements).
-const TRANSFER_KINDS := ["sold", "bought", "given", "found", "looted", "pawned", "redeemed", "commissioned", "offered", "returned", "received", "held"]
+const TRANSFER_KINDS := ["departed", "sold", "bought", "given", "found", "looted", "pawned", "redeemed", "commissioned", "offered", "returned", "received", "held"]
 
 
 # ======================================================================= state

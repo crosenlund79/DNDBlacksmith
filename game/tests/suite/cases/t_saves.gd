@@ -9,7 +9,11 @@ extends SuiteCase
 const SMOKE := ["test_step_registry", "test_golden_0_14_6", "test_fresh_game_round_trip_idempotent", "test_corrupt_main_falls_back_to_bak",
 	"test_test_mode_refuses_real_saves"]
 const FIXTURES := "res://tests/fixtures/saves/"
-const GOLDEN := ["build-0.11.2", "build-0.12.4", "build-0.13.5", "build-0.14.6"]
+const GOLDEN := ["build-0.11.2", "build-0.12.4", "build-0.13.5", "build-0.14.6", "artifact-0.15", "artifact-0.16.19",
+	"artifact-0.16.21"]
+## R1: the schema each golden save declares. Releases up to 0.14.6 wrote 1; the playtest artifacts 0.15 (S2),
+## 0.16.19 (the Living Workshop) and 0.16.21 (the Living Village & Workshop) wrote 4, 7 and 8.
+const SCHEMA := {"artifact-0.15": 4, "artifact-0.16.19": 7, "artifact-0.16.21": 8}
 ## Top-level keys every save has carried since 0.11 (Game.new_game).
 const REQUIRED_KEYS := ["version", "day", "minute", "gold", "next_uid", "ledger", "journal", "flags", "upgrades", "player",
 	"hirelings", "applicants", "adventurers", "social", "orders", "customers", "craft", "returns", "world", "objectives",
@@ -164,7 +168,7 @@ func _golden(name: String) -> void:
 	if not check(Saves.load_slot(slot), "%s loads" % name):
 		return
 	var rep: Dictionary = Saves.last_load.get("migration", {})
-	eq(int(rep.get("from", -1)), 1, "%s declares schema 1" % name)
+	eq(int(rep.get("from", -1)), int(SCHEMA.get(name, 1)), "%s declares schema %d" % [name, int(SCHEMA.get(name, 1))])
 	eq(int(rep.get("to", -1)), Game.SAVE_VERSION, "%s is migrated to the current schema" % name)
 	eq(int(Game.state.get("version", -1)), Game.SAVE_VERSION, "%s: the state records the new version" % name)
 	check(not bool(Saves.last_load.get("from_backup", true)), "%s: read from the main file" % name)
@@ -233,12 +237,25 @@ func test_golden_0_14_6() -> void:
 	_golden("build-0.14.6")
 
 
+func test_golden_artifact_0_15() -> void:
+	_golden("artifact-0.15")
+
+
+func test_golden_artifact_0_16_19() -> void:
+	_golden("artifact-0.16.19")
+
+
+func test_golden_artifact_0_16_21() -> void:
+	_golden("artifact-0.16.21")
+
+
 func test_golden_provenance_documented() -> void:
 	var readme := FileAccess.get_file_as_string(FIXTURES + "README.md")
 	for g in GOLDEN:
 		check(readme.contains(g + ".json"), "the fixtures README documents %s" % g)
 		var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(FIXTURES + g + ".json"))
-		check(doc is Dictionary and (doc as Dictionary).has("meta") and int(doc["meta"].get("version", -1)) == 1, "%s is an untouched schema-1 file" % g)
+		var want := int(SCHEMA.get(g, 1))
+		check(doc is Dictionary and (doc as Dictionary).has("meta") and int(doc["meta"].get("version", -1)) == want, "%s is an untouched schema-%d file" % [g, want])
 
 
 ## Each migration step is idempotent: applying it again to its own output changes nothing.
@@ -249,7 +266,10 @@ func test_migrations_idempotent_on_golden_saves() -> void:
 			continue
 		SaveMigrations.run(data)
 		var once := _snap(data)
-		for to in range(1, SaveMigrations.latest() + 1):
+		# a save written natively by a later build (the playtest artifacts) never ran the steps below its own schema,
+		# so only the steps it actually ran are re-applied to it (R1); release saves (schema 1) ran them all
+		var first := int(SCHEMA.get(g, 1)) + 1 if SCHEMA.has(g) else 1
+		for to in range(first, SaveMigrations.latest() + 1):
 			SaveMigrations.apply_step(to, data)
 			check(_snap(data) == once, "%s: step v%d → v%d run again changes nothing" % [g, to - 1, to])
 		eq((SaveMigrations.run(data)["steps"] as Array).size(), 0, "%s: a migrated save runs no further steps" % g)

@@ -233,15 +233,16 @@ func test_selling_step_ignores_background_income() -> void:
 	# a counter-class panel is open (a conversation with Pip): before S2 Borin's hourly sale ticked the step here
 	Tutorial.serving_override = true
 	Tutorial.served_override = "pip"
+	# R1 (D-5): hirelings no longer sell workshop goods made without a station; their background income is field
+	# trade on the roads (payer 'market', S2 BUG-050)
 	var borin := Hire.get_h("borin")
-	borin["alloc"] = {"smithing": 100}
-	Game.remove_def("ore_iron", Game.count("ore_iron"))
+	borin["alloc"] = {"travelling": 100}
 	_to_hour(10)
 	var g0 := Game.gold()
 	for i in 8:
 		Hire.work_hour(10)
 		Tutorial._on_gold(Game.gold())
-	check(Game.gold() > g0, "Borin sold horseshoes (%d g, payer 'market')" % (Game.gold() - g0))
+	check(Game.gold() > g0, "Borin traded small goods (%d g, payer 'market')" % (Game.gold() - g0))
 	check(not Tutorial.is_done("customer"), "his sale does not complete the selling step while a counter panel is open")
 	# an adventurer buying a draught from the display by himself (not the one being served)
 	Game.add_gold(30, "sales", "Varn bought a healing draught", "varn")

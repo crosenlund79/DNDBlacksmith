@@ -170,6 +170,27 @@ static func away_block(id: String) -> String:
 	return "You are away — the steward is running the forge. Take the workshop back first (%s, or the steward's plate)." % key()
 
 
+## R1 (STW-026, BUG-003): a button in a look-only panel that would act in the world (open an acting panel such as
+## crafting, refining or trading) is shown disabled while the steward runs the forge, with the reason — instead of
+## being enabled and then refused. Returns the button for chaining.
+const AWAY_ACTION_TIP := "The steward runs the forge — take it back to act."
+
+
+static func guard_action(b: Button, route: String) -> Button:
+	if b != null and away_block(route) != "":
+		b.disabled = true
+		b.tooltip_text = AWAY_ACTION_TIP
+	return b
+
+
+## The same for a button that acts directly (not by opening a panel), e.g. learning a Skill Tree node.
+static func guard_direct(b: Button) -> Button:
+	if b != null and Steward.smith_away():
+		b.disabled = true
+		b.tooltip_text = AWAY_ACTION_TIP
+	return b
+
+
 static func away_note() -> String:
 	return "You are away: the steward runs the forge. Look around as you like; take the workshop back to act yourself."
 

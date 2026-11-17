@@ -290,10 +290,26 @@ static func equip(id: String, uid: int) -> bool:
 	return true
 
 
+## R1 (BUG-017, canonical §6.1): a hireling who is let go keeps the gear they wear (it is theirs, or was given to
+## them) and takes it out of the simulated world. Each piece gets a recorded hand-over in its own history and is kept
+## whole in the registry's holdings archive under its new holder, so its identity and story never silently vanish.
+static func _leave_with_gear(h: Dictionary) -> void:
+	var eq: Dictionary = h.get("equipment", {})
+	for slot in eq.keys():
+		var it: Variant = eq[slot]
+		if not (it is Dictionary) or (it as Dictionary).is_empty() or not Provenance.applies(it):
+			continue
+		Lore.record("departed", "%s left Brindlewick with %s when they were let go." % [h["name"], Items.display_name(it)],
+			{"items": [it], "importance": 1 if Provenance.is_notable(it) else 0, "place": "brindlewick",
+				"data": {"holder": str(h["id"]), "holder_name": str(h["name"]), "how": "dismissed"}})
+		ItemRegistry.archive(it, str(h["id"]), str(h["name"]), "departed", {"slot": str(slot)})
+
+
 static func dismiss(id: String) -> void:
 	var h := get_h(id)
 	if h.is_empty() or h["status"] == "away":
 		return
+	_leave_with_gear(h)
 	list().erase(h)
 	Game.journal("%s was let go." % h["name"])
 	Events.hirelings_changed.emit()
@@ -315,7 +331,7 @@ const WORK_OUTPUT := {
 	"mining": [["ore_iron", 2], ["coal", 2], ["ore_copper", 1]],
 	"alchemy": [["herb_moonwort", 1], ["reagent_salt", 1], ["herb_emberleaf", 1]],
 	"runecraft": [["runestone_blank", 1]],
-	"smithing": [["ingot_iron", 1]],
+	"smithing": [],   # R1 (D-5): no field work; smelting happens at the forge and crucible
 	"travelling": [],
 	"relic_hunting": [["relic_coin", 1]],
 }
@@ -355,8 +371,18 @@ static func work_hour(_h: int) -> void:
 				add_xp(h, skill, 6)
 
 
+## R1 (decision D-5, STAFF-004 / HA-025; canonical §1.2 "a physical workshop matters", §4.3): field hirelings do
+## FIELD work in their allocated hours — they mine ore and coal, gather herbs and salt, quarry runestone blanks, hunt
+## relics on the spoil heaps and study them, and trade small goods on the roads. They no longer process stored
+## materials into finished goods without a station (potions, oils, prepared runestones, smelted ingots, horseshoes):
+## workshop goods come only from station work by the smith and the workshop's specialists. Smithing has no field
+## work, so hours allocated to it produce nothing (the hireling panel says so). Verified before removal: field work,
+## station production, golden saves and the steward's early economy (84-day A/B: 12,891 g with processing, 12,441 g
+## without, the same seed) are preserved.
+const NO_FIELD_WORK := ["smithing"]
+
+
 static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
-	# skilled hands process stored materials into finished goods instead of gathering raw ones
 	if skill == "relic_hunting":
 		for it in Game.inventory():
 			if Regions.is_unidentified(it):
@@ -364,45 +390,23 @@ static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
 				if not res.is_empty():
 					Events.toast.emit("%s identified a relic: %s." % [h["name"], Items.display_name(res)], "good")
 					return "studied a relic: %s" % Items.display_name(res)
-	if skill == "alchemy" and lvl >= 2:
-		if Game.count("herb_moonwort") >= 2 and randf() < 0.5:
-			Game.remove_def("herb_moonwort", 2)
-			Game.add_item(Items.make("potion_healing", {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
-			return "brewed a Healing Draught from stored moonwort"
-		if Game.count("herb_emberleaf") >= 1 and Game.count("reagent_salt") >= 1:
-			Game.remove_def("herb_emberleaf", 1)
-			Game.remove_def("reagent_salt", 1)
-			Game.add_item(Items.make("oil_whetstone", {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
-			return "pressed Whetstone Oil from stored emberleaf"
-	if skill == "runecraft" and lvl >= 2 and Game.count("runestone_blank") >= 1 and randf() < 0.35 + lvl * 0.05:
-		var kind := "runestone_ward" if Game.count("reagent_salt") >= 1 else ("runestone_ember" if Game.count("herb_emberleaf") >= 1 else "")
-		if kind != "":
-			Game.remove_def("runestone_blank", 1)
-			Game.remove_def("reagent_salt" if kind == "runestone_ward" else "herb_emberleaf", 1)
-			Game.add_item(Items.make(kind, {"qty": 1, "quality": 60.0 + lvl * 6.0, "crafted_by": h["name"]}), false)
-			return "prepared a %s" % DB.item(kind)["name"]
 	if skill == "travelling":
 		var g := int(round((4 + lvl * 2 + randi_range(0, 4)) * trait_mult(h, "mult", "travelling")))
 		Game.add_gold(g, "trade", "%s traded small goods" % h["name"], "market")
 		return "traded small goods for %d g" % g
 	if skill == "relic_hunting" and randf() > (0.25 + lvl * 0.05) * trait_mult(h, "mult", "relic_hunting"):
 		return "sifted the spoil heaps and found nothing"
+	if NO_FIELD_WORK.has(skill):
+		return ""
 	var opts: Array = WORK_OUTPUT.get(skill, [])
 	if skill == "mining" and lvl >= 4 and randf() < 0.25:
 		opts = [["ore_silver", 1]]
-	if skill == "alchemy" and lvl >= 3 and randf() < 0.3:
-		opts = [["potion_healing", 1]]
 	if opts.is_empty():
 		return ""
 	var pick: Array = opts.pick_random()
-	if skill == "smithing" and Game.count("ore_iron") >= 2:
-		Game.remove_def("ore_iron", 2)
-	elif skill == "smithing":
-		Game.add_gold(3 + lvl, "sales", "%s sold horseshoes and nails" % h["name"], "market")
-		return "sold horseshoes and nails for %d g" % (3 + lvl)
 	var it := Items.make(pick[0], {"qty": int(pick[1])})
 	Game.add_item(it, false)
-	return "%s %d %s" % [{"mining": "mined", "alchemy": "gathered", "runecraft": "split", "smithing": "smelted", "relic_hunting": "found"}.get(skill, "made"), int(pick[1]), it["name"]]
+	return "%s %d %s" % [{"mining": "mined", "alchemy": "gathered", "runecraft": "quarried", "relic_hunting": "found"}.get(skill, "gathered"), int(pick[1]), it["name"]]
 
 
 # ------------------------------------------------------------------ expeditions

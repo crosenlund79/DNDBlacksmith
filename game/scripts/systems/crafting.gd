@@ -877,10 +877,16 @@ static func socket(item_uid: int, rune_def: String, quality: float) -> bool:
 	for k in rs:
 		it["affixes"].append({"id": "rune_" + k, "stat": k, "value": int(round(float(rs[k]) * (0.6 + quality / 100.0 * 0.6)))})
 	it["sockets"].append(rune_def)
+	# R1 (BUG-042, decision D-3): the piece keeps its own name. A Common piece that now carries a rune's property is
+	# Magic by the rarity rules (affixes), and that change is recorded on the event, never made silently.
+	var data := {"rune": rune_def, "quality": quality}
+	var text := "A %s was set into it at the Ironhand forge." % DB.item(rune_def).get("name", rune_def)
 	if it["rarity"] == "common":
 		it["rarity"] = "magic"
-		it["name"] = "Runed " + str(it["name"])
-	Provenance.workshop(it, "enchanted", "A %s was set into it at the Ironhand forge." % DB.item(rune_def).get("name", rune_def))
+		data["rarity_from"] = "common"
+		data["rarity_to"] = "magic"
+		text += " The rune's power made it a Magic piece (it was Common)."
+	Provenance.workshop(it, "enchanted", text, data)
 	ItemSpirit.speak(it, "enchant")
 	Game.grant_player_xp("runecraft", 20)
 	Events.inventory_changed.emit()

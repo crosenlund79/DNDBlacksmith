@@ -280,7 +280,7 @@ func _materials_cycle() -> void:
 	Game.add_item(scroll, false)
 	var msg := Regions.read_recipe(int(scroll["uid"]))
 	check(Game.has_flag("recipe_starsteel"), "relics: reading the notes teaches the Starsteel Blade (%s)" % msg)
-	# hirelings process stored materials into finished goods
+	# R1 (D-5): hirelings are field staff — they gather, they do not process stored materials into finished goods
 	var al := Hire._new_entry("alch", "Test Alchemist", "applicant_2", "Human", "", {"alchemy": 4, "runecraft": 4}, 3)
 	al["traits"] = []
 	al["alloc"] = {"mining": 0, "smithing": 0, "alchemy": 50, "runecraft": 50, "travelling": 0, "relic_hunting": 0}
@@ -290,13 +290,18 @@ func _materials_cycle() -> void:
 	Game.add_item(Items.make("reagent_salt", {"qty": 3}), false)
 	var pots := Game.count("potion_healing") + Game.count("oil_whetstone")
 	var runes := Game.count("runestone_ward") + Game.count("runestone_ember")
+	var stored := Game.count("herb_moonwort")
+	var raw := Game.count("herb_moonwort") + Game.count("reagent_salt") + Game.count("herb_emberleaf") + Game.count("runestone_blank")
 	var m0: int = Game.state["minute"]
 	Game.state["minute"] = 10 * 60
 	for i in 24:
 		Hire.work_hour(10)
 	Game.state["minute"] = m0
-	check(Game.count("potion_healing") + Game.count("oil_whetstone") > pots and Game.count("runestone_ward") + Game.count("runestone_ember") > runes,
-		"processing: a hireling brewed potions/oils and prepared runestones from stored materials")
+	check(Game.count("potion_healing") + Game.count("oil_whetstone") == pots and Game.count("runestone_ward") + Game.count("runestone_ember") == runes,
+		"field work: a hireling makes no potions, oils or runestones without a station")
+	check(Game.count("herb_moonwort") >= stored, "field work: stored moonwort is not consumed by a hireling")
+	check(Game.count("herb_moonwort") + Game.count("reagent_salt") + Game.count("herb_emberleaf") + Game.count("runestone_blank") > raw,
+		"field work: the hireling gathered herbs, salt or runestone blanks")
 	Hire.list().erase(al)
 	Game.add_gold(gold0 - Game.gold(), "test", "reset")
 

@@ -1,5 +1,13 @@
 # The Living Realm — roadmap status
 
+> **SUPERSEDED (R1, 17 November 2026).** This is the historical status table of the Living Realm brief's own phases
+> 1–10. It is **not** the game's roadmap: the canonical roadmap is `docs/EMBER_ASH_CANONICAL_VISION.md` §12 (creative
+> Phases 0–10 and the technical gates A–J), and what remains to finish the game is `docs/final_completion/`
+> (`FINAL_COMPLETION_AUDIT.md`, `FINAL_DEVELOPMENT_ROADMAP.md`). Where the rows below once said "allegiance" or order the
+> civilizations before a regional proof, canonical governs: there is no allegiance — the smith may work for either
+> civilization, both or neither (D15) — and a small regional crisis proof comes first (§10.2). "Playtested" Windows rows
+> rest on CI install-and-launch checks, not human acceptance. Rows marked "Done" were done against the original scope.
+
 What is implemented, tested and released, and what remains. Nothing below is marked done without code, tests and
 rendered checks.
 
@@ -11,7 +19,7 @@ rendered checks.
 | 4 | Sponsored expeditions | **Done** | `sponsor.gd` in the dispatch panel and the Expeditions engine (`t_sponsor`, `sponsor_rl`) |
 | 5 | Major commissions & integrated workshop production | **Done** | `contracts.gd`, Project Bench, patrons to the Crown, apprentice contract hours (`t_contracts`, `contracts_rl`) |
 | 6 | Equipment affixes & deeper item legacy | **Not started** | Existing rarity/affixes/refinement/provenance remain; no new affix work yet |
-| 7 | Autonomous civilizations, allegiance, world influence | **Not started** | — |
+| 7 | Autonomous civilizations, (superseded: no allegiance — D15), world influence | **Not started** | — |
 | 8 | Authored storylines & the regional conflict prototype | **Not started** | — |
 | 9 | Campaign variation, chronicles, interconnected consequences | **Partly prepared** | World seed and seeded rosters exist (phase 3); no chronicle/comparison work yet |
 | 10 | Broader overarching conflict | **Not started** | Must follow a successful regional prototype (phase 8) |

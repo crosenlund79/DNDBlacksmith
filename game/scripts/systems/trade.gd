@@ -260,6 +260,7 @@ static func _depart() -> void:
 	if s.is_empty():
 		return
 	Chronicle.add("trade", "%s cast off and left Brindlewick harbour." % s["name"], {"ship": s["type"]})
+	ItemRegistry.retire_stock(s.get("stock", []), "ship_" + str(s.get("type", "")), str(s.get("name", "a ship")))   # R1 (EQ-004)
 	t["ship"] = {}
 	var g: Array = cfg().get("schedule", {}).get("gap", [3, 6])
 	_schedule_next(randi_range(int(g[0]), int(g[1])))
@@ -439,6 +440,7 @@ static func dev_force_ship(type := "") -> void:
 	var t := st()
 	if type == "" or ship_type(type).is_empty():
 		type = str(cfg().get("ships", {}).keys().pick_random())
+	ItemRegistry.retire_stock((t["ship"] as Dictionary).get("stock", []), "ship", "a departing ship")
 	t["ship"] = {}
 	_dock(type)
 
