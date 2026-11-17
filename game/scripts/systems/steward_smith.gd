@@ -960,11 +960,7 @@ static func _plan_restock() -> void:
 			why_none = "Materials for a new piece would break the spending limits (the purse is at or near the reserve)."
 			continue
 		var value := Items.value({"def": out, "quality": expected_quality(rid)})
-		var cost := 0
-		var inputs: Dictionary = DB.recipe(rid).get("inputs", {})
-		for d in inputs:
-			var sp := Steward._shop_price(str(d))
-			cost += int(inputs[d]) * (int(sp["price"]) if not sp.is_empty() else int(DB.item(str(d)).get("value", 5)))
+		var cost := Valuation.design_material_cost(rid)
 		var margin := float(value - cost)
 		if margin <= 0.0:
 			continue

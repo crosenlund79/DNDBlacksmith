@@ -218,8 +218,8 @@ func _fill_stats() -> void:
 	for st in STATS:
 		for d in slots:
 			var it := _item(str(d[0]))
-			if not it.is_empty() and _known(it) and Items.stat(it, st[0]) != 0:
-				used.append(st)
+			if not it.is_empty() and _known(it) and Items.stat(it, st[0]) != 0 and Items.stat_in_play(it, st[0]):
+				used.append(st)   # R2 (EQ-053): only stats that change what happens in play
 				break
 	var g := GridContainer.new()
 	g.columns = used.size() + 2
@@ -238,7 +238,7 @@ func _fill_stats() -> void:
 		var nm := Items.display_name(it) if kn else "a %s" % Items.type_label(it).to_lower()
 		g.add_child(UIKit.label("%s — %s" % [Items.SLOT_LABEL.get(str(d[0]), str(d[0]).capitalize()), nm.left(28)], 16, "body", Items.color(it, false) if kn else UIKit.INK))
 		for st in used:
-			var v := Items.stat(it, st[0]) if kn else 0
+			var v := Items.stat(it, st[0]) if kn and Items.stat_in_play(it, st[0]) else 0
 			tot[st[0]] = int(tot.get(st[0], 0)) + v
 			g.add_child(UIKit.label(str(v) if v != 0 else ("·" if kn else "?"), 16))
 		var stt: Dictionary = it.get("stats", {})
@@ -391,7 +391,7 @@ static func key_stats(it: Dictionary, n := 4) -> String:
 	var bits := []
 	for k in STATS:
 		var v := Items.stat(it, k[0])
-		if v != 0:
+		if v != 0 and Items.stat_in_play(it, k[0]):   # R2 (EQ-053)
 			bits.append("%s %d" % [k[2], v])
 		if bits.size() >= n:
 			break
@@ -492,10 +492,10 @@ static func compare_view(current: Dictionary, candidate: Dictionary, verdict := 
 		g.add_child(UIKit.label(hdr, 14, "body_bold", C_LABEL))
 	var rows := 0
 	for st in STATS:
-		var a := Items.stat(current, st[0]) if not current.is_empty() else 0
-		var b := Items.stat(candidate, st[0]) if not candidate.is_empty() else 0
+		var a := Items.stat(current, st[0]) if not current.is_empty() and Items.stat_in_play(current, st[0]) else 0
+		var b := Items.stat(candidate, st[0]) if not candidate.is_empty() and Items.stat_in_play(candidate, st[0]) else 0
 		if a == 0 and b == 0:
-			continue
+			continue   # R2 (EQ-053): stats with no effect in play are not compared
 		rows += 1
 		g.add_child(UIKit.label(str(st[1]), 16))
 		g.add_child(UIKit.label(str(a), 16))

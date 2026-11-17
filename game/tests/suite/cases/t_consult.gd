@@ -27,7 +27,6 @@ func _calm(a: Dictionary) -> void:
 		if it.get("stats", {}).has("durability_max"):
 			it["stats"]["durability"] = int(it["stats"]["durability_max"])
 	a["goals"] = [{"kind": "skill", "target": 99, "since": 1}]
-	a["next_dest"] = "ironroot_mine"
 	a["equipment"]["weapon"]["coating"] = {"name": "Flame Coating", "stat": "fire", "value": 4, "uses": 3}
 
 
@@ -59,6 +58,13 @@ func _persuadable(npc: String) -> void:
 	train("smithing", 8)
 
 
+
+## R2 (ADV-012): where an adventurer is going is the planner's — a forming party with its destination is the fixture
+## for "bound for X" (setting the old next_dest field by hand no longer decides anything).
+func _bound(a: Dictionary, rid: String) -> void:
+	var pid := "p_test_" + str(a["id"])
+	Expeditions.st()["parties"][pid] = {"id": pid, "members": [str(a["id"])], "leader": str(a["id"]), "dest": rid, "goal": "explore"}
+
 func test_triggers_rate_limited() -> void:
 	fresh_game()
 	for a in Adv.all().values():
@@ -74,9 +80,9 @@ func test_triggers_rate_limited() -> void:
 	eq(str(Consult.reason_for(b).get("kind", "")), "defeat", "coming home beaten is a reason to ask")
 	var c := _adv("pip")
 	c["equipment"]["weapon"].erase("coating")
-	c["next_dest"] = "barrow_fields"
+	_bound(c, "barrow_fields")
 	eq(str(Consult.reason_for(c).get("kind", "")), "mismatch", "a trip to wights that fear fire, with no fire in the kit")
-	c["next_dest"] = "ironroot_mine"
+	_bound(c, "ironroot_mine")
 	c["equipment"]["weapon"]["coating"] = {"name": "Flame Coating", "stat": "fire", "value": 4, "uses": 3}
 	c["goals"] = [{"kind": "gear", "target": 999, "since": 1}]
 	eq(str(Consult.reason_for(c).get("kind", "")), "goal", "a gear-seeker asks where to spend their coin")
@@ -150,7 +156,7 @@ func test_recommendations_from_data() -> void:
 	var a := _adv("sigrun")
 	_calm(a)
 	a["equipment"]["weapon"].erase("coating")
-	a["next_dest"] = "barrow_fields"
+	_bound(a, "barrow_fields")
 	a["gold"] = 3000
 	var armor: Dictionary = a["equipment"]["armor"]
 	armor["stats"]["durability"] = int(int(armor["stats"]["durability_max"]) * 0.2)
@@ -185,7 +191,7 @@ func test_recommendations_from_data() -> void:
 	var p := _adv("pip")
 	_calm(p)
 	WorldSites.site("drakes_crag")["discovered"] = true
-	p["next_dest"] = "drakes_crag"
+	_bound(p, "drakes_crag")
 	var pr := Consult.recommendations(p)
 	var dr := _rec(pr, "dest")
 	check(not dr.is_empty(), "Drake's Crag is %s for a level-%d bard: 'try somewhere else first'" % [Consult.danger_text(p, "drakes_crag"), int(p["level"])])
@@ -284,7 +290,7 @@ func test_accepted_advice_changes_decisions() -> void:
 	var a := _adv("sigrun")
 	_calm(a)
 	a["equipment"]["weapon"].erase("coating")
-	a["next_dest"] = "barrow_fields"
+	_bound(a, "barrow_fields")
 	a["gold"] = 3000
 	_persuadable("sigrun")
 	var blade := Items.make("sword_emberwarden", {"quality": 95.0})
@@ -316,7 +322,7 @@ func test_accepted_advice_changes_decisions() -> void:
 	var c := _adv("garrick")
 	_calm(c)
 	c["equipment"]["weapon"].erase("coating")
-	c["next_dest"] = "barrow_fields"
+	_bound(c, "barrow_fields")
 	c["gold"] = 3000
 	_persuadable("garrick")
 	Game.state["player"]["inventory"] = Game.inventory().filter(func(it): return not str(it["def"]).begins_with("coating"))   # no coatings in the stores (the stores live under player.inventory)
@@ -332,7 +338,7 @@ func test_accepted_advice_changes_decisions() -> void:
 	var d := _adv("varn")
 	_calm(d)
 	d["equipment"]["weapon"].erase("coating")
-	d["next_dest"] = "barrow_fields"
+	_bound(d, "barrow_fields")
 	d["gold"] = 500
 	_persuadable("varn")
 	give("coating_flame")
@@ -348,7 +354,7 @@ func test_accepted_advice_changes_decisions() -> void:
 	var p := _adv("pip")
 	_calm(p)
 	WorldSites.site("drakes_crag")["discovered"] = true
-	p["next_dest"] = "drakes_crag"
+	_bound(p, "drakes_crag")
 	_persuadable("pip")
 	var rd := _rec(Consult.session("pip")["recs"], "dest")
 	check(not rd.is_empty(), "a change of plan is advised")
@@ -380,7 +386,7 @@ func test_credibility_after_outcomes() -> void:
 	var a := _adv("pip")
 	_calm(a)
 	WorldSites.site("drakes_crag")["discovered"] = true
-	a["next_dest"] = "drakes_crag"
+	_bound(a, "drakes_crag")
 	_persuadable("pip")
 	var rd := _rec(Consult.session("pip")["recs"], "dest")
 	_seed_roll("pip", str(rd["id"]), true)

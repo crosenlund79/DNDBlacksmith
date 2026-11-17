@@ -81,7 +81,7 @@ static func update() -> void:
 		return
 	c["status"] = "missed"
 	TalkMarkers.clear(str(c.get("adv", "")))
-	Shop.rep_change(1.0)
+	Reputation.change(1.0)
 	if str(c.get("adv", "")) != "":
 		Social.change(str(c["adv"]), -2.0, 1.0, "", "", false)
 	Chronicle.add("social", "The square honoured %s's deed at noon — the smith was not there to hear it." % Talk.npc_name(str(c.get("adv", ""))), {"adv": str(c.get("adv", ""))})
@@ -158,7 +158,7 @@ static func attend() -> Dictionary:
 	TalkMarkers.clear(adv)
 	var w: Dictionary = Game.state["world"]
 	w["smith_renown"] = int(w.get("smith_renown", 0)) + RENOWN
-	Shop.rep_change(REP, "the village publicly honoured the smith's work.")
+	Reputation.change(REP, "the village publicly honoured the smith's work.")
 	if adv != "":
 		Social.change(adv, 8.0, 5.0, "ceremony_%d" % Game.day(), "Brannoc stood beside me in the square when they honoured my deed.")
 	for v in c.get("crowd", []):

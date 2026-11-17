@@ -36,6 +36,8 @@ const STEPS := [
 		"what": "Canonical v1.7 (#64–66): the ground floor is the compact 19 × 18 smithy; the quarters and the household rooms are in the Loft, the material store and the arcane foundry in the dug-out basement. Each moved room keeps its id, unit and stations (same place within the room); a room the player made in the removed part of the old ground floor is dropped and its stations go to storage; doorways for moved rooms come from the data; a save that owned the foundry also owns the cellar dig that leads to it; a plan that would not validate stores the moved rooms' stations to re-place; the smith, if he stood where the millpond now lies, is set down inside the front door. Units, upgrades, items and stations are never removed (Property.migrate_layout_v17)."},
 	{"to": 9, "name": "item tombstones",
 		"what": "R1 (EQ-012, EQ-007): every piece the save records as lost or destroyed in Lore gains a permanent structured tombstone (uid, name, maker, owners, Epic, events; reconstructed from the event when the piece no longer exists); pieces identified from relics before R1 are marked as identified (the relic's old uid was never kept). Nothing is deleted; idempotent."},
+	{"to": 10, "name": "reputation by audience and place",
+		"what": "R2 (TECH-019, WLD-011 data model, decision D-7): the single `world.rep` (what the village had heard of the smith) becomes what every audience — villagers, adventurers, traders, artisans, nobility — in the village has heard (`reputation.word[audience][place]`); the region starts with nothing heard (spreading is R8). The general standing is unchanged. Idempotent."},
 ]
 
 
@@ -103,6 +105,9 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 			var n := ItemRegistry.migrate_tombstones(data)
 			if n > 0:
 				Log.info("  item tombstones and identification marks: %d added" % n)
+		10:
+			if Reputation.migrate(data) > 0:
+				Log.info("  reputation: the village's word of the smith moved into audiences × places")
 		_:
 			return false
 	return true

@@ -102,14 +102,14 @@ func _form() -> void:
 	so.name = "SiteOption"
 	so.custom_minimum_size = Vector2(300, 40)
 	for i in sites.size():
-		so.add_item("%s (%s)" % [WorldSites.name_of(str(sites[i])), WorldSites.danger_word(str(sites[i]))], i)
+		so.add_item("%s (%s)" % [WorldSites.name_of(str(sites[i])), Danger.word(str(sites[i]))], i)
 		if str(sites[i]) == sel_site:
 			so.select(i)
 	so.item_selected.connect(func(i): sel_site = str(sites[i]); sel_obj = 0; _queue())
 	r1.add_child(so)
 	var cond := WorldSites.conditions(sel_site)
 	var tr: Array = Expeditions.region(sel_site).get("travel_h", [2, 3])
-	var si := UIKit.label("%s · %d–%d h on the road each way%s" % [WorldSites.danger_word(sel_site).capitalize(), int(tr[0]), int(tr[1]), (" · " + str(cond[0])) if not cond.is_empty() else ""], 17, "body_italic")
+	var si := UIKit.label("%s · %d–%d h on the road each way%s" % [Danger.word(sel_site).capitalize(), int(tr[0]), int(tr[1]), (" · " + str(cond[0])) if not cond.is_empty() else ""], 17, "body_italic")
 	si.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	r1.add_child(si)
 	box.add_child(r1)

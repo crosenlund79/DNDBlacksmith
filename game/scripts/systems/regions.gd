@@ -1,6 +1,7 @@
 ## Regions — what the workshop knows about the land around Brindlewick, and what it can do there.
 ## EN: Scouting knowledge per destination (built by travelling hands and shared rumours) lowers the
-##     danger for everyone who goes there, hirelings and adventurers alike. Some regions reveal
+##     danger for everyone who goes there: hirelings' trips are safer and adventurer parties are likelier to spot an
+##     ambush first (Danger.trip, Danger.ambush_dc). Some regions reveal
 ##     suppliers when first scouted; trade runs then buy their materials and sell the workshop's
 ##     trade goods (potions, oils, coatings, spare materials marked for trade). Relics brought home
 ##     unidentified are studied — by the smith at the cleansing basin, or by a relic hunter during
@@ -42,10 +43,10 @@ static func knowledge_word(pts: float) -> String:
 	return "unknown"
 
 
-## Danger after scouting knowledge: up to 30% lower when well charted.
+## A trip's danger (R2: the one danger model — Danger.trip: the place's own danger, moved by its live state and lowered
+## by scouting knowledge, up to 30 % when well charted). Kept as the old entry point's name.
 static func danger(dest: String) -> float:
-	var d: Dictionary = DB.destinations.get(dest, {})
-	return float(d.get("danger", 1)) * (1.0 - 0.3 * scouted(dest) / SCOUT_MAX)
+	return Danger.trip(dest)
 
 
 ## Called when a hireling or adventurer returns from a region.

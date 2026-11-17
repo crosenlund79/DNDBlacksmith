@@ -428,10 +428,16 @@ func _page_expedition(a: Dictionary) -> void:
 	var ex := Expeditions.exp_of(adv_id)
 	page.add_child(_heading("Now"))
 	if ex.is_empty():
-		var nd: String = DB.destinations.get(str(a.get("next_dest", "")), {}).get("name", "")
+		# R2 (ADV-012): the plan shown is the live planner's — a party's agreed destination, or their current lean
+		var pl := Adv.current_plan(a)
+		var nd := WorldSites.name_of(str(pl.get("dest", ""))) if str(pl.get("dest", "")) != "" else ""
+		var lean := ""
+		if nd != "" and _know() >= 20:
+			lean = (" — bound for %s%s" % [nd, " (your sponsorship)" if bool(pl.get("sponsored", false)) else ""]) if bool(pl.get("committed", false)) \
+				else " — as things stand they lean towards %s" % nd
 		var t := "%s." % Expeditions.status_word(a)
 		if a["status"] == "in_town":
-			t += " Next departure planned for day %d%s." % [int(a.get("depart_day", Game.day())), (" — means to head for " + nd) if nd != "" and _know() >= 20 else ""]
+			t += " Next departure planned for day %d%s." % [int(a.get("depart_day", Game.day())), lean]
 		page.add_child(UIKit.label(t, 21))
 	else:
 		var reg := Expeditions.region(str(ex["dest"]))

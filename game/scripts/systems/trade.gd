@@ -47,7 +47,7 @@ static func st() -> Dictionary:
 
 ## Buying price factor: on Apprentice (prices 1.15) goods are cheaper, on Master (0.9) dearer.
 static func price_factor() -> float:
-	return 1.0 / maxf(0.5, float(Expeditions.diff().get("prices", 1.0)))
+	return Valuation.smith_buys_factor()   # R2: the one valuation interface
 
 
 static func _new_id(prefix: String) -> String:
@@ -232,7 +232,7 @@ static func _dock(type: String, ship_name := "", captain := "") -> void:
 		if d.is_empty():
 			continue
 		stock.append({"def": str(e[0]), "qty": randi_range(int(e[2][0]), int(e[2][1])),
-			"price": maxi(1, int(round(float(d.get("value", 5)) * float(e[1]) * pf)))})
+			"price": Valuation.merchant_price(str(e[0]), float(e[1]))})
 		mark_seen(str(e[0]))
 	for e in sd.get("equipment", []):
 		if randf() > float(e[2]):
@@ -323,7 +323,7 @@ static func import_info(def_id: String) -> Dictionary:
 	var c: Dictionary = cfg().get("imports", {}).get(def_id, {})
 	if c.is_empty():
 		return {}
-	var unit := maxi(1, int(round(float(DB.item(def_id).get("value", 5)) * float(c.get("mult", 1.8)) * price_factor())))
+	var unit := Valuation.merchant_price(def_id, float(c.get("mult", 1.8)))
 	var lead: Array = c.get("lead", [3, 5])
 	return {"def": def_id, "tier": str(c.get("tier", "common")), "unit": unit, "lead": [int(lead[0]), int(lead[1])],
 		"deposit_share": float(cfg().get("harbour", {}).get("deposit", 0.4))}

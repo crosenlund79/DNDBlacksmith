@@ -119,6 +119,10 @@ func test_multi_order_partial() -> void:
 		return
 	for c in Shop.customers().duplicate():
 		Shop.remove_customer(str(c["npc"]))
+	# R2 (BUG-046): the repair part is a real worn piece the adventurer carries (a spare in the pack), not a conjured one
+	var spare := Items.make("sword_iron", {"quality": 60.0})
+	spare["stats"]["durability"] = int(int(spare["stats"]["durability_max"]) * 0.3)
+	(Adv.get_a(aid)["loot"] as Array).append(spare)
 	Shop._add_customer(aid, "multi")
 	var c := Shop.customer(aid)
 	if not check(str(c.get("want", "")) == "multi", "the customer brings several requests"):

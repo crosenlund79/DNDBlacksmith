@@ -43,7 +43,7 @@ func _ready() -> void:
 	var head := UIKit.hbox(14)
 	var t := UIKit.rich("[i]%s · the smith's renown [b]%d[/b] · reputation: [b]%s[/b] · %d plaque%s[/i]" % [
 		"The board on the shop wall of the Ironhand forge" if where == "smithy" else "The honours board by the podium in the square",
-		Ceremony.smith_renown(), Shop.reputation_word(), Recognition.entries().size(), "" if Recognition.entries().size() == 1 else "s"], 20)
+		Ceremony.smith_renown(), Reputation.word_text(), Recognition.entries().size(), "" if Recognition.entries().size() == 1 else "s"], 20)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t)
 	content.add_child(head)

@@ -43,7 +43,7 @@ static func price_of(it: Dictionary) -> int:
 ## difficulty factor on what adventurers pay — at the smith's display, in their idea of a fair price (Adv.purchase_check),
 ## in their saving goals (Adv.price_estimate) and at the Salt Anvil (Commerce.rival_adv_price).
 static func buyer_factor() -> float:
-	return float(Expeditions.diff().get("prices", 1.0))
+	return Valuation.buyers_factor()
 
 
 ## A piece's default asking price on the display (when the smith has set none): its value (rarity, craftsmanship, Epic),
@@ -67,36 +67,18 @@ const UPKEEP := 4
 # ------------------------------------------------------------------ reputation
 ## The workshop's standing in Brindlewick: how people regard the smith, plus what they have heard
 ## (good sales, disputes settled or refused, adventurers saved or lost by the smith's work).
+## R2: the one reputation entry point is Reputation (audiences × places). These keep the old names for older callers;
+## no system reads or writes the standing anywhere else.
 static func reputation() -> float:
-	var tot := 0.0
-	var n := 0
-	for npc in Game.state["social"]:
-		var k: String = DB.character(npc).get("kind", "")
-		if k in ["adventurer", "villager"]:
-			tot += float(Game.state["social"][npc]["aff"])
-			n += 1
-	var base := tot / maxf(1.0, n)
-	return clampf(base * 0.8 + float(Game.state["world"].get("rep", 0.0)), -100.0, 100.0)
+	return Reputation.standing()
 
 
 static func rep_change(delta: float, why := "") -> void:
-	var w: Dictionary = Game.state["world"]
-	w["rep"] = clampf(float(w.get("rep", 0.0)) + delta, -60.0, 60.0)
-	if why != "" and absf(delta) >= 3.0:
-		Game.journal(("Word gets around: " if delta > 0 else "Tongues wag: ") + why)
+	Reputation.change(delta, why)
 
 
 static func reputation_word() -> String:
-	var r := reputation()
-	if r <= -25.0:
-		return "notorious"
-	if r <= -8.0:
-		return "poorly thought of"
-	if r < 8.0:
-		return "a modest name"
-	if r < 25.0:
-		return "well respected"
-	return "renowned"
+	return Reputation.word_text()
 
 
 ## Daily running costs: coal, rent to the reeve, the odd broken tool.
@@ -1083,9 +1065,9 @@ static func fulfil(order_id: String, uid: int) -> String:
 		# giver paid for it (S2, D14: of their OWN share, not the village's subsidy — a customer who paid nothing gives
 		# nothing; before A2 the package came from the open loot tables: 935 g on average)
 		if margin >= 5 or it.get("rarity") in ["legendary", "rare"]:
-			var pkg := Payments.gift_within(Loot.roll_table("reward", 10.0), int(float(paid) * Payments.GIFT_SHARE))
+			# R2 (ECO-045): the package is something of their own (Sim.gift_of: a piece from their pack), not a loot roll
+			var pkg: Array = Sim.gift_of(str(o["npc"]), false, true, int(float(paid) * Payments.GIFT_SHARE)).get("items", [])
 			if not pkg.is_empty():
-				Payments.note_gift(str(o["npc"]), Payments.value_of(pkg))
 				Game.state["returns"].append(Loot.make_container("package_reward", pkg, a["name"],
 					"%s left this for you: 'Work like yours deserves more than coin.'" % a["name"]))
 				Events.inventory_changed.emit()   # world redraws the waiting bags
@@ -1209,13 +1191,23 @@ static func multi_parts_for(a: Dictionary) -> Array:
 		if can_pay_repair(a, ws):
 			parts.append({"pid": "rep", "kind": "repair", "own_slot": ws, "item": ItemRegistry.ref(a["equipment"][ws]), "pay": repair_quote(a, ws), "status": "pending"})
 	else:
-		var it := Items.make(["dagger", "helm_iron", "shield_round", "axe_hand"].pick_random(), {"quality": randf_range(55, 75)})
-		if it["stats"].has("durability"):
-			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.25, 0.5))
+		# R2 (BUG-046): a spare they really carry — a worn piece in their own pack — never a piece made up for the order
+		var spare := worn_spare(a)
 		var pay := randi_range(8, 16)
-		if int(a.get("gold", 0)) >= pay:
-			parts.append({"pid": "rep", "kind": "repair", "item": it, "pay": pay, "status": "pending"})
+		if not spare.is_empty() and int(a.get("gold", 0)) >= pay:
+			parts.append({"pid": "rep", "kind": "repair", "loot_uid": int(spare["uid"]), "item": ItemRegistry.ref(spare), "pay": pay, "status": "pending"})
 	return parts
+
+
+## R2 (BUG-046): the most worn piece of equipment in an adventurer's own pack that needs mending, or {}.
+static func worn_spare(a: Dictionary) -> Dictionary:
+	var best := {}
+	var best_f := 2.0
+	for it in a.get("loot", []):
+		if it is Dictionary and Items.is_equipment(it) and Items.needs_mending(it) and Items.durability_frac(it) < best_f:
+			best = it
+			best_f = Items.durability_frac(it)
+	return best
 
 
 static func _craft_part(r: Dictionary, a: Dictionary, advanced: bool) -> Dictionary:
@@ -1329,6 +1321,10 @@ static func repair_part(npc: String, pid: String, quality: float) -> void:
 	if pt.has("own_slot"):
 		var a := Adv.get_a(npc)
 		it = a.get("equipment", {}).get(str(pt["own_slot"]), it)
+	elif pt.has("loot_uid"):   # R2 (BUG-046): the spare in their own pack, repaired where it is
+		for x in Adv.get_a(npc).get("loot", []):
+			if x is Dictionary and int(x.get("uid", -1)) == int(pt["loot_uid"]):
+				it = x
 	if ItemRegistry.is_ref(it):
 		it = it.duplicate(true)   # the piece is gone from the world: the record itself is never changed
 	var st: Dictionary = it.get("stats", {})

@@ -137,7 +137,7 @@ func test_dressing_never_blocks() -> void:
 	for sk in ["runecraft", "alchemy", "enchanted_stitching", "arcane_metalwork"]:
 		legacy_level(sk, 12)   # B1: other crafts stop at the basic level — an old save's earned levels (room tiers need 12)
 	Game.state["gold"] = 4000
-	(Game.state["world"] as Dictionary)["rep"] = 30.0   # a renowned name (D18: renown is earned, not bought)
+	Reputation.set_village_word(30.0)   # a renowned name (D18: renown is earned, not bought)
 	var w := _world()
 	var tiers := {}
 	var dressing := 0

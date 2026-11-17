@@ -222,7 +222,7 @@ static func choose(opt: String, _area: String) -> Dictionary:
 		Social.set_romance(ID, "married")
 		Social.change(ID, 15.0, 10.0, "married", "Married Brannoc Ironhand.")
 		Game.set_flag("married")
-		Shop.rep_change(4.0, "the smith married Róisín of the harbour.")
+		Reputation.change(4.0, "the smith married Róisín of the harbour.")
 		Game.journal("You married Róisín. She keeps her own name, her own tea house and your heart, roughly in that order.")
 		Audio.play("sfx/level_up")
 		return {"text": "She turns the band in the lamplight, checking the join like a jeweller. \"Clean,\" she says, and then her voice goes. \"Yes. Yes, you great soot-faced fool.\"\n\nThe chapel is small. Hilde cries; Rosalind pretends she doesn't. Róisín wears green, and the sea-clock in her pocket keeps perfect time.",

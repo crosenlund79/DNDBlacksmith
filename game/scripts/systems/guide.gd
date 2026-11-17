@@ -288,7 +288,7 @@ static func _src_ships(def: String, out: Array) -> void:
 		if row.is_empty():
 			continue
 		var label := str(sd.get("label", type))
-		var price := maxi(1, int(round(float(DB.item(def).get("value", 5)) * float(row[1]) * _pf())))
+		var price := Valuation.merchant_price(def, float(row[1]))
 		var chance := float(row[3])
 		if str(cur.get("type", "")) == str(type):
 			var held := 0
@@ -318,7 +318,7 @@ static func _src_caravan(def: String, out: Array) -> void:
 			row = e
 	if row.is_empty():
 		return
-	var price := maxi(1, int(round(float(DB.item(def).get("value", 5)) * float(row[1]) * _pf())))
+	var price := Valuation.merchant_price(def, float(row[1]))
 	var label := str(cc.get("label", "The Brask Caravan"))
 	if Commerce.caravan_present():
 		for st in Commerce.caravan().get("stock", []):
@@ -340,7 +340,7 @@ static func _src_rival(def: String, out: Array) -> void:
 	for e in rc.get("materials", []):
 		if str(e[0]) != def:
 			continue
-		var price := maxi(1, int(round(float(DB.item(def).get("value", 5)) * float(e[1]) * _pf())))
+		var price := Valuation.merchant_price(def, float(e[1]))
 		_src(out, "rival", "rival_smith", str(rc.get("shop", "The Salt Anvil")), str(rc.get("shop", "The Salt Anvil")),
 			"Buy from your rival at %s (~%d g, when in stock)" % [str(rc.get("shop", "The Salt Anvil")), price], "obtainable", "",
 			venue_when("rival_smith") + "; restocks every few days", _map_link("rival_smith"), price, float(e[3]))

@@ -475,7 +475,7 @@ static func on_day() -> void:
 static func odds(h: Dictionary, dest_id: String) -> Dictionary:
 	var d: Dictionary = DB.destinations.get(dest_id, {})
 	var lvl := SkillSys.level(h["skills"], str(d.get("skill", "mining")))
-	var danger := Regions.danger(dest_id) * trait_mult(h, "danger")
+	var danger := Danger.trip(dest_id) * trait_mult(h, "danger")
 	var power := lvl * 1.0 + SkillSys.level(h["skills"], "travelling") * 0.4 + gear_score(h) * 0.05
 	var success := clampf(0.5 + (power - danger) * 0.09, 0.1, 0.97)
 	var injury := clampf((0.08 + (danger - power) * 0.06) * trait_mult(h, "injury"), 0.02, 0.6)

@@ -216,7 +216,10 @@ static func choose(npc: String, opt: String, area: String) -> Dictionary:
 			if not a["log"].is_empty() and Social.fam(npc) >= 10.0:
 				rep += "\n\n[i]" + "\n".join(a["log"]) + "[/i]"
 			if rep == "":
-				rep = "\"Haven't been out yet this season. Soon — %s, maybe.\"" % DB.destinations.get(Adv.choose_dest(a.duplicate()), {}).get("name", "the Barrow Fields")
+				# R2 (ADV-012): what they say about their plans is the planner's current lean
+				var nd := Adv.choose_dest(a)
+				rep = ("\"Haven't been out yet this season. Soon — %s, maybe.\"" % WorldSites.name_of(nd)) if nd != "" \
+					else "\"Haven't been out yet this season. Haven't decided where.\""
 			return {"text": rep + "\n\nThey are carrying: " + _gear_text(a)}
 		"equip":
 			return {"text": "", "action": "shop"}
@@ -339,15 +342,52 @@ static func _story(npc: String) -> String:
 	return text
 
 
+## R2 (LORE-015, WLD-019): a rumour is a fact the world really holds — an adventurer's real plan, the expedition they
+## are on, a piece of their kit near breaking, a full purse after a good haul, an injury and where it came from, or a
+## recent notable event from Lore. dialogue.json only words the fact. Nothing true to tell: a quiet week.
+static func rumour_facts() -> Array:
+	var out := []
+	for a in Adv.all().values():
+		var st := str(a.get("status", ""))
+		var nm := str(a.get("name", ""))
+		var hist: Array = a.get("history", [])
+		var last := str(hist[-1].get("dest", "")) if not hist.is_empty() else ""
+		match st:
+			"in_town":
+				var plan := Adv.current_plan(a)
+				if str(plan.get("dest", "")) != "":
+					out.append({"kind": "plan", "adv": a, "dest": WorldSites.name_of(str(plan["dest"]))})
+				var ws := Shop.worn_slot(a)
+				if ws != "":
+					out.append({"kind": "worn", "adv": a, "piece": str(a["equipment"][ws].get("name", "kit")).to_lower()})
+				if int(a.get("gold", 0)) >= 250 and not hist.is_empty() and str(hist[-1].get("outcome", "")).begins_with("success") \
+						and Game.day() - int(hist[-1].get("day", -99)) <= 10:
+					out.append({"kind": "flush", "adv": a})
+			"away":
+				var e := Expeditions.exp_of(str(a.get("id", "")))
+				if not e.is_empty():
+					out.append({"kind": "away", "adv": a, "dest": WorldSites.name_of(str(e["dest"]))})
+			"injured":
+				if last != "":
+					out.append({"kind": "hurt", "adv": a, "dest": WorldSites.name_of(last)})
+	for id in Lore.st()["order"].slice(-60):
+		var ev: Dictionary = Lore.st()["events"].get(id, {})
+		if int(ev.get("importance", 0)) >= 2 and Game.day() - int(ev.get("day", -99)) <= 7 and str(ev.get("text", "")) != "":
+			out.append({"kind": "lore", "text": str(ev["text"])})
+	return out
+
+
 static func _rumour() -> String:
-	var pool := Adv.all().values().filter(func(x): return x["status"] in ["in_town", "away"])
-	if pool.is_empty():
-		return "\"Quiet week. Nobody's saying much.\""
-	var a: Dictionary = pool.pick_random()
-	var dest: String = DB.destinations.get(a.get("dest", ""), {}).get("name", "the Barrow Fields")
-	Game.set_flag("rumour_" + a["id"])
-	var t: String = DB.dialogue["rumours"].pick_random()
-	return t.replace("{adv}", a["name"]).replace("{dest}", dest)
+	var facts := rumour_facts()
+	var words: Dictionary = DB.dialogue.get("rumours", {})
+	if facts.is_empty():
+		return str((words.get("none", ["\"Quiet week. Nobody's saying much.\""]) as Array).pick_random())
+	var f: Dictionary = facts.pick_random()
+	var t := str((words.get(str(f["kind"]), ["{text}"]) as Array).pick_random())
+	if f.has("adv"):
+		Game.set_flag("rumour_" + str(f["adv"]["id"]))
+		t = t.replace("{adv}", str(f["adv"]["name"]))
+	return t.replace("{dest}", str(f.get("dest", ""))).replace("{piece}", str(f.get("piece", ""))).replace("{text}", str(f.get("text", "")))
 
 
 static func _gear_text(a: Dictionary) -> String:

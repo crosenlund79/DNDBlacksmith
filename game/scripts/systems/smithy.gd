@@ -59,7 +59,7 @@ static func _in_room(r: Dictionary, disc: String) -> int:
 static func renown() -> Dictionary:
 	if Game.state.is_empty():
 		return {"ok": false, "why": ""}
-	var rep := Shop.reputation()
+	var rep := Reputation.standing()
 	var plaques := (Game.state.get("hall_of_fame", []) as Array).size()
 	if rep >= RENOWN_REP:
 		return {"ok": true, "why": "the village calls the forge renowned"}

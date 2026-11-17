@@ -246,12 +246,33 @@
    ]
   ]
  },
- "rumours": [
-  "\"{adv} is heading to {dest} soon — with gear that won't last the week, if you ask me.\"",
-  "\"{adv} boasted that {dest} would make their fortune. They were drinking to forget the last trip.\"",
-  "\"{adv} has more gold than sense since the last haul. Sell them something shiny.\"",
-  "\"{adv} limps when they think nobody's looking. Their armour took the blow badly.\""
- ],
+ "rumours": {
+  "_doc": "R2 (LORE-015, WLD-019): every rumour states a fact the world really holds (Talk._rumour picks the facts, these only word them). {adv}, {dest}, {piece}, {text} are filled from that state.",
+  "plan": [
+   "\"{adv} has been asking about {dest}. Means to try it soon, by the sound of it.\"",
+   "\"{adv} keeps talking about {dest}. Reckon that's where they're headed next.\""
+  ],
+  "away": [
+   "\"{adv} is out at {dest} right now. We'll hear soon enough how it went.\""
+  ],
+  "worn": [
+   "\"{adv}'s {piece} won't last much longer — took a beating, that did.\"",
+   "\"Saw {adv}'s {piece} up close. It needs a smith before it needs a fight.\""
+  ],
+  "flush": [
+   "\"{adv} came home flush — more gold than sense since the last haul. Sell them something shiny.\""
+  ],
+  "hurt": [
+   "\"{adv} is laid up after {dest}. Not walking right yet.\""
+  ],
+  "lore": [
+   "\"Have you heard? {text}\"",
+   "\"Word is — {text}\""
+  ],
+  "none": [
+   "\"Quiet week. Nobody's saying much.\""
+  ]
+ },
  "romance": {
   "drink_ok": "You share a jug by the fire. The noise of the inn fades; for an hour it's just the two of you.",
   "drink_no": "\"Another time, Brannoc.\"",

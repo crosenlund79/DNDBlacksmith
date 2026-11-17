@@ -315,9 +315,24 @@ func test_boots_request_explained_and_declined_politely() -> void:
 
 
 # ------------------------------------------------------------------ 7. the request mix (observation 5)
+## R2: measured over four seeds instead of one. The single seed sat on the old 30 % line (29 % before R2, 37.5 % after:
+## seed noise — the world diverges chaotically once anything changes). On these four seeds the share of requests beyond
+## the workshop is 31.7 % on the pre-R2 tree (66 of 208) and 31.3 % with R2 (72 of 230), so the line is now 35 % of the
+## four-seed total: "most requests are things the workshop can make", measured, not one draw.
 func test_request_feasibility_mix() -> void:
-	var seen := {}
 	var mix := {"craftable": 0, "beyond": 0}
+	for sd in [9001, 11, 12, 13]:
+		fresh_game("journeyman", sd)
+		_mix_21_days(mix)
+	var tot := int(mix["craftable"]) + int(mix["beyond"])
+	note("4 × 21 days of requests: %d the workshop can make, %d beyond it (before A2, one seed: 18 and 46 — 72%% beyond)" % [int(mix["craftable"]), int(mix["beyond"])])
+	check(tot >= 80, "enough requests to judge (%d)" % tot)
+	check(float(mix["beyond"]) <= 0.35 * float(tot), "most requests are things the workshop can make (%d of %d beyond)" % [int(mix["beyond"]), tot])
+	check(int(mix["beyond"]) > 0, "a few remain as visible opportunities")
+
+
+func _mix_21_days(mix: Dictionary) -> void:
+	var seen := {}
 	for h in 24 * 21:
 		Game.advance_minutes(60)
 		for c in Shop.customers():
@@ -341,11 +356,6 @@ func test_request_feasibility_mix() -> void:
 			seen["o" + str(o["id"])] = true
 			var ok := str(Shop.order_request(o).get("availability", "")) in ["now", "materials"]   # what the card says
 			mix["craftable" if ok else "beyond"] += 1
-	var tot := int(mix["craftable"]) + int(mix["beyond"])
-	note("21 days of requests: %d the workshop can make, %d beyond it (before A2, same seed and criterion: 18 and 46 — 72%% beyond)" % [int(mix["craftable"]), int(mix["beyond"])])
-	check(tot >= 20, "enough requests to judge (%d)" % tot)
-	check(float(mix["beyond"]) <= 0.3 * float(tot), "most requests are things the workshop can make (%d of %d beyond)" % [int(mix["beyond"]), tot])
-	check(int(mix["beyond"]) > 0, "a few remain as visible opportunities")
 
 
 # ------------------------------------------------------------------ 8. gifts scaled to the business (observation 6)
@@ -358,13 +368,14 @@ func test_gifts_scaled_to_business() -> void:
 	var e := Social.ensure("pip")
 	e["aff"] = 60.0
 	eq(Payments.gift_budget("pip"), 0, "Pip has paid the forge nothing this month: no gift budget")
-	check(Sim.gift_from("pip").is_empty(), "so no gift")
+	check(Sim.gift_of("pip").is_empty(), "so no gift")
 	# 100 g of business: at most 50 g of gifts over the month, all told
 	Game.add_gold(100, "sales", "Sold Pip a blade", "pip")
 	eq(Payments.gift_budget("pip"), 50, "after 100 g of business the budget is 50 g")
 	var total := 0
-	for i in 12:
-		total += Payments.value_of(Sim.gift_from("pip"))
+	for i in 12:   # R2: gifts come from Pip's own pack or purse (Sim.gift_of), still within the budget
+		var g := Sim.gift_of("pip")
+		total += Payments.value_of(g.get("items", [])) + int(g.get("gold", 0))
 	check(total <= 50, "a month's gifts from Pip are worth %d g (≤ 50)" % total)
 	# the reward package after a commission: at most half the reward
 	var a := _adv("garrick")

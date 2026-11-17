@@ -32,7 +32,7 @@ func _adv(id: String) -> Dictionary:
 func _neutral(a: Dictionary) -> void:
 	a["goals"] = []
 	Social.ensure(str(a["id"]))["aff"] = 0.0
-	Game.state["world"]["rep"] = 0.0
+	Reputation.set_village_word(0.0)
 
 
 func _suitable(a: Dictionary, it: Dictionary) -> bool:
@@ -357,7 +357,14 @@ func test_ledger_60_days_conserved() -> void:
 		var before := int((_snaps[i - 1]["purses"] as Dictionary).get(who, now)) if i > 0 else now
 		var after := int((_snaps[i + 1]["purses"] as Dictionary).get(who, now)) if i + 1 < _snaps.size() else now
 		checked += 1
-		if now - before != -amt and after - now != -amt and after - before != -amt:
+		# R2: a coin gift is paid in the daily tick, where Barnaby may already have bought a road-found Ironfront card from
+		# the same adventurer (Ironfront.on_day — from his till, not the smith's, so no ledger line); his shelf records it
+		var barnaby := 0
+		if Game.state.has("ironfront"):
+			for sh in Ironfront.st()["shelf"]:
+				if str(sh.get("from", "")) == who and int(sh.get("day", -1)) == int(l2["day"]):
+					barnaby += Ironfront.sell_price(str(sh["id"]))
+		if now - before != -amt and after - now != -amt and after - before != -amt and now - before - barnaby != -amt:
 			broken.append("day %d %+d %s «%s»: purse %d → %d → %d" % [int(l2["day"]), amt, str(l2["cat"]), str(l2["note"]), before, now, after])
 	check(checked >= 20, "%d payments between the smith and adventurers were checked" % checked)
 	check(broken.is_empty(), "each moved the same coins through the adventurer's purse: %s" % str(broken.slice(0, 5)))

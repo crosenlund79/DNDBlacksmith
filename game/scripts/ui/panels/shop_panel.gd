@@ -446,7 +446,7 @@ func _ledger_summary() -> void:
 	elif delta < 0:
 		trend = "falling — %+d g this week" % delta
 	purse.add_child(UIKit.rich("Trend: [color=%s][b]%s[/b][/color]" % ["#26622f" if delta >= 0 else "#9e3a0c", trend], 20))
-	purse.add_child(UIKit.rich("Standing in Brindlewick: [i]%s[/i]" % Shop.reputation_word(), 20))
+	purse.add_child(UIKit.rich("Standing in Brindlewick: [i]%s[/i]" % Reputation.word_text(), 20))
 	top.add_child(purse)
 	top.add_child(_sparkline(series))
 	body.add_child(top)

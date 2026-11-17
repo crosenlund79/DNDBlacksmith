@@ -94,7 +94,7 @@ func test_offers_need_accomplishments() -> void:
 	check(Contracts.offers().is_empty(), "no letter arrives for a smith who has done nothing yet")
 	# a great reputation and a fortune alone do not bring the Crown
 	SkillTree.unlock_all()
-	(Game.state["world"] as Dictionary)["rep"] = 60.0
+	Reputation.set_village_word(60.0)
 	Game.state["gold"] = 50000
 	Game.state["stats"]["crafted"] = 40
 	check(int(Contracts.standing()["tier"]) < 3, "reputation and gold alone do not open the great lords or the Crown (tier %d)" % int(Contracts.standing()["tier"]))
@@ -141,7 +141,7 @@ func test_letter_says_why_and_royal_when_earned() -> void:
 	check(int(Contracts.standing()["tier"]) < 4, "orders alone are not enough without fame (%s)" % Contracts.tier_open(4))
 	for i in 4:
 		Recognition.record("craft", "Masterwork %d" % i, "test", {}, "t_ct_%d" % i)
-	(Game.state["world"] as Dictionary)["rep"] = 60.0
+	Reputation.set_village_word(60.0)
 	eq(int(Contracts.standing()["tier"]), 4, "orders well served, four plaques and a renowned forge open the Royal Household")
 	var ro := Contracts.make_offer("queens_guard")
 	check(not ro.has("error") and str(ro["why"]).contains("Warden"), "the royal letter says why it came: %s" % ro.get("why", ""))
@@ -293,13 +293,13 @@ func test_outcomes_pay_and_reputation() -> void:
 	var c := _accept("drovers_kit")
 	_finish(c)
 	var gold0 := Game.gold()
-	var rep0 := float(Game.state["world"].get("rep", 0.0))
+	var rep0 := Reputation.word("villagers")
 	var r := Contracts.deliver(str(c["id"]))
 	check(str(r["outcome"]) in ["good", "excellent"], "on time above the minimum is good or excellent (%s, %.1f%%)" % [r["outcome"], float(r["quality"])])
 	var rest := int(c["pay"]) - int(c["advance"])
 	eq(Game.gold() - gold0, int(r["pay"]), "the payment on delivery is credited")
 	check(int(r["pay"]) >= rest, "on time and good pays at least the agreed rest (%d ≥ %d)" % [int(r["pay"]), rest])
-	check(float(Game.state["world"].get("rep", 0.0)) > rep0, "reputation rises")
+	check(Reputation.word("villagers") > rep0, "reputation rises")
 	check(Contracts.favour("odo_varrick") >= 1, "the patron's favour rises")
 	eq(str(Contracts.history()[-1]["status"]), "delivered", "the order is in the record")
 	check((Lore.st()["events"] as Dictionary).values().any(func(e): return str(e.get("kind", "")) == "commission" and str(e.get("text", "")).contains("delivered")), "the delivery is one Lore event")
@@ -315,21 +315,21 @@ func test_outcomes_pay_and_reputation() -> void:
 	check(str(ol["outcome"]) != "excellent", "late work is never excellent")
 	var restl := int(cl["pay"]) - int(cl["advance"])
 	eq(int(ol["pay"]), int(round(restl * (1.15 if str(ol["outcome"]) == "excellent" else 1.0) * 0.7)), "late pay loses 10 % a day")
-	var rl0 := float(Game.state["world"].get("rep", 0.0))
+	var rl0 := Reputation.word("villagers")
 	var rlate := Contracts.deliver(str(cl["id"]))
-	check(float(Game.state["world"].get("rep", 0.0)) - rl0 < float(cl["rep"]) * 0.6, "late delivery earns less reputation (%.1f)" % float(rlate["rep"]))
+	check(Reputation.word("villagers") - rl0 < float(cl["rep"]) * 0.6, "late delivery earns less reputation (%.1f)" % float(rlate["rep"]))
 	# poor
 	_game()
 	_bench()
 	var cp := _accept("drovers_kit")
 	_finish(cp)
 	cp["min_q"] = 130.0
-	var rp0 := float(Game.state["world"].get("rep", 0.0))
+	var rp0 := Reputation.word("villagers")
 	var g0 := Game.gold()
 	var rp := Contracts.deliver(str(cp["id"]))
 	eq(str(rp["outcome"]), "poor", "below the minimum craftsmanship is poor")
 	eq(Game.gold() - g0, int(round((int(cp["pay"]) - int(cp["advance"])) * 0.6)), "poor work is paid at 60 %")
-	check(float(Game.state["world"].get("rep", 0.0)) < rp0, "and costs reputation")
+	check(Reputation.word("villagers") < rp0, "and costs reputation")
 	check(Contracts.favour("odo_varrick") < 0, "the patron is displeased")
 	# withdrawn: long overdue, never a game over
 	_game()
@@ -337,11 +337,11 @@ func test_outcomes_pay_and_reputation() -> void:
 	var cw := _accept("drovers_kit")
 	var cid := str(cw["id"])
 	cw["deadline"] = Game.day()
-	var w0 := float(Game.state["world"].get("rep", 0.0))
+	var w0 := Reputation.word("villagers")
 	days(7)
 	check(Contracts.active().is_empty(), "an order long overdue is withdrawn by the patron")
 	eq(str(Contracts.get_c(cid).get("outcome", "")), "failed", "recorded as withdrawn")
-	check(float(Game.state["world"].get("rep", 0.0)) < w0, "reputation suffers")
+	check(Reputation.word("villagers") < w0, "reputation suffers")
 	eq((Contracts.get_c(cid)["crate_returned"] as Dictionary).get("ingot_iron", 0), 10, "the unused crate went back to the patron")
 	check(Game.state.has("player") and Game.day() > 1, "the game goes on")
 

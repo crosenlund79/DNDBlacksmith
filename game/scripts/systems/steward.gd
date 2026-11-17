@@ -776,11 +776,7 @@ static func _observe_tasks() -> void:
 # ----------------------------------------------------------------------- material planning
 ## A village counter's list price for a def (from the trade data; never touches today's stock): {store, price} or {}.
 static func _shop_price(def_id: String) -> Dictionary:
-	for sid in VILLAGE_STORES:
-		for e in Trade.store_cfg(sid).get("stock", []):
-			if str(e[0]) == def_id:
-				return {"store": sid, "price": maxi(1, int(round(float(e[1]) * Trade.price_factor())))}
-	return {}
+	return Valuation.counter_price(def_id)
 
 
 static func _category_ok(def_id: String) -> bool:
@@ -1413,11 +1409,7 @@ static func _restock() -> void:
 			continue
 		var q := Apprentices.expected_quality(a, rid)
 		var value := Items.value({"def": out, "quality": q})
-		var cost := 0
-		var inputs: Dictionary = DB.recipe(rid).get("inputs", {})
-		for d in inputs:
-			var sp := _shop_price(str(d))
-			cost += int(inputs[d]) * (int(sp["price"]) if not sp.is_empty() else int(DB.item(str(d)).get("value", 5)))
+		var cost := Valuation.design_material_cost(rid)
 		var margin := float(value - cost)
 		if margin <= 0.0:
 			continue
@@ -1531,11 +1523,7 @@ static func min_price(it: Dictionary) -> int:
 	var floor_v := int(ceil(float(Items.value(it)) * float(pct) / 100.0))
 	var rid := str(it.get("craft", {}).get("recipe", ""))
 	if rid != "":
-		var cost := 0
-		var inputs: Dictionary = DB.recipe(rid).get("inputs", {})
-		for d in inputs:
-			var sp := _shop_price(str(d))
-			cost += int(inputs[d]) * (int(sp["price"]) if not sp.is_empty() else int(DB.item(str(d)).get("value", 5)))
+		var cost := Valuation.design_material_cost(rid)
 		floor_v = maxi(floor_v, cost)
 	return maxi(1, floor_v)
 

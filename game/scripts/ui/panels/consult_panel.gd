@@ -111,7 +111,7 @@ func _facts(a: Dictionary, ses: Dictionary) -> Control:
 	else:
 		var hd := UIKit.hbox(8)
 		hd.add_child(UIKit.icon("ui/act_road", 34))
-		hd.add_child(_wide(UIKit.rich("Bound for [b]%s[/b] — %s, %s" % [Consult.dest_name(rid), WorldSites.danger_word(rid), Consult.danger_text(a, rid)], 21)))
+		hd.add_child(_wide(UIKit.rich("Bound for [b]%s[/b] — %s, %s" % [Consult.dest_name(rid), Danger.word(rid), Consult.danger_text(a, rid)], 21)))
 		left.add_child(hd)
 		for th in Consult.threats(rid):
 			var t := UIKit.hbox(8)

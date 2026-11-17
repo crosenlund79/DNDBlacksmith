@@ -26,6 +26,10 @@ static func cfg() -> Dictionary:
 	return Expeditions.cfg().get("sites", {})
 
 
+## Every place starts with a little threat (R2: named so Danger can measure a place against how it started).
+const START_THREAT := 0.6
+
+
 static func info(id: String) -> Dictionary:
 	return cfg().get(id, {})
 
@@ -56,7 +60,7 @@ static func site(id: String) -> Dictionary:
 		var boss_n := Expeditions.node_of(id, str(inf.get("boss", "")))
 		var first: Array = boss_n.get("enemies", [["", 1]])[0] if not (boss_n.get("enemies", []) as Array).is_empty() else ["", 1]
 		s[id] = {"id": id, "discovered": bool(inf.get("known", false)), "found_day": 0 if bool(inf.get("known", false)) else -1, "found_by": [],
-			"found_how": "known" if bool(inf.get("known", false)) else "", "threat": 0.6, "resources": res, "lost": [], "visits": 0,
+			"found_how": "known" if bool(inf.get("known", false)) else "", "threat": START_THREAT, "resources": res, "lost": [], "visits": 0,
 			"boss": {"alive": true, "enemy": str(first[0]), "unique": str(first[0]), "gen": 0, "slain": [], "next_at": -1},
 			"notes": [], "rumour_day": -1, "last_visit": -1}
 	return s[id]
@@ -249,23 +253,22 @@ static func enemies_at(rid: String, n: Dictionary) -> Array:
 static func danger_factor(id: String) -> float:
 	if not cfg().has(id):
 		return 1.0
-	return 1.0 + 0.08 * float(site(id).get("threat", 0.0))
+	return threat_factor(float(site(id).get("threat", 0.0)))
+
+
+## How much a level of threat strengthens a place (more foes, bolder, better organised).
+static func threat_factor(threat: float) -> float:
+	return 1.0 + 0.08 * threat
 
 
 ## The danger rating of a site as it stands (Expeditions.rating reads enemies_at and danger_factor).
+## R2: the one danger model is Danger (Danger.site / Danger.word); these keep the old names.
 static func danger(id: String) -> float:
-	return Expeditions.rating(id)
+	return Danger.site(id)
 
 
 static func danger_word(id: String) -> String:
-	var r := danger(id)
-	if r >= 95.0:
-		return "deadly"
-	if r >= 70.0:
-		return "dangerous"
-	if r >= 45.0:
-		return "risky"
-	return "fair"
+	return Danger.word(id)
 
 
 static func status_word(id: String) -> String:

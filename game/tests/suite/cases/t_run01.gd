@@ -205,13 +205,13 @@ func test_withdrawn_contract_returns_the_advance() -> void:
 func test_renown_is_not_bought() -> void:
 	fresh_game()
 	Game.state["gold"] = 1000000
-	(Game.state["world"] as Dictionary)["rep"] = 0.0
+	Reputation.set_village_word(0.0)
 	check(not bool(Smithy.renown()["ok"]), "a million gold is not renown (%s)" % Smithy.renown()["why"])
 	check(not str(Smithy.renown()["why"]).contains("gold"), "the forge is told what earns renown, not what buys it")
 	check(not bool(Contracts.standing()["renown"]), "contracts do not see a wealthy forge as renowned")
-	(Game.state["world"] as Dictionary)["rep"] = 40.0
+	Reputation.set_village_word(40.0)
 	check(bool(Smithy.renown()["ok"]), "a renowned name is renown")
-	(Game.state["world"] as Dictionary)["rep"] = 0.0
+	Reputation.set_village_word(0.0)
 	for i in 3:
 		Recognition.record("epic", "Plaque %d" % i, "test", {}, "suite_run01_%d" % i)
 	check(bool(Smithy.renown()["ok"]), "three Hall of Fame plaques are renown")

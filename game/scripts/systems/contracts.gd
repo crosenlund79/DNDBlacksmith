@@ -130,7 +130,7 @@ static func bench_installed() -> bool:
 # ======================================================================= standing: what the smith has earned
 ## The accomplishments patrons look at. tier = the highest patron tier open now; reasons[tier] = why it is open.
 static func standing() -> Dictionary:
-	var out := {"rep": Shop.reputation(), "good": 0, "good_by_tier": {}, "plaques": 0, "epics": 0, "renown": false,
+	var out := {"rep": Reputation.standing(), "good": 0, "good_by_tier": {}, "plaques": 0, "epics": 0, "renown": false,
 		"crafted": int(Game.state.get("stats", {}).get("crafted", 0)), "tier": 0, "reasons": {}, "missing": {}}
 	for h in history():
 		if str(h.get("outcome", "")) in ["excellent", "good"]:
@@ -152,7 +152,7 @@ static func standing() -> Dictionary:
 
 
 static func _rep_phrase() -> String:
-	var w := Shop.reputation_word()
+	var w := Reputation.word_text()
 	return str({"a modest name": "modest regard", "well respected": "good regard", "renowned": "high renown", "poorly thought of": "low regard"}.get(w, "regard"))
 
 
@@ -184,7 +184,7 @@ static func _tier_check(tier: int, s: Dictionary) -> Dictionary:
 			else:
 				miss.append("deliver a merchant's or the muster's order well")
 			if rep >= 10.0:
-				reasons.append("your name is %s" % Shop.reputation_word())
+				reasons.append("your name is %s" % Reputation.word_text())
 			elif int(s["plaques"]) >= 1:
 				reasons.append("your work hangs in the Hall of Fame")
 			else:
@@ -835,7 +835,7 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	ps["last_day"] = Game.day()
 	if pay > 0:
 		Game.add_gold(pay, "contract", "Contract delivered: " + str(c["title"]), "patron:" + str(c["patron"]))
-	Shop.rep_change(rep, text)
+	Reputation.change(rep, text)
 	_log(c, text)
 	var tier := int(patron(pid).get("tier", 1))
 	var imp := 2 if outcome != "poor" else 1

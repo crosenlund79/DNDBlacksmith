@@ -25,7 +25,7 @@ const APPROACH_CHANCE := 0.25  # per hour, when someone has a reason and a seat 
 const APPROACH_GAP := 3        # days between approaches in the whole village (never more than one a day)
 const MAX_PICKS := 2           # recommendations the smith may put forward in one consultation
 const RECORD_DAYS := 21        # advice not tested by an expedition within this long is forgotten
-## Danger against their strength (Expeditions.rating is the strongest group there, boss included, against the
+## Danger against their strength (R2: Danger.ratio — Expeditions.rating is the strongest group there, boss included, against the
 ## strength of a party like theirs): parties routinely take on ratios near 2; beyond 2.6 they walk into a grave.
 const BEYOND := 2.6
 const STRETCH := 1.9
@@ -90,15 +90,22 @@ static func planned_dest(a: Dictionary) -> String:
 	var p := Expeditions.party_of(str(a.get("id", "")))
 	if not p.is_empty():
 		return str(p["dest"])
-	return str(a.get("next_dest", a.get("planned_dest", "")))
+	return Adv.choose_dest(a)   # R2 (ADV-012): the planner's current lean, not a stored legacy pick
+
+
+## R2 (ADV-018, TECH-021): their forming party is on an expedition the smith sponsors — its agreed objective stands, so
+## advice may not quietly send it elsewhere.
+static func sponsored(a: Dictionary) -> bool:
+	return str(Expeditions.party_of(str(a.get("id", ""))).get("sponsor", "")) != ""
 
 
 static func dest_name(rid: String) -> String:
 	return str(DB.destinations.get(rid, {}).get("name", Expeditions.region(rid).get("name", rid)))
 
 
+## R2 (ADV-017): the foes actually there today (Danger.threats — what parties fight), not destinations.json's list.
 static func threats(rid: String) -> Array:
-	return DB.destinations.get(rid, {}).get("threats", [])
+	return Danger.threats(rid)
 
 
 ## What a party like theirs can take on (their own strength; they rarely go alone).
@@ -111,7 +118,7 @@ static func strength(a: Dictionary) -> float:
 
 
 static func danger_ratio(a: Dictionary, rid: String) -> float:
-	return Expeditions.rating(rid) * float(Expeditions.diff().get("enemy", 1.0)) / maxf(1.0, strength(a))
+	return Danger.ratio(rid, strength(a))
 
 
 static func danger_text(a: Dictionary, rid: String) -> String:
@@ -397,9 +404,10 @@ static func recommendations(a: Dictionary) -> Array:
 			"why": "Level %d, still swinging plain iron." % int(a.get("level", 1)),
 			"details": ["A commission for a steel weapon: about %d g." % ucost, "Steel or better is required."],
 			"relevance": 0.35 + (0.1 if Living.has_goal(a, "gear") else 0.0)})
-	# 5. a safer place first
+	# 5. a safer place first — never for a party on the smith's sponsored expedition (R2, ADV-018): the agreed objective
+	#    stands (better kit, above, is how the smith helps them)
 	for gp in g:
-		if not str(gp["kind"]) in ["danger", "resist"]:
+		if not str(gp["kind"]) in ["danger", "resist"] or sponsored(a):
 			continue
 		var alt := safer_site(a, rid)
 		if alt == "":
@@ -407,7 +415,7 @@ static func recommendations(a: Dictionary) -> Array:
 		out.append({"id": "dest_" + alt, "kind": "dest", "dest": alt, "avoid": rid, "cost": 0,
 			"title": "Don't go to %s with this kit — try %s first" % [dn, dest_name(alt)],
 			"why": ("%s is %s." % [dn, danger_text(a, rid)]) if str(gp["kind"]) == "danger" else ("Plain steel does little against %s." % ", ".join(PackedStringArray(gp["names"]))),
-			"details": ["%s: %s (%s)." % [dest_name(alt), WorldSites.danger_word(alt), danger_text(a, alt)], "Changes where they mean to go next."],
+			"details": ["%s: %s (%s)." % [dest_name(alt), Danger.word(alt), danger_text(a, alt)], "Changes where they mean to go next."],
 			"relevance": 0.8 if str(gp["kind"]) == "danger" else 0.5})
 		break
 	# 6. rest after a beating
@@ -513,8 +521,8 @@ static func safer_site(a: Dictionary, avoid: String) -> String:
 		if dd.has("requires_flag") and not Game.has_flag(str(dd["requires_flag"])) and not WorldSites.cfg().has(rid):
 			continue
 		var ratio := danger_ratio(a, str(rid))
-		if ratio <= SAFE and ratio < danger_ratio(a, avoid) * 0.8 and Expeditions.rating(str(rid)) > best_r:
-			best_r = Expeditions.rating(str(rid))
+		if ratio <= SAFE and ratio < danger_ratio(a, avoid) * 0.8 and Danger.site(str(rid)) > best_r:
+			best_r = Danger.site(str(rid))
 			best = str(rid)
 	return best
 
@@ -535,8 +543,8 @@ static func odds(a: Dictionary, rec: Dictionary) -> Dictionary:
 	var aff := Social.aff(npc)
 	reasons.append(["They %s you" % ("like" if aff >= 20.0 else ("distrust" if aff <= -10.0 else "hardly know")), aff / 100.0 * 0.3])
 	# the workshop's name
-	var rep := Shop.reputation()
-	reasons.append(["The forge is %s" % Shop.reputation_word(), rep / 100.0 * 0.15])
+	var rep := Reputation.standing()
+	reasons.append(["The forge is %s" % Reputation.word_text(), rep / 100.0 * 0.15])
 	# the track record
 	var cred := credibility(npc)
 	reasons.append(["Your track record: %s" % credibility_word(npc), cred / 100.0 * 0.35])
@@ -715,6 +723,8 @@ static func _apply(a: Dictionary, rec: Dictionary) -> String:
 			Events.orders_changed.emit()
 			return "A commission: %s (due day %d). They hold off until it is ready." % [Shop.order_text(o), int(o["deadline"])]
 		"dest":
+			if sponsored(a):
+				return "!that party is on your sponsored expedition — the agreed objective stands"
 			var alt := str(rec["dest"])
 			a["next_dest"] = alt
 			a["advised"] = {"avoid": str(rec.get("avoid", "")), "prefer": alt, "until": Game.day() + 8}
@@ -866,7 +876,7 @@ static func _judge(r: Dictionary, a: Dictionary, outcome: String) -> void:
 	elif verdict == "wrong":
 		s["bad"] = int(s.get("bad", 0)) + 1
 	# notable: advice taken and proved at a dangerous place, a death, a warning ignored to the cost of a life
-	var risky := went != "" and WorldSites.danger_word(went) in ["risky", "dangerous", "deadly"]
+	var risky := went != "" and Danger.word(went) in ["risky", "dangerous", "deadly"]
 	var notable := (bool(r["accepted"]) and (outcome == "died" or (good and (risky or str(r["kind"]) in ["dest", "coat", "commission", "upgrade"])))) \
 		or (not bool(r["accepted"]) and outcome in ["died", "failed"] and risky)
 	if notable and verdict != "moot" and not r.has("lore"):

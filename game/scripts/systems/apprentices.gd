@@ -1987,7 +1987,7 @@ static func estimate(t: Dictionary, app := {}) -> Dictionary:
 			if n <= 0:
 				continue
 			mats[d] = n
-			cost += int(DB.item(str(d)).get("value", 0)) * n
+			cost += Valuation.material_cost(str(d), n)   # R2: what it costs to get, as the steward plans
 			if Game.count(str(d)) < n:
 				miss[d] = n - Game.count(str(d))
 		out["materials"] = mats

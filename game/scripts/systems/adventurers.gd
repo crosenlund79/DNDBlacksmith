@@ -96,17 +96,17 @@ static func power(a: Dictionary) -> float:
 	return int(a["level"]) * 9.0 + gear_score(a)
 
 
-## Rough, player-facing estimate (no hidden numbers revealed exactly).
+## Rough, player-facing estimate (no hidden numbers revealed exactly). R2 (ADV-012): the strength the expeditions and
+## every decision use (Expeditions.power), not the older display-only `power` above; the bands were matched to the old
+## words' spread over 220 adventurer snapshots (3 seeds × 120 days), so a "Seasoned" fighter is still about as common.
+const RATING_BANDS := [[32.0, "Green"], [45.0, "Capable"], [60.0, "Seasoned"], [80.0, "Formidable"]]
+
+
 static func rating_text(a: Dictionary) -> String:
-	var p := power(a)
-	if p < 50:
-		return "Green"
-	if p < 80:
-		return "Capable"
-	if p < 115:
-		return "Seasoned"
-	if p < 160:
-		return "Formidable"
+	var p := Expeditions.power(Expeditions.ensure(a))
+	for b in RATING_BANDS:
+		if p < float(b[0]):
+			return str(b[1])
 	return "Legendary"
 
 
@@ -114,33 +114,44 @@ static func in_town() -> Array:
 	return all().values().filter(func(a): return a["status"] == "in_town")
 
 
+## R2 (ADV-012): where they mean to go — the live planner's answer, not a random pick. A party already forming has
+## its destination (`committed`); otherwise the planner weighs the places for them and their company in town exactly
+## as it will at departure, without its random jitter (Expeditions.choose_destination preview). Pure: no randomness,
+## no change to the world. {dest, goal, why, committed, sponsored} or {} (not in town / nothing known).
+static func current_plan(a: Dictionary) -> Dictionary:
+	if a.is_empty():
+		return {}
+	var p := Expeditions.party_of(str(a.get("id", "")))
+	if not p.is_empty() and str(p.get("dest", "")) != "":
+		return {"dest": str(p["dest"]), "goal": str(p.get("goal", "explore")), "why": str(p.get("why", "")), "committed": true,
+			"sponsored": str(p.get("sponsor", "")) != ""}
+	if str(a.get("status", "")) != "in_town":
+		return {}
+	var members := [a]
+	var co := Companies.of(str(a.get("id", "")))
+	for mid in co.get("members", []):
+		var m := get_a(str(mid))
+		if str(mid) != str(a.get("id", "")) and str(m.get("status", "")) == "in_town":
+			members.append(m)
+	var ch := Expeditions.choose_destination(members, true)
+	if ch.is_empty():
+		return {}
+	ch["committed"] = false
+	ch["sponsored"] = false
+	return ch
+
+
+## The destination of current_plan, or "" — kept under the old name for older callers.
 static func choose_dest(a: Dictionary) -> String:
-	if a.has("next_dest"):
-		var nd: String = a["next_dest"]
-		a.erase("next_dest")
-		return nd
-	if a.has("planned_dest"):
-		var p: String = a["planned_dest"]
-		a.erase("planned_dest")
-		return p
-	var lvl := int(a["level"])
-	var options := ["whisperwood", "highmarsh_road", "ironroot_mine"]
-	if lvl >= 3:
-		options.append("barrow_fields")
-	if lvl >= 4:
-		options.append("barrow_fields")
-	if lvl >= 6 and Game.has_flag("delve_map"):
-		options.append("deep_ironroot")
-	return options.pick_random()
+	return str(current_plan(a).get("dest", ""))
 
 
-## Where they mean to go next, and what that place demands (a damage type its threats fear).
+## Where they mean to go next (current_plan), and what that place demands: a damage type its foes are weak to, from the
+## foes actually there (Danger.threats — the same ones they will fight).
 static func plan_next(a: Dictionary) -> void:
-	if not a.has("next_dest"):
-		a["next_dest"] = choose_dest(a)
-	var d: Dictionary = DB.destinations.get(a["next_dest"], {})
+	a["next_dest"] = choose_dest(a)
 	var weak := {}
-	for th in d.get("threats", []):
+	for th in Danger.threats(str(a["next_dest"])):
 		var w := str(th.get("weak", ""))
 		if w in ["fire", "frost"]:
 			weak[w] = int(weak.get(w, 0)) + 1
@@ -179,6 +190,8 @@ static func morning_departures() -> void:
 			continue
 		_buy_supplies(a)
 		var dest := choose_dest(a)
+		if not DB.destinations.has(dest):
+			continue   # (legacy path, unused since the expedition simulation: nothing is planned)
 		var d: Dictionary = DB.destinations[dest]
 		a["status"] = "away"
 		a["dest"] = dest
@@ -228,7 +241,7 @@ static func run_encounters(a: Dictionary, dest: String) -> Dictionary:
 	ensure(a)
 	var d: Dictionary = DB.destinations[dest]
 	var threats: Array = d.get("threats", [{"name": "trouble", "kind": "beast", "power": 10.0 * float(d["danger"]), "dmg": 6, "weak": "", "resist": ""}])
-	var scale := Regions.danger(dest) / maxf(0.1, float(d["danger"]))
+	var scale := Danger.trip(dest) / maxf(0.1, float(d["danger"]))
 	var eq: Dictionary = a["equipment"]
 	var weapon: Dictionary = eq.get("weapon", {})
 	var lv := int(a["level"])
@@ -319,7 +332,7 @@ static func _total(a: Dictionary, stat: String) -> int:
 static func _resolve(a: Dictionary) -> void:
 	ensure(a)
 	var d: Dictionary = DB.destinations[a["dest"]]
-	var danger := Regions.danger(a["dest"])
+	var danger := Danger.trip(a["dest"])
 	var enc := run_encounters(a, a["dest"])
 	var success := int(enc["wins"]) * 2 >= int(enc["fought"]) and int(enc["fought"]) > 0
 	var wounds := float(enc["wounds"])
@@ -376,7 +389,7 @@ static func _resolve(a: Dictionary) -> void:
 			credited.append(it)
 			it["deeds"] = int(it.get("deeds", 0)) + 1
 	if success and not credited.is_empty():
-		Shop.rep_change(2.0, "%s swears by the smith's work." % a["name"])
+		Reputation.change(2.0, "%s swears by the smith's work." % a["name"])
 		var ci: Dictionary = credited[0]
 		Social.change(a["id"], 8.0, 5.0, "gear_held_" + str(Game.day()), "Your %s saved me at %s (%s)." % [ci["name"], d["name"], enc["credits"][str(ci["uid"])]])
 	elif success and not mine.is_empty():
@@ -413,6 +426,7 @@ static func _resolve(a: Dictionary) -> void:
 static func _die(a: Dictionary, d: Dictionary, mine: Array) -> void:
 	a["status"] = "dead"
 	a["died_day"] = Game.day()
+	a["died_where"] = str(d["name"])
 	a["last_report"] = "%s fell at %s." % [a["name"], d["name"]]
 	_die_consequences(a, mine, d["name"])
 
@@ -427,7 +441,7 @@ static func _die_consequences(a: Dictionary, mine: Array, where: String) -> void
 		if float(it.get("quality", 70)) < 60.0:
 			bad = true
 	if bad:
-		Shop.rep_change(-10.0, "%s died carrying the smith's shoddy work." % a["name"])
+		Reputation.change(-10.0, "%s died carrying the smith's shoddy work." % a["name"])
 	for r in Social.relatives(a["id"]):
 		if bad:
 			Social.change(r, -35.0, 5.0, "blame_" + a["id"], "%s died carrying your shoddy work." % a["name"], false)
@@ -466,7 +480,7 @@ static func purchase_check(a: Dictionary, it: Dictionary, price: int) -> String:
 		return "can't afford it"
 	# S2: the buyers' difficulty factor counts in what they think fair, as it does in the asking price (Shop.list_price) —
 	# before, a neutral buyer on Apprentice called the default price with Display Cases (value × 1.1 × 1.15) overpriced
-	var fair := Items.value(it) * Shop.buyer_factor() * (1.15 + Living.price_tolerance(a) + Social.aff(a["id"]) / 200.0 + Shop.reputation() / 300.0)
+	var fair := Items.value(it) * Shop.buyer_factor() * (1.15 + Living.price_tolerance(a) + Social.aff(a["id"]) / 200.0 + Reputation.standing() / 300.0)
 	if not married and price > fair:
 		return "thinks it's overpriced"
 	return ""

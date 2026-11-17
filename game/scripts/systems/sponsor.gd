@@ -59,7 +59,7 @@ static func sites() -> Array:
 	for rid in regs:
 		if WorldSites.is_discovered(str(rid)):
 			out.append(str(rid))
-	out.sort_custom(func(a, b): return Expeditions.rating(a) < Expeditions.rating(b))
+	out.sort_custom(func(a, b): return Danger.site(a) < Danger.site(b))
 	return out
 
 
@@ -280,7 +280,7 @@ static func risk_of(ids: Array) -> float:
 
 ## The danger of the site for this party: danger rating against strength (1.0 = an even match).
 static func danger_ratio(rid: String, ids: Array) -> float:
-	return WorldSites.danger(rid) * float(Expeditions.diff().get("enemy", 1.0)) / maxf(1.0, strength_of(ids))
+	return Danger.ratio(rid, strength_of(ids))
 
 
 static func travel_h(rid: String) -> float:
@@ -295,7 +295,7 @@ static func asking(obj: Dictionary, ids: Array) -> Dictionary:
 	var dr := danger_ratio(rid, ids)
 	var risk := risk_of(ids)
 	var steps := route_to(rid, str(obj["node"])).size()
-	var base := 12.0 + WorldSites.danger(rid) * 0.45 + travel_h(rid) * 2.0 * 4.0 + steps * 6.0
+	var base := 12.0 + Danger.site(rid) * 0.45 + travel_h(rid) * 2.0 * 4.0 + steps * 6.0
 	base *= 0.7 + 0.3 * ids.size()
 	base += float(obj.get("value", 30)) * 0.2
 	var m := 1.0
@@ -319,7 +319,7 @@ static func asking(obj: Dictionary, ids: Array) -> Dictionary:
 	# how they regard the smith, and the smith's name in the village
 	var aff := Social.aff(str(lead["id"]))
 	m *= 1.0 - clampf(aff, -60.0, 80.0) / 400.0
-	m *= 1.0 - clampf(Shop.reputation(), -60.0, 60.0) / 300.0
+	m *= 1.0 - clampf(Reputation.standing(), -60.0, 60.0) / 300.0
 	# a company with a name asks for it
 	if not co.is_empty():
 		m *= 1.0 + minf(0.3, float(co.get("rep", 0)) / 500.0)
@@ -383,7 +383,7 @@ static func evaluate(obj: Dictionary, ids: Array, terms: Dictionary, round_no :=
 		return res
 	if ratio < 0.55:
 		res["verdict"] = "refuse"
-		res["reason"] = "\"For that? %s is %s. Not worth the risk.\"" % [WorldSites.name_of(rid), WorldSites.danger_word(rid)]
+		res["reason"] = "\"For that? %s is %s. Not worth the risk.\"" % [WorldSites.name_of(rid), Danger.word(rid)]
 		return res
 	res["verdict"] = "counter"
 	res["counter"] = _counter_terms(terms, a, obj, ids, false)
@@ -395,7 +395,7 @@ static func evaluate(obj: Dictionary, ids: Array, terms: Dictionary, round_no :=
 		asks.append("a %d%% share" % int(c["share"]))
 	if int(c["bonus"]) > int(terms.get("bonus", 0)):
 		asks.append("%d g when we bring it home" % int(c["bonus"]))
-	res["reason"] = "\"%s and %s — make it %s, and we go.\"" % [WorldSites.danger_word(rid).capitalize(), _travel_word(rid), " and ".join(asks) if not asks.is_empty() else "a little more"]
+	res["reason"] = "\"%s and %s — make it %s, and we go.\"" % [Danger.word(rid).capitalize(), _travel_word(rid), " and ".join(asks) if not asks.is_empty() else "a little more"]
 	return res
 
 
@@ -812,7 +812,7 @@ static func on_finish(e: Dictionary, alive: Array) -> void:
 				sp["paid"][str(alive[i])] = int(sp["paid"].get(str(alive[i]), 0)) + part
 		if paid < owed:
 			Social.change(str(alive[0]), -6.0, 1.0, "sponsor_owed_" + str(sp["id"]), "The smith still owes us %d g for %s." % [owed - paid, WorldSites.name_of(rid)])
-			Shop.rep_change(-2.0, "the smith did not pay a sponsored company in full")
+			Reputation.change(-2.0, "the smith did not pay a sponsored company in full")
 	elif outcome == "success" and not alive.is_empty():
 		Social.change(str(alive[0]), 2.0, 2.0)
 	_conclude(sp, e, outcome, deliver, paid, owed)

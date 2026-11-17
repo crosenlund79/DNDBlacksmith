@@ -318,6 +318,22 @@ static func score(it: Dictionary) -> float:
 		+ float(it.get("quality", 70)) * 0.05
 
 
+## R2 (EQ-053, canonical §11 "honest information"): which stats change what happens in play today. Attack, protection,
+## magic, fire, frost and ward are fought with; healing heals; vitality adds hit points only on an amulet. Speed and
+## scouting only weigh in how much a buyer likes a piece; luck, carry and the Bear's extra durability are read by
+## nothing. Displays show the first group plainly and label the rest — making them matter is equipment depth (R5).
+const STATS_IN_PLAY := ["attack", "protection", "magic", "fire", "frost", "ward", "heal"]
+const NO_EFFECT_NOTE := "[color=#a89a80](no effect in play yet)[/color]"
+
+
+static func stat_in_play(it: Dictionary, stat_id: String) -> bool:
+	if STATS_IN_PLAY.has(stat_id):
+		return true
+	if stat_id == "vitality":
+		return slot(it) == "amulet"
+	return false
+
+
 static func value(it: Dictionary) -> int:
 	var base := float(def(it).get("value", 5))
 	var mult: float = {"common": 1.0, "magic": 1.8, "rare": 3.0, "legendary": 7.0, "unique": 9.0, "set": 6.0}.get(it.get("rarity", "common"), 1.0)
@@ -377,12 +393,14 @@ static func tooltip(it: Dictionary) -> String:
 		var v := stat(it, k)
 		if v != 0:
 			var b := base_stat(it, k)
-			lines.append(("%s  [b]%d[/b]" % [names[k], v]) + (("  [color=#c09070](%d when sound)[/color]" % b) if b != v else ""))
+			lines.append(("%s  [b]%d[/b]" % [names[k], v]) + (("  [color=#c09070](%d when sound)[/color]" % b) if b != v else "")
+				+ ("" if stat_in_play(it, k) or k in ["edge", "smithing"] else "  " + NO_EFFECT_NOTE))
 	if st.has("durability"):
 		lines.append("Durability  %d / %d" % [int(st["durability"]), int(st.get("durability_max", st["durability"]))])
 	for a in it.get("affixes", []):
 		if not names.has(a["stat"]):
-			lines.append("[color=#8aa6f2]+%d %s[/color]" % [int(a["value"]), str(a["stat"]).capitalize()])
+			lines.append("[color=#8aa6f2]+%d %s[/color]" % [int(a["value"]), str(a["stat"]).capitalize()]
+				+ ("" if stat_in_play(it, str(a["stat"])) else "  " + NO_EFFECT_NOTE))
 	for s in it.get("sockets", []):
 		lines.append("[color=#ffc070]◆ Set with %s[/color]" % DB.item(s).get("name", s))
 	if it.get("arcane_glow", false):

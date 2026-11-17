@@ -189,7 +189,7 @@ static func name_item(it: Dictionary, nm: String, kind: String, why: String, ref
 		mark_famous(it, "Named “%s” — %s." % [final_name, why])
 		Recognition.record("named", final_name, "%s, from the Ironhand forge, was named “%s” — %s." % [base, final_name, why],
 			{"uid": int(it.get("uid", -1)), "adv": adv, "def": str(it.get("def", ""))}, "named_%d" % int(it.get("uid", -1)))
-		Shop.rep_change(2.0, "a piece from the Ironhand forge earned a name.")
+		Reputation.change(2.0, "a piece from the Ironhand forge earned a name.")
 		(st()["pending_fame"] as Array).append(int(it.get("uid", -1)))
 		_village_reaction(it, adv)
 	Events.inventory_changed.emit()

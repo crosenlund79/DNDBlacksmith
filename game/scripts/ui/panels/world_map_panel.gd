@@ -83,7 +83,7 @@ func _overview() -> void:
 		h.add_child(UIKit.icon("ui/world/site_" + WorldSites.icon_of(sid), 44))
 		var b := UIKit.button(WorldSites.name_of(sid), func(): select(sid), 230)
 		h.add_child(b)
-		h.add_child(UIKit.rich("[i]%s · %s[/i]" % [WorldSites.status_word(sid), WorldSites.danger_word(sid)], 17))
+		h.add_child(UIKit.rich("[i]%s · %s[/i]" % [WorldSites.status_word(sid), Danger.word(sid)], 17))
 		box.add_child(h)
 	var unknown := WorldSites.ids().filter(func(i): return not WorldSites.is_discovered(str(i))).size()
 	if unknown > 0:
@@ -147,7 +147,7 @@ func _site_page(id: String) -> void:
 	elif str(s.get("found_how", "")) == "explored" and not (s.get("found_by", []) as Array).is_empty():
 		found = " · found by %s on day %d" % [WorldSites._names(s["found_by"]), int(s["found_day"])]
 	page.add_child(UIKit.rich("[i]%s[/i]%s\n%s" % [tw, found, str(WorldSites.info(id).get("desc", ""))], 18))
-	page.add_child(UIKit.rich("Danger: [b]%s[/b] (%.0f)   ·   Status: [b][color=%s]%s[/color][/b]   ·   Expeditions: %d" % [WorldSites.danger_word(id), WorldSites.danger(id), stc, st.capitalize(), int(s["visits"])], 18))
+	page.add_child(UIKit.rich("Danger: [b]%s[/b] (%.0f)   ·   Status: [b][color=%s]%s[/color][/b]   ·   Expeditions: %d" % [Danger.word(id), Danger.site(id), stc, st.capitalize(), int(s["visits"])], 18))
 	var conds := WorldSites.conditions(id)
 	for c in conds:
 		page.add_child(UIKit.rich("[color=#7e2418]•[/color] [i]%s[/i]" % str(c), 17))
@@ -351,7 +351,7 @@ class WorldView extends Control:
 		# hover hint
 		if hover != "" and WorldSites.is_discovered(hover):
 			var hp := _to(WorldSites.world_pos(hover))
-			var txt := "%s — %s, %s" % [WorldSites.name_of(hover), WorldSites.status_word(hover), WorldSites.danger_word(hover)]
+			var txt := "%s — %s, %s" % [WorldSites.name_of(hover), WorldSites.status_word(hover), Danger.word(hover)]
 			var tw := fb.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 14.0
 			var tr := Rect2(hp + Vector2(-tw * 0.5, 52 * k), Vector2(tw, 22))
 			draw_rect(tr, Color(0.13, 0.08, 0.05, 0.85))

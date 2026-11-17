@@ -53,8 +53,8 @@ static func business_with(npc: String, days := GIFT_DAYS) -> int:
 	var tot := 0
 	var since := Game.day() - days
 	for e in Game.state.get("ledger", []):
-		if str(e.get("party", "")) == npc and int(e.get("day", 0)) > since:
-			tot += absi(int(e["amount"]))
+		if str(e.get("party", "")) == npc and int(e.get("day", 0)) > since and str(e.get("cat", "")) != "gift":
+			tot += absi(int(e["amount"]))   # R2: a gift they gave is not business (it would raise its own budget)
 	return tot
 
 

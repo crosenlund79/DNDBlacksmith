@@ -330,7 +330,10 @@ static func invite_score(members: Array, c: Dictionary) -> float:
 
 
 ## Pick a region whose danger fits the party's strength and nerve, or answer a call for help.
-static func choose_destination(members: Array) -> Dictionary:
+## R2 (ADV-012): with `preview` the same weighing runs without its random jitter and without touching the world (a missing
+## party is not marked as searched) — the party's current preference "as things stand", for sheets and talk. The real
+## choice at departure still has its jitter, so a preview is a lean, not a promise.
+static func choose_destination(members: Array, preview := false) -> Dictionary:
 	var pow := 0.0
 	var risk := 0.0
 	for m in members:
@@ -343,7 +346,8 @@ static func choose_destination(members: Array) -> Dictionary:
 	for mid in Game.state["world"].get("missing", {}):
 		var mi: Dictionary = Game.state["world"]["missing"][mid]
 		if not mi.get("searched", false) and risk >= 0.5 and strength >= rating(str(mi["dest"])) * 0.75:
-			mi["searched"] = true
+			if not preview:
+				mi["searched"] = true
 			return {"dest": str(mi["dest"]), "goal": "search"}
 	var best := ""
 	var best_s := -1e9
@@ -361,7 +365,7 @@ static func choose_destination(members: Array) -> Dictionary:
 		if not WorldSites.capable(rid, strength, risk):
 			continue
 		var want := strength * (0.6 + risk * 0.8)
-		var s := -absf(rating(rid) * float(diff().get("enemy", 1.0)) - want) + randf() * 18.0
+		var s := -absf(rating(rid) * float(diff().get("enemy", 1.0)) - want) + (9.0 if preview else randf() * 18.0)
 		# interests, opportunities and ambitions (class and trait, rumours, a lost comrade's gear, rich
 		# resources, an uncleared master for the strong, the leader's plan)
 		var ap := WorldSites.appeal(members, rid, strength, risk)
@@ -385,7 +389,7 @@ static func choose_destination(members: Array) -> Dictionary:
 		# nothing fits: the least dangerous known place (with a little variety among the easiest)
 		known.sort_custom(func(x, y): return rating(x) < rating(y))
 		var easy: Array = known.filter(func(r): return rating(r) <= rating(known[0]) * 1.15)
-		best = str(easy[randi() % easy.size()])
+		best = str(easy[0] if preview else easy[randi() % easy.size()])
 	if best == "":
 		return {}
 	return {"dest": best, "goal": "explore", "why": best_why}
@@ -828,7 +832,8 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 		scout = _best(e, "traps")
 	var first := false
 	if not scout.is_empty():
-		var sr := _check(scout, "wis", 12 + (2 if rec["boss"] else 0), "scouting")
+		# R2 (WLD-018): what the village knows of the ground helps the scout read it (Danger.ambush_dc)
+		var sr := _check(scout, "wis", Danger.ambush_dc(str(e["dest"]), bool(rec["boss"])), "scouting")
 		first = sr["ok"]
 		rec["actions"].append({"t": 0, "kind": "scout", "actor": scout["name"], "txt": ("%s spotted them first (%s)" if first else "%s failed to spot the ambush (%s)") % [scout["name"], sr["txt"]]})
 	var t := 1
@@ -1211,6 +1216,7 @@ static func has_healer_standing(e: Dictionary) -> bool:
 static func _kill(e: Dictionary, a: Dictionary, where: String) -> void:
 	a["status"] = "dead"
 	a["died_day"] = Game.day()
+	a["died_where"] = str(region(e["dest"]).get("name", ""))   # R2 (WLD-019): table talk names the real place
 	a["activity"] = "fallen"
 	a["hp"] = 0
 	_j(e, "%s fell at %s." % [a["name"], where], "death")
@@ -1337,6 +1343,7 @@ static func _reveal_fate(a: Dictionary, mi: Dictionary, finder: String) -> void:
 		return
 	a["status"] = "dead"
 	a["died_day"] = Game.day()
+	a["died_where"] = str(region(mi["dest"]).get("name", ""))
 	a["activity"] = "fallen"
 	Chronicle.add("death", "%s's fate is known at last: %s fell in %s." % [a["name"], a["name"], region(mi["dest"])["name"]], {"adv": a["id"]}, true)
 	Adv._die_consequences(a, Adv._crafted_by_player(a), region(mi["dest"])["name"])
@@ -1527,7 +1534,7 @@ static func _judge_gear(e: Dictionary, alive: Array) -> void:
 			Items.add_history(it, "%s at %s: %s." % [a["name"], region(e["dest"])["name"], ("dealt %d damage" % dealt) if dealt > 0 else ("turned %d damage" % turned)])
 			if alive.has(id):
 				Social.change(id, 3.0 + minf(8.0, (dealt + turned) / 12.0), 3.0, "gear_" + e["id"], "Your %s %s at %s." % [it["name"], "struck true" if dealt > 0 else "held", region(e["dest"])["name"]])
-				Shop.rep_change(0.8)
+				Reputation.change(0.8)
 
 
 static func _archive(e: Dictionary) -> void:

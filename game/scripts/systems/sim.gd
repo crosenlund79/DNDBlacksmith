@@ -77,10 +77,10 @@ static func take_delivery() -> String:
 		Social.remember("aldric", "gave_runestone", "Gave the smith a runestone", 5.0)
 		lines.append("\"A traveller paid me with this odd stone. Mira says you'd know what to do with it. Take it — for looking after my girl.\"")
 	elif band in ["friendly", "devoted"] and randf() < 0.5:
-		var purse := gift_from("aldric", 10.0)
-		if not purse.is_empty():
-			Game.state["returns"].append(Loot.make_container("purse_gift", purse, "Aldric Pell", "Tucked under the cheese: a little something extra."))
-			lines.append("He winks at a small purse tucked under the cheese.")
+		var purse := gift_of("aldric")   # R2: from his own counter's stock
+		if not purse.get("items", []).is_empty():
+			Game.state["returns"].append(Loot.make_container("purse_gift", purse["items"], "Aldric Pell", "Tucked under the cheese: a little something extra from his own shelves."))
+			lines.append("He winks at a small bundle tucked under the cheese.")
 			Events.inventory_changed.emit()   # world redraws the waiting bags
 	elif Social.has_memory("aldric", "kin_gear_failed_mira") or Social.has_memory("aldric", "blame_mira"):
 		lines.append("He doesn't meet your eye. \"Mira came home with a broken bow-arm. Your gear, I hear.\"")
@@ -129,15 +129,66 @@ static func _maybe_order() -> void:
 ## what they paid the forge in the last 30 days, less earlier gifts). [] when nothing fits — no gift then.
 ## Milestone A2: before, every gift was an unbounded roll (118 g on average, up to 1,600 g) whatever the giver had
 ## spent — three in a few days could be worth several times the purchase that warmed them to the smith.
-## `table`: the loot table the gift is rolled from (S2: the once-per-friend "gratitude" relic uses the same budget).
-static func gift_from(npc: String, bias := 5.0, table := "gift") -> Array:
-	var cap := Payments.gift_budget(npc)
+## R2 (ECO-045, canonical §1.2): a gift comes out of what the giver really has — never rolled from a loot table.
+##   an adventurer: a piece from their own pack (spares they carry, kit they replaced; for a "relic" gift only a relic
+##     they hold), else a little of their own coin;
+##   a shopkeeper: something from their own counter's stock today (Aldric's provisions, the herbalist's shelves), which
+##     then is no longer for sale;
+##   anyone else: no gift — they have nothing simulated to give.
+## Still bounded by A2's budget (half their business with the forge this month, less earlier gifts). Returns
+## {items: [...]} or {gold: n} (paid at once, from their purse to the smith's) or {} when nothing fits.
+const KEEPER_STORE := {"aldric": "general_store", "herbalist": "herbalist"}
+
+
+static func gift_of(npc: String, relic_only := false, items_only := false, cap_override := -1) -> Dictionary:
+	var cap := Payments.gift_budget(npc) if cap_override < 0 else cap_override
 	if cap <= 0:
-		return []
-	var g := Payments.gift_within(Loot.roll_table(table, bias), cap)
-	if not g.is_empty():
-		Payments.note_gift(npc, Payments.value_of(g))
-	return g
+		return {}
+	var a := Adv.get_a(npc)
+	if not a.is_empty():
+		var best := {}
+		var best_v := -1
+		for it in a.get("loot", []):
+			if not (it is Dictionary) or (it as Dictionary).is_empty():
+				continue
+			if relic_only and not (Regions.is_unidentified(it) or Items.def(it).get("tags", []).has("relic") or str(Items.def(it).get("type", "")) == "relic"):
+				continue
+			var v := Items.value(it)
+			if v <= cap and v > best_v:
+				best = it
+				best_v = v
+		if not best.is_empty():
+			(a["loot"] as Array).erase(best)
+			best["_arrives_how"] = "given"
+			Payments.note_gift(npc, best_v)
+			return {"items": [best]}
+		if relic_only or items_only:
+			return {}
+		var coins := mini(cap, int(int(a.get("gold", 0)) * 0.2))
+		if coins >= 5:
+			a["gold"] = int(a["gold"]) - coins
+			Payments.note_gift(npc, coins)
+			Game.add_gold(coins, "gift", "A gift from %s" % str(a.get("name", npc)), npc)
+			return {"gold": coins}
+		return {}
+	var store := str(KEEPER_STORE.get(npc, ""))
+	if store == "" or relic_only:
+		return {}
+	var pick := {}
+	var pick_v := -1
+	for e in Trade.store_stock(store):
+		if int(e.get("qty", 0)) < 1:
+			continue
+		var uv := Commerce.unit_value(Items.make(str(e["def"]), {"qty": 1}))
+		if uv <= cap and uv > pick_v:
+			pick = e
+			pick_v = uv
+	if pick.is_empty():
+		return {}
+	var n := clampi(int(cap / maxi(1, pick_v)), 1, mini(2, int(pick["qty"])))
+	pick["qty"] = int(pick["qty"]) - n
+	Payments.note_gift(npc, pick_v * n)
+	return {"items": [Items.make(str(pick["def"]), {"qty": n})]}
 
 
 static func _social_events() -> void:
@@ -149,13 +200,16 @@ static func _social_events() -> void:
 			var c := DB.character(npc)
 			if c.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
-			var gift := gift_from(str(npc))
+			var gift := gift_of(str(npc))
 			if gift.is_empty():
-				continue   # nothing within what their dealings with the forge warrant
+				continue   # nothing of their own within what their dealings with the forge warrant
 			e["last_gift"] = Game.day()
-			Game.state["returns"].append(Loot.make_container("purse_gift", gift, c["name"],
-				"%s left this at your door with a note: \"For your kindness.\"" % c["name"]))
-			Events.toast.emit("%s left a gift at your door." % c["name"], "good")
+			if gift.has("gold"):
+				Events.toast.emit("%s left %d gold at your door: \"For your kindness.\"" % [c["name"], int(gift["gold"])], "good")
+			else:
+				Game.state["returns"].append(Loot.make_container("purse_gift", gift["items"], c["name"],
+					"%s left this at your door with a note: \"For your kindness.\"" % c["name"]))
+				Events.toast.emit("%s left a gift at your door." % c["name"], "good")
 			Social.remember(npc, "gave_gift_" + str(Game.day()), "Left the smith a gift", 2.0)
 			break
 	# a friend back from the road shares what they learned (scouting knowledge for everyone)
@@ -167,19 +221,19 @@ static func _social_events() -> void:
 				Events.toast.emit("%s told you the safe paths through %s." % [a["name"], DB.destinations[dest]["name"]], "good")
 				break
 	# deep gratitude: a devoted friend brings something old and strange from the barrows — S2 (BUG-045): bounded like
-	# every other gift (Sim.gift_from: at most half their business with the forge this month, less earlier gifts); when
+	# every other gift (Sim.gift_of: at most half their business with the forge this month, less earlier gifts); when
 	# nothing fits there is no relic yet, and they may bring one later (before, the satchel bypassed the cap)
 	for npc in Game.state["social"]:
 		if Social.band(npc) == "devoted" and not Social.has_memory(npc, "gave_relic") and randf() < 0.35:
 			var c2 := DB.character(npc)
 			if c2.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
-			var relic := gift_from(str(npc), 0.0, "gratitude")
+			var relic: Array = gift_of(str(npc), true).get("items", [])   # R2: only a relic they really carry
 			if relic.is_empty():
 				continue
 			Social.remember(npc, "gave_relic", "Gave the smith a relic out of gratitude", 4.0)
 			Game.state["returns"].append(Loot.make_container("satchel_relic", relic, c2["name"],
-				"%s left this with a note: \"Found it in the barrows. I trust you more than any collector.\"" % c2["name"]))
+				"%s left this with a note: \"Brought it home from the road. I trust you more than any collector.\"" % c2["name"]))
 			Events.toast.emit("%s left you a relic in gratitude." % c2["name"], "good")
 			Events.inventory_changed.emit()
 			break

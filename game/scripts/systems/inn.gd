@@ -46,7 +46,9 @@ static func table_talk() -> String:
 	for a in Adv.all().values():
 		Adv.ensure(a)
 		if a["status"] == "dead" and Game.day() - int(a.get("died_day", Game.day())) <= 7:
-			lines.append("\"To %s,\" someone says, and the room goes quiet. \"The barrows took a good one.\"" % a["name"])
+			# R2 (WLD-019): the place they really fell (older saves did not record it: then the room says only "out there")
+			var fell := str(a.get("died_where", ""))
+			lines.append("\"To %s,\" someone says, and the room goes quiet. \"%s took a good one.\"" % [a["name"], fell if fell != "" else "The road"])
 		elif not a["history"].is_empty() and Game.day() - int(a["history"][-1]["day"]) <= 3 and a["status"] in ["in_town", "injured"]:
 			var h: Dictionary = a["history"][-1]
 			var dn: String = DB.destinations.get(h["dest"], {}).get("name", "the road")
@@ -61,7 +63,7 @@ static func table_talk() -> String:
 		lines.append("Someone raises a cup to the smith and %s. Hilde rolls her eyes and pours anyway." % Adv.get_a(Social.spouse()).get("name", "his wife"))
 	if int(Game.state["stats"].get("legendaries", 0)) > 0:
 		lines.append("Pip has made up a song about a legendary blade from the Ironhand forge. It is not a good song.")
-	var rw := Shop.reputation_word()
+	var rw := Reputation.word_text()
 	if rw in ["renowned", "well respected"]:
 		lines.append("At the bar, a stranger asks where to find a decent smith. Three people point at you.")
 	elif rw in ["notorious", "poorly thought of"]:
@@ -121,7 +123,7 @@ static func wedding(npc: String) -> String:
 	# marrying into a family: her kin become yours
 	for r in Social.relatives(npc):
 		Social.change(r, 25.0, 15.0, "family_" + npc, "The smith married into our family.", false)
-	Shop.rep_change(5.0, "the smith married %s." % Talk.npc_name(npc))
+	Reputation.change(5.0, "the smith married %s." % Talk.npc_name(npc))
 	Game.set_flag("married")
 	return str(ROMANCE.get(npc, {}).get("wedding", "A small ceremony at the Chapel of the Dawn."))
 

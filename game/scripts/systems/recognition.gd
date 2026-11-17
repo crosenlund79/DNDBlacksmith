@@ -204,7 +204,7 @@ static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed
 		{"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 3, "chronicle": true, "notable": true,
 		"data": {"deed": deed}})
 	ItemStory.on_epic(it, deed)
-	Shop.rep_change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
+	Reputation.change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
 	record("epic", Items.display_name(it), "%s — %s." % [_cap(deed), who] if who != "" else _cap(deed) + ".",
 		{"uid": int(it.get("uid", -1)), "adv": adv_id, "def": str(it.get("def", ""))}, "epic_%d" % int(it.get("uid", -1)))
 	Events.toast.emit("EPIC — %s %s." % [Items.display_name(it), deed], "legendary")
@@ -249,6 +249,6 @@ static func customer_comment(npc: String) -> String:
 		_:
 			line = "\"Quite the board you keep, smith.\""
 	Social.change(npc, 1.5, 1.0, "", "", false)
-	Shop.rep_change(0.3)
+	Reputation.change(0.3)
 	Events.toast.emit("%s studies the Hall of Fame: %s" % [name, line], "info")
 	return line

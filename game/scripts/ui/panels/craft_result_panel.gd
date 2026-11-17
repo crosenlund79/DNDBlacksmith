@@ -97,7 +97,8 @@ func _item_column(rar: String, cr: Dictionary) -> Control:
 			lines.append("%s  [b]%d[/b]" % [STAT_NAMES[k], val])
 	for a in item.get("affixes", []):
 		if not STAT_NAMES.has(a["stat"]):
-			lines.append("[color=#8aa6f2]+%d %s[/color]" % [int(a["value"]), str(a["stat"]).capitalize()])
+			lines.append("[color=#8aa6f2]+%d %s[/color]" % [int(a["value"]), str(a["stat"]).capitalize()]
+				+ ("" if Items.stat_in_play(item, str(a["stat"])) else "  " + Items.NO_EFFECT_NOTE))
 	if item.get("arcane_glow", false):
 		lines.append("[color=#b89cff]Arcane markings glow along the metal.[/color]")
 	if item.has("epic"):
@@ -167,7 +168,8 @@ func _work_column(cr: Dictionary) -> Control:
 		var lines_bd := PackedStringArray(bd.map(func(x): return str(x)))
 		var aff := PackedStringArray()
 		for a in item.get("affixes", []):
-			aff.append("%+d %s" % [int(a.get("value", 0)), str(a.get("stat", "")).capitalize()])
+			aff.append("%+d %s%s" % [int(a.get("value", 0)), str(a.get("stat", "")).capitalize(),
+				"" if Items.stat_in_play(item, str(a.get("stat", ""))) else " (no effect in play yet)"])
 		if not aff.is_empty():
 			lines_bd.append("then the %s rarity adds %s" % [Items.RARITY_LABEL.get(str(item.get("rarity", "common")), ""), ", ".join(aff)])
 		v.add_child(UIKit.rich("[color=#efe4cc]%s[/color]" % "\n".join(lines_bd), 19, true))
