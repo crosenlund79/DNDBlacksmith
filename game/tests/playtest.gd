@@ -564,11 +564,19 @@ func phase_interiors() -> void:
 	await click("New Game")
 	await wait(2.5)
 	await advance_to(10, 0)
-	var tour := [["smithy", [5.0, 7.0], "forge_room"], ["smithy", [14.5, 1.6], "shop"], ["smithy", [14.5, 8.0], "stock_hall"],
-		["smithy", [3.6, 13.6], "rune_room"], ["smithy", [10.0, 13.0], "alchemy_room"], ["smithy", [16.0, 13.6], "leather_room"],
-		["smithy", [5.5, 22.2], "arcane_room"], ["smithy", [15.6, 20.4], "material_store"], ["smithy", [24.0, 2.4], "living"],
-		["smithy", [20.6, 10.4], "study"], ["smithy", [26.0, 11.6], "bedroom"], ["smithy", [21.0, 16.0], "storage"],
-		["smithy", [27.0, 19.0], "pantry"], ["inn", [7.0, 8.4], "common"], ["inn", [16.6, 3.4], "kitchen"],
+	# R1: the smithy's ground-floor rooms are toured where the current layout puts them, from the world's own room
+	# list (every one the smith owns at the start). Canonical v1.7 moved the household to the Loft and production space
+	# to a basement dug out later; those are separate areas (smithy_loft, smithy_basement) toured by lvw_layout. The
+	# fixed coordinates of the pre-v1.7 plan (which still listed the Loft rooms on the ground floor) are gone.
+	for rm in W().buildings.get("smithy", {}).get("rooms", []):
+		if not Property.room_owned(rm):
+			note("room: smithy/%s is not owned at the start (v1.7) — not toured" % rm["id"])
+			continue
+		await tp((rm["rect"] as Rect2).get_center())
+		await wait(0.9)
+		expect(W().room == str(rm["id"]), "room: smithy/%s (area %s room %s)" % [rm["id"], W().area, W().room])
+		await shot("room_smithy_%s" % rm["id"])
+	var tour := [["inn", [7.0, 8.4], "common"], ["inn", [16.6, 3.4], "kitchen"],
 		["inn", [16.6, 10.6], "hilde_room"], ["grocery", [3.6, 7.0], "g_shop"], ["grocery", [4.6, 2.4], "g_living"],
 		["house_tobin", [3.0, 4.6], "house_tobin_main"], ["inn_upstairs", [6.0, 7.0], "landing"],
 		["inn_upstairs", [15.0, 6.0], "velvet_parlour"]]
@@ -750,7 +758,9 @@ func phase_craft() -> void:
 	Engine.time_scale = 0.3
 	var leg := await craft_ui("iron_longsword", 0.0, "physical", {"edge": 9, "temper": 6, "fortune": 18}, "legendary")
 	Engine.time_scale = 1.0
-	expect(leg.get("rarity") == "legendary" and leg.get("star", false), "9. legendary from exceptional crafting with fortune 18 (q %.1f%%, %s)" % [float(leg.get("quality", 0)), leg.get("rarity")])
+	# canonical v1.6 §6.2: an ordinary Design (the iron longsword) is Rare at most, however exceptional the work —
+	# Legendary comes only from designated advanced Designs (t_legendary). R1: this expectation predated v1.6.
+	expect(leg.get("rarity") == "rare" and float(leg.get("quality", 0)) > 100.0, "9. exceptional crafting of an ordinary Design stops at Rare (canonical v1.6 §6.2; q %.1f%%, %s)" % [float(leg.get("quality", 0)), leg.get("rarity")])
 	# 10. save, then (phase craft_reload) restart, load and inspect the record
 	await close_panel()
 	await press("cancel")

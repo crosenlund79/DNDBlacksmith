@@ -28,7 +28,7 @@ technical work). No entry in this register authorises implementation; work start
 **Companion documents:** [`EMBER_ASH_ROADMAP_REGISTER.md`](EMBER_ASH_ROADMAP_REGISTER.md) (milestones, gates, dependencies,
 risks) and [`EMBER_ASH_PLAYTEST_OBSERVATIONS.md`](EMBER_ASH_PLAYTEST_OBSERVATIONS.md) (playtest observations OBS-01 … OBS-61).
 
-**Size:** 649 entries in this register, plus 61 playtest observations in the observation register.
+**Size:** 650 entries in this register, plus 61 playtest observations in the observation register.
 
 ---
 
@@ -142,18 +142,18 @@ passes recorded only what canonical does not name.
 | `CIV` | 8 | 6 | 0 | 0 | 2 | 6 | 2 | 0 | 0 | 0 |
 | `UX` | 33 | 32 | 0 | 1 | 0 | 0 | 5 | 1 | 27 | 0 |
 | `LORE` | 17 | 12 | 2 | 2 | 1 | 10 | 4 | 1 | 2 | 0 |
-| `BUG` | 61 | 37 | 18 | 5 | 1 | 22 | 5 | 5 | 29 | 0 |
+| `BUG` | 62 | 38 | 18 | 5 | 1 | 23 | 5 | 5 | 29 | 0 |
 | `PROP` | 50 | 4 | 46 | 0 | 0 | 43 | 3 | 0 | 4 | 0 |
 | `QST` | 33 | 20 | 0 | 13 | 0 | 13 | 6 | 6 | 8 | 0 |
 | `HA` | 57 | 51 | 2 | 2 | 2 | 4 | 2 | 15 | 36 | 0 |
 | `HB` | 62 | 54 | 0 | 7 | 1 | 6 | 2 | 4 | 49 | 1 |
-| **All** | **649** | **491** | **82** | **39** | **37** | **186** | **72** | **63** | **327** | **1** |
+| **All** | **650** | **492** | **82** | **39** | **37** | **187** | **72** | **63** | **327** | **1** |
 
 ### 1.2 Counts by target
 
 | BASELINE | A1 | S1 | A2 | RUN0 | RUN0.1 | S2 | LW | R1 | A-REM | B1 | B2 | C1 | D | E | F | G | H | I | J | BACKLOG | — |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 196 | 29 | 27 | 15 | 1 | 8 | 25 | 27 | 12 | 32 | 17 | 11 | 26 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 109 | 37 |
+| 196 | 29 | 27 | 15 | 1 | 8 | 25 | 27 | 12 | 32 | 17 | 11 | 26 | 9 | 21 | 7 | 13 | 3 | 5 | 19 | 110 | 37 |
 
 ### 1.3 Conflicts with canonical
 
@@ -986,7 +986,7 @@ records the change):
 ## Part III — Known defects, proposals and open questions
 
 
-### 15. Known bugs and limitations — `BUG` (61)
+### 15. Known bugs and limitations — `BUG` (62)
 
 | ID | Requirement | Source | Scope | Delivery | Target | Dependencies · Evidence | Open questions |
 |---|---|---|---|---|---|---|---|
@@ -1051,6 +1051,7 @@ records the change):
 | BUG-059 | Asking an adventurer for a commission skipped their own want/purse rule (`Adv.decide`): day 9, 11 asks → 11 orders before, 5 after. | OBS-56 | APPROVED | VERIFIED | LW | RELIABILITY `5fea6d3`; `test_asking_for_a_commission_follows_their_rules` | Daily random order rule: PROP-029. |
 | BUG-060 | Walking figures lost the rest of each step at every waypoint, so walks took more game minutes at higher paces (81 % of the distance at 5×, 93 % at 1.5×); steps now carry past waypoints. | FAMILY (found measuring OBS-40) | APPROVED | VERIFIED | LW | FAMILY `7731642`; `npc.gd`; `test_npc_walk_same_game_minutes_at_any_step` | — |
 | BUG-061 | Cancelling a work order while the smith was working his stage of it left his craft job behind: new work and the steward's hand-over were refused and his further steps vanished without a piece (no duplication or loss). `Apprentices.cancel_task` now ends his stage of the cancelled order. | ACCEPTANCE (ACC-1) | APPROVED | VERIFIED | LW | ACCEPTANCE `d0d5362`; regression test in `t_lw_acceptance` (fails without the fix) | — |
+| BUG-062 | In the established-workshop 365-day soak a worker briefly waits for a station while another instance of its type stands free (2 quarter-hours per 365 days, seed 9001). | R1 soak (`tests/lw_soak.tscn -- est 365`) | APPROVED | NOT STARTED | BACKLOG | Found in R1; identical on the pre-R1 baseline `65e70b5` (same seed, same figures), so not caused by R1 — it appeared after the Living Workshop (`d0d5362` passed). Likely a tick-ordering race: a task keeps its "Waiting for the …" blocker until its next tick when another worker frees an instance in the same tick. `apprentices.gd` station allocation (`pick_instance`) | Fix the ordering, or accept the soak sampling the stale blocker? |
 
 
 ### 16. Proposals awaiting a decision — `PROP` (50)
@@ -1365,4 +1366,4 @@ records the change):
 | 10 November 2026 | S2: BUG-001, BUG-043, BUG-044, BUG-045, BUG-050 verified; BUG-005 superseded; BUG-020, ECO-011 partial; PROP-015/016/017/020 approved by the S2 brief and verified; ECO-044, STW-020, HB-056 updated; added STW-029 … STW-032, UX-017 … UX-023, PROP-022 … PROP-026, QST-029 … QST-031; target `S2`; canonical v1.3. |
 | 11 November 2026 | S2 completion: BUG-051 (Mining XP hotfix integrated into S2, `4fbfaee`). |
 | 11 November 2026 | Living Workshop: STAFF-002, 005 … 008, 012, 013, 015 … 018, PROD-001, 002, 004 … 014, 018, 019, 022, 026, WS-007, 012, EQ-010, STW-025, TECH-003, TECH-027, QST-003 verified; STAFF-014, GOV-026, HA-027, HB-019 (the universal smith) retired; PROD-016, PROD-023 interim values; WS-006, UX-009 partial; added STAFF-020 … 024, PROD-027 … 030, WS-014, STW-033, STW-034, UX-024 … 033, BUG-052 … 061, PROP-027 … 050, QST-032, QST-033; acceptance measurements on STAFF-019, QST-031, STW-017, STW-019, PROP-040; target `LW`; observations OBS-37 … OBS-61; canonical v1.4. |
-| 17 November 2026 | R1 "Integration & Foundation Closure" (branch `claude/r1-integration`): EQ-007, BUG-042, BUG-017, EQ-004, EQ-012, STAFF-004, STW-026, BUG-003, REL-010, QST-027 verified; BUG-049, TECH-023 implemented; HA-025 rejected by decision D-5 (field hirelings); TECH-014 advanced (tests workflow); new target label R1; §1.1/§1.2 recomputed; the §1.4 lists lose the decided entries. Integration into the default branch deferred (D-1). |
+| 17 November 2026 | R1 "Integration & Foundation Closure" (branch `claude/r1-integration`): EQ-007, BUG-042, BUG-017, EQ-004, EQ-012, STAFF-004, STW-026, BUG-003, REL-010, QST-027 verified; BUG-049, TECH-023 implemented; HA-025 rejected by decision D-5 (field hirelings); TECH-014 advanced (tests workflow); BUG-062 added (pre-existing soak station-wait race); new target label R1; §1.1/§1.2 recomputed; the §1.4 lists lose the decided entries. Integration into the default branch deferred (D-1). |

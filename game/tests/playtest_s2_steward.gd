@@ -90,10 +90,25 @@ func _rates(secs: float) -> Dictionary:
 	var acc0: float = Game.get("_acc")
 	var u0 := probe.unscaled
 	var s0 := probe.scaled
+	# R1: the smith's speed is the distance he actually walks, summed frame by frame — in the compact v1.7 smithy his
+	# route to a station turns corners within the window, so straight-line displacement understated it
+	# R1: the smith's speed is the distance he actually walks per second WHILE he walks, summed frame by frame — in the
+	# compact v1.7 smithy his route to a station is short and turns corners, so straight-line displacement over a fixed
+	# window understated it (and a longer window caught him standing at the station)
+	var walked := 0.0
+	var moving := 0.0
+	var prev := p0
+	var ut := u0
 	while probe.unscaled - u0 < secs:
 		await pt.get_tree().process_frame
+		var step := w.player.position.distance_to(prev)
+		if step > 0.5:
+			walked += step
+			moving += probe.unscaled - ut
+		prev = w.player.position
+		ut = probe.unscaled
 	var u := maxf(0.001, probe.unscaled - u0)
-	var out := {"clock": (float(Game.now() - m0) + float(Game.get("_acc")) - acc0) / u, "smith": w.player.position.distance_to(p0) / u,
+	var out := {"clock": (float(Game.now() - m0) + float(Game.get("_acc")) - acc0) / u, "smith": walked / maxf(0.001, moving),
 		"npc": 0.0, "npc_base": 0.0, "scaled": (probe.scaled - s0) / u}
 	if walker != null and is_instance_valid(walker):
 		out["npc"] = walker.position.distance_to(n0) / u
@@ -137,9 +152,12 @@ func run(p: Node) -> void:
 	# ---- 8:00: he walks to the forge — the walking pace measured too
 	var walked := await _until(func(): return Game.hour() >= 8 and bool(StewardSmith.sm().get("walking", false)) and str(StewardSmith.sm().get("goal", "")).begins_with("station:"), 120, "he sets off for a station")
 	if walked:
-		var r1 := await _rates(0.4)
-		pt.note("   the smith walks %.0f px a second at the steward's pace (his own pace %.0f); clock %.2f" % [float(r1["smith"]), PlayerBody.WALK, float(r1["clock"])])
-		pt.expect(float(r1["smith"]) > PlayerBody.WALK * 1.25, "s2st: he walks half again as fast as at normal pace (%.0f px/s)" % float(r1["smith"]))
+		var r1 := await _rates(1.2)   # R1: a longer window; the speed counts only the frames he moves
+		# R1: his own pace is the walk speed times his fatigue factor (Vitality.move_factor, as player.gd moves him); the
+		# check used to assume a fully rested smith
+		var own := PlayerBody.WALK * Vitality.move_factor()
+		pt.note("   the smith walks %.0f px a second at the steward's pace (his own pace %.0f, fatigue factor %.2f); clock %.2f" % [float(r1["smith"]), own, Vitality.move_factor(), float(r1["clock"])])
+		pt.expect(float(r1["smith"]) > own * 1.25, "s2st: he walks half again as fast as at normal pace (%.0f px/s vs his own %.0f)" % [float(r1["smith"]), own])
 		await pt.shot("s2st_02_walks_to_station")
 	pt.expect(await _until(func(): return _at_work(), 180, "at work at a station"), "s2st: he works at a station")
 	await pt.wait(0.8)

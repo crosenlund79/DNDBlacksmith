@@ -15,6 +15,13 @@ func _wait_unscaled(s: float) -> void:
 	await pt.get_tree().create_timer(s, true, false, true).timeout
 
 
+## Game minutes over `s` real seconds, standing still.
+func _clock(s: float) -> int:
+	var m0 := Game.now()
+	await _wait_unscaled(s)
+	return Game.now() - m0
+
+
 ## Game minutes and the player's walked distance over `s` real seconds, walking right.
 func _measure(s: float) -> Array:
 	var w: VillageWorld = pt.W()
@@ -61,8 +68,16 @@ func run_dev(p: Node) -> void:
 	DevTools.set_sim_pace(1.0)
 	var back := await _measure(1.0)
 	pt.note("pace: ×1 %d min / %.0f px; ×4 %d min / %.0f px; back ×1 %d min / %.0f px (per the same real time; last 1.0 s)" % [normal[0], normal[1], fast[0], fast[1], back[0], back[1]])
-	var rc := float(fast[0]) / maxf(1.0, float(normal[0]))
 	var rw := float(fast[1]) / maxf(1.0, float(normal[1]))
+	# R1: the clock is counted in whole game minutes, so 1.5 s (≈1 minute at ×1, 4 or 5 at ×4 depending on where the
+	# minute ticks fall) made the ratio flip between 4.0 and 5.0. The clock is timed over a longer window, standing
+	# still, so the ratio is stable; the walking check above stays as it was.
+	var c1 := await _clock(6.0)
+	DevTools.set_sim_pace(4.0)
+	var c4 := await _clock(6.0)
+	DevTools.set_sim_pace(1.0)
+	var rc := float(c4) / maxf(1.0, float(c1))
+	pt.note("pace (clock only, 6 s each): ×1 %d min, ×4 %d min" % [c1, c4])
 	pt.expect(rc > 3.0 and rc < 5.0, "dev: ×4 runs the clock about four times as fast (%.1f×)" % rc)
 	pt.expect(rw > 2.8 and rw < 5.2, "dev: …and the smith walks about four times as far (%.1f×) — together" % rw)
 	pt.expect(Engine.time_scale == 1.0, "dev: back to normal speed")
