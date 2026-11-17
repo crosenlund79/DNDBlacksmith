@@ -53,6 +53,34 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
   destroyed piece keeps uid, def, name, maker, mark, owners, origin, earned names and Epic and its Lore event ids, and a
   lost piece found again is marked `recovered`. Step 9 reconstructs tombstones from old saves' `lost`/`destroyed` Lore
   events and marks pieces identified from relics before R1 (`identified.legacy`).
+- **Schema 10 (R2)** moves the single `world.rep` (what the village had heard of the smith) into
+  `Game.state.reputation.word[audience][place]` (`reputation.gd`): every audience in the village gets the old value, the
+  region nothing. Idempotent; the general standing is unchanged.
+- **R2 "Truthful World Model" interfaces** (pure reads unless stated):
+  - `Danger` (`danger.gd`) — the one danger model. `site(rid)` is the live strength of a place (the strongest group of
+    foes actually there, `WorldSites.enemies_at`), `ratio(rid, strength)` at the campaign difficulty, `word(rid)`,
+    `threats(rid)` (the foes really there, with weaknesses), `knowledge(rid)` (scouting 0..1),
+    `ambush_dc(rid, boss)` (12, +2 at a lair, −up to 3 for well-charted ground) and `trip(dest)` (a hireling's trip
+    danger on destinations.json's scale, moved by the place's live strength and lowered by scouting). Parties, fights,
+    consultations, sponsorship, hirelings, the map and the sheets all ask here; `Regions.danger` and
+    `WorldSites.danger` delegate.
+  - `Reputation` (`reputation.gd`) — audiences (villagers, adventurers, traders, artisans, nobility and `civ:<id>`) ×
+    places (village, region, `civ:<id>`; decision D-7 — civilizations are not created yet). `standing()` (the old
+    `Shop.reputation`), `standing_of(aud, place)`, `word(aud, place)`, `change(delta, why)` (every audience in the
+    village; spreading is R8), `word_text()`.
+  - `Valuation` (`valuation.gd`) — item worth (`value`, `unit_value`, `catalogue`), the two difficulty factors
+    (`smith_buys_factor`, `buyers_factor`), `merchant_price(def, mult)`, `counter_price(def)` and
+    `material_cost` / `design_material_cost` (the village counter's price, else the catalogue value — one rule for the
+    steward, its working smith and the Workshop Ledger).
+  - `Adv.current_plan(a)` — where an adventurer really means to go: a forming party's committed destination (marked when
+    it is the smith's sponsorship), else what the expedition planner would choose for their company today
+    (`Expeditions.choose_destination(members, true)`, no dice, no side effects). Dossier, dialogue, wish lists and
+    consultations read it; a consultation cannot redirect a sponsored party.
+  - `Sim.gift_of(npc, …)` — gifts come from what the giver really has: an adventurer's carried loot or purse (the purse
+    is paid on the ledger), a shopkeeper's own shelf (stock decremented). Repair parts of a multi-request are a real worn
+    spare from the adventurer's pack (`Shop.worn_spare`).
+  - `Items.STATS_IN_PLAY` / `stat_in_play` — stats with no effect in play (and inert affixes) are labelled in tooltips
+    and left out of equipment-sheet totals and comparisons.
 - **R1 identity rules.** `Regions.identify` turns the studied relic into what it was **in place** (same uid; a stacked
   relic is split first, `split_from`; `identified` records what it was; an `identified` Lore event; earlier Lore of the
   relic is linked into the piece's provenance). `Crafting.socket` never renames a piece; a Common → Magic change is
@@ -168,8 +196,8 @@ Every crafting station stands on a painted tabletop base, the same miniature bas
 | Module | What it holds |
 |---|---|
 | `regions.gd` (`Regions`) | Scouting knowledge per destination (`world.scouted`), danger after scouting, supplier discovery (`suppliers.json`), trade runs, relic identification, reading recipe scrolls |
-| `adventurers.gd` | `run_encounters()`: threats from `destinations.json` (power, dmg, weak, resist). Offence = level + attack (+magic for casters) + 3 × matching damage type; defence reduces damage proportionally; draughts heal; coatings wear off after 3 trips. `plan_next()` sets the next trip and the damage type it calls for. |
-| `shop.gd` | Reputation (average village affection × 0.8 + `world.rep`), upkeep, goods customers, disputes, repairs of adventurers' own gear, refusals |
+| `adventurers.gd` | `run_encounters()` (legacy resolver): threats from `destinations.json` (power, dmg, weak, resist), scaled by `Danger.trip`. Offence = level + attack (+magic for casters) + 3 × matching damage type; defence reduces damage proportionally; draughts heal; coatings wear off after 3 trips. `plan_next()` sets the next trip (`current_plan`) and the damage type its real foes are weak to (`Danger.threats`). |
+| `shop.gd` | Reputation (delegates to `Reputation`: average village affection × 0.8 + what the village has heard), upkeep, goods customers, disputes, repairs of adventurers' own gear, refusals |
 | `inn.gd` (`InnLife`) | Table talk from real state; knucklebones on `Dice`; romance beats (walk, keepsake, wedding, married lines) |
 | `crafting.gd` | `treat()` applies coatings and oils. Arcane recipes add `bound` magic (spellweave die). Hirelings on shift add `hireling_assist()` to the skill bonus. `requires_flag` gates forgotten recipes. |
 
@@ -180,7 +208,7 @@ Every crafting station stands on a painted tabletop base, the same miniature bas
 **Save compatibility:** every new field is added on first access, so older saves still load:
 - adventurers: trait, potions, log, history
 - hirelings: traits, log, history
-- `world.scouted` and `world.rep`
+- `world.scouted` (and `world.rep` until schema 10 moved it to `reputation`)
 
 ## NPCs
 

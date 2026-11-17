@@ -56,7 +56,7 @@ This guide walks through every connected system in one or two in-game weeks. Nor
 
 - Send a hand with a good Travelling skill down **Highmarsh Road** with a 50–200 g purse.
 - They buy materials from the suppliers you know, and sell anything you marked *Send with the next trade run*.
-- Scouting a region lowers its danger for everyone. The first scouting trip can reveal a new supplier: mithril, gems or ethereal thread.
+- Scouting a region lowers its danger for everyone: hirelings' trips there are safer, and adventurer parties spot ambushes there more easily. The first scouting trip can reveal a new supplier: mithril, gems or ethereal thread.
 
 ### 5. Recruit (notice board, village square)
 

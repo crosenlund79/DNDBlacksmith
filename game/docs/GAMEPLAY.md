@@ -403,7 +403,7 @@ Aldric delivers provisions on day 3 and then weekly. There is no hunger system; 
 
 **Gems and rare minerals:** garnet, sapphire, moonstone, starstone, starmetal and adamantine. What you find depends on the region and on the finder's skill.
 
-**Regions:** scouting knowledge lowers danger for everyone, and new suppliers are found along the way.
+**Regions:** scouting knowledge lowers danger for everyone — hirelings' trips are safer, and parties' scouts spot ambushes more easily on well-charted ground — and new suppliers are found along the way.
 
 **Trade runs:** a hireling carries a purse to buy materials and sells the goods you marked for trade.
 
