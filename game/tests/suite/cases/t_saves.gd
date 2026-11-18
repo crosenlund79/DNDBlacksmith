@@ -175,6 +175,21 @@ func _golden(name: String) -> void:
 	eq(Log.error_count, errs, "%s: loading and migrating logs no errors" % name)
 	var bad := _integrity(Game.state)
 	check(bad.is_empty(), "%s: whole-state integrity %s" % [name, str(bad)])
+	# R2 (save step 10): the old `world.rep` became what every audience in the village has heard; the general standing
+	# is the very figure the old release computed (mean affection of adventurers and villagers × 0.8 + world.rep)
+	var raw := _golden_data(name)
+	if raw.get("world", {}).has("rep"):
+		var tot := 0.0
+		var n := 0
+		for npc in raw.get("social", {}):
+			if str(DB.character(npc).get("kind", "")) in ["adventurer", "villager"]:
+				tot += float(raw["social"][npc]["aff"])
+				n += 1
+		var old := clampf(tot / maxf(1.0, n) * 0.8 + clampf(float(raw["world"]["rep"]), -60.0, 60.0), -100.0, 100.0)
+		check(absf(Reputation.standing() - old) < 0.001, "%s: the smith's standing is unchanged by step 10 (%.2f, was %.2f)" % [name, Reputation.standing(), old])
+		check(not (Game.state["world"] as Dictionary).has("rep"), "%s: world.rep was moved, not copied" % name)
+		for a in Reputation.AUDIENCES:
+			eq(Reputation.word(a, "village"), clampf(float(raw["world"]["rep"]), -60.0, 60.0), "%s: %s in the village heard what the village had heard" % [name, a])
 	# the v1 → v2 conversions are done: the lazy converters find nothing left to do
 	check(Game.state.has("property") and (Game.state["property"] as Dictionary).has("floors_v"), "%s: the property plan has the Loft's rooms" % name)
 	check(Game.state.has("skilltree"), "%s: the skill tree is present" % name)

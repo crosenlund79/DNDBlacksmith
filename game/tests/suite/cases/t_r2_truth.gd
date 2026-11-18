@@ -134,8 +134,37 @@ func test_plan_is_the_planners_and_pure() -> void:
 	eq(str(plan.get("dest", "")), str(pre.get("dest", "")), "the plan is the live planner's preview")
 	check(str(plan.get("dest", "")) != "", "they lean somewhere (%s)" % plan.get("dest", ""))
 	check(not bool(plan.get("committed", true)), "a lean, not a commitment")
+	# their own wish weighs on the planner (+6 when they lead) and so is part of the plan shown — not shown as the plan
+	a["next_dest"] = "barrow_fields"
+	var with_wish := Expeditions.choose_destination([a], true)
+	eq(str(Adv.current_plan(a).get("dest", "")), str(with_wish.get("dest", "")), "the shown plan includes their wish's pull")
 	Adv.plan_next(a)
-	eq(str(a.get("next_dest", "")), str(plan["dest"]), "what the sheet and wish list use is the same plan")
+	eq(str(a.get("next_dest", "")), "barrow_fields", "a wish, once made, is kept (the pre-R2 rule, unchanged)")
+	a.erase("next_dest")
+	a["planned_dest"] = "whisperwood"
+	Adv.plan_next(a)
+	eq(str(a.get("next_dest", "")), "whisperwood", "a story plan (planned_dest) becomes their wish")
+
+
+## The wish list says "the things there fear fire": whenever the (pre-R2) rule names a weakness, at least two kinds of
+## foe really at that place share it — at the start and after a season of play.
+func test_wish_list_claims_are_true() -> void:
+	var a := _adv("garrick")
+	for k in ["fire", "frost"]:
+		a["equipment"]["weapon"] = {}
+	for rnd in 2:
+		if rnd == 1:
+			for i in 60:
+				Game.advance_minutes(1440)
+		for dest in DB.destinations:
+			var w := Adv.wish_prop(a, str(dest))
+			if w == "":
+				continue
+			var n := 0
+			for th in Danger.threats(str(dest)):
+				if str(th.get("weak", "")) == w:
+					n += 1
+			check(n >= 2, "day %d: wanting %s for %s is true — %d kinds of foe there fear it" % [Game.day(), w, dest, n])
 
 
 func test_party_destination_is_shown_as_committed() -> void:

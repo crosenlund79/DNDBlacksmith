@@ -146,19 +146,49 @@ static func choose_dest(a: Dictionary) -> String:
 	return str(current_plan(a).get("dest", ""))
 
 
-## Where they mean to go next (current_plan), and what that place demands: a damage type its foes are weak to, from the
-## foes actually there (Danger.threats — the same ones they will fight).
+## Their own standing wish (`next_dest`), as before R2: a story plan (`planned_dest`, e.g. Mira's Barrow Fields) or a pick
+## by level, kept until advice changes it. It is real state: the planner weighs it (+6 when they lead —
+## WorldSites.site_appeal, "as X had planned"), so it is part of current_plan, which is what every sheet shows.
+static func _wish(a: Dictionary) -> String:
+	if a.has("planned_dest"):
+		var p: String = a["planned_dest"]
+		a.erase("planned_dest")
+		return p
+	var lvl := int(a["level"])
+	var options := ["whisperwood", "highmarsh_road", "ironroot_mine"]
+	if lvl >= 3:
+		options.append("barrow_fields")
+	if lvl >= 4:
+		options.append("barrow_fields")
+	if lvl >= 6 and Game.has_flag("delve_map"):
+		options.append("deep_ironroot")
+	return options.pick_random()
+
+
+## Their wish (kept once made), and what that place demands: a damage type it is known for (destinations.json — the
+## pre-R2 rule, kept so the requests and the commissions they lead to stay as they were). R2 checks the claim is true:
+## every weakness this rule names is shared by at least two kinds of foe really there (Danger.threats;
+## t_r2_truth.test_wish_list_claims_are_true). The live foes would justify more wishes (Whisperwood's wolves and bears
+## fear fire); calibrating the rule to them is a balance decision left open (R2 report).
 static func plan_next(a: Dictionary) -> void:
-	a["next_dest"] = choose_dest(a)
+	if str(a.get("next_dest", "")) == "":
+		a["next_dest"] = _wish(a)
+	a["wants_prop"] = wish_prop(a, str(a["next_dest"]))
+
+
+## The damage type an adventurer would want for `dest` (fire or frost), or "" — they lack it and the place is known for
+## at least two foes that fear it.
+static func wish_prop(a: Dictionary, dest: String) -> String:
 	var weak := {}
-	for th in Danger.threats(str(a["next_dest"])):
+	for th in DB.destinations.get(dest, {}).get("threats", []):
 		var w := str(th.get("weak", ""))
 		if w in ["fire", "frost"]:
 			weak[w] = int(weak.get(w, 0)) + 1
-	a["wants_prop"] = ""
+	var out := ""
 	for w in weak:
 		if _total(a, w) <= 0 and int(weak[w]) >= 2:
-			a["wants_prop"] = w
+			out = w
+	return out
 
 
 ## Before leaving, an adventurer buys a healing draught from the smith's displayed stock.

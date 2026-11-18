@@ -58,7 +58,7 @@ func _persuadable(npc: String) -> void:
 	train("smithing", 8)
 
 
-
+## for "bound for X" (their own wish, next_dest, only weighs on the planner — it is not where they are bound).
 ## R2 (ADV-012): where an adventurer is going is the planner's — a forming party with its destination is the fixture
 ## for "bound for X" (setting the old next_dest field by hand no longer decides anything).
 func _bound(a: Dictionary, rid: String) -> void:
