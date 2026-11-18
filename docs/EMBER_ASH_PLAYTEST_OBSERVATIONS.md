@@ -82,7 +82,8 @@ Residual issues found while verifying 1–9 (recorded as decision-register entri
   `Commerce.price_factor` is a documented reciprocal, not an inversion; the real asymmetry is the Salt Anvil priced with the
   player-buying factor.
 - OBS-06: the once-per-friend "deep gratitude" relic satchel bypasses the A2 gift cap; gifts are still loot-table rolls,
-  not the giver's possessions.
+  not the giver's possessions. **Resolved in R2** (ECO-045): gifts come from the giver's own pack, purse (on the ledger)
+  or shelf, within the same cap; the gratitude relic is one they really carry.
 - OBS-07: test strings still say "Simple Blades" (cosmetic).
 - OBS-08: "detachable details" became a collapsible column — needs acceptance at the human Windows check.
 - OBS-09: no slot filters; the potion ("goods") counter branch was not converted (see OBS-15).
@@ -189,3 +190,4 @@ Residual issues found while verifying 1–9 (recorded as decision-register entri
 | 11 November 2026 | Living Workshop: OBS-37 … OBS-61 (the user's #37–61) added with their outcomes; authority canonical v1.4. |
 | 13 November 2026 | The Living Village & Workshop: OBS-64 … OBS-76 (the user's #64–76) added with their outcomes on branch claude/living-village-workshop; authority canonical v1.7. |
 | 17 November 2026 | R1 (branch `claude/r1-integration`): no observation changed status. R1 adds the human acceptance checklist `docs/final_completion/R1_ACCEPTANCE_CHECKLIST.md`; what the user observes in that playtest becomes new OBS entries here. Decision D-5 (field hirelings) touches OBS-21's residual (field hirelings at stations, PROP-026): hirelings now do field work only. |
+| 17 November 2026 | R2 (branch `claude/r2-truthful-world`): no observation changed status. OBS-06's residual (gifts rolled from loot tables, not the giver's possessions) is resolved by ECO-045. |

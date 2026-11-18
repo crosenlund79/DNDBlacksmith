@@ -74,8 +74,9 @@ tools/             data, art, audio generators and a GDScript lint (tools/lint/c
     steward, its working smith and the Workshop Ledger).
   - `Adv.current_plan(a)` — where an adventurer really means to go: a forming party's committed destination (marked when
     it is the smith's sponsorship), else what the expedition planner would choose for their company today
-    (`Expeditions.choose_destination(members, true)`, no dice, no side effects). Dossier, dialogue, wish lists and
-    consultations read it; a consultation cannot redirect a sponsored party.
+    (`Expeditions.choose_destination(members, true)`, no dice, no side effects — the adventurer's own wish, `next_dest`,
+    is one of the things it weighs). Dossier, dialogue and consultations read it; a consultation cannot redirect a
+    sponsored party.
   - `Sim.gift_of(npc, …)` — gifts come from what the giver really has: an adventurer's carried loot or purse (the purse
     is paid on the ledger), a shopkeeper's own shelf (stock decremented). Repair parts of a multi-request are a real worn
     spare from the adventurer's pack (`Shop.worn_spare`).
@@ -196,7 +197,7 @@ Every crafting station stands on a painted tabletop base, the same miniature bas
 | Module | What it holds |
 |---|---|
 | `regions.gd` (`Regions`) | Scouting knowledge per destination (`world.scouted`), danger after scouting, supplier discovery (`suppliers.json`), trade runs, relic identification, reading recipe scrolls |
-| `adventurers.gd` | `run_encounters()` (legacy resolver): threats from `destinations.json` (power, dmg, weak, resist), scaled by `Danger.trip`. Offence = level + attack (+magic for casters) + 3 × matching damage type; defence reduces damage proportionally; draughts heal; coatings wear off after 3 trips. `plan_next()` sets the next trip (`current_plan`) and the damage type its real foes are weak to (`Danger.threats`). |
+| `adventurers.gd` | `run_encounters()` (legacy resolver): threats from `destinations.json` (power, dmg, weak, resist), scaled by `Danger.trip`. Offence = level + attack (+magic for casters) + 3 × matching damage type; defence reduces damage proportionally; draughts heal; coatings wear off after 3 trips. `plan_next()` keeps the adventurer's own wish (`next_dest`: a story plan or a pick by level — it pulls the planner +6 when they lead) and the damage type that place is known for (`wish_prop`; each claim checked against the live foes). |
 | `shop.gd` | Reputation (delegates to `Reputation`: average village affection × 0.8 + what the village has heard), upkeep, goods customers, disputes, repairs of adventurers' own gear, refusals |
 | `inn.gd` (`InnLife`) | Table talk from real state; knucklebones on `Dice`; romance beats (walk, keepsake, wedding, married lines) |
 | `crafting.gd` | `treat()` applies coatings and oils. Arcane recipes add `bound` magic (spellweave die). Hirelings on shift add `hireling_assist()` to the skill bonus. `requires_flag` gates forgotten recipes. |
