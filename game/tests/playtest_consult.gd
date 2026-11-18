@@ -32,6 +32,7 @@ func run(p: Node) -> void:
 	Expeditions.ensure(a)
 	a["status"] = "in_town"
 	a["next_dest"] = "barrow_fields"
+	Expeditions.st()["parties"]["p_pt_sigrun"] = {"id": "p_pt_sigrun", "members": ["sigrun"], "leader": "sigrun", "dest": "barrow_fields", "goal": "explore"}   # R2: really bound there
 	a["gold"] = 900
 	a["equipment"]["weapon"]["stats"]["durability"] = 0
 	a["equipment"]["weapon"]["broken"] = true
@@ -88,7 +89,10 @@ func run(p: Node) -> void:
 	v["trait"] = "reckless"
 	v["goals"] = [{"kind": "renown", "target": 9999, "since": 1}]
 	WorldSites.site("drakes_crag")["discovered"] = true
+	# R2 (ADV-012): where he is bound is the planner's — a forming party bound for the Crag (his own wish, next_dest,
+	# only weighs on the planner, so setting it alone no longer makes the Crag his destination)
 	v["next_dest"] = "drakes_crag"
+	Expeditions.st()["parties"]["p_pt_varn"] = {"id": "p_pt_varn", "members": ["varn"], "leader": "varn", "dest": "drakes_crag", "goal": "explore"}
 	v["level"] = 1
 	v["hp_max"] = Expeditions.hp_max(v)
 	v["hp"] = v["hp_max"]
