@@ -2,7 +2,8 @@
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
 `fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`) and **in the Living Workshop** (11 November 2026,
-branch `claude/living-workshop`) and **in R1** (17 November 2026, branch `claude/r1-integration`).
+branch `claude/living-workshop`), **in R1** (17 November 2026, branch `claude/r1-integration`) and **in R2** (17 November 2026,
+branch `claude/r2-truthful-world`).
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -36,16 +37,18 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | Canonical v1.6 "Beyond the Safe Roads" (Legendary crafting, three dangerous regions, seasons) | §6.2, §8.1, §11 | Complete on branch; not integrated | `774d5f6` | No | `t_legendary`, `t_regions`, `t_seasons`, rendered `beyond_map`, `seasons` | No |
 | Canonical v1.7 "The Living Village & Workshop" (OBS-64 … 76) | §4.1, §7.1, §11 | Complete on branch; not integrated | `65e70b5` | No — Windows artifact EmberAndAsh-Windows-0.16.21 (run 43475441787) only | `t_compact_smithy`, `t_rare_materials`, `t_ironfront_intro`; compile 272, suite 443/443, unit 392/392 re-run 17 Nov | No |
 | Final completion audit (docs) | CLAUDE.md §2 | Complete | `be92b9a` | — | `docs/final_completion/` | — |
-| **R1** Integration & Foundation Closure | Gate A (remainder); roadmap R1 | Complete on its isolated branch; **not integrated, not released** (decision D-1) | branch `claude/r1-integration` | No — private Windows artifact 0.17 only | `t_r1_identity` (9), `t_r1_workshop` (4), `t_steward_ui.test_look_only_buttons_disabled_away`, `t_saves` (+3 golden artifacts, schema 9); see the R1 report | Checklist `docs/final_completion/R1_ACCEPTANCE_CHECKLIST.md` — pending |
+| **R1** Integration & Foundation Closure | Gate A (remainder); roadmap R1 | Complete on its isolated branch; **not integrated, not released** (decision D-1) | branch `claude/r1-integration` | No — private Windows artifact 0.17 only | `t_r1_identity` (9), `t_r1_workshop` (4), `t_steward_ui.test_look_only_buttons_disabled_away`, `t_saves` (+3 golden artifacts, schema 9); see the R1 report | Checklist `docs/final_completion/R1_ACCEPTANCE_CHECKLIST.md` — Windows playtest accepted by the user (17 Nov 2026) |
+| **R2** Truthful World Model | Gate A entry points; roadmap R2; decision D-7 (data only) | Complete on its isolated branch; **not integrated, not released** | branch `claude/r2-truthful-world` | No (internal; roadmap) | `t_r2_truth` (21), `t_saves` (golden saves keep the standing through schema 10), 20-seed 90-day comparison (no metric at \|t\| ≥ 1.6); see `docs/final_completion/R2_BUILD_REPORT.md` | Wish-list weakness calibration (report §7.1) |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
 
 **What players have:** the latest release is still **build-0.14.6** (GitHub latest release; the default branch is at Run
-0.1, `2e854af`). No published build contains A1, S1, A2 or anything later; S2, the Living Workshop, the pilots, v1.5–v1.7
-and R1 exist on development branches and as private Windows artifacts (0.15, 0.16.19, 0.16.21, 0.17). None has a
-recorded human acceptance yet (REL-003, REL-004, REL-005); R1's checklist asks for it. The finish line and the remaining
-builds R2–R11 are in `docs/final_completion/`.
+0.1, `2e854af`). No published build contains A1, S1, A2 or anything later; S2, the Living Workshop, the pilots, v1.5–v1.7,
+R1 and R2 exist on development branches; private Windows artifacts exist for 0.15, 0.16.19, 0.16.21 and 0.17 (R1). The
+user accepted R1's Windows playtest (R2 brief, 17 November 2026); which of REL-003/004/005 that acceptance covers is not
+yet recorded row by row. R2 has no Windows build (internal). The finish line and the remaining
+builds R3–R11 are in `docs/final_completion/` (R2 is delivered on its branch).
 
 **Residuals of delivered milestones** (approved, still partial; no milestone scheduled):
 - S1: "political commitments" have nothing to defer until G/H/I exist (STW-014); some look-only panels keep minor action
@@ -164,11 +167,11 @@ All A-REM entries:
 | TECH-001 | APPROVED | PARTIAL | Gate A readiness complete: human playtest, versioned migrations + golden saves, item identity hygiene, trustworthy UI/repair fixes, CI … |
 | TECH-011 | PROPOSED | NOT STARTED | No state-changing reads: legacy items' provenance created in a migration step, not lazily on first read. |
 | TECH-014 | APPROVED | PARTIAL | Stronger regression/release gates for Phase 0 beyond the smoke test. |
-| TECH-017 | APPROVED | NOT STARTED | Truthful UI: plans, advice threats, power ratings, rumours and toasts derive from live state and the same models used for decisions. |
-| TECH-018 | APPROVED | NOT STARTED | One common danger entry point used by decisions, combat, advice, sponsorship and hirelings. |
-| TECH-019 | APPROVED | NOT STARTED | One common reputation entry point (facade) so no new code reads `Shop.reputation()` directly. |
+| TECH-017 | APPROVED | VERIFIED (R2) | Truthful UI: plans, advice threats, power ratings, rumours and toasts derive from live state and the same models used for decisions. |
+| TECH-018 | APPROVED | VERIFIED (R2) | One common danger entry point used by decisions, combat, advice, sponsorship and hirelings. |
+| TECH-019 | APPROVED | VERIFIED (R2) | One common reputation entry point (facade) so no new code reads `Shop.reputation()` directly. |
 | TECH-020 | PROPOSED | NOT STARTED | Legacy expedition resolver removed (old saves' away adventurers migrated), docs updated. |
-| TECH-021 | APPROVED | NOT STARTED | A consultation must not silently redirect a sponsored party (respect sponsor objectives or make the conflict explicit). |
+| TECH-021 | APPROVED | VERIFIED (R2) | A consultation must not silently redirect a sponsored party (respect sponsor objectives or make the conflict explicit). |
 | TECH-023 | APPROVED | IMPLEMENTED (R1) | Repository roadmap documents reconciled with the canonical phases (no "allegiance", World Recognition phase present, regional proof before … |
 | TECH-033 | APPROVED | PARTIAL | "Before B/C" gate: save migrations and canonical identity boundaries safe; |
 | REL-003 | PROPOSED | NOT STARTED | A Windows build containing the Gate A work (A1 + S1 + A2) is published, with a human playtest note attached. |
@@ -178,18 +181,18 @@ All A-REM entries:
 | STW-027 | APPROVED | NOT STARTED | A human player accepts Steward Mode on Windows (steward performance against active play, how the report reads, how rare letters are). |
 | EQ-006 | PROPOSED | PARTIAL | One lookup used by every system. Today `find_uid_anywhere`, `History.find_item` and `ItemStory.find` go through the registry but keep their … |
 | EQ-007 | APPROVED | VERIFIED (R1) | Identifying a relic keeps the identity chain. |
-| ADV-012 | APPROVED | NOT STARTED | Character sheets and talk show truthful plans: |
-| ADV-017 | APPROVED | PARTIAL | Consultation advice uses the same threat data adventurers actually fight. |
-| ADV-018 | APPROVED | NOT STARTED | Sponsored expeditions pursue the agreed objective: |
+| ADV-012 | APPROVED | VERIFIED (R2) | Character sheets and talk show truthful plans: |
+| ADV-017 | APPROVED | VERIFIED (R2) | Consultation advice uses the same threat data adventurers actually fight. |
+| ADV-018 | APPROVED | VERIFIED (R2) | Sponsored expeditions pursue the agreed objective: |
 | ADV-020 | PROPOSED | NOT STARTED | One expedition resolver: the legacy adventurer resolver is retired, old saves' away adventurers are migrated, and the docs updated. |
-| ADV-021 | APPROVED | NOT STARTED | One authoritative danger model with a common entry point, used by adventurer decisions, consultations, sponsorship, hirelings, scouting and … |
-| WLD-013 | APPROVED | NOT STARTED | A common reputation entry point (facade) so no new code reads the global number directly before audience/place reputation arrives. |
-| WLD-018 | APPROVED | NOT STARTED | Scouting knowledge and its claims ("told you the safe paths", "lowers danger for everyone") must affect the danger model adventurers … |
-| WLD-019 | APPROVED | PARTIAL | Village talk and rumours derive from real state; |
+| ADV-021 | APPROVED | VERIFIED (R2) | One authoritative danger model with a common entry point, used by adventurer decisions, consultations, sponsorship, hirelings, scouting and … |
+| WLD-013 | APPROVED | VERIFIED (R2) | A common reputation entry point (facade) so no new code reads the global number directly before audience/place reputation arrives. |
+| WLD-018 | APPROVED | VERIFIED (R2) | Scouting knowledge and its claims ("told you the safe paths", "lowers danger for everyone") must affect the danger model adventurers … |
+| WLD-019 | APPROVED | VERIFIED (R2) | Village talk and rumours derive from real state; |
 | UX-007 | APPROVED | PARTIAL | Honest information: progress, work stages, plans, risk, availability, reputation and histories shown in the UI come from actual state. |
 | UX-011 | APPROVED | PARTIAL | Validate real Windows gameplay and rendered screenshots as UX acceptance; |
 | UX-013 | APPROVED | PARTIAL | Panels fit and stay readable on the 1920×1080 canvas (1600×900 scaled) with no overflow and no hidden controls. |
-| LORE-015 | APPROVED | NOT STARTED | Tavern rumours and table talk come from real Lore and state, not invented template facts. |
+| LORE-015 | APPROVED | VERIFIED (R2) | Tavern rumours and table talk come from real Lore and state, not invented template facts. |
 | BUG-017 | APPROVED | VERIFIED (R1) | A dismissed hireling who leaves with gear in their name records a hand-over event. |
 | BUG-042 | APPROVED | VERIFIED (R1) | Socketing a runestone must not overwrite a piece's name or silently change its rarity. |
 | BUG-049 | APPROVED | IMPLEMENTED (R1) | Player, test and design documents describe the current build. |
@@ -355,7 +358,7 @@ boundaries (EQ-027, EQ-033); whether socketing may change rarity (BUG-042); whet
 | EQ-039 | APPROVED | NOT STARTED | Only an explicitly communicated, extraordinary experiment may permanently destroy the physical item, and its historical record endures. |
 | EQ-040 | APPROVED | PARTIAL | A difficult failure may break or disable an item: |
 | EQ-052 | APPROVED | PARTIAL | Equipment presentation shows material/craftsmanship, mechanical rarity, affixes and earned Epic history separately. |
-| EQ-053 | APPROVED | PARTIAL | Displayed stats are truthful: whatever a sheet or tooltip shows must affect the simulation, or be labelled as not doing so. |
+| EQ-053 | APPROVED | VERIFIED (R2) | Displayed stats are truthful: whatever a sheet or tooltip shows must affect the simulation, or be labelled as not doing so. |
 | EQ-056 | APPROVED | PARTIAL | Journey "The famous sword returns": the sword is sold, used in real adventures, earns Epic recognition, is inherited, and is later … |
 | EQ-058 | APPROVED | NOT STARTED | Journey "The cost of ambition": an extraordinary, clearly warned reworking fails; |
 | BUG-027 | APPROVED | NOT STARTED | Consultation "upgrade" advice can propose refining the adventurer's own piece, not only a commission. |
@@ -372,7 +375,7 @@ valuation replacing about ten price routines (ECO-031, TECH-030); the danger ent
 
 | ID | Scope | Delivery | Requirement |
 |---|---|---|---|
-| TECH-030 | APPROVED | NOT STARTED | Shared item valuation (value to this NPC) replacing ~10 price/negotiation routines. |
+| TECH-030 | APPROVED | PARTIAL (R2) | Shared item valuation (value to this NPC) replacing ~10 price/negotiation routines. |
 | ECO-030 | APPROVED | NOT STARTED | Adventurers may accept gold, crafted equipment or a combination for expeditions, protection and procurement; |
 | ECO-031 | APPROVED | PARTIAL | Offers and counter-offers reflect each person's actual needs, personality, relationships, available funds, danger and how useful the … |
 | ECO-032 | APPROVED | NOT STARTED | Expeditions and mine runs can negotiate escorts and protection, priced on actual regional danger, as a real risk/benefit choice. |
@@ -395,9 +398,9 @@ Tamsin Hale is the canonical mayor; the role of bandits once militia protection 
 | WLD-007 | APPROVED | NOT STARTED | Militia equipment improves regional security and mining/trade risks indirectly, gradually and causally — no magical hard-edged safe circle; |
 | WLD-009 | APPROVED | PARTIAL | Map feedback on danger/safety is permitted only if it reflects real conditions. |
 | WLD-010 | UNDECIDED | NOT STARTED | Decide the role of bandit encounters once militia protection exists ("fewer bandit runs?"). |
-| WLD-011 | APPROVED | PARTIAL | Reputation differs by community/profession, person, institution and geography (dwarven artisans, adventurers, traders, nobles, each … |
+| WLD-011 | APPROVED | PARTIAL (R2) | Reputation differs by community/profession, person, institution and geography (dwarven artisans, adventurers, traders, nobles, each … |
 | WLD-012 | APPROVED | NOT STARTED | News and reputation spread gradually through travel, letters, goods, events and relationships — no instant worldwide fame meter. |
-| WLD-014 | APPROVED | NOT STARTED | Danger, reputation and delivered-equipment effects share authoritative state before Gates G/H. |
+| WLD-014 | APPROVED | PARTIAL (R2) | Danger, reputation and delivered-equipment effects share authoritative state before Gates G/H. |
 | WLD-015 | APPROVED | PARTIAL | Renown cannot be purchased: acclaim follows deeds and credible spread; |
 | WLD-016 | APPROVED | PARTIAL | Renowned merchants, adventurers and patrons who come are credible persistent people with reasons to come, not rank rewards. |
 | WLD-021 | APPROVED | NOT STARTED | Proof journey "A town safer by craftsmanship": |
@@ -602,3 +605,4 @@ relationship meters (HA-029).
 | 10 November 2026 | S2: rows for canonical v1.3 and S2; S2 decisions added. |
 | 11 November 2026 | Living Workshop: rows for canonical v1.4 and LW; B1, B2 and C1 marked delivered on the LW branch; LW decisions added. |
 | 17 November 2026 | R1: milestone rows for the pilots, v1.5, v1.6, v1.7, the final completion audit and R1; "what players have" corrected (latest release build-0.14.6; nothing later integrated or released); R1 deliveries marked in the A-REM/B1 tables. |
+| 17 November 2026 | R2: milestone row; TECH-017/018/019/021, ADV-012/017/018/021, WLD-013/018/019, LORE-015, EQ-053 marked VERIFIED (R2), TECH-030, WLD-011, WLD-014 PARTIAL (R2) in the A-REM and later tables. |

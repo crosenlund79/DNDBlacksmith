@@ -99,7 +99,7 @@ system; see `docs/sprite_catalogue/`.
 
 **Windows build:** yes, **public**.
 
-## R2 — Truthful World Model
+## R2 — Truthful World Model  *(delivered on branch `claude/r2-truthful-world`, not integrated — see [R2_BUILD_REPORT.md](R2_BUILD_REPORT.md))*
 
 **Purpose.** One danger model, one reputation entry point and honest information, so every later world feature reads
 and writes real state.
