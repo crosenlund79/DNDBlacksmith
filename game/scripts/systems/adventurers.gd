@@ -219,9 +219,13 @@ static func morning_departures() -> void:
 		if a["status"] != "in_town" or Game.day() < int(a["depart_day"]):
 			continue
 		_buy_supplies(a)
-		var dest := choose_dest(a)
+		# legacy resolver (no caller in play since the expedition simulation): as before R2, they go where they wished
+		var dest := str(a.get("next_dest", ""))
+		a.erase("next_dest")
+		if dest == "":
+			dest = _wish(a)
 		if not DB.destinations.has(dest):
-			continue   # (legacy path, unused since the expedition simulation: nothing is planned)
+			continue
 		var d: Dictionary = DB.destinations[dest]
 		a["status"] = "away"
 		a["dest"] = dest
