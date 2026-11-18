@@ -80,12 +80,29 @@ No metric differs at |t| ≥ 1.6.
 | Gate | Result |
 |---|---|
 | Compile | **279 scripts, 0 failed** |
-| Suite (full) | **482 passed, 0 failed** (476 s) |
+| Suite (full) | **482 passed, 0 failed** (449 s, on `87ee9a6`) |
 | Unit & regression | **394 passed, 0 failed** |
-| CI `tests.yml` | success on `c31043e` (run 44202356026) and on the final code `823196f` (run 44204299128) |
+| CI `tests.yml` | success on every R2 push; on the final code `87ee9a6`: run 44206452050 |
 | Save migration | schema 10; step 10 idempotent; every golden save (0.11.2 … 0.17) loads, migrates to 10, keeps the smith's standing exactly, round-trips and plays on (`t_saves` 26/26) |
-| Rendered phases | **in progress:** 8 of 72 passed on the final code (smoke, full, reload, diag, stations, panels, interiors, nav — 0 failures); the 22 phases for characters, consultations, sponsorship, taverns, shops and equipment are running, then the rest |
+| Rendered phases | **72 / 72 pass**. The 22 phases for characters (`character`, `adv10`), consultations (`consult_rl`), sponsorship (`sponsor_rl`), taverns (`village`, `inn_diag`, `iter2`), shops (`commerce10`, `a2econ`, `smithy_rl`), equipment (`equip_rl`, `equip_terrain`, `refine_ux`) and reputation, steward, saves and map (`recog10`, `contracts_rl`, `s2_steward`, `s2_econdev`, `identity_a1`, `beyond_map`, `lvw_oldsave`, `newer_save`, `world_ux`) ran first. Two failures were found and resolved (below). |
 | Windows installer | not built: the roadmap marks R2 internal, and R1's playtest raised no truthfulness issue. One can be built as a private artifact on request (§7). |
+
+**Rendered failures, resolved:**
+
+- **`consult_rl`** (1 failure): "Don't go to Drake's Crag with this kit" was not advised. The phase made Varn "bound
+  for" the Crag by writing `next_dest` by hand. Since R2 that field is only his wish, and a level-1 Varn's planner never
+  chose the Crag, so the advice was rightly absent. Sigrun and Varn are now bound by real forming parties (the same
+  fixture change as `t_consult`). The card now names the foes really at the Barrow Fields. Passes.
+- **`iter2_reload`** (4 failures, "persist: …"): an ordering artifact. The phases were re-ordered to run the brief's
+  22 first, so `iter2_reload` ran 13 phases after the `iter2` whose save it reloads. Run directly after `iter2`, as in
+  R1's order, it passes.
+- **Found by reading `slice`:** the legacy `Adv.morning_departures` (no caller in play; the phase drives it) had been
+  routed through the planner's preview. It is back to its pre-R2 rule: they go where they wished (`87ee9a6`). `slice`
+  then passed ("Garrick departs for the Barrow Fields").
+
+A container restart interrupted the run after 63 of the batch's 64 phases. The last one (`lvw_panels`) and the
+`iter2` pair were run afterwards. Every phase passed on code equal to `87ee9a6`, except where noted: phases before the
+`morning_departures` change ran on `823196f`, which differs only in that legacy path, and only `slice` uses it.
 
 **Tests changed in R2.** Each of these was checked against the pre-R2 tree before it was changed:
 
@@ -105,7 +122,7 @@ No metric differs at |t| ≥ 1.6.
 | Item | Value |
 |---|---|
 | Branch | `claude/r2-truthful-world` (pushed) |
-| Verified code commit | `823196f` (CI run 44204299128); the docs, registers and this report are committed on top of it |
+| Verified code commit | `87ee9a6` (CI run 44206452050); this report is committed on top of it |
 | Releases, tags, default branch | unchanged; nothing merged, published or tagged |
 
 ## 7. Open items and unresolved inconsistencies
