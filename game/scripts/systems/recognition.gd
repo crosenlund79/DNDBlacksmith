@@ -31,6 +31,9 @@ const EPIC_VALUE := 1.5                        # an Epic piece is worth half aga
 const EPIC_REP := 5.0
 const SMITH := "Brannoc"
 
+## R3: the Lore event the plaque being written comes from (set while a feed entry is read), kept on the plaque.
+static var _anchor := ""
+
 
 # ------------------------------------------------------------------ the board
 static func entries() -> Array:
@@ -47,6 +50,9 @@ static func has_key(key: String) -> bool:
 static func record(kind: String, title: String, text: String, refs := {}, key := "") -> Dictionary:
 	if has_key(key):
 		return {}
+	if _anchor != "" and not refs.has("event"):
+		refs = refs.duplicate()
+		refs["event"] = _anchor
 	var e := {"id": "hof_%d" % Game.new_uid(), "key": key, "kind": kind, "day": Game.day(), "title": title, "text": text, "refs": refs}
 	entries().append(e)
 	while entries().size() > CAP:
@@ -109,6 +115,12 @@ static func on_crafted(it: Dictionary) -> void:
 
 ## Chronicle.add hands every entry here (one-line hook). Only the kinds that matter are read.
 static func on_chronicle(e: Dictionary) -> void:
+	_anchor = str(e.get("event", ""))
+	_on_chronicle(e)
+	_anchor = ""
+
+
+static func _on_chronicle(e: Dictionary) -> void:
 	if Game.state.is_empty():
 		return
 	var refs: Dictionary = e.get("refs", {})
@@ -234,7 +246,7 @@ static func customer_comment(npc: String) -> String:
 	var es := recent(6)
 	if es.is_empty():
 		return ""
-	var e: Dictionary = es.pick_random()
+	var e: Dictionary = Rng.pick("world", es)
 	var name := Talk.npc_name(npc)
 	var line := ""
 	match str(e.get("kind", "")):

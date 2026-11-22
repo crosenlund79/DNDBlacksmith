@@ -135,7 +135,7 @@ func _party(level: int, q: float, rar: String) -> Array:
 
 func _run(rid: String, level: int, q: float, rar: String, seed_: int, risk := -1.0) -> Dictionary:
 	fresh_game("journeyman", seed_)
-	seed(seed_)
+	Rng.reseed(seed_)
 	WorldSites.reveal(rid, "known")
 	var ids := _party(level, q, rar)
 	if risk >= 0.0:

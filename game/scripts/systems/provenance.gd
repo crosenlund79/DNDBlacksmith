@@ -234,7 +234,12 @@ static func transfer(it: Dictionary, to_id: String, how: String, place := "", no
 	var notable := is_notable(it)
 	var text := note if note != "" else "%s passed from %s to %s (%s)." % [Items.display_name(it), _who(from) if from != "" else "nobody",
 		_who(to_id), how]
-	Lore.record(how, text, {"items": [it], "actors": _actors(from, to_id),
+	var roles := {}
+	if from != "" and from != SMITH_ID:
+		roles[from] = "giver"
+	if to_id != "" and to_id != SMITH_ID:
+		roles[to_id] = "heir" if how == "inherited" else "receiver"
+	Lore.record(how, text, {"items": [it], "actors": _actors(from, to_id), "roles": roles,
 		"place": place, "importance": 1 if notable or how in ["inherited", "recovered", "looted", "found"] else 0})
 
 

@@ -85,13 +85,13 @@ func test_goals_change_behaviour() -> void:
 	a["goals"] = [{"kind": "wealth", "target": 9999, "since": 1}]
 	var wealth_risk := Living.eff_risk(a)
 	var wealth_dest := 0.0
-	seed(7)
+	Rng.reseed(7)
 	for i in 30:
 		wealth_dest += Expeditions.rating(str(Expeditions.choose_destination([a]).get("dest", "whisperwood")))
 	a["goals"] = [{"kind": "gear", "target": 9999, "since": 1}]
 	var gear_risk := Living.eff_risk(a)
 	var gear_dest := 0.0
-	seed(7)
+	Rng.reseed(7)
 	for i in 30:
 		gear_dest += Expeditions.rating(str(Expeditions.choose_destination([a]).get("dest", "whisperwood")))
 	check(wealth_risk > gear_risk, "a wealth-seeker takes more risk (%.2f vs %.2f)" % [wealth_risk, gear_risk])
@@ -246,7 +246,7 @@ func test_companies_lifecycle() -> void:
 	# a member falls: struck off with a reason; the company recruits a replacement
 	var lost: String = (c["members"] as Array).filter(func(i): return str(i) != str(c["leader"]))[0]
 	Adv.get_a(lost)["status"] = "dead"
-	seed(3)
+	Rng.reseed(3)
 	for i in 8:
 		Companies.daily()
 	check(not (c["members"] as Array).has(lost), "the fallen member is struck off")
@@ -262,7 +262,8 @@ func test_companies_lifecycle() -> void:
 		Adv.get_a(m1)["relations"][m0] = -60.0
 		var n0: int = (c["members"] as Array).size()
 		Companies.daily()
-		check((c["members"] as Array).size() < n0 or str(c["status"]) != "active", "rivals inside a company: one walks out")
+		# R3: one walks out (a recruit may fill the gap the same day, so the count alone proves nothing)
+		check(not ((c["members"] as Array).has(m0) and (c["members"] as Array).has(m1)) or str(c["status"]) != "active", "rivals inside a company: one walks out")
 	# a long losing streak breaks it
 	if str(c["status"]) == "active":
 		var ids: Array = (c["members"] as Array).duplicate()
@@ -279,7 +280,7 @@ func test_companies_lifecycle() -> void:
 	var pair: Array = Adv.all().keys().filter(func(i): return str(Adv.get_a(str(i))["status"]) == "in_town" and str(i) != "mira").slice(0, 2)
 	Living.relate(str(pair[0]), str(pair[1]), 70.0, "test")
 	var before := Companies.active().size()
-	seed(11)
+	Rng.reseed(11)
 	for i in 30:
 		Companies._formations()
 		if Companies.active().size() > before:

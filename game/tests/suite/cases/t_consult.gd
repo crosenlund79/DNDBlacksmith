@@ -90,7 +90,7 @@ func test_triggers_rate_limited() -> void:
 	c["goals"] = [{"kind": "skill", "target": 99, "since": 1}]
 	# rate limit: at most one approach a day, never before 10 or after 17, never the same adventurer twice in COOLDOWN days
 	Shop.customers().clear()
-	seed(5)
+	Rng.reseed(5)
 	for h in [6, 8, 9, 17, 20]:
 		for i in 10:
 			Consult.on_hour(h)
@@ -190,6 +190,10 @@ func test_recommendations_from_data() -> void:
 	# a place beyond them: a safer site that fits their strength
 	var p := _adv("pip")
 	_calm(p)
+	# R3: his starting kit is now rolled on the crafting stream, so give him an explicit, modest one — enough for the
+	# home woods, nowhere near enough for the Crag (the test is about the advice, not about Pip's dice)
+	p["equipment"]["weapon"] = Items.make("sword_iron", {"quality": 80.0})
+	p["equipment"]["armor"] = Items.make("armor_leather" if not DB.item("armor_leather").is_empty() else "cuirass_steel", {"quality": 75.0})
 	WorldSites.site("drakes_crag")["discovered"] = true
 	_bound(p, "drakes_crag")
 	var pr := Consult.recommendations(p)
@@ -353,6 +357,10 @@ func test_accepted_advice_changes_decisions() -> void:
 	# 5. a change of destination: the avoided place is not chosen while the advice holds
 	var p := _adv("pip")
 	_calm(p)
+	# R3: his starting kit is now rolled on the crafting stream, so give him an explicit, modest one — enough for the
+	# home woods, nowhere near enough for the Crag (the test is about the advice, not about Pip's dice)
+	p["equipment"]["weapon"] = Items.make("sword_iron", {"quality": 80.0})
+	p["equipment"]["armor"] = Items.make("armor_leather" if not DB.item("armor_leather").is_empty() else "cuirass_steel", {"quality": 75.0})
 	WorldSites.site("drakes_crag")["discovered"] = true
 	_bound(p, "drakes_crag")
 	_persuadable("pip")
@@ -363,7 +371,7 @@ func test_accepted_advice_changes_decisions() -> void:
 		check(bool(Consult.advise("pip", str(rd["id"]))["accepted"]), "Pip agrees")
 		eq(str(p["next_dest"]), str(rd["dest"]), "her plan is now %s" % rd["dest"])
 		check(Consult.dest_bias([p], "drakes_crag") < 0.0 and Consult.dest_bias([p], str(rd["dest"])) > 0.0, "the party choice is steered away and towards")
-		seed(3)
+		Rng.reseed(3)
 		var picks := {}
 		for i in 30:
 			var dd := str(Expeditions.choose_destination([p]).get("dest", ""))

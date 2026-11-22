@@ -203,7 +203,7 @@ static func on_hour(h: int) -> void:
 	if h < int(HOURS[0]) or h >= int(HOURS[1]):
 		return
 	var s := st()
-	if Game.day() - int(s.get("approach_day", -99)) < APPROACH_GAP or Shop.free_seat() < 0 or randf() > APPROACH_CHANCE:
+	if Game.day() - int(s.get("approach_day", -99)) < APPROACH_GAP or Shop.free_seat() < 0 or Rng.f("commerce") > APPROACH_CHANCE:
 		return
 	var best := {}
 	var best_w := -1

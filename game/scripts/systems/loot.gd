@@ -21,18 +21,18 @@ static func roll_table(table_id: String, bias := 0.0, skill := 0) -> Array:
 	for e in entries:
 		total += float(e[1])
 	var out := []
-	var n := randi_range(int(t["rolls"][0]), int(t["rolls"][1]))
+	var n := Rng.ri("expeditions", int(t["rolls"][0]), int(t["rolls"][1]))
 	for i in n:
-		var pick := randf() * total
+		var pick := Rng.f("expeditions") * total
 		for e in entries:
 			pick -= float(e[1])
 			if pick <= 0.0:
-				var qty := randi_range(int(e[2][0]), int(e[2][1]))
+				var qty := Rng.ri("expeditions", int(e[2][0]), int(e[2][1]))
 				var id: String = e[0]
 				if id.begins_with("equip:"):
 					out.append(random_equipment(id.substr(6), bias))
 				else:
-					out.append(Items.make(id, {"qty": qty, "quality": randf_range(55, 95)}))
+					out.append(Items.make(id, {"qty": qty, "quality": Rng.rf("expeditions", 55, 95)}))
 				break
 	return out
 
@@ -58,10 +58,10 @@ static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
 	if category == "ancient":
 		# grave-goods of an older age: well made, often magical, never common junk
 		var adefs := _equip_defs("any")
-		var aid: String = adefs.pick_random()
-		var aq := randf_range(85.0, 118.0)
-		var ait := Items.make(aid, {"quality": aq, "dice": {"edge": randi_range(8, 20), "guard": randi_range(8, 20), "temper": randi_range(4, 12)}})
-		var ar := Items.rarity_from(aq, randi_range(30, 100), 10.0 + bias * 0.2)
+		var aid: String = Rng.pick("expeditions", adefs)
+		var aq := Rng.rf("expeditions", 85.0, 118.0)
+		var ait := Items.make(aid, {"quality": aq, "dice": {"edge": Rng.ri("expeditions", 8, 20), "guard": Rng.ri("expeditions", 8, 20), "temper": Rng.ri("expeditions", 4, 12)}})
+		var ar := Items.rarity_from(aq, Rng.ri("expeditions", 30, 100), 10.0 + bias * 0.2)
 		Items.apply_rarity(ait, "rare" if ar in ["common", "magic"] else ar)
 		ait["crafted_by"] = "a smith of the barrow-kings' age"
 		ait["ancient"] = true
@@ -69,10 +69,10 @@ static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
 	if category == "garrison":
 		# v1.6 §8.1, the Weeping Fortress: the garrison's old arms and armour — well made, historic, never common junk
 		var gdefs := _equip_defs("any")
-		var gid: String = gdefs.pick_random()
-		var gq := randf_range(82.0, 112.0)
-		var git := Items.make(gid, {"quality": gq, "dice": {"edge": randi_range(8, 20), "guard": randi_range(8, 20), "temper": randi_range(4, 12)}})
-		var gr := Items.rarity_from(gq, randi_range(30, 100), 8.0 + bias * 0.2)
+		var gid: String = Rng.pick("expeditions", gdefs)
+		var gq := Rng.rf("expeditions", 82.0, 112.0)
+		var git := Items.make(gid, {"quality": gq, "dice": {"edge": Rng.ri("expeditions", 8, 20), "guard": Rng.ri("expeditions", 8, 20), "temper": Rng.ri("expeditions", 4, 12)}})
+		var gr := Items.rarity_from(gq, Rng.ri("expeditions", 30, 100), 8.0 + bias * 0.2)
 		Items.apply_rarity(git, "rare" if gr in ["common", "magic"] else gr)
 		git["crafted_by"] = "an armourer of the Weeping Garrison"
 		git["ancient"] = true
@@ -83,16 +83,16 @@ static func random_equipment(category := "any", bias := 0.0) -> Dictionary:
 		it["crafted_by"] = "a dwarf-smith of Ironroot, long dead"
 		return it
 	var defs := _equip_defs(category)
-	var def_id: String = defs.pick_random() if not defs.is_empty() else "dagger"
-	var q := clampf(randf_range(45.0, 100.0) + bias * 0.3, 20.0, 125.0)
-	var dice := {"edge": randi_range(1, 20), "guard": randi_range(1, 20), "temper": randi_range(1, 12)}
+	var def_id: String = Rng.pick("expeditions", defs) if not defs.is_empty() else "dagger"
+	var q := clampf(Rng.rf("expeditions", 45.0, 100.0) + bias * 0.3, 20.0, 125.0)
+	var dice := {"edge": Rng.ri("expeditions", 1, 20), "guard": Rng.ri("expeditions", 1, 20), "temper": Rng.ri("expeditions", 1, 12)}
 	var it := Items.make(def_id, {"quality": q, "dice": dice})
-	var fortune := randi_range(1, 100) + int(bias)
+	var fortune := Rng.ri("expeditions", 1, 100) + int(bias)
 	var score := q * 0.65 + fortune * 0.45
 	# very rare named drops. A Unique exists once per campaign (D13, Uniques): once it has been minted — whatever has
 	# happened to it since — the find is an ordinary piece instead. Set pieces may recur.
-	if score >= 112.0 and randf() < 0.25:
-		var named := "grimhold" if randf() < 0.5 else "wyvernscale_pauldron"
+	if score >= 112.0 and Rng.f("expeditions") < 0.25:
+		var named := "grimhold" if Rng.f("expeditions") < 0.5 else "wyvernscale_pauldron"
 		if not Uniques.is_unique_def(named) or Uniques.can_mint(named):
 			var nit := Items.make(named, {"quality": q})
 			Uniques.register(nit, "loot")

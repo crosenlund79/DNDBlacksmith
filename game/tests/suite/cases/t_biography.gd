@@ -112,9 +112,9 @@ func test_generation_untouched() -> void:
 	# the biography has its own random generator: the game's random sequence is the same with or without it
 	var a := Living.make_adventurer("rv_fen", Living.rng_for("t_bio_gen"), false)
 	var b := Living.make_adventurer("rv_fen", Living.rng_for("t_bio_gen"), false)
-	seed(424242)
+	Rng.reseed(424242)
 	var x := [randi(), randi()]
-	seed(424242)
+	Rng.reseed(424242)
 	Biography.compose(a)
 	eq([randi(), randi()], x, "composing a biography consumes nothing from the global random sequence")
 	# an old-format adventurer gains exactly the biography and nothing else

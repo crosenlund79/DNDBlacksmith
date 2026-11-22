@@ -138,9 +138,9 @@ static func try_discover(e: Dictionary, chance := -1.0) -> String:
 		var sc := Expeditions._best(e, "scouting")
 		if not sc.is_empty():
 			p += 0.08
-	if randf() >= p:
+	if Rng.f("expeditions") >= p:
 		return ""
-	var id: String = cands[randi() % cands.size()]
+	var id: String = cands[Rng.i("expeditions") % cands.size()]
 	var finder := Expeditions._best(e, "scouting")
 	if finder.is_empty():
 		finder = Adv.get_a(str(standing[0]))
@@ -182,7 +182,7 @@ static func daily() -> void:
 		if gate != "" and Game.has_flag(gate) and not bool(s["discovered"]):
 			reveal(id, "map", [], "The delve map shows the way below the old workings: %s. %s" % [name_of(id), str(inf.get("desc", ""))])
 		# rumours
-		if not is_discovered(id) and str(inf.get("gate", "")) == "" and randf() < RUMOUR_CHANCE:
+		if not is_discovered(id) and str(inf.get("gate", "")) == "" and Rng.f("expeditions") < RUMOUR_CHANCE:
 			reveal(id, "rumour", [], "Rumour at the Tipsy Wyvern: a pedlar swears to %s. %s" % [name_of(id), str(inf.get("desc", ""))])
 
 
@@ -428,7 +428,7 @@ static func on_boss_down(e: Dictionary, n: Dictionary, rec: Dictionary, killer: 
 		unique = int(b.get("gen", 0)) == 0
 		b["alive"] = false
 		var lo: Array = info(rid).get("successor_days", [30, 45])
-		b["next_at"] = randi_range(int(lo[0]), int(lo[1])) * (1 if unique else 2)   # world days until a successor
+		b["next_at"] = Rng.ri("expeditions", int(lo[0]), int(lo[1])) * (1 if unique else 2)   # world days until a successor
 		s["threat"] = 0.0
 		if n.has("id"):
 			s["resources"][str(n["id"])] = 0.0   # the hoard goes home with the victors
@@ -483,6 +483,7 @@ static func on_death(e: Dictionary, a: Dictionary, where: String) -> String:
 		if not it.is_empty():
 			items.append(it)
 	return Lore.record("death", "%s fell at %s, %s." % [a["name"], where, name_of(rid)], {"actors": [a["id"]], "items": items, "place": rid, "importance": 2,
+		"roles": {str(a["id"]): "fell"},
 		"data": {"exp": e.get("id", "")}})
 
 

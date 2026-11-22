@@ -16,7 +16,7 @@ func _grimholds(items: Array) -> Array:
 # ------------------------------------------------------------------ D13: one authentic Unique
 func test_unique_minted_once_per_campaign() -> void:
 	fresh_game()
-	seed(1301)
+	Rng.reseed(1301)
 	check(Uniques.is_unique_def("grimhold") and not Uniques.is_unique_def("wyvernscale_pauldron"), "Grimhold is a Unique; the pauldron is a Set piece")
 	check(Uniques.can_mint("grimhold") and not Game.state.has("uniques"), "a new campaign has minted nothing (and reading creates no state)")
 	var rolls := []
@@ -133,7 +133,7 @@ func test_payments_conserve_money() -> void:
 	eq(Social.spouse(), str(s["id"]), "the smith is married to %s" % s["name"])
 	var ok := false
 	for attempt in 30:
-		seed(500 + attempt)
+		Rng.reseed(500 + attempt)
 		s["status"] = "away"
 		s.erase("exp")
 		s["dest"] = str(DB.destinations.keys()[0])
@@ -217,17 +217,17 @@ func test_renown_is_not_bought() -> void:
 	check(bool(Smithy.renown()["ok"]), "three Hall of Fame plaques are renown")
 
 
-# ------------------------------------------------------------------ the Chronicle/Lore split, as documented
-## Characterisation (not an endorsement): until Gate J the Chronicle is a separate, capped feed beside Lore
-## (decision register LORE-017). This pins today's behaviour so any change to it is deliberate and documented.
+# ------------------------------------------------------------------ the Chronicle is a view of Lore (R3)
+## Run 0.1 pinned the separate, capped feed beside Lore (LORE-017) so that any change would be deliberate. R3 ("One
+## History") made that change: a feed entry IS a Lore event, and the feed is no longer capped.
 func test_chronicle_and_lore_split_is_as_documented() -> void:
 	fresh_game()
-	eq(Chronicle.CAP, 400, "the Chronicle feed keeps its last 400 entries")
 	var n_lore := (Lore.st()["events"] as Dictionary).size()
 	var n_chr := Chronicle.entries().size()
-	Chronicle.add("social", "A Chronicle-only note (Run 0.1 characterisation).", {})
+	var e := Chronicle.add("social", "A feed note (R3: a Lore event).", {})
 	eq(Chronicle.entries().size(), n_chr + 1, "a Chronicle.add lands in the feed")
-	eq((Lore.st()["events"] as Dictionary).size(), n_lore, "… and not in Lore (the known split)")
+	eq((Lore.st()["events"] as Dictionary).size(), n_lore + 1, "… as a Lore event (one history)")
+	eq(str(Lore.event(str(e["event"])).get("text", "")), "A feed note (R3: a Lore event).", "the feed entry names its Lore event")
 	var id := Lore.record("test", "A notable Lore event (Run 0.1 characterisation).", {"importance": 2, "chronicle": true, "notable": true})
 	check(str(id) != "", "Lore records the event")
-	check(Chronicle.entries().any(func(e): return str(e.get("text", "")).contains("A notable Lore event")), "a notable Lore event is mirrored into the feed")
+	check(Chronicle.entries().any(func(x): return str(x.get("event", "")) == id), "a notable Lore event is the feed entry itself (no copy)")

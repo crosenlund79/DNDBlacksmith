@@ -70,7 +70,7 @@ static func table_talk() -> String:
 		lines.append("Conversation dips when you come in. Someone mutters about refunds.")
 	if lines.is_empty():
 		lines = TABLE_FALLBACK.duplicate()
-	lines.shuffle()
+	Rng.shuffle("world", lines)
 	return "\n".join(lines.slice(0, 3))
 
 

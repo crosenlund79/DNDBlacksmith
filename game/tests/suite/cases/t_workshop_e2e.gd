@@ -23,7 +23,7 @@ func _to_hour(h: int) -> void:
 
 func test_apprentice_career() -> void:
 	fresh_game()
-	seed(1212)
+	Rng.reseed(1212)
 	train("smithing", 6)
 	Game.state["gold"] = 50000
 	(Game.state["hirelings"] as Array).clear()   # keep Borin's own work out of the stores under test
@@ -130,7 +130,7 @@ func test_apprentice_career() -> void:
 ## pay its way — and still not out-craft the smith's own exceptional work.
 func test_solo_to_workshop_economy() -> void:
 	fresh_game()
-	seed(2012)
+	Rng.reseed(2012)
 	train("smithing", 6)
 	Game.state["gold"] = 5000
 	(Game.state["hirelings"] as Array).clear()

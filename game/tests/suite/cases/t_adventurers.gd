@@ -91,7 +91,7 @@ func test_broken_gear_lowers_combat() -> void:
 	check(Items.stat(am, "magic") < mg, "a broken amulet's magic is halved too")
 	check(Items.tooltip(w).contains("half strength"), "the tooltip says so")
 	# and it changes outcomes: over many blows a sound weapon deals clearly more
-	seed(77)
+	Rng.reseed(77)
 	var dealt := [0, 0]
 	for k in 2:
 		w["broken"] = k == 1
@@ -211,7 +211,7 @@ func test_companion_strikes() -> void:
 	var prot := Expeditions.total(a, "protection")
 	a["equipment"].erase("companion")
 	check(prot > Expeditions.total(a, "protection"), "a companion adds protection")
-	seed(5)
+	Rng.reseed(5)
 	mod0 = int(Expeditions._check(a, "wis", 10, "scouting")["mod"])
 	a["equipment"]["companion"] = comp
 	check(int(Expeditions._check(a, "wis", 10, "scouting")["mod"]) > mod0, "it improves scouting checks")

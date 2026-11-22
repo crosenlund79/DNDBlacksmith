@@ -14,10 +14,11 @@ const GOLDEN := ["build-0.11.2", "build-0.12.4", "build-0.13.5", "build-0.14.6",
 ## R1: the schema each golden save declares. Releases up to 0.14.6 wrote 1; the playtest artifacts 0.15 (S2),
 ## 0.16.19 (the Living Workshop), 0.16.21 (the Living Village & Workshop) and 0.17 (R1) wrote 4, 7, 8 and 9.
 const SCHEMA := {"artifact-0.15": 4, "artifact-0.16.19": 7, "artifact-0.16.21": 8, "artifact-0.17": 9}
-## Top-level keys every save has carried since 0.11 (Game.new_game).
+## Top-level keys every save has carried since 0.11 (Game.new_game). R3: the separate `chronicle` array is retired by
+## save step 11 — the Chronicle is a view of Lore (`lore`), which every save since 0.11 also carries.
 const REQUIRED_KEYS := ["version", "day", "minute", "gold", "next_uid", "ledger", "journal", "flags", "upgrades", "player",
 	"hirelings", "applicants", "adventurers", "social", "orders", "customers", "craft", "returns", "world", "objectives",
-	"stats", "difficulty", "chronicle", "exp", "offers"]
+	"stats", "difficulty", "lore", "exp", "offers"]
 
 
 # ------------------------------------------------------------------ helpers

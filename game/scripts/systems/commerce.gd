@@ -147,28 +147,28 @@ static func _caravan_arrive() -> void:
 	var pf := price_factor()
 	var stock := []
 	for e in cc.get("stock", []):
-		if randf() > float(e[3]) or DB.item(str(e[0])).is_empty():
+		if Rng.f("commerce") > float(e[3]) or DB.item(str(e[0])).is_empty():
 			continue
-		stock.append({"def": str(e[0]), "qty": randi_range(int(e[2][0]), int(e[2][1])),
+		stock.append({"def": str(e[0]), "qty": Rng.ri("commerce", int(e[2][0]), int(e[2][1])),
 			"price": Valuation.merchant_price(str(e[0]), float(e[1]))})
 	for key in ["equipment", "curiosities"]:
 		for e in cc.get(key, []):
-			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
+			if Rng.f("commerce") > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
 			var eq := Items.is_equipment({"def": str(e[0])})
-			var it := Items.make(str(e[0]), {"quality": randf_range(68, 94), "rarity": ("magic" if randf() < 0.3 else "common") if eq else "common"})
+			var it := Items.make(str(e[0]), {"quality": Rng.rf("commerce", 68, 94), "rarity": ("magic" if Rng.f("commerce") < 0.3 else "common") if eq else "common"})
 			if it.is_empty():
 				continue
 			Items.add_history(it, "Came to Brindlewick with the Brask caravan.")
 			stock.append({"def": str(e[0]), "qty": 1, "item": it, "kind": key,
 				"price": maxi(1, int(round(Items.value(it) * float(e[1]) * pf)))})
-	if randf() < float(cc.get("ironfront_chance", 0.0)):
-		var card: Variant = _ironfront_call("random_card", ["special" if randf() < 0.35 else "rare"])
+	if Rng.f("commerce") < float(cc.get("ironfront_chance", 0.0)):
+		var card: Variant = _ironfront_call("random_card", ["special" if Rng.f("commerce") < 0.35 else "rare"])
 		if card is String and str(card) != "":
 			stock.append({"card": str(card), "def": "", "qty": 1, "price": int(round(float(cc.get("ironfront_price", 140)) * pf))})
 	# goods wanted: a few things the caravan pays a premium for
 	var pool: Array = (cc.get("wanted", []) as Array).duplicate()
-	pool.shuffle()
+	Rng.shuffle("commerce", pool)
 	var wanted := []
 	for e in pool.slice(0, int(cc.get("wanted_count", 3))):
 		if DB.item(str(e[0])).is_empty():
@@ -198,7 +198,7 @@ static func _caravan_depart() -> void:
 	Game.journal("The Brask caravan took the east road out of Brindlewick.")
 	TalkMarkers.clear("caravan_master")
 	var g: Array = cfg().get("caravan", {}).get("schedule", {}).get("gap", [6, 10])
-	_schedule_caravan(randi_range(int(g[0]), int(g[1])))
+	_schedule_caravan(Rng.ri("commerce", int(g[0]), int(g[1])))
 
 
 static func buy_caravan(index: int, qty := 1) -> String:
@@ -231,7 +231,7 @@ static func buy_caravan(index: int, qty := 1) -> String:
 		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s from the Brask caravan." % Items.display_name(it))
 		Game.add_item(it, false)
 	else:
-		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(70, 92)}), false)
+		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": Rng.rf("commerce", 70, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty
 	Trade.mark_seen(str(e["def"]))
 	if cost >= 400:
@@ -390,9 +390,9 @@ static func house_stock() -> Array:
 	if int(h.get("week", -1)) != int((Game.day() - 1) / 7) or not h.has("stock"):
 		var out := []
 		for e in pawn_cfg().get("house_stock", []):
-			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
+			if Rng.f("commerce") > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
-			var it := Items.make(str(e[0]), {"quality": randf_range(55, 85), "qty": 1})
+			var it := Items.make(str(e[0]), {"quality": Rng.rf("commerce", 55, 85), "qty": 1})
 			# R2 (BUG-047): the house's own stock — bought in by the pawnbroker for his shelf, never a pledge
 			Items.add_history(it, "Bought in by Silas Quell for the house shelf of the Three Brass Balls.")
 			out.append({"def": str(e[0]), "item": it, "price": maxi(2, int(round(Items.value(it) * float(e[1]) * float(pawn_cfg().get("sale", 0.85)) * price_factor())))})
@@ -446,22 +446,22 @@ static func rival_stock() -> Array:
 		var out := []
 		var pf := price_factor()
 		for e in rival_cfg().get("stock", []):
-			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
+			if Rng.f("commerce") > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
-			var it := Items.make(str(e[0]), {"quality": randf_range(82, 104), "rarity": "magic" if randf() < 0.2 else "common", "crafted_by": "Maren Tallowgate"})
+			var it := Items.make(str(e[0]), {"quality": Rng.rf("commerce", 82, 104), "rarity": "magic" if Rng.f("commerce") < 0.2 else "common", "crafted_by": "Maren Tallowgate"})
 			out.append(_rival_piece(it, float(e[1]), pf))
 		for e in rival_cfg().get("materials", []):
-			if randf() > float(e[3]) or DB.item(str(e[0])).is_empty():
+			if Rng.f("commerce") > float(e[3]) or DB.item(str(e[0])).is_empty():
 				continue
-			out.append({"def": str(e[0]), "qty": randi_range(int(e[2][0]), int(e[2][1])),
+			out.append({"def": str(e[0]), "qty": Rng.ri("commerce", int(e[2][0]), int(e[2][1])),
 				"price": Valuation.merchant_price(str(e[0]), float(e[1]))})
 		# S2 (PROP-015): her plain everyday work — always common, ordinary craftsmanship, a small markup — within a
 		# starting adventurer's purse. Real pieces with her mark, sold like the rest (same uid, same story).
 		for e in rival_cfg().get("plain", []):
-			if randf() > float(e[2]) or DB.item(str(e[0])).is_empty():
+			if Rng.f("commerce") > float(e[2]) or DB.item(str(e[0])).is_empty():
 				continue
 			var q: Array = e[3] if e.size() > 3 and e[3] is Array else [62, 78]
-			var pit := Items.make(str(e[0]), {"quality": randf_range(float(q[0]), float(q[1])), "rarity": "common", "crafted_by": "Maren Tallowgate"})
+			var pit := Items.make(str(e[0]), {"quality": Rng.rf("commerce", float(q[0]), float(q[1])), "rarity": "common", "crafted_by": "Maren Tallowgate"})
 			var pe := _rival_piece(pit, float(e[1]), pf)
 			pe["plain"] = true
 			out.append(pe)
@@ -510,7 +510,7 @@ static func buy_rival(index: int, qty := 1) -> String:
 		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s at the Salt Anvil." % Items.display_name(it))
 		Game.add_item(it, false)
 	else:
-		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(75, 92)}), false)
+		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": Rng.rf("commerce", 75, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty
 	Trade.mark_seen(str(e["def"]))
 	return ""
@@ -608,7 +608,7 @@ static func hall_of_fame_count() -> int:
 static func _rival_rivalry_line() -> String:
 	var lines: Dictionary = rival_cfg().get("lines", {}).get("rivalry", {})
 	var pool: Array = []
-	if hall_of_fame_count() > 0 and randf() < 0.6:
+	if hall_of_fame_count() > 0 and Rng.f("commerce") < 0.6:
 		pool = lines.get("hof", [])
 	if pool.is_empty():
 		pool = lines.get(rivalry_band(), [])
@@ -617,7 +617,7 @@ static func _rival_rivalry_line() -> String:
 	if not sales.is_empty() and Game.day() - int(sales[-1]["day"]) <= 7:
 		var s: Dictionary = sales[-1]
 		extra = "\n\n\"%s bought my %s last week. Paid full price, too. Just so you know.\"" % [Talk.npc_name(str(s["adv"])), str(s["item"]).to_lower()]
-	return (str(pool[randi() % pool.size()]) if not pool.is_empty() else "\"Hm.\"") + extra
+	return (str(pool[Rng.i("commerce") % pool.size()]) if not pool.is_empty() else "\"Hm.\"") + extra
 
 
 static func _rival_tip() -> String:
@@ -654,15 +654,15 @@ static func creature_stock() -> Array:
 		var out := []
 		for key in ["ordinary", "magical"]:
 			for e in creature_cfg().get(key, []):
-				if DB.item(str(e[0])).is_empty() or randf() > float(e[1]):
+				if DB.item(str(e[0])).is_empty() or Rng.f("commerce") > float(e[1]):
 					continue
-				out.append({"def": str(e[0]), "price": creature_price(str(e[0])), "quality": randf_range(80, 100), "sold": false})
+				out.append({"def": str(e[0]), "price": creature_price(str(e[0])), "quality": Rng.rf("commerce", 80, 100), "sold": false})
 		# at least one magical creature to wonder at, and the plain ones are never all gone
 		if not out.any(func(x): return Companions.magical(str(x["def"]))):
 			var mg: Array = creature_cfg().get("magical", [])
 			if not mg.is_empty():
-				var m: Array = mg[randi() % mg.size()]
-				out.append({"def": str(m[0]), "price": creature_price(str(m[0])), "quality": randf_range(80, 100), "sold": false})
+				var m: Array = mg[Rng.i("commerce") % mg.size()]
+				out.append({"def": str(m[0]), "price": creature_price(str(m[0])), "quality": Rng.rf("commerce", 80, 100), "sold": false})
 		c["stock"] = out
 		c["day"] = Game.day()
 	return c["stock"]
@@ -783,7 +783,7 @@ static func commission_creature(def_id: String, for_adv := "") -> String:
 		if not Companions.of(a).is_empty():
 			return "%s already keeps a companion." % a["name"]
 	var lead: Array = cc.get("lead", [3, 6])
-	var days := randi_range(int(lead[0]), int(lead[1]))
+	var days := Rng.ri("commerce", int(lead[0]), int(lead[1]))
 	var o := {"id": _new_id("cr"), "def": def_id, "for": for_adv, "price": price, "placed": Game.day(), "due": Game.day() + days, "status": "ordered"}
 	commissions().append(o)
 	Game.add_gold(-price, "creatures", "Commissioned from Hale Farm: %s" % _iname(def_id), "hale_farm")
@@ -799,7 +799,7 @@ static func _creature_day() -> void:
 		var a := Adv.get_a(target) if target != "" else {}
 		if target != "" and not a.is_empty() and str(a.get("status", "")) in ["away", "injured"]:
 			continue   # wait until they are back in town
-		var it := Companions.make(str(o["def"]), randf_range(88, 102))
+		var it := Companions.make(str(o["def"]), Rng.rf("commerce", 88, 102))
 		if target != "" and not a.is_empty() and str(a.get("status", "")) == "in_town" and Companions.of(a).is_empty():
 			Companions.give(a, it, "Commissioned by the smith from Hale Farm as a gift for %s." % a["name"])
 			Social.change(target, 10.0 + int(o["price"]) / 60.0, 6.0, "creature_" + str(it["uid"]), "The smith commissioned %s for me." % it["name"])
@@ -881,7 +881,7 @@ static func greeting(npc: String) -> String:
 	match npc:
 		"rival_smith":
 			var g: Array = rival_cfg().get("lines", {}).get("greet", [])
-			return str(g[randi() % g.size()]) if not g.is_empty() else ""
+			return str(g[Rng.i("commerce") % g.size()]) if not g.is_empty() else ""
 		"pawnbroker":
 			var p: Array = pawn_cfg().get("lines", [])
 			return str(p[Game.day() % p.size()]) if not p.is_empty() else ""
@@ -889,10 +889,10 @@ static func greeting(npc: String) -> String:
 			if not caravan_present():
 				return "\"The wagons are on the road, smith. I came back for my hat.\""
 			var c: Array = cfg().get("caravan", {}).get("lines", [])
-			return str(c[randi() % c.size()]) if not c.is_empty() else ""
+			return str(c[Rng.i("commerce") % c.size()]) if not c.is_empty() else ""
 		"hale_elder", "hale_younger":
 			var l: Array = creature_cfg().get("lines", {}).get(npc, [])
-			return str(l[randi() % l.size()]) if not l.is_empty() else ""
+			return str(l[Rng.i("commerce") % l.size()]) if not l.is_empty() else ""
 	return ""
 
 
@@ -918,7 +918,7 @@ static func talk_choose(npc: String, opt: String) -> Dictionary:
 		"c_rival_talk":
 			Social.change(npc, 1.0, 2.0)
 			var s: Array = rival_cfg().get("lines", {}).get("shop", [])
-			return {"text": str(s[randi() % s.size()]) if not s.is_empty() else "\"Hot iron, cold beer.\""}
+			return {"text": str(s[Rng.i("commerce") % s.size()]) if not s.is_empty() else "\"Hot iron, cold beer.\""}
 		"c_rival_jab":
 			Social.change(npc, 1.5, 2.0)
 			return {"text": _rival_rivalry_line()}
@@ -937,7 +937,7 @@ static func talk_choose(npc: String, opt: String) -> Dictionary:
 			Social.change(npc, 1.0, 2.0)
 			var key := "talk_elder" if npc == "hale_elder" else "talk_younger"
 			var l: Array = creature_cfg().get("lines", {}).get(key, [])
-			return {"text": str(l[randi() % l.size()]) if not l.is_empty() else "\"They're good creatures.\""}
+			return {"text": str(l[Rng.i("commerce") % l.size()]) if not l.is_empty() else "\"They're good creatures.\""}
 	return {}
 
 

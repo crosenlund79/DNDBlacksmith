@@ -200,14 +200,14 @@ static func _maybe_visit() -> void:
 		return
 	if Game.day() - int(m.get("last_visit_day", -99)) < GHOST_GAP_DAYS and not force_ghost:
 		return
-	if not force_ghost and randf() >= GHOST_CHANCE:
+	if not force_ghost and Rng.f("world") >= GHOST_CHANCE:
 		return
 	if eligible.is_empty():
 		eligible = graves()
 	if eligible.is_empty():
 		force_ghost = false
 		return
-	var g: Dictionary = eligible[randi() % eligible.size()]
+	var g: Dictionary = eligible[Rng.i("world") % eligible.size()]
 	m["visit"] = {"id": str(g["id"]), "day": Game.day(), "met": false}
 	m["last_visit_day"] = Game.day()
 	force_ghost = false

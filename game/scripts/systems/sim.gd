@@ -42,6 +42,7 @@ static func on_day(day: int) -> void:
 	if day % 7 == 1:
 		Hire.refresh_applicants()
 	_social_events()
+	Lore.on_day(day)   # R3: routine workshop work older than two months folds into monthly digests
 
 
 # ------------------------------------------------------------------ grocer
@@ -76,7 +77,7 @@ static func take_delivery() -> String:
 		Game.add_item(Items.make("runestone_ember"), false)
 		Social.remember("aldric", "gave_runestone", "Gave the smith a runestone", 5.0)
 		lines.append("\"A traveller paid me with this odd stone. Mira says you'd know what to do with it. Take it — for looking after my girl.\"")
-	elif band in ["friendly", "devoted"] and randf() < 0.5:
+	elif band in ["friendly", "devoted"] and Rng.f("world") < 0.5:
 		var purse := gift_of("aldric")   # R2: from his own counter's stock
 		if not purse.get("items", []).is_empty():
 			Game.state["returns"].append(Loot.make_container("purse_gift", purse["items"], "Aldric Pell", "Tucked under the cheese: a little something extra from his own shelves."))
@@ -115,12 +116,12 @@ static func on_mira_returned(success: bool, mine: Array) -> void:
 
 # ------------------------------------------------------------------ orders & social events
 static func _maybe_order() -> void:
-	if Shop.open_orders().size() >= 3 or randf() > 0.4:
+	if Shop.open_orders().size() >= 3 or Rng.f("world") > 0.4:
 		return
 	var town := Adv.in_town()
 	if town.is_empty():
 		return
-	var a: Dictionary = town.pick_random()
+	var a: Dictionary = Rng.pick("world", town)
 	if a["needs"] != "" and not Shop.open_orders().any(func(o): return o["npc"] == a["id"]):
 		Shop.create_order(a["id"], Adv.request_slot(a, str(a["needs"])))   # A2: weighted toward what the forge can make
 
@@ -196,7 +197,7 @@ static func _social_events() -> void:
 	# a grateful villager or adventurer brings a gift
 	for npc in Game.state["social"]:
 		var e: Dictionary = Game.state["social"][npc]
-		if float(e["aff"]) >= 40.0 and Game.day() - int(e.get("last_gift", -10)) >= 5 and randf() < 0.3:
+		if float(e["aff"]) >= 40.0 and Game.day() - int(e.get("last_gift", -10)) >= 5 and Rng.f("world") < 0.3:
 			var c := DB.character(npc)
 			if c.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
@@ -214,7 +215,7 @@ static func _social_events() -> void:
 			break
 	# a friend back from the road shares what they learned (scouting knowledge for everyone)
 	for a in Adv.in_town():
-		if Social.band(a["id"]) in ["friendly", "devoted"] and not a.get("history", []).is_empty() and randf() < 0.25:
+		if Social.band(a["id"]) in ["friendly", "devoted"] and not a.get("history", []).is_empty() and Rng.f("world") < 0.25:
 			var dest: String = a["history"][-1]["dest"]
 			if Regions.scouted(dest) < Regions.SCOUT_MAX - 5.0:
 				Regions.add_scouting(dest, 6.0, "told by " + a["name"])
@@ -224,7 +225,7 @@ static func _social_events() -> void:
 	# every other gift (Sim.gift_of: at most half their business with the forge this month, less earlier gifts); when
 	# nothing fits there is no relic yet, and they may bring one later (before, the satchel bypassed the cap)
 	for npc in Game.state["social"]:
-		if Social.band(npc) == "devoted" and not Social.has_memory(npc, "gave_relic") and randf() < 0.35:
+		if Social.band(npc) == "devoted" and not Social.has_memory(npc, "gave_relic") and Rng.f("world") < 0.35:
 			var c2 := DB.character(npc)
 			if c2.is_empty() or Adv.get_a(npc).get("status", "") in ["dead", "away"]:
 				continue
@@ -240,7 +241,7 @@ static func _social_events() -> void:
 	# a dissatisfied villager pelts the storefront with eggs
 	if not w.get("eggs", false):
 		for npc in Game.state["social"]:
-			if float(Game.state["social"][npc]["aff"]) <= -30.0 and randf() < 0.45:
+			if float(Game.state["social"][npc]["aff"]) <= -30.0 and Rng.f("world") < 0.45:
 				w["eggs"] = true
 				w["eggs_by"] = npc
 				Events.toast.emit("Someone pelted your storefront with eggs overnight.", "bad")
@@ -250,7 +251,7 @@ static func _social_events() -> void:
 	# gossip: the worst memory of a sour customer spreads to a friend
 	for npc in Game.state["social"]:
 		var m := Social.strongest_memory(npc)
-		if not m.is_empty() and float(m["w"]) <= -10.0 and randf() < 0.3 and not Social.has_memory("pip", "gossip_" + npc):
+		if not m.is_empty() and float(m["w"]) <= -10.0 and Rng.f("world") < 0.3 and not Social.has_memory("pip", "gossip_" + npc):
 			Social.change("pip", -3.0, 1.0, "gossip_" + npc, "Heard from %s: \"%s\"" % [DB.character(npc).get("name", npc), m["text"]], false)
 			Social.change("wenna", -2.0, 1.0, "", "", false)
 			break

@@ -87,7 +87,7 @@ static func run_trade(budget: int, travelling: int, want: Array) -> Dictionary:
 	var list := supply_list()
 	if not want.is_empty():
 		list = list.filter(func(e): return want.has(e[0]))
-	list.shuffle()
+	Rng.shuffle("expeditions", list)
 	var guard := 0
 	while spend > 0 and guard < 40 and not list.is_empty():
 		guard += 1
@@ -131,10 +131,10 @@ static func identify(uid: int, quality: float, by := "Brannoc") -> Dictionary:
 	# what kind of relic it was nudges the outcome
 	match str(it["def"]):
 		"relic_unknown_arms":
-			if randf() < 0.65:
+			if Rng.f("expeditions") < 0.65:
 				res = Loot.random_equipment("ancient", quality * 0.2)
 		"relic_unknown_tablet":
-			if randf() < 0.6 and not Game.has_flag("recipe_starsteel"):
+			if Rng.f("expeditions") < 0.6 and not Game.has_flag("recipe_starsteel"):
 				res = Items.make("recipe_scroll")
 	for unused in found:
 		if unused != res:
@@ -215,7 +215,7 @@ static func read_recipe(uid: int) -> String:
 	if unknown.is_empty():
 		Game.add_gold(60, "sales", "Sold a duplicate Design's notes to a collector", "collector")
 		return "You already know everything in these notes. A collector pays 60 g for them."
-	var r: Dictionary = unknown.pick_random()
+	var r: Dictionary = Rng.pick("expeditions", unknown)
 	Game.set_flag(str(r["requires_flag"]))
 	Game.journal("Learned a forgotten Design: %s." % r["name"])
 	Audio.play("sfx/level_up")

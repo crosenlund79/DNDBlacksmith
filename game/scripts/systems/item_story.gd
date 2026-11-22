@@ -735,7 +735,7 @@ static func circulating() -> Array:
 ## Shop.customer_hour: now and then a villager brings in an old blade bought from a pedlar — the smith's own work.
 ## Returns true when a stranger took the seat.
 static func maybe_stranger() -> bool:
-	if randf() > STRANGER_CHANCE or Game.day() - int(st().get("stranger_day", -99)) < STRANGER_GAP:
+	if Rng.f("world") > STRANGER_CHANCE or Game.day() - int(st().get("stranger_day", -99)) < STRANGER_GAP:
 		return false
 	return not stranger_visit().is_empty()
 

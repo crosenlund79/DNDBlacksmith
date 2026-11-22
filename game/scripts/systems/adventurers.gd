@@ -162,7 +162,7 @@ static func _wish(a: Dictionary) -> String:
 		options.append("barrow_fields")
 	if lvl >= 6 and Game.has_flag("delve_map"):
 		options.append("deep_ironroot")
-	return options.pick_random()
+	return Rng.pick("expeditions", options)
 
 
 ## Their wish (kept once made), and what that place demands: a damage type it is known for (destinations.json — the
@@ -230,7 +230,7 @@ static func morning_departures() -> void:
 		a["status"] = "away"
 		a["dest"] = dest
 		a["exit"] = d["exit"]
-		a["days_left"] = randi_range(int(d["days"][0]), int(d["days"][1]))
+		a["days_left"] = Rng.ri("expeditions", int(d["days"][0]), int(d["days"][1]))
 		Game.journal("%s the %s set out for %s." % [a["name"], a["cls"], d["name"]])
 		Events.adventurer_departed.emit(a["id"], d["exit"])
 	Events.adventurers_changed.emit()
@@ -253,7 +253,7 @@ static func on_day() -> void:
 				if int(a["injured_days"]) <= 0:
 					a["status"] = "in_town"
 					a["activity"] = "recovering"
-					a["depart_day"] = Game.day() + randi_range(1, 2)
+					a["depart_day"] = Game.day() + Rng.ri("expeditions", 1, 2)
 	Living.on_day()   # goals, retirement, newcomers, companies (The Living Realm)
 	Events.adventurers_changed.emit()
 
@@ -280,11 +280,11 @@ static func run_encounters(a: Dictionary, dest: String) -> Dictionary:
 	var weapon: Dictionary = eq.get("weapon", {})
 	var lv := int(a["level"])
 	var tr: String = a["trait"]
-	var n := randi_range(2, 4) + (1 if tr == "greedy" else 0) - (1 if tr == "cautious" else 0)
+	var n := Rng.ri("expeditions", 2, 4) + (1 if tr == "greedy" else 0) - (1 if tr == "cautious" else 0)
 	var res := {"wins": 0, "fought": 0, "wounds": 0.0, "lines": [], "credits": {}}
 	for i in maxi(1, n):
-		var th: Dictionary = threats.pick_random()
-		var power := float(th["power"]) * 1.25 * scale * randf_range(0.85, 1.25)
+		var th: Dictionary = Rng.pick("expeditions", threats)
+		var power := float(th["power"]) * 1.25 * scale * Rng.rf("expeditions", 0.85, 1.25)
 		var atk := float(Items.stat(weapon, "attack")) + _coat(weapon, "attack")
 		if str(th.get("resist", "")) == "physical":
 			atk *= 0.45
@@ -306,7 +306,7 @@ static func run_encounters(a: Dictionary, dest: String) -> Dictionary:
 		if tr == "reckless":
 			offence *= 1.15
 		var chance := clampf(0.5 + (offence - power) / (power + 14.0), 0.08, 0.96)
-		var won := randf() < chance
+		var won := Rng.f("expeditions") < chance
 		var defence := lv * 2.0 + float(_total(a, "protection")) * 1.2 + (float(_total(a, "ward")) * 2.0 if th["kind"] in ["spirit", "undead"] else 0.0)
 		if tr == "devout" and th["kind"] in ["spirit", "undead"]:
 			defence += 6.0
@@ -371,7 +371,7 @@ static func _resolve(a: Dictionary) -> void:
 	var success := int(enc["wins"]) * 2 >= int(enc["fought"]) and int(enc["fought"]) > 0
 	var wounds := float(enc["wounds"])
 	var injured := wounds >= 12.0
-	var dies := wounds >= 26.0 and not success and randf() < clampf((wounds - 22.0) * 0.04, 0.0, 0.7)
+	var dies := wounds >= 26.0 and not success and Rng.f("expeditions") < clampf((wounds - 22.0) * 0.04, 0.0, 0.7)
 	a["log"] = enc["lines"]
 	a["history"].append({"day": Game.day(), "dest": a["dest"], "outcome": "died" if dies else ("success" if success else "failed") + ("_injured" if injured else ""),
 		"wins": enc["wins"], "fought": enc["fought"], "credits": enc["credits"]})
@@ -385,7 +385,7 @@ static func _resolve(a: Dictionary) -> void:
 	if dies:
 		_die(a, d, mine)
 		return
-	var gold := int(danger * randf_range(14, 36) * (1.0 if success else 0.35))
+	var gold := int(danger * Rng.rf("expeditions", 14, 36) * (1.0 if success else 0.35))
 	var xp := int(danger * 30 * (1.0 if success else 0.4))
 	a["gold"] = int(a["gold"]) + gold
 	a["xp"] = int(a["xp"]) + xp
@@ -394,7 +394,7 @@ static func _resolve(a: Dictionary) -> void:
 	for k in a["equipment"]:
 		var st: Dictionary = a["equipment"][k].get("stats", {})
 		if st.has("durability"):
-			st["durability"] = max(1, int(st["durability"]) - randi_range(4, 14) * int(danger))
+			st["durability"] = max(1, int(st["durability"]) - Rng.ri("expeditions", 4, 14) * int(danger))
 	# upgrade from loot
 	for it in loot:
 		var s := Items.slot(it)
@@ -407,11 +407,11 @@ static func _resolve(a: Dictionary) -> void:
 	var report := "%s returned from %s %s (%d of %d fights won)." % [a["name"], d["name"], "triumphant" if success else "battered and empty-handed", int(enc["wins"]), int(enc["fought"])]
 	if injured:
 		a["status"] = "injured"
-		a["injured_days"] = randi_range(1, 3)
+		a["injured_days"] = Rng.ri("expeditions", 1, 3)
 		report += " Injured."
 	else:
 		a["status"] = "in_town"
-		a["depart_day"] = Game.day() + randi_range(1, 3)
+		a["depart_day"] = Game.day() + Rng.ri("expeditions", 1, 3)
 	if success:
 		a["victories"] = int(a["victories"]) + 1
 	a["last_report"] = report
@@ -705,7 +705,7 @@ static func buy_elsewhere(a: Dictionary, want := {}) -> bool:
 	if Apprentices.alumni_buy_for(a, want):
 		return true
 	# otherwise, now and then, the Salt Anvil across the village
-	if randf() < float(Commerce.rival_cfg().get("adv_chance", 0.5)):
+	if Rng.f("expeditions") < float(Commerce.rival_cfg().get("adv_chance", 0.5)):
 		return not Commerce.rival_buy_for(a).is_empty()
 	return false
 
@@ -786,7 +786,7 @@ static func commission_ask(a: Dictionary) -> Dictionary:
 static func request_slot(a: Dictionary, wanted: String) -> String:
 	if wanted == "" or wanted == "companion" or Shop.can_make_slot(wanted, a, Shop.order_need(a, wanted)) or not best_stock(a, wanted).is_empty():
 		return wanted
-	if randf() < Shop.OPPORTUNITY_CHANCE:
+	if Rng.f("expeditions") < Shop.OPPORTUNITY_CHANCE:
 		return wanted
 	for need in gear_needs(a):
 		var s := str(need["slot"])
@@ -1073,6 +1073,12 @@ static func bequeath(dead: Dictionary, heirs: Array, place: String, place_name :
 	if dead.get("bequeathed", false):
 		return
 	dead["bequeathed"] = true
+	Lore.push_cause(str(dead.get("death_event", "")))   # R3: the inheritance, the burial and the homecoming follow the death
+	_bequeath(dead, heirs, place, place_name)
+	Lore.pop_cause()
+
+
+static func _bequeath(dead: Dictionary, heirs: Array, place: String, place_name := "") -> void:
 	var home := []
 	for slot in (dead.get("equipment", {}) as Dictionary).keys():
 		var it: Dictionary = dead["equipment"][slot]

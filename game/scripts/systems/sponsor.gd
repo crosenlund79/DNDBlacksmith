@@ -662,11 +662,11 @@ static func on_node(e: Dictionary, n: Dictionary) -> int:
 		"material":
 			var want := int(obj.get("qty", 1))
 			var q := maxi(1, int(round(float(want) * clampf(rich + 0.3, 0.3, 1.0)))) + (1 if int(chk["total"]) >= dc + 6 else 0)
-			got.append(Items.make(str(obj["def"]), {"qty": q, "quality": randf_range(60.0, 95.0)}))
+			got.append(Items.make(str(obj["def"]), {"qty": q, "quality": Rng.rf("commerce", 60.0, 95.0)}))
 		"relic":
 			var rel := _relic_defs(str(n.get("loot", "")))
 			if not rel.is_empty():
-				got.append(Items.make(str(rel[randi() % rel.size()])))
+				got.append(Items.make(str(rel[Rng.i("commerce") % rel.size()])))
 		"salvage":
 			got.append(Loot.random_equipment("any", float(tier - 1) * 8.0))
 	# a careful search takes its own toll on the place (WorldSites depletion)

@@ -69,7 +69,7 @@ func _forge_shield() -> Dictionary:
 ## Plays the rune stabilisation like a steady player: the cursor held on the socket from the start (the rune follows it,
 ## late). Returns the binding's craftsmanship (the average over the binding time), without the result banner.
 func _rune_round(args: Dictionary, rng_seed: int) -> float:
-	seed(rng_seed)
+	Rng.reseed(rng_seed)
 	var g := RuneGame.new(args, Minigames.config_for("rune_engraving_stand"))
 	g.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	g.size = Vector2(1920, 1080)
@@ -160,7 +160,7 @@ func test_shield_stays_with_the_smith() -> void:
 ## Plays one round of the real MultiHitGame (mounted, no how-to card): presses `offset_s` seconds after each section's
 ## centre passes under the needle. Returns [hits, sections, quality].
 func _multihit_round(args: Dictionary, offset_s: float, rng_seed: int) -> Array:
-	seed(rng_seed)
+	Rng.reseed(rng_seed)
 	var a := args.duplicate()
 	a["no_tutorial"] = true
 	var g := MultiHitGame.new(a, Minigames.config_for(str(a["station"])))
@@ -282,7 +282,7 @@ func test_rune_binding_follows_skill() -> void:
 	# letting go is still punished: no cursor at all, the rune drifts
 	Game.player_skills()["runecraft"]["lvl"] = 4
 	var p4 := Minigames.socket_check("runestone_frost")
-	seed(3)
+	Rng.reseed(3)
 	var g := RuneGame.new({"zone": p4["zone"], "speed": p4["speed"], "count": 1}, {})
 	g.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	g.size = Vector2(1920, 1080)

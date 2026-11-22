@@ -20,7 +20,7 @@ func _in_town(skip := "") -> String:
 
 func test_craft_to_reunion() -> void:
 	fresh_game()
-	seed(4242)
+	Rng.reseed(4242)
 	give("ingot_iron", 6)
 	give("leather_cured", 3)
 	var it := craft("iron_longsword", 100.0, {"edge": 14, "temper": 12, "fortune": 1})

@@ -657,10 +657,10 @@ static func customer_hour(h: int) -> void:
 			customers().erase(c)          # never made it here; nobody noticed
 	# someone waiting wanders over to the Hall of Fame board by the shop wall
 	for c in waiting():
-		if not c.get("hof_seen", false) and not Recognition.entries().is_empty() and randf() < 0.12:
+		if not c.get("hof_seen", false) and not Recognition.entries().is_empty() and Rng.f("commerce") < 0.12:
 			c["hof_seen"] = true
 			Recognition.customer_comment(str(c["npc"]))
-	if free_seat() < 0 or randf() > clampf(0.45 * (1.0 + reputation() / 120.0), 0.15, 0.75):
+	if free_seat() < 0 or Rng.f("commerce") > clampf(0.45 * (1.0 + reputation() / 120.0), 0.15, 0.75):
 		return
 	if ItemStory.maybe_stranger():   # now and then: a villager with an old blade from the Ironhand forge
 		return
@@ -669,13 +669,13 @@ static func customer_hour(h: int) -> void:
 		if not refuses(a["id"]):
 			var ws0 := worn_slot(a)
 			var w := "repair_own" if ws0 != "" and can_pay_repair(a, ws0) else "browse"   # a repair they cannot pay for is no errand
-			if randf() < MULTI_CHANCE and open_orders().filter(func(o): return o["npc"] == a["id"]).is_empty():
+			if Rng.f("commerce") < MULTI_CHANCE and open_orders().filter(func(o): return o["npc"] == a["id"]).is_empty():
 				w = "multi"   # several requests at once (one may be beyond the smith for now)
 			pool.append([a["id"], w])
 	for v in ["martha", "tobin", "jory", "eda", "oswin", "wenna"]:
 		if not refuses(v):
-			pool.append([v, "goods" if randf() < 0.35 else "repair"])
-	pool.shuffle()
+			pool.append([v, "goods" if Rng.f("commerce") < 0.35 else "repair"])
+	Rng.shuffle("commerce", pool)
 	for p in pool:
 		if customers().any(func(c): return c["npc"] == p[0]):
 			continue
@@ -698,11 +698,11 @@ static func _add_customer(npc: String, want: String, slot := "") -> void:
 	var c := {"npc": npc, "want": want, "arrived": Game.day() * 24 + Game.hour(), "seat": seat, "present": false}
 	if want == "repair":
 		var defs := ["sword_iron", "axe_hand", "dagger", "helm_iron", "shield_round"]
-		var it := Items.make(defs.pick_random(), {"quality": randf_range(50, 75)})
+		var it := Items.make(Rng.pick("commerce", defs), {"quality": Rng.rf("commerce", 50, 75)})
 		if it["stats"].has("durability"):
-			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * randf_range(0.2, 0.5))
+			it["stats"]["durability"] = int(int(it["stats"]["durability_max"]) * Rng.rf("commerce", 0.2, 0.5))
 		c["item"] = it
-		c["pay"] = randi_range(8, 18)
+		c["pay"] = Rng.ri("commerce", 8, 18)
 	elif want == "repair_own":
 		var a2 := Adv.get_a(npc)
 		var slot2 := slot
@@ -722,8 +722,8 @@ static func _add_customer(npc: String, want: String, slot := "") -> void:
 			c["slot"] = Adv.request_slot(a3, want3 if want3 != "" else Adv._weakest_slot(a3))
 			_equipment_wish(c, a3)
 	elif want == "goods":
-		c["budget"] = randi_range(30, 80)
-		c["looking_for"] = ["potion_healing", "oil_whetstone"].pick_random()
+		c["budget"] = Rng.ri("commerce", 30, 80)
+		c["looking_for"] = Rng.pick("commerce", ["potion_healing", "oil_whetstone"])
 	else:
 		var a := Adv.get_a(npc)
 		c["budget"] = int(a.get("gold", 0))
@@ -975,7 +975,7 @@ const PRIORITY := {
 
 static func _set_priority(o: Dictionary, a: Dictionary) -> void:
 	var risk := float(a.get("risk", 0.5))
-	var r := randf()
+	var r := Rng.f("commerce")
 	var pri := "speed" if r < 0.2 + risk * 0.2 else ("cost" if int(a.get("gold", 0)) < 60 and r < 0.75 else "quality")
 	o["priority"] = pri
 	match pri:
@@ -1176,14 +1176,14 @@ static func multi_parts_for(a: Dictionary) -> Array:
 	var locked: Array = er["locked"]
 	locked.sort_custom(func(x, y): return int(x.get("difficulty", 1)) < int(y.get("difficulty", 1)))
 	if not locked.is_empty():
-		var pick: Dictionary = locked[randi() % mini(5, locked.size())]
+		var pick: Dictionary = locked[Rng.i("commerce") % mini(5, locked.size())]
 		parts.append(_craft_part(pick, a, true))
 	# 2. an ordinary piece he can make, preferably for the slot they need
 	var open: Array = er["open"]
 	var fits := open.filter(func(r): return str(DB.item(str(r["output"])).get("slot", "")) == slot)
 	var pool: Array = fits if not fits.is_empty() else open
 	if not pool.is_empty():
-		parts.append(_craft_part(pool[randi() % pool.size()], a, false))
+		parts.append(_craft_part(pool[Rng.i("commerce") % pool.size()], a, false))
 	# 3. a simple repair: their own worn piece, or a spare they carry
 	#    (A2: only what they can pay for out of their own purse — they pay when it is done)
 	var ws := worn_slot(a)
@@ -1193,7 +1193,7 @@ static func multi_parts_for(a: Dictionary) -> Array:
 	else:
 		# R2 (BUG-046): a spare they really carry — a worn piece in their own pack — never a piece made up for the order
 		var spare := worn_spare(a)
-		var pay := randi_range(8, 16)
+		var pay := Rng.ri("commerce", 8, 16)
 		if not spare.is_empty() and int(a.get("gold", 0)) >= pay:
 			parts.append({"pid": "rep", "kind": "repair", "loot_uid": int(spare["uid"]), "item": ItemRegistry.ref(spare), "pay": pay, "status": "pending"})
 	return parts

@@ -25,7 +25,7 @@ static func roll(expr: String) -> Dictionary:
 	var faces: Array = []
 	var total: int = p["mod"]
 	for i in p["n"]:
-		var f := randi_range(1, p["sides"])
+		var f := Rng.ri("crafting", 1, p["sides"])
 		faces.append(f)
 		total += f
 	return {"expr": expr, "faces": faces, "total": total}

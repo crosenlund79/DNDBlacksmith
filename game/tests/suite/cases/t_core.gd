@@ -7,7 +7,7 @@ const SMOKE := ["test_startup", "test_iron_longsword_from_new_game", "test_save_
 func test_startup() -> void:
 	check(DB.items.size() > 50 and DB.recipes.size() > 30 and DB.stations.size() > 20, "data: items, recipes and stations load")
 	check(not DB.layout.is_empty() and DB.building("smithy").has("units"), "data: the village layout with the smithy's units")
-	for k in ["player", "property", "hirelings", "adventurers", "orders", "customers", "chronicle", "exp"]:
+	for k in ["player", "property", "hirelings", "adventurers", "orders", "customers", "lore", "exp"]:   # R3: the Chronicle is a view of Lore
 		check(Game.state.has(k), "new game: state has '%s'" % k)
 	check(Game.gold() > 0 and Game.player_level("smithing") >= 1, "new game: gold and skills")
 

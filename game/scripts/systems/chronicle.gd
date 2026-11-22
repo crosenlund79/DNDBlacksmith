@@ -1,34 +1,51 @@
-## Chronicle — the village's news feed: the last CAP (400) notable happenings, newest last.
-## EN: Entries are written by the authoritative simulation, with references to the people, items, expeditions and
-##     places involved; the Most Wanted board (Legends & History), dossiers, History panels and Recognition read it.
-##     KNOWN INCONSISTENCY, preserved on purpose until Gate J (Run 0.1; decision register LORE-017 / GOV-031): Lore
-##     (lore.gd) is meant to be the single shared memory and this feed only a view of it (canon §10.4, §15), but today
-##     the two stores run side by side. About two thirds of writers call Chronicle.add directly and never reach Lore
-##     (hireling deaths and funerals, many social notes); the feed is capped, so such entries vanish after 400 newer
-##     ones; Recognition awards Hall of Fame plaques and Epic by matching Chronicle text. Do not "fix" one side alone:
-##     the rebuild (Lore coverage, roles and indices, a retention policy, converting old entries) belongs to Gate J.
-##     See game/docs/TECHNICAL.md "History: Lore and the Chronicle".
-## DA: Landsbyens nyhedsstrøm (de seneste 400 hændelser). Kendt uoverensstemmelse: den kører ved siden af Lore i
-##     stedet for at være en visning af den; det bevares bevidst, indtil historiksystemet samles i Gate J.
+## Chronicle — the village's news feed, a VIEW of Lore (R3 "One History": GOV-031, LORE-017, LORE-002, BUG-018).
+## EN: Before R3 this was a separate store capped at 400 entries, written by about seventy places directly, so many
+##     happenings (hireling deaths, funerals, social notes) never reached Lore and vanished from the feed after 400
+##     newer ones. Now every feed entry IS a Lore event (Lore.chronicle marks it with its feed kind and links); this
+##     file only presents them, newest last, in the shape every reader has always used:
+##       {t, day, time, kind (the feed kind), text, refs {adv, party, item, uid, place, …, event}, event}.
+##     Nothing is capped: the feed is as long as the world's history (panels show the recent part).
+##     The Hall of Fame and Epic distinction still read each new entry (Recognition.on_chronicle), now with its event id.
+## DA: Landsbyens nyhedsstrøm — en visning af Lore (intet gemmes to gange, intet falder ud af en begrænset liste).
 class_name Chronicle
 extends RefCounted
 
-const CAP := 400
+static var _view: Array = []
+static var _view_for: Dictionary = {}
+static var _view_n := 0
 
 
+static func _entry(e: Dictionary) -> Dictionary:
+	var refs: Dictionary = (e.get("refs", {}) as Dictionary).duplicate()
+	refs["event"] = str(e["id"])
+	return {"t": int(e.get("t", 0)), "day": int(e.get("day", 1)), "time": str(e.get("time", "")), "kind": str(e.get("chron", e.get("kind", ""))),
+		"text": str(e.get("text", "")), "refs": refs, "event": str(e["id"])}
+
+
+## Every feed entry, oldest first (a read-only view: build anything new with add()).
 static func entries() -> Array:
-	if not Game.state.has("chronicle"):
-		Game.state["chronicle"] = []
-	return Game.state["chronicle"]
+	var s := Lore.st()
+	var ids: Array = s["chron_ids"]
+	if not is_same(_view_for, s) or _view_n > ids.size():
+		_view = []
+		_view_for = s
+		_view_n = 0
+	while _view_n < ids.size():
+		var e := Lore.event(str(ids[_view_n]))
+		if not e.is_empty():
+			_view.append(_entry(e))
+		_view_n += 1
+	return _view
 
 
 ## kind: departure, return, victory, defeat, death, missing, rescue, discovery, legend, levelup,
 ##       renown, relic, item, sale, commission, social, chain
+## refs.event: the Lore event this entry presents (Lore.record with chronicle = true passes it); without it a Lore
+## event is recorded for the entry (with the people, items and place in refs).
 static func add(kind: String, text: String, refs := {}, notable := false) -> Dictionary:
-	var e := {"t": Game.now(), "day": Game.day(), "time": Game.time_string(), "kind": kind, "text": text, "refs": refs}
-	entries().append(e)
-	while entries().size() > CAP:
-		entries().pop_front()
+	var ev := Lore.chronicle(kind, text, refs, notable)
+	var e := _entry(ev)
+	entries()   # keep the view current
 	if notable:
 		Game.journal(text)
 	Recognition.on_chronicle(e)   # the Hall of Fame and Epic distinction read the record
@@ -45,8 +62,9 @@ static func about(id: String, kinds := []) -> Array:
 
 static func recent(n := 10, kinds := []) -> Array:
 	var out := []
-	for i in range(entries().size() - 1, -1, -1):
-		var e: Dictionary = entries()[i]
+	var all := entries()
+	for i in range(all.size() - 1, -1, -1):
+		var e: Dictionary = all[i]
 		if kinds.is_empty() or kinds.has(e["kind"]):
 			out.append(e)
 			if out.size() >= n:

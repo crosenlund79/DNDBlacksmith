@@ -63,7 +63,7 @@ static func make_seed() -> int:
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--seed="):
 			return absi(int(str(arg).split("=")[1]))
-	return randi() % 2000000000
+	return Rng.i("world") % 2000000000
 
 
 static func rng_for(key: String) -> RandomNumberGenerator:
@@ -628,7 +628,7 @@ static func on_day() -> void:
 			retire(a, why)
 			retired_today = true
 	Companies.daily()
-	if active_count() < int(s["target"]) and Game.day() - int(s.get("last_arrival", 0)) >= ARRIVAL_GAP and randf() < 0.4:
+	if active_count() < int(s["target"]) and Game.day() - int(s.get("last_arrival", 0)) >= ARRIVAL_GAP and Rng.f("world") < 0.4:
 		newcomer()
 
 
@@ -651,15 +651,15 @@ static func retire_reason(a: Dictionary) -> String:
 		return ""
 	var age := int(a.get("age", 30)) + int(Game.day() / 360)
 	var lv := int(a.get("level", 1))
-	if float(a.get("trauma", 0.0)) >= 70.0 and randf() < 0.2:
+	if float(a.get("trauma", 0.0)) >= 70.0 and Rng.f("world") < 0.2:
 		return "trauma"
-	if age >= 55 and randf() < 0.03:
+	if age >= 55 and Rng.f("world") < 0.03:
 		return "age"
-	if int(a.get("gold", 0)) >= 900 + lv * 100 and randf() < 0.06:
+	if int(a.get("gold", 0)) >= 900 + lv * 100 and Rng.f("world") < 0.06:
 		return "wealth"
-	if bool(a.get("retire_on_goal", false)) and int(a.get("goals_achieved", 0)) >= 2 and randf() < 0.2:
+	if bool(a.get("retire_on_goal", false)) and int(a.get("goals_achieved", 0)) >= 2 and Rng.f("world") < 0.2:
 		return "goal"
-	if int(a.get("deaths_cheated", 0)) >= 3 and randf() < 0.1:
+	if int(a.get("deaths_cheated", 0)) >= 3 and Rng.f("world") < 0.1:
 		return "injury"
 	return ""
 
@@ -678,7 +678,7 @@ static func retire(a: Dictionary, why: String, stays := -1) -> Dictionary:
 	for m in co.get("members", []):
 		if str(m) != id and not friends.has(str(m)):
 			friends.append(str(m))
-	var stay := stays == 1 or (stays == -1 and (is_story(id) or not friends.is_empty() and randf() < 0.65))
+	var stay := stays == 1 or (stays == -1 and (is_story(id) or not friends.is_empty() and Rng.f("world") < 0.65))
 	var given := []
 	var offered := []
 	for slot in (a.get("equipment", {}) as Dictionary).keys():

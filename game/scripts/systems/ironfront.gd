@@ -175,18 +175,18 @@ static func grant_card(card_id: String, source: String = "") -> bool:
 static func random_card(rarity := "") -> String:
 	var r := rarity
 	if r == "":
-		var x := randf()
+		var x := Rng.f("world")
 		r = "common" if x < 0.6 else "uncommon" if x < 0.87 else "rare" if x < 0.97 else "special"
 	var pool := all_cards().filter(func(c): return c["rarity"] == r)
 	if pool.is_empty():
 		pool = all_cards().filter(func(c): return not c.get("special", false))
 	if pool.is_empty():
 		return ""
-	return str(pool[randi() % pool.size()]["id"])
+	return str(pool[Rng.i("world") % pool.size()]["id"])
 
 
 static func _weighted_rarity(odds: Dictionary) -> String:
-	var x := randf()
+	var x := Rng.f("world")
 	var acc := 0.0
 	for k in ["common", "uncommon", "rare"]:
 		acc += float(odds.get(k, 0.0))
@@ -1240,7 +1240,7 @@ static func sell_card(id: String) -> int:
 static func card_found(finder: Dictionary, smiths := false, rarity := "", key := "") -> String:
 	# its own dice (seeded by `key`, e.g. the expedition): a find never shifts the game's other random draws
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(key) if key != "" else randi()
+	rng.seed = hash(key) if key != "" else Rng.i("world")
 	var r := rarity
 	if r == "":
 		var x := rng.randf()

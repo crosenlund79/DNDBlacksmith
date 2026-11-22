@@ -214,33 +214,33 @@ static func refresh_applicants() -> void:
 	var out := []
 	var looks: Array = DB.names.get("applicant_looks", [])
 	var ap: Dictionary = cfg("applicants")
-	var n := randi_range(int(ap.get("min", 1)), int(ap.get("max", 3)))
+	var n := Rng.ri("world", int(ap.get("min", 1)), int(ap.get("max", 3)))
 	var prefs_pool: Array = PREF_DISCIPLINES.duplicate()
 	if not Game.state.is_empty() and Game.has_upgrade("arcane_foundry"):
 		prefs_pool.append("arcane")
 	for i in n:
 		if looks.is_empty():
 			break
-		var lk: Dictionary = looks.pick_random()
+		var lk: Dictionary = Rng.pick("world", looks)
 		var race: String = str(lk.get("race", "Human"))
 		var pool: Dictionary = DB.names["first"].get(race, DB.names["first"]["Human"])
-		var first: String = str((pool["f"] if bool(lk.get("female", false)) else pool["m"]).pick_random())
-		var last: String = str(DB.names["last"].pick_random())
-		var pref: String = str(prefs_pool.pick_random())
+		var first: String = str(Rng.pick("world", (pool["f"] if bool(lk.get("female", false)) else pool["m"])))
+		var last: String = str(Rng.pick("world", DB.names["last"]))
+		var pref: String = str(Rng.pick("world", prefs_pool))
 		var levels := {}
 		for sk: String in _skill_ids():
 			levels[sk] = 0
-		levels["smithing"] = randi_range(0, 2)
+		levels["smithing"] = Rng.ri("world", 0, 2)
 		var psk: String = str(Crafting.DISCIPLINE_SKILL.get(pref, "smithing"))
-		levels[psk] = int(levels.get(psk, 0)) + randi_range(1, 2)
+		levels[psk] = int(levels.get(psk, 0)) + Rng.ri("world", 1, 2)
 		levels[psk] = maxi(int(levels[psk]), WorkshopKnowledge.entry_level(pref))   # B2: work of their own craft from day one
 		var traits := []
 		var good := _trait_ids(true)
 		var bad := _trait_ids(false)
-		if randf() < 0.85 and not good.is_empty():
-			traits.append(str(good.pick_random()))
-		if randf() < 0.6 and not bad.is_empty():
-			traits.append(str(bad.pick_random()))
+		if Rng.f("world") < 0.85 and not good.is_empty():
+			traits.append(str(Rng.pick("world", good)))
+		if Rng.f("world") < 0.6 and not bad.is_empty():
+			traits.append(str(Rng.pick("world", bad)))
 		if traits.is_empty() and not good.is_empty():
 			traits.append(str(good[0]))
 		var total := 0
@@ -248,7 +248,7 @@ static func refresh_applicants() -> void:
 			total += int(levels[k])
 		var wage := int(ap.get("base_wage", 3)) + int(total / 3)
 		out.append({"name": "%s %s" % [first, last], "look": str(lk.get("look", "applicant_0")), "race": race,
-			"female": bool(lk.get("female", false)), "personality": str(DB.names["personality"].pick_random()),
+			"female": bool(lk.get("female", false)), "personality": str(Rng.pick("world", DB.names["personality"])),
 			"traits": traits, "prefs": [pref], "levels": levels, "wage": wage, "fee": wage * int(ap.get("fee_days", 5)),
 			"profession": Workers.discipline_profession(pref)})
 	s["applicants"] = out

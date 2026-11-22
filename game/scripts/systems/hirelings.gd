@@ -56,10 +56,10 @@ static func random_traits() -> Array:
 	var good := TRAITS.keys().filter(func(k): return TRAITS[k]["good"])
 	var bad := TRAITS.keys().filter(func(k): return not TRAITS[k]["good"])
 	var out := []
-	if randf() < 0.85:
-		out.append(good.pick_random())
-	if randf() < 0.75:
-		out.append(bad.pick_random())
+	if Rng.f("expeditions") < 0.85:
+		out.append(Rng.pick("expeditions", good))
+	if Rng.f("expeditions") < 0.75:
+		out.append(Rng.pick("expeditions", bad))
 	return out
 
 
@@ -212,23 +212,23 @@ static func refresh_applicants() -> void:
 	var out := []
 	var looks: Array = DB.names.get("applicant_looks", [])
 	# some weeks nobody answers the notice; most weeks two to four do
-	var roll := randf()
+	var roll := Rng.f("expeditions")
 	var n := 0 if roll < 0.1 else (1 if roll < 0.25 else (2 if roll < 0.5 else (3 if roll < 0.8 else 4)))
 	for i in n:
-		var lk: Dictionary = looks.pick_random()
+		var lk: Dictionary = Rng.pick("expeditions", looks)
 		var race: String = lk["race"]
 		var pool: Dictionary = DB.names["first"].get(race, DB.names["first"]["Human"])
-		var first: String = (pool["f"] if lk["female"] else pool["m"]).pick_random()
-		var name := "%s %s" % [first, DB.names["last"].pick_random()]
+		var first: String = Rng.pick("expeditions", (pool["f"] if lk["female"] else pool["m"]))
+		var name := "%s %s" % [first, Rng.pick("expeditions", DB.names["last"])]
 		var levels := {}
 		var skills: Array = DB.work_skills.duplicate()
-		skills.shuffle()
+		Rng.shuffle("expeditions", skills)
 		for j in skills.size():
-			levels[skills[j]] = [randi_range(3, 5), randi_range(2, 4), randi_range(1, 2), randi_range(0, 2), randi_range(0, 1), 0][j]
+			levels[skills[j]] = [Rng.ri("expeditions", 3, 5), Rng.ri("expeditions", 2, 4), Rng.ri("expeditions", 1, 2), Rng.ri("expeditions", 0, 2), Rng.ri("expeditions", 0, 1), 0][j]
 		var wage := 3 + int((levels.values().reduce(func(a, b): return a + b, 0)) / 3)
 		out.append({"name": name, "look": lk["look"], "race": race, "female": lk["female"],
-			"personality": DB.names["personality"].pick_random(), "levels": levels, "wage": wage, "fee": wage * 4,
-			"traits": random_traits(), "potential": snappedf(randf_range(0.7, 1.55), 0.01)})
+			"personality": Rng.pick("expeditions", DB.names["personality"]), "levels": levels, "wage": wage, "fee": wage * 4,
+			"traits": random_traits(), "potential": snappedf(Rng.rf("expeditions", 0.7, 1.55), 0.01)})
 	Game.state["applicants"] = out
 	Events.hirelings_changed.emit()
 
@@ -349,7 +349,7 @@ static func work_hour(_h: int) -> void:
 		if h["status"] != "working":
 			continue
 		# this hour's visible activity follows the allocation
-		var r := randf() * 100.0
+		var r := Rng.f("expeditions") * 100.0
 		for skill in h["alloc"]:
 			r -= float(h["alloc"][skill])
 			if r <= 0.0:
@@ -391,19 +391,19 @@ static func _produce(h: Dictionary, skill: String, lvl: int) -> String:
 					Events.toast.emit("%s identified a relic: %s." % [h["name"], Items.display_name(res)], "good")
 					return "studied a relic: %s" % Items.display_name(res)
 	if skill == "travelling":
-		var g := int(round((4 + lvl * 2 + randi_range(0, 4)) * trait_mult(h, "mult", "travelling")))
+		var g := int(round((4 + lvl * 2 + Rng.ri("expeditions", 0, 4)) * trait_mult(h, "mult", "travelling")))
 		Game.add_gold(g, "trade", "%s traded small goods" % h["name"], "market")
 		return "traded small goods for %d g" % g
-	if skill == "relic_hunting" and randf() > (0.25 + lvl * 0.05) * trait_mult(h, "mult", "relic_hunting"):
+	if skill == "relic_hunting" and Rng.f("expeditions") > (0.25 + lvl * 0.05) * trait_mult(h, "mult", "relic_hunting"):
 		return "sifted the spoil heaps and found nothing"
 	if NO_FIELD_WORK.has(skill):
 		return ""
 	var opts: Array = WORK_OUTPUT.get(skill, [])
-	if skill == "mining" and lvl >= 4 and randf() < 0.25:
+	if skill == "mining" and lvl >= 4 and Rng.f("expeditions") < 0.25:
 		opts = [["ore_silver", 1]]
 	if opts.is_empty():
 		return ""
-	var pick: Array = opts.pick_random()
+	var pick: Array = Rng.pick("expeditions", opts)
 	var it := Items.make(pick[0], {"qty": int(pick[1])})
 	Game.add_item(it, false)
 	return "%s %d %s" % [{"mining": "mined", "alchemy": "gathered", "runecraft": "quarried", "relic_hunting": "found"}.get(skill, "gathered"), int(pick[1]), it["name"]]
@@ -427,7 +427,7 @@ static func send(id: String, dest_id: String, opts := {}) -> String:
 	if d.has("requires_flag") and not Game.has_flag(d["requires_flag"]):
 		return "Nobody knows the way there yet."
 	var trav := SkillSys.level(h["skills"], "travelling")
-	var days: int = maxi(1, randi_range(int(d["days"][0]), int(d["days"][1])) - (1 if trav >= 5 else 0))
+	var days: int = maxi(1, Rng.ri("expeditions", int(d["days"][0]), int(d["days"][1])) - (1 if trav >= 5 else 0))
 	h["status"] = "away"
 	h["expedition"] = {"dest": dest_id, "days_left": days, "total": days, "exit": d["exit"], "left_day": Game.day()}
 	# a trade run carries a purse for buying materials (and takes the trade goods along to sell)
@@ -501,9 +501,9 @@ static func _resolve(h: Dictionary) -> void:
 	var o := odds(h, e["dest"])
 	var lvl: int = o["level"]
 	var danger: float = o["danger"]
-	var success := randf() < float(o["success"])
-	var injury := randf() < float(o["injury"])
-	var death := (not success) and injury and randf() < clampf((danger - float(o["power"])) * 0.05, 0.0, 0.3)
+	var success := Rng.f("expeditions") < float(o["success"])
+	var injury := Rng.f("expeditions") < float(o["injury"])
+	var death := (not success) and injury and Rng.f("expeditions") < clampf((danger - float(o["power"])) * 0.05, 0.0, 0.3)
 	match force_outcome:
 		"death":
 			success = false
@@ -569,7 +569,7 @@ static func _resolve(h: Dictionary) -> void:
 	var find := _notable_find(contents)
 	if injury:
 		h["status"] = "injured"
-		h["injured_days"] = maxi(1, int(round(randi_range(1, 3) * trait_mult(h, "injury"))))
+		h["injured_days"] = maxi(1, int(round(Rng.ri("expeditions", 1, 3) * trait_mult(h, "injury"))))
 		h["injuries"] = int(h.get("injuries", 0)) + 1
 		h["injured_total"] = int(h["injured_days"])
 		Chronicle.add("return", "%s came back hurt from %s (%d day%s to mend)." % [h["name"], d["name"], int(h["injured_days"]), "" if int(h["injured_days"]) == 1 else "s"], {"hireling": h["id"], "place": d["id"]})

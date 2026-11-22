@@ -242,14 +242,14 @@ func test_gratitude_gift_bounded() -> void:
 	(Game.state["returns"] as Array).clear()
 	# no business with the forge: never a relic, however devoted
 	for i in 60:
-		seed(1000 + i)
+		Rng.reseed(1000 + i)
 		Sim._social_events()
 	check(_gifts_from(str(a["name"])).is_empty(), "with no business this month, Kestra leaves nothing (before S2 the relic satchel came anyway)")
 	check(not Social.has_memory("kestra", "gave_relic"), "and the once-only relic is still to come")
 	# 240 g of business: everything she leaves this month is worth at most 120 g
 	Game.add_gold(240, "sales", "Sold Kestra a blade", "kestra")
 	for i in 120:
-		seed(2000 + i)
+		Rng.reseed(2000 + i)
 		Sim._social_events()
 	var total := 0
 	for g in _gifts_from(str(a["name"])):

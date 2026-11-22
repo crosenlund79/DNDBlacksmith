@@ -8,7 +8,7 @@
 extends Node
 
 ## The save-schema version this build writes; SaveMigrations.STEPS converts every older version up to it.
-const SAVE_VERSION := 10
+const SAVE_VERSION := 11
 const MINUTES_PER_SECOND := 1.6   # one in-game day ≈ 15 real minutes
 const DAY_START_HOUR := 6
 
@@ -60,7 +60,6 @@ func new_game(difficulty := "journeyman") -> void:
 		"objectives": {},
 		"stats": {"crafted": 0, "sold": 0, "legendaries": 0},
 		"difficulty": "journeyman",
-		"chronicle": [],
 		"exp": {"active": {}, "done": [], "parties": {}},
 		"offers": [],
 	}
@@ -393,6 +392,7 @@ func grant_player_xp(skill: String, amount: int) -> void:
 # ------------------------------------------------------------------ serialisation
 func to_save() -> Dictionary:
 	state["version"] = SAVE_VERSION
+	Rng.persist()   # R3: the simulation's random streams continue exactly where they were
 	return state
 
 

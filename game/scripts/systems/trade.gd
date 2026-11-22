@@ -131,7 +131,7 @@ static func _restock(store_id: String) -> void:
 	var h := _store_state(store_id)
 	var out := []
 	for e in store_cfg(store_id).get("stock", []):
-		var q := randi_range(int(e[2][0]), int(e[2][1]))
+		var q := Rng.ri("commerce", int(e[2][0]), int(e[2][1]))
 		out.append({"def": str(e[0]), "qty": q, "price": maxi(1, int(round(float(e[1]) * price_factor())))})
 	h["day"] = Game.day()
 	h["stock"] = out
@@ -156,7 +156,7 @@ static func buy_store(store_id: String, def_id: String, qty := 1) -> String:
 			return "You cannot afford it (%d g)." % cost
 		var who := "Herbalist" if store_id == "herbalist" else store_name(store_id)
 		Game.add_gold(-cost, "materials", "%s: %d × %s" % [who, qty, DB.item(def_id).get("name", def_id)], Payments.store_party(store_id))
-		Game.add_item(Items.make(def_id, {"qty": qty, "quality": randf_range(68, 90)}), false)
+		Game.add_item(Items.make(def_id, {"qty": qty, "quality": Rng.rf("commerce", 68, 90)}), false)
 		e["qty"] = int(e["qty"]) - qty
 		mark_seen(def_id)
 		return ""
@@ -206,9 +206,9 @@ static func _schedule_next(after_days: int) -> void:
 		return
 	var last: String = str(t.get("last_type", ""))
 	var pool := types.filter(func(x): return x != last)
-	var type: String = str(pool[randi() % pool.size()]) if not pool.is_empty() else str(types[0])
+	var type: String = str(pool[Rng.i("commerce") % pool.size()]) if not pool.is_empty() else str(types[0])
 	var names: Array = ship_type(type).get("names", [["A merchant ship", "her captain"]])
-	var nm: Array = names[randi() % names.size()]
+	var nm: Array = names[Rng.i("commerce") % names.size()]
 	var arrive_day := Game.day() + maxi(1, after_days)
 	t["next"] = {"type": type, "name": str(nm[0]), "captain": str(nm[1]), "at": (arrive_day - 1) * 1440 + int(sc.get("arrive_hour", 7)) * 60}
 
@@ -219,31 +219,31 @@ static func _dock(type: String, ship_name := "", captain := "") -> void:
 	if sd.is_empty():
 		return
 	if ship_name == "":
-		var nm: Array = (sd.get("names", [["A merchant ship", "her captain"]]) as Array).pick_random()
+		var nm: Array = Rng.pick("commerce", (sd.get("names", [["A merchant ship", "her captain"]]) as Array))
 		ship_name = str(nm[0])
 		captain = str(nm[1])
 	var stay := int(cfg().get("schedule", {}).get("stay", 2))
 	var stock := []
 	var pf := price_factor()
 	for e in sd.get("stock", []):
-		if randf() > float(e[3]):
+		if Rng.f("commerce") > float(e[3]):
 			continue
 		var d := DB.item(str(e[0]))
 		if d.is_empty():
 			continue
-		stock.append({"def": str(e[0]), "qty": randi_range(int(e[2][0]), int(e[2][1])),
+		stock.append({"def": str(e[0]), "qty": Rng.ri("commerce", int(e[2][0]), int(e[2][1])),
 			"price": Valuation.merchant_price(str(e[0]), float(e[1]))})
 		mark_seen(str(e[0]))
 	for e in sd.get("equipment", []):
-		if randf() > float(e[2]):
+		if Rng.f("commerce") > float(e[2]):
 			continue
-		var it := Items.make(str(e[0]), {"quality": randf_range(62, 92), "rarity": "magic" if randf() < 0.25 else "common"})
+		var it := Items.make(str(e[0]), {"quality": Rng.rf("commerce", 62, 92), "rarity": "magic" if Rng.f("commerce") < 0.25 else "common"})
 		if it.is_empty():
 			continue
 		Items.add_history(it, "Brought to Brindlewick aboard %s." % ship_name)
 		stock.append({"def": str(e[0]), "qty": 1, "item": it, "price": maxi(1, int(round(Items.value(it) * float(e[1]) * pf)))})
 	# special Ironfront cards (only when the Ironfront system exists)
-	if randf() < float(sd.get("ironfront_chance", 0.0)):
+	if Rng.f("commerce") < float(sd.get("ironfront_chance", 0.0)):
 		var card: Variant = _ironfront_call("random_card", ["rare"])
 		if card is String and str(card) != "":
 			stock.append({"card": str(card), "qty": 1, "price": int(round(120 * pf)), "def": ""})
@@ -263,7 +263,7 @@ static func _depart() -> void:
 	ItemRegistry.retire_stock(s.get("stock", []), "ship_" + str(s.get("type", "")), str(s.get("name", "a ship")))   # R1 (EQ-004)
 	t["ship"] = {}
 	var g: Array = cfg().get("schedule", {}).get("gap", [3, 6])
-	_schedule_next(randi_range(int(g[0]), int(g[1])))
+	_schedule_next(Rng.ri("commerce", int(g[0]), int(g[1])))
 
 
 static func buy_from_ship(index: int, qty := 1) -> String:
@@ -296,7 +296,7 @@ static func buy_from_ship(index: int, qty := 1) -> String:
 		Provenance.transfer(it, "smith", "bought", "brindlewick", "The smith bought %s from %s." % [Items.display_name(it), s["name"]])
 		Game.add_item(it, false)
 	else:
-		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": randf_range(70, 92)}), false)
+		Game.add_item(Items.make(str(e["def"]), {"qty": qty, "quality": Rng.rf("commerce", 70, 92)}), false)
 	e["qty"] = int(e["qty"]) - qty
 	mark_seen(str(e["def"]))
 	if DB.item(str(e["def"])).get("tags", []).has("dragon"):
@@ -367,7 +367,7 @@ static func place_import(def_id: String, qty := 1) -> String:
 	var deposit := int(ceil(total * float(info["deposit_share"])))
 	if not Game.can_afford(deposit):
 		return "The deposit is %d g — you cannot afford it." % deposit
-	var lead := randi_range(int(info["lead"][0]), int(info["lead"][1]))
+	var lead := Rng.ri("commerce", int(info["lead"][0]), int(info["lead"][1]))
 	var nm: String = DB.item(def_id).get("name", def_id)
 	var o := {"id": _new_id("imp"), "def": def_id, "qty": qty, "total": total, "deposit": deposit, "balance": total - deposit,
 		"placed": Game.day(), "due": Game.day() + lead, "status": "ordered", "tier": info["tier"]}
@@ -389,7 +389,7 @@ static func collect_delivery(oid: String) -> String:
 		var nm: String = DB.item(str(o["def"])).get("name", o["def"])
 		if bal > 0:
 			Game.add_gold(-bal, "imports", "Import balance: %d × %s" % [int(o["qty"]), nm], "harbourmaster")
-		var it := Items.make(str(o["def"]), {"qty": int(o["qty"]), "quality": randf_range(72, 94)})
+		var it := Items.make(str(o["def"]), {"qty": int(o["qty"]), "quality": Rng.rf("commerce", 72, 94)})
 		Game.add_item(it, false)
 		mark_seen(str(o["def"]))
 		o["status"] = "collected"
@@ -439,7 +439,7 @@ static func on_hour(_h: int) -> void:
 static func dev_force_ship(type := "") -> void:
 	var t := st()
 	if type == "" or ship_type(type).is_empty():
-		type = str(cfg().get("ships", {}).keys().pick_random())
+		type = str(Rng.pick("commerce", cfg().get("ships", {}).keys()))
 	ItemRegistry.retire_stock((t["ship"] as Dictionary).get("stock", []), "ship", "a departing ship")
 	t["ship"] = {}
 	_dock(type)

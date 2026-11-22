@@ -155,7 +155,7 @@ static func leave(cid: String, adv_id: String, why: String, ev := "") -> void:
 		disband(cid, "no one is left")
 		return
 	if str(c["leader"]) == adv_id:
-		if (c["members"] as Array).size() >= 2 and randf() < 0.65:
+		if (c["members"] as Array).size() >= 2 and Rng.f("world") < 0.65:
 			var nl := _best_leader(c["members"])
 			c["leader"] = nl
 			_event(c, "leader", "%s now leads %s." % [Adv.get_a(nl).get("name", nl), c["name"]], [nl])
@@ -285,7 +285,7 @@ static func _quarrels(c: Dictionary) -> void:
 
 ## Takes in an unaffiliated adventurer in town who fills a gap and is not anyone's rival here.
 static func recruit(c: Dictionary) -> bool:
-	if randf() > 0.5:
+	if Rng.f("world") > 0.5:
 		return false
 	var members: Array = (c["members"] as Array).map(func(i): return Adv.get_a(str(i)))
 	var best := {}
@@ -314,7 +314,7 @@ static func recruit(c: Dictionary) -> bool:
 ## Friends who have shared the road found a company (a few at a time; old saves get theirs this way).
 static func _formations() -> void:
 	var free: Array = Adv.all().values().filter(func(a): return _free(a))
-	if active().size() >= maxi(1, Living.active_count() / 4) or free.size() < 2 or randf() > 0.35:
+	if active().size() >= maxi(1, Living.active_count() / 4) or free.size() < 2 or Rng.f("world") > 0.35:
 		return
 	var best := []
 	var bv := 34.0
@@ -367,7 +367,7 @@ static func plan_parties(avail: Array) -> Array:
 		if ms.is_empty():
 			continue
 		if ms.size() == 1 and (c["members"] as Array).size() >= 2:
-			if randf() < 0.6:
+			if Rng.f("world") < 0.6:
 				avail.erase(ms[0])
 				ms[0]["activity"] = "waiting"
 			continue
@@ -427,7 +427,7 @@ static func on_expedition(e: Dictionary, alive: Array, won: int, outcome: String
 		# a bad trip strains the company
 		var ms: Array = (c["members"] as Array).filter(func(i): return alive.has(i))
 		if ms.size() >= 2:
-			Living.relate(str(ms[randi() % ms.size()]), str(c["leader"]), -3.0, "argued over %s" % Expeditions.region(str(e["dest"])).get("name", "the trip"))
+			Living.relate(str(ms[Rng.i("world") % ms.size()]), str(c["leader"]), -3.0, "argued over %s" % Expeditions.region(str(e["dest"])).get("name", "the trip"))
 	# the shared history: what members did out there (Lore recorded during the trip)
 	var mark := int(e.get("lore_mark", 0))
 	if mark > 0:

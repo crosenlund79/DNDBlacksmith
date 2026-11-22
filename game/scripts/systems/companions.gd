@@ -61,7 +61,7 @@ static func random_name(def_id: String) -> String:
 	var pool: Array = Commerce.cfg().get("creatures", {}).get("names", {}).get(sp, [])
 	if pool.is_empty():
 		return "Scamp"
-	return str(pool[randi() % pool.size()])
+	return str(pool[Rng.i("expeditions") % pool.size()])
 
 
 ## A new companion instance: a named creature with a short history.

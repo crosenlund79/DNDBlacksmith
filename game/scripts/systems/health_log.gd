@@ -75,7 +75,8 @@ static func points(adv_id: String) -> Array:
 				var t1 := t0 + 1   # the record keeps the party's state when the fight was written up, right after it
 				by_t[t1] = {"t": t1, "hp": maxi(0, int(snap.get("hp", 0))), "max": int(snap.get("hp_max", 1)), "kind": "a"}
 	for p in a.get(KEY, []):
-		if p is Array and (p as Array).size() >= 3:
+		# R3: a fight's own record is the authority for its minute (a log point written the same minute never hides it)
+		if p is Array and (p as Array).size() >= 3 and not (by_t.has(int(p[0])) and str(by_t[int(p[0])]["kind"]) == "f"):
 			by_t[int(p[0])] = {"t": int(p[0]), "hp": int(p[1]), "max": int(p[2]), "kind": str(p[3]) if (p as Array).size() > 3 else "h"}
 	var ts := by_t.keys()
 	ts.sort()

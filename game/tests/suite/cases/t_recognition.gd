@@ -14,7 +14,7 @@ func _in_town_adv() -> String:
 
 # ------------------------------------------------------------------ weighted dice
 func test_weighted_dice_statistics() -> void:
-	seed(4242)
+	Rng.reseed(4242)
 	var spec: Dictionary = DB.recipe("iron_longsword")["dice"]
 	var d := DB.item("sword_iron")
 	var mat: Dictionary = DB.crafting["materials"].get(str(DB.recipe("iron_longsword").get("material", "iron")), {})

@@ -214,13 +214,16 @@ func save(slot: String) -> bool:
 	if mk != OK and not DirAccess.dir_exists_absolute(p.get_base_dir()):
 		return _fail("cannot create the save folder %s (error %d)" % [p.get_base_dir(), mk])
 	var data := Game.to_save()
+	var floats := []
+	_float_paths(data, [], floats)
 	var doc := {
 		"meta": {"version": Game.SAVE_VERSION, "slot": slot, "day": Game.day(), "time": Game.time_string(),
 			"gold": Game.gold(), "saved_unix": Time.get_unix_time_from_system(), "seed": int(Game.state.get("world_seed", -1)),
 			"saved_at": Time.get_datetime_string_from_system(false, true)},
 		"data": data,
+		"floats": floats,   # R3: where a whole-number value is a float (JSON cannot tell 90.0 from 90)
 	}
-	var text := JSON.stringify(doc)
+	var text := JSON.stringify(doc, "", false, true)   # R3: keys in the order the game holds them (iteration order is behaviour)
 	var tmp := p + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
@@ -278,14 +281,16 @@ func load_slot(slot: String) -> bool:
 		Log.warn("Refused to load %s: save format %d is newer than this build's %d (file left untouched)" % [slot, nv, Game.SAVE_VERSION])
 		Events.toast.emit(last_error, "bad")
 		return false
-	var data := _read(p)
+	var doc := _read_doc(p)
+	var data: Dictionary = doc.get("data", {}) if not doc.is_empty() else {}
 	if data.is_empty():
 		var bak := _bak(p)
 		if FileAccess.file_exists(p):
 			Log.warn("Save %s is corrupt or unreadable — trying its backup %s" % [p, bak])
 		elif FileAccess.file_exists(bak):
 			Log.warn("Save %s is missing — trying its backup %s" % [p, bak])
-		data = _read(bak)
+		doc = _read_doc(bak)
+		data = doc.get("data", {}) if not doc.is_empty() else {}
 		if data.is_empty():
 			last_error = "no readable save in slot %s" % slot
 			if FileAccess.file_exists(p) or FileAccess.file_exists(bak):
@@ -295,7 +300,12 @@ func load_slot(slot: String) -> bool:
 			return false
 		last_load["from_backup"] = true
 		Log.warn("Loaded the backup of %s" % slot)
-	data = _restore_ints(data)
+	if doc.get("floats") is Array:
+		data = _restore_ints(data, "", true)   # the save says exactly which whole numbers are floats
+		_restore_floats(data, doc["floats"])
+	else:
+		data = _restore_ints(data)   # older saves: the known float keys stay floats
+
 	last_load["migration"] = SaveMigrations.run(data)
 	Game.from_save(data)
 	Log.info("Loaded %s (day %d)" % [slot, Game.day()])
@@ -328,20 +338,85 @@ func _read(p: String) -> Dictionary:
 	return doc["data"] if not doc.is_empty() else {}
 
 
-func _restore_ints(v: Variant, key := "") -> Variant:
+func _restore_ints(v: Variant, key := "", exact := false) -> Variant:
 	if v is Dictionary:
 		var out := {}
 		for k in v:
-			out[k] = _restore_ints(v[k], str(k))
+			out[k] = _restore_ints(v[k], str(k), exact)
 		return out
 	if v is Array:
 		var arr := []
 		for e in v:
-			arr.append(_restore_ints(e, key))
+			arr.append(_restore_ints(e, key, exact))
 		return arr
-	if v is float and not FLOAT_KEYS.has(key) and is_equal_approx(v, round(v)) and abs(v) < 1e12:
+	if v is float and (exact or not FLOAT_KEYS.has(key)) and v == round(v) and abs(v) < 1e12:   # R3: exactly whole (82.0005 stays 82.0005)
 		return int(v)
 	return v
+
+
+## R3: JSON writes 90.0 and 90 alike (and _restore_ints makes every whole number an int), and Godot's JSON writer keeps
+## only about 15 significant digits of a float inside a dictionary — so a loaded game could compute differently from
+## the same game left running. The save lists every float JSON cannot carry exactly: [path…, ""] for a whole-number
+## float (restored as a float), [path…, "<16 hex digits>"] for a float that needs its exact 8 bytes.
+static func _float_paths(v: Variant, path: Array, out: Array) -> void:
+	if v is Dictionary:
+		for k in v:
+			path.append(k)
+			_float_paths(v[k], path, out)
+			path.pop_back()
+	elif v is Array:
+		for i in (v as Array).size():
+			path.append(i)
+			_float_paths(v[i], path, out)
+			path.pop_back()
+	elif v is float:
+		if v == round(v) and abs(v) < 1e12:
+			var p := path.duplicate()
+			p.append("")
+			out.append(p)
+		elif str(v).to_float() != v:
+			var p2 := path.duplicate()
+			p2.append(PackedFloat64Array([v]).to_byte_array().hex_encode())
+			out.append(p2)
+
+
+static func _restore_floats(data: Dictionary, paths: Variant) -> void:
+	if not paths is Array:
+		return
+	for p in paths:
+		if not p is Array or (p as Array).size() < 2:
+			continue
+		var exact := str(p[-1])
+		var node: Variant = data
+		var ok := true
+		for i in (p as Array).size() - 2:
+			var k: Variant = p[i]
+			if node is Dictionary and (node as Dictionary).has(str(k)):
+				node = node[str(k)]
+			elif node is Array and (k is float or k is int) and int(k) < (node as Array).size():
+				node = node[int(k)]
+			else:
+				ok = false
+				break
+		if not ok:
+			continue
+		var last: Variant = p[-2]
+		var val: Variant = null
+		if node is Dictionary and (node as Dictionary).has(str(last)):
+			val = node[str(last)]
+		elif node is Array and (last is float or last is int) and int(last) < (node as Array).size():
+			val = node[int(last)]
+		if not (val is int or val is float):
+			continue
+		var f := float(val)
+		if exact != "":
+			var b := exact.hex_decode()
+			if b.size() == 8:
+				f = b.to_float64_array()[0]
+		if node is Dictionary:
+			node[str(last)] = f
+		else:
+			node[int(last)] = f
 
 
 ## Upgrades older saves through the explicit, ordered schema steps (SaveMigrations). `load_slot` never passes a

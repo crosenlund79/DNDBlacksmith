@@ -32,18 +32,25 @@ func _deliver_rare(id: String, purse: int) -> Dictionary:
 
 func test_reward_package_capped_by_the_givers_own_payment() -> void:
 	fresh_game()
-	# a penniless customer: the village pays the whole commission, the customer gives nothing
+	# a penniless customer: the village pays the whole commission, the customer gives nothing. R3: the roster comes
+	# from the world seed, so take whichever newcomer this campaign has (Liesl when she is here)
+	var poor := "rv_liesl"
+	if not Adv.all().has(poor):
+		for id in Adv.all():
+			if str(id).begins_with("rv_"):
+				poor = str(id)
+				break
 	for i in 12:
-		seed(4100 + i)
-		var r := _deliver_rare("rv_liesl", 0)
-		if not check(not r.is_empty() and str(r["err"]) == "", "a commission delivered to Liesl (%s)" % str(r.get("err", ""))):
+		Rng.reseed(4100 + i)
+		var r := _deliver_rare(poor, 0)
+		if not check(not r.is_empty() and str(r["err"]) == "", "a commission delivered to %s (%s)" % [poor, str(r.get("err", ""))]):
 			return
-		eq(int(r["order"]["paid"]["gold"]), 0, "Liesl paid nothing (the subsidy covered it)")
+		eq(int(r["order"]["paid"]["gold"]), 0, "%s paid nothing (the subsidy covered it)" % poor)
 		eq((r["pkgs"] as Array).size(), 0, "so she leaves no reward package (D14: no gift without a giver's means)")
 	# a customer who pays: any package is worth at most half of their own share
 	var seen := 0
 	for i in 20:
-		seed(4200 + i)
+		Rng.reseed(4200 + i)
 		var r2 := _deliver_rare("garrick", 2000)
 		if r2.is_empty():
 			continue

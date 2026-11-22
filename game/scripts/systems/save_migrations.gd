@@ -38,6 +38,8 @@ const STEPS := [
 		"what": "R1 (EQ-012, EQ-007): every piece the save records as lost or destroyed in Lore gains a permanent structured tombstone (uid, name, maker, owners, Epic, events; reconstructed from the event when the piece no longer exists); pieces identified from relics before R1 are marked as identified (the relic's old uid was never kept). Nothing is deleted; idempotent."},
 	{"to": 10, "name": "reputation by audience and place",
 		"what": "R2 (TECH-019, WLD-011 data model, decision D-7): the single `world.rep` (what the village had heard of the smith) becomes what every audience — villagers, adventurers, traders, artisans, nobility — in the village has heard (`reputation.word[audience][place]`); the region starts with nothing heard (spreading is R8). The general standing is unchanged. Idempotent."},
+	{"to": 11, "name": "one history: the Chronicle in Lore",
+		"what": "R3 (GOV-031, LORE-017, BUG-018): the separate, capped news feed (`chronicle`) is folded into Lore — every feed entry becomes a Lore event (or marks the event it already presented) in its original time and order, linked to its people, items and place, and the Chronicle becomes a view of Lore. Hall of Fame plaques and Epic distinctions are untouched. Nothing is deleted; idempotent."},
 ]
 
 
@@ -108,6 +110,10 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 		10:
 			if Reputation.migrate(data) > 0:
 				Log.info("  reputation: the village's word of the smith moved into audiences × places")
+		11:
+			var n11 := Lore.migrate_chronicle(data)
+			if n11 > 0:
+				Log.info("  one history: %d Chronicle entries are now Lore events" % n11)
 		_:
 			return false
 	return true

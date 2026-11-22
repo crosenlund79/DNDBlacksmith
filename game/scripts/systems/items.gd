@@ -98,12 +98,12 @@ static func apply_rarity(it: Dictionary, rarity: String) -> void:
 	var n: int = {"common": 0, "magic": 1, "rare": 2, "legendary": 3}.get(rarity, 0)
 	var s := slot(it)
 	var pool := AFFIXES.filter(func(a): return a["for"].has(s))
-	pool.shuffle()
+	Rng.shuffle("crafting", pool)
 	var prefix := ""
 	var suffix := ""
 	for i in min(n, pool.size()):
 		var a: Dictionary = pool[i]
-		var val := randi_range(int(a["lo"]), int(a["hi"])) * (2 if rarity == "legendary" else 1)
+		var val := Rng.ri("crafting", int(a["lo"]), int(a["hi"])) * (2 if rarity == "legendary" else 1)
 		it["affixes"].append({"id": a["id"], "stat": a["stat"], "value": val})
 		if a.has("prefix") and prefix == "":
 			prefix = a["prefix"]
@@ -115,8 +115,8 @@ static func apply_rarity(it: Dictionary, rarity: String) -> void:
 		for k in it["stats"]:
 			if k in ["attack", "protection", "magic"]:
 				it["stats"][k] = int(round(it["stats"][k] * 1.15))
-		it["name"] = "%s, %s" % [LEGEND_NAMES.pick_random(), base_name]
-		it["epithet"] = LEGEND_TITLES.pick_random()
+		it["name"] = "%s, %s" % [Rng.pick("crafting", LEGEND_NAMES), base_name]
+		it["epithet"] = Rng.pick("crafting", LEGEND_TITLES)
 	elif rarity == "rare":
 		it["name"] = ("%s %s %s" % [prefix, base_name, suffix]).strip_edges()
 	elif rarity == "magic":

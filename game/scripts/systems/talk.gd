@@ -25,7 +25,7 @@ static func greeting(npc: String) -> String:
 	if npc in Commerce.NPCS:   # caravan, pawnshop, rival smith, creature merchants
 		return Commerce.greeting(npc)
 	var lines: Array = DB.dialogue.get("greet", {}).get(Social.band(npc), ["\"Hm?\""])
-	var t: String = lines.pick_random()
+	var t: String = Rng.pick("world", lines)
 	var married := Social.spouse() == npc
 	if married:
 		t = "\"Husband.\" She smiles despite herself. " + InnLife.married_line(npc)
@@ -49,7 +49,7 @@ static func greeting(npc: String) -> String:
 	if Shop.refuses(npc) and not married:
 		t += "\n[i]They make it plain they would rather not deal with you.[/i]"
 	# village talk about the smith's named pieces (ItemStory) — now and then, at most once a day per person
-	if ItemStory.has_rumours() and int(ItemStory.st()["rumours_told"].get(npc, -1)) != Game.day() and npc not in Commerce.NPCS and randf() < 0.35:
+	if ItemStory.has_rumours() and int(ItemStory.st()["rumours_told"].get(npc, -1)) != Game.day() and npc not in Commerce.NPCS and Rng.f("world") < 0.35:
 		var ru := ItemStory.rumour_line(npc)
 		if ru != "":
 			t += "\n" + ru
@@ -381,9 +381,9 @@ static func _rumour() -> String:
 	var facts := rumour_facts()
 	var words: Dictionary = DB.dialogue.get("rumours", {})
 	if facts.is_empty():
-		return str((words.get("none", ["\"Quiet week. Nobody's saying much.\""]) as Array).pick_random())
-	var f: Dictionary = facts.pick_random()
-	var t := str((words.get(str(f["kind"]), ["{text}"]) as Array).pick_random())
+		return str(Rng.pick("world", (words.get("none", ["\"Quiet week. Nobody's saying much.\""]) as Array)))
+	var f: Dictionary = Rng.pick("world", facts)
+	var t := str(Rng.pick("world", (words.get(str(f["kind"]), ["{text}"]) as Array)))
 	if f.has("adv"):
 		Game.set_flag("rumour_" + str(f["adv"]["id"]))
 		t = t.replace("{adv}", str(f["adv"]["name"]))
