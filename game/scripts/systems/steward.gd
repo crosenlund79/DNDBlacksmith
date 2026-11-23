@@ -304,6 +304,8 @@ static func protection_reason(it: Dictionary) -> String:
 	var uid := int(it.get("uid", -1))
 	if (st()["orders"]["protected"] as Array).has(uid):
 		return "You marked it as protected."
+	if it.has("custody"):
+		return "It belongs to %s, kept in your care." % str(it["custody"].get("name", "its family"))   # R6
 	if it.has("epic"):
 		return "It has earned Epic distinction."
 	if ItemStory.is_named(it):

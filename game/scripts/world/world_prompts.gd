@@ -88,6 +88,8 @@ static func _shop_counter() -> Dictionary:
 static func _station(sid: String) -> Dictionary:
 	if sid == Contracts.BENCH:
 		return Contracts.prompt()   # The Living Realm: the Project Bench (major contracts)
+	if sid == Reliquary.STATION:
+		return Reliquary.prompt()   # R6
 	var st := DB.station(sid)
 	var p := _p(Property.instance_label(sid))   # #37: "Anvil #2" when the workshop has several
 	# iteration 012: an apprentice at this station says so (the smith still takes it; they step aside)

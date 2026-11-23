@@ -781,5 +781,29 @@
   "sfx": "hammer",
   "fx": [],
   "solid": true
+ },
+ {
+  "id": "reliquary",
+  "name": "The Reliquary",
+  "discipline": "classic",
+  "pos": [
+   12.0,
+   6.0
+  ],
+  "size": [
+   96,
+   56
+  ],
+  "purpose": "A magically secured glass case for pieces that can no longer serve and whose service is remembered. It adds no fame; history earned that.",
+  "check": {
+   "count": 1,
+   "speed": 0.5,
+   "zone": 34,
+   "weight": 1.0
+  },
+  "unlock": {},
+  "sfx": "arcane",
+  "fx": [],
+  "solid": true
  }
 ]

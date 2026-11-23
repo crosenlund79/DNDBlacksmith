@@ -451,6 +451,8 @@ func _route(id: String, args: Dictionary) -> void:
 		"station":
 			if str(args.get("id", "")) == Contracts.BENCH:   # The Living Realm: the Project Bench opens the contract view
 				open(ContractsPanel.new({}))
+			elif str(args.get("id", "")) == Reliquary.STATION:   # R6: the Reliquary
+				open(ReliquaryPanel.new({}))
 			else:
 				open(StationPanel.new(args["id"]))
 		"contracts":
@@ -557,6 +559,8 @@ func _route(id: String, args: Dictionary) -> void:
 			open(WorkshopPanel.new())
 		"refine":   # UX iteration: improving existing equipment (Refinement)
 			open(RefinePanel.new(args))
+		"reliquary":   # R6: the Reliquary and the heirs' letters
+			open(ReliquaryPanel.new(args))
 		"dev_panel":
 			open(DevPanel.new())
 		"dev_catalogue":   # UX iteration: the developer catalogue (F10)

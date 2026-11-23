@@ -44,6 +44,7 @@ static func on_day(day: int) -> void:
 	_social_events()
 	Lore.on_day(day)   # R3: routine workshop work older than two months folds into monthly digests
 	Institutions.on_day(day)   # R4: the village purse takes in its weekly income
+	Reliquary.on_day(day)   # R6: heirs write about relics in the case; answers to the smith's letters arrive
 
 
 # ------------------------------------------------------------------ grocer

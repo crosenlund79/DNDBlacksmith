@@ -18,11 +18,11 @@
 class_name Refinement
 extends RefCounted
 
-const ACTIONS := ["refine", "rework", "upgrade", "reforge", "enchant", "attune", "experiment"]
+const ACTIONS := ["refine", "rework", "upgrade", "reforge", "enchant", "attune", "experiment", "restore"]
 const KIND := {"refine": "refined", "rework": "reworked", "upgrade": "upgraded", "reforge": "reforged", "enchant": "enchanted",
-	"attune": "attuned", "experiment": "tempered"}
+	"attune": "attuned", "experiment": "tempered", "restore": "restored"}
 const LABEL := {"refine": "Refine", "rework": "Rework", "upgrade": "Upgrade", "reforge": "Reforge", "enchant": "Enchant",
-	"attune": "Attune", "experiment": "Temper beyond"}
+	"attune": "Attune", "experiment": "Temper beyond", "restore": "Restore"}
 const BLURB := {
 	"refine": "Hone and planish the piece: its craftsmanship rises a little and its stats follow.",
 	"rework": "Re-cut one attribute: it is re-rolled within its legal range, the dice weighted by your work.",
@@ -31,15 +31,18 @@ const BLURB := {
 	"enchant": "Your arcanist binds a deep arcane property into the piece — permanent, the same piece (canonical §6.3, D17).",
 	"attune": "Your arcanist wakes a dormant arcane property.",
 	"experiment": "An extraordinary tempering beyond the piece's ceiling. It can fail badly: the piece may be left unusable or destroyed — its history is kept.",
+	"restore": "Bring an unusable piece back into service — the same piece, its history kept. A failed attempt never costs the piece (R6).",
 }
 ## Improvements allowed per piece (successful ones count; -1 = no count, only the ceiling limits it).
-const LIMIT := {"refine": 3, "rework": 2, "upgrade": 1, "reforge": -1, "enchant": 2, "attune": -1, "experiment": 1}
+const LIMIT := {"refine": 3, "rework": 2, "upgrade": 1, "reforge": -1, "enchant": 2, "attune": -1, "experiment": 1, "restore": -1}
 ## Check thresholds: at or above SUCCESS the work takes; below FAIL it slips (a small, recoverable loss).
-const SUCCESS := {"refine": 70.0, "rework": 50.0, "upgrade": 60.0, "reforge": 0.0, "enchant": 55.0, "attune": 50.0, "experiment": 85.0}
-const FAIL := {"refine": 50.0, "rework": 40.0, "upgrade": 40.0, "reforge": -1.0, "enchant": 40.0, "attune": 35.0, "experiment": 60.0}
-const XP := {"refine": 6, "rework": 8, "upgrade": 16, "reforge": 12, "enchant": 0, "attune": 0, "experiment": 30}
+const SUCCESS := {"refine": 70.0, "rework": 50.0, "upgrade": 60.0, "reforge": 0.0, "enchant": 55.0, "attune": 50.0, "experiment": 85.0, "restore": 60.0}
+const FAIL := {"refine": 50.0, "rework": 40.0, "upgrade": 40.0, "reforge": -1.0, "enchant": 40.0, "attune": 35.0, "experiment": 60.0, "restore": 40.0}
+const XP := {"refine": 6, "rework": 8, "upgrade": 16, "reforge": 12, "enchant": 0, "attune": 0, "experiment": 30, "restore": 20}
 const SPIRIT_CTX := {"refine": "sharpen", "rework": "enchant", "upgrade": "reforge", "reforge": "reforge", "enchant": "enchant",
-	"attune": "enchant", "experiment": "reforge"}
+	"attune": "enchant", "experiment": "reforge", "restore": "reforge"}
+## R6 (EQ-046): restoring a bloodline Unique without the consent of its line is this much harder (and its materials double).
+const LINELESS_HARDER := 15.0
 ## R5 (EQ-038, EQ-039): the risk each kind of work carries. Routine work can only slip a little. Advanced work (re-cutting
 ## a magical property at the rune stand, an upgrade to a rare material, an arcane binding) can crack the piece (broken:
 ## half strength until reforged) or leave a binding dormant. Only the extraordinary experiment — explicitly warned and
@@ -184,6 +187,8 @@ static func station_for(it: Dictionary, action: String, target := "") -> String:
 			return "spellbinding_array"
 		"experiment":
 			return "anvil"
+		"restore":
+			return "anvil" if fam == "metal" else ("stitching_table" if fam == "leather" else "tailors_bench")
 		"refine":
 			return "grinding_wheel" if fam == "metal" else "stitching_table"
 		"rework":
@@ -206,6 +211,13 @@ static func inputs_for(it: Dictionary, action: String, target := "") -> Dictiona
 			return {"infusion_aether": 1}
 		"experiment":
 			return {str(OWN_STOCK.get(material_of(it), "ingot_steel")): 2, "coal": 2}
+		"restore":
+			var k := 2 if _lineless(it) else 1
+			if fam == "metal":
+				return {str(OWN_STOCK.get(material_of(it), "ingot_steel")): 2 * k, "coal": 2 * k}
+			if fam == "leather":
+				return {"leather_cured": 2 * k, "thread_linen": 1 * k}
+			return {"thread_linen": 3 * k}
 		"refine":
 			return {"reagent_salt": 1} if fam == "metal" else {"thread_linen": 1}
 		"rework":
@@ -336,8 +348,12 @@ static func plan(it: Dictionary, action: String, opts := {}) -> Dictionary:
 		obs.append("It must be in your stores to be worked on.")
 	if int(out["left"]) == 0:
 		obs.append("No more %s for this piece (%d of %d used) — more would spoil it." % [{"refine": "refining", "rework": "reworking", "upgrade": "upgrades"}.get(action, action), used(it, action), int(LIMIT[action])])
-	if GearDepth.disabled(it) and action != "experiment":
+	if GearDepth.disabled(it) and not action in ["experiment", "restore"]:
 		obs.append("It is unusable — only restoration can bring it back (the Reliquary).")
+	if action == "restore":
+		out["success_at"] = restore_success(it)
+		if not GearDepth.disabled(it):
+			obs.append("Only an unusable piece needs restoring — a broken one is made whole by a reforge.")
 	match action:
 		"enchant", "attune":
 			var arc := arcanist()
@@ -399,7 +415,7 @@ static func plan(it: Dictionary, action: String, opts := {}) -> Dictionary:
 	out["ok"] = obs.is_empty()
 	out["why"] = "" if obs.is_empty() else str(obs[0])
 	out["risk"] = risk(it, action, target)
-	out["rows"] = preview_rows(it, action, target) if not action in ["enchant", "attune", "experiment"] else []
+	out["rows"] = preview_rows(it, action, target) if not action in ["enchant", "attune", "experiment", "restore"] else []
 	var c := Crafting.check_params(st, str(STEPS.get(material_of(it), {}).get("gate", "")) if action == "upgrade" else "", mini(2, int(DB.station(st).get("check", {}).get("count", 1))))
 	out["check"] = c
 	return out
@@ -513,6 +529,7 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 		"enchant": res = _do_enchant(it, quality, str(p.get("target", {}).get("id", opts.get("target", ""))), p.get("arcanist", {}))
 		"attune": res = _do_attune(it, quality)
 		"experiment": res = _do_experiment(it, quality)
+		"restore": res = _do_restore(it, quality)
 		_: res = _do_reforge(it, quality)
 	# R5: advanced work that goes badly wrong cracks the piece (broken: half strength until a reforge makes it whole)
 	if str(risk(it, action, str(opts.get("target", "")))["tier"]) == "advanced" and action in ["rework", "upgrade"] and quality < float(FAIL[action]) - CRACK_BELOW:
@@ -532,7 +549,7 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 		return {"ok": true, "text": str(res.get("summary", "")), "kind": "destroyed", "action": action, "outcome": "destroyed", "before": before,
 			"after": {}, "changes": [], "event": str(res.get("event", "")), "summary": str(res.get("summary", ""))}
 	var text := "%s at the Ironhand %s (%d%%): %s." % [{"refine": "Refined", "rework": "Reworked", "upgrade": "Upgraded", "reforge": "Reforged",
-		"enchant": "Enchanted", "attune": "Attuned", "experiment": "Tempered beyond its limits"}[action],
+		"enchant": "Enchanted", "attune": "Attuned", "experiment": "Tempered beyond its limits", "restore": "Restored"}[action],
 		PLACE_WORD.get(str(p["station"]), str(p["station_name"]).to_lower()), int(round(quality)), str(res.get("summary", ""))]
 	if not changes.is_empty():
 		text += " " + change_text(changes) + "."
@@ -541,6 +558,13 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 	var data := {"action": action, "smith": Provenance.SMITH_ID, "smith_name": Provenance.SMITH_NAME, "station": str(p["station"]),
 		"materials": (p["inputs"] as Dictionary).duplicate(), "check": quality, "outcome": outcome, "changes": changes,
 		"quality_before": float(before["quality"]), "quality_after": float(after["quality"]), "target": str(res.get("target", ""))}
+	if action == "restore":
+		data["contributors"] = _restore_contributors(it, quality)   # R6 (EQ-045): who took part, the line's consent included
+		var c := Reliquary.claim(int(it.get("uid", -1)))
+		if not c.is_empty():
+			data["terms"] = {"heir": str(c.get("heir", "")), "answer": str(c.get("answer", "")), "compensation": int(c.get("compensation", 0))}
+		if Reliquary.bloodline(it) and Reliquary.consented(int(it.get("uid", -1))) and outcome == "success":
+			text += " %s laid a hand on it in consent — the rite of its line; its ancestral nature woke." % str(c.get("heir_name", "The heir"))
 	var ev := Provenance.workshop(it, KIND[action], text, data)
 	(r["steps"] as Array).append({"day": Game.day(), "action": action, "outcome": outcome, "event": ev})
 	while (r["steps"] as Array).size() > 20:
@@ -548,6 +572,8 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 	if int(XP[action]) > 0:
 		Game.grant_player_xp(Crafting.skill_for_station(str(p["station"])), int(XP[action]) if outcome != "fail" else int(float(XP[action]) * 0.5))
 	ItemSpirit.speak(it, SPIRIT_CTX[action])
+	if action == "restore" and outcome != "fail":
+		Reliquary.on_restored(it, ev, outcome == "success")   # R6: the ancestral nature, the agreed terms (home to the family)
 	Events.inventory_changed.emit()
 	return {"ok": true, "text": text, "kind": KIND[action], "action": action, "outcome": outcome, "before": before, "after": after,
 		"changes": changes, "event": ev, "summary": str(res.get("summary", ""))}
@@ -721,6 +747,13 @@ static func risk(it: Dictionary, action: String, target := "") -> Dictionary:
 		"attune":
 			tier = "advanced"
 			text = "Advanced work: badly done, the property stays asleep (the materials are spent)."
+		"restore":
+			tier = "advanced"
+			text = "Restoration: done well (%d%%+) it serves again; a failed attempt costs the materials only — the piece is never lost." % int(restore_success(it))
+			if _lineless(it):
+				text += " Without the consent of its line (no heir has agreed), the work is harder and needs twice the materials, and its ancestral nature stays asleep."
+			elif Reliquary.bloodline(it):
+				text += " Its line has consented: done well, its ancestral nature wakes."
 		"experiment":
 			tier = "extraordinary"
 			text = "EXTRAORDINARY — beyond the piece's ceiling. Done finely (%d%%+), its craftsmanship and every property rise. Done badly (below %d%%), the piece is destroyed (%d%% of the time) or left unusable — its history is kept either way. This cannot be undone." % [int(SUCCESS["experiment"]), int(FAIL["experiment"]), int(DESTROY_SHARE * 100.0)]
@@ -793,6 +826,48 @@ static func _do_experiment(it: Dictionary, q: float) -> Dictionary:
 	return {"outcome": "fail", "summary": "the tempering failed — it is unusable until restored", "event": ev}
 
 
+# ======================================================================= R6: restoration
+## A bloodline Unique whose line has not consented.
+static func _lineless(it: Dictionary) -> bool:
+	return Reliquary.bloodline(it) and not Reliquary.consented(int(it.get("uid", -1)))
+
+
+## The check a restoration must reach.
+static func restore_success(it: Dictionary) -> float:
+	return float(SUCCESS["restore"]) + (LINELESS_HARDER if _lineless(it) else 0.0)
+
+
+static func _restore_contributors(it: Dictionary, q: float) -> Array:
+	var out := [{"who": Provenance.SMITH_ID, "name": Provenance.SMITH_NAME, "profession": "blacksmith", "title": "restoration", "quality": q}]
+	var c := Reliquary.claim(int(it.get("uid", -1)))
+	if Reliquary.consented(int(it.get("uid", -1))):
+		out.append({"who": str(c.get("heir", "")), "name": str(c.get("heir_name", "")), "profession": "heir",
+			"title": "consent of the line" + (" (the rite)" if Reliquary.bloodline(it) else "")})
+	return out
+
+
+## Restoration: the unusable piece serves again (well done: sound; half done: usable, scarred). A failure costs only
+## the materials — never the piece.
+static func _do_restore(it: Dictionary, q: float) -> Dictionary:
+	var st2: Dictionary = it.get("stats", {})
+	if q < float(FAIL["restore"]):
+		return {"outcome": "fail", "summary": "the restoration would not take; the materials are spent — the piece is unharmed"}
+	var full := q >= restore_success(it)
+	var info: Dictionary = it.get("disabled_info", {})
+	it.erase("disabled")
+	it.erase("disabled_info")
+	it.erase("broken")
+	if not it.has("restorations"):
+		it["restorations"] = []
+	(it["restorations"] as Array).append({"day": Game.day(), "check": q, "full": full, "was": str(info.get("why", ""))})
+	if st2.has("durability_max"):
+		st2["durability"] = int(round(float(st2["durability_max"]) * (0.8 if full else 0.4)))
+	it["quality"] = maxf(1.0, float(it.get("quality", 70.0)) - (1.0 if full else 4.0))
+	if full:
+		return {"outcome": "success", "summary": "made whole and fit to serve again"}
+	return {"outcome": "partial", "summary": "usable again, though the scars of its ruin show"}
+
+
 # ======================================================================= records
 ## A comparable picture of a piece: quality, every stat, affixes, material and the old service fields.
 static func snapshot(it: Dictionary) -> Dictionary:
@@ -855,10 +930,11 @@ static func tooltip_line(it: Dictionary) -> String:
 static func actions_at(station_id: String) -> Array:
 	var out := []
 	match station_id:
-		"anvil": out = ["reforge", "upgrade", "rework", "experiment"]
+		"anvil": out = ["reforge", "upgrade", "rework", "experiment", "restore"]
 		"grinding_wheel": out = ["refine"]
 		"rune_engraving_stand": out = ["rework"]
-		"stitching_table": out = ["refine", "rework", "upgrade"]
-		"tailors_bench", "arcane_anvil": out = ["upgrade"]
+		"stitching_table": out = ["refine", "rework", "upgrade", "restore"]
+		"tailors_bench": out = ["upgrade", "restore"]
+		"arcane_anvil": out = ["upgrade"]
 		"spellbinding_array": out = ["enchant", "attune"]   # R5: the arcanist's bindings
 	return out

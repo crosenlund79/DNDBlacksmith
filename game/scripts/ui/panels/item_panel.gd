@@ -26,7 +26,12 @@ func _init(item_uid: int = -1, start_tab := "Overview") -> void:
 
 
 func _it() -> Dictionary:
-	return ItemStory.find(uid)
+	var it := ItemStory.find(uid)
+	if it.is_empty():
+		# R6: a piece the world still holds where the smith knows it — in the Reliquary, an institution's stock, a
+		# family's home — can be looked at (inspection only; ItemStory's narrower scope is unchanged for its users)
+		it = ItemRegistry.find(uid)
+	return it
 
 
 func _ready() -> void:

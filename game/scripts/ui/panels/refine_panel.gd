@@ -159,8 +159,10 @@ func _work_view() -> void:
 		right.add_child(UIKit.label("Choose a piece on the left.", 22, "body_italic"))
 		return
 	right.add_child(_piece_head(it))
-	# the four actions: label + where + a one-word status
-	var tabs := UIKit.hbox(8)
+	# the actions: label + a one-word status (R6: a wrapping row — eight actions no longer fit one line)
+	var tabs := HFlowContainer.new()
+	tabs.add_theme_constant_override("h_separation", 8)
+	tabs.add_theme_constant_override("v_separation", 6)
 	for a in Refinement.ACTIONS:
 		var p := Refinement.plan(it, a, {"station": station})
 		var ok := bool(p["ok"])

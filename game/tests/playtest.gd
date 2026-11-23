@@ -3893,6 +3893,11 @@ func phase_equipment_depth() -> void:
 	var ph: RefCounted = load("res://tests/playtest_equipment_depth.gd").new()
 	await ph.run(self)
 
+# ======================================================================= R6: the Reliquary and an heir
+func phase_reliquary() -> void:
+	var ph: RefCounted = load("res://tests/playtest_reliquary.gd").new()
+	await ph.run(self)
+
 # ======================================================================= R4: the Honor Guard (commissions v2, civic recipients)
 func phase_honor_guard() -> void:
 	var ph: RefCounted = load("res://tests/playtest_honor_guard.gd").new()

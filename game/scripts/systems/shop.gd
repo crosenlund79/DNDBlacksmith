@@ -19,6 +19,8 @@ static func set_for_sale(uid: int, on: bool) -> String:
 	var it := Game.find_uid(uid)
 	if it.is_empty():
 		return "That piece is not in the stores."
+	if on and Reliquary.custody_reason(it) != "":
+		return Reliquary.custody_reason(it)   # R6: kept in the forge's care for its family — not the smith's to sell
 	it["for_sale"] = on
 	Events.inventory_changed.emit()
 	return ""
@@ -816,6 +818,8 @@ static func sell_to(npc: String, uid: int, price := -1, seller := "") -> String:
 	var it := Game.find_uid(uid)
 	if a.is_empty() or it.is_empty():
 		return "Nothing to sell."
+	if Reliquary.custody_reason(it) != "":
+		return Reliquary.custody_reason(it)   # R6
 	var listed := price_of(it)
 	var agreed := listed if price < 0 else price
 	var pr := counter_price_reason(listed, agreed, seller)

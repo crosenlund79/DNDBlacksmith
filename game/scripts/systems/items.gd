@@ -299,7 +299,10 @@ static func base_stat(it: Dictionary, key: String) -> int:
 	for a in it.get("affixes", []):
 		if a["stat"] == key:
 			v += int(a["value"])
-	return v + GearDepth.arcana_stat(it, key)   # R5: an arcanist's deep property (while it is awake)
+	v += GearDepth.arcana_stat(it, key)   # R5: an arcanist's deep property (while it is awake)
+	if v > 0 and not key in ["durability", "durability_max"] and (def(it).get("tags", []) as Array).has("bloodline"):
+		v = int(floor(float(v) * Reliquary.strength_factor(it)))   # R6: a bloodline Unique's ancestral nature asleep
+	return v
 
 
 ## A stat as it works now: worn pieces lose some effectiveness, broken ones half of every stat.

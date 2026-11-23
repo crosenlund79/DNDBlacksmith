@@ -243,7 +243,7 @@ func add_item(item: Dictionary, notify := true) -> void:
 	MaterialLedger.on_add(item)   # Living Workshop #46: materials in, with their source (no-op for other items)
 	if not bool(item.get("dev", false)):
 		SkillTree.note_item(str(item["def"]))   # skill-tree requirement "have held this material" (not by dev tools)
-	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov"):
+	if Provenance.applies(item) and Provenance.owner_id(item) != "smith" and item.has("prov") and not item.has("custody"):   # R6: a family's piece in the forge's care stays theirs
 		ItemStory.on_returned(item, str(item.get("_arrives_how", "received")))   # "A Familiar Creation"
 		Provenance.transfer(item, "smith", str(item.get("_arrives_how", "received")), "brindlewick")
 	item.erase("_arrives_how")

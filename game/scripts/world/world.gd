@@ -2341,6 +2341,8 @@ var _hint_phase := 0.0
 static func station_usable(sid: String) -> bool:
 	if sid == Contracts.BENCH:
 		return Contracts.bench_installed() and not Contracts.active().is_empty()
+	if sid == Reliquary.STATION:
+		return Reliquary.installed()
 	if not Property.is_installed(sid) or Crafting.station_locked_reason(sid) != "":
 		return false
 	if Crafting.active():

@@ -18,7 +18,7 @@ const PRICE := {
 	"forge": 120, "anvil": 90, "crucible": 110, "quench_trough": 60, "bellows": 140, "grinding_wheel": 80,
 	"rune_cutting_bench": 160, "rune_engraving_stand": 190, "rune_cleansing_basin": 150, "resonance_pedestal": 260, "rune_polishing_wheel": 170,
 	"mortar_station": 70, "alembic": 140, "cauldron": 120, "reagent_table": 110, "infusion_rack": 150,
-	"stitching_table": 90, "leather_vat": 110, "thread_spinner": 170, "embroidery_frame": 190, "fitting_mannequin": 160,
+	"reliquary": 450, "stitching_table": 90, "leather_vat": 110, "thread_spinner": 170, "embroidery_frame": 190, "fitting_mannequin": 160,
 	"loom": 180, "cutting_table": 120, "tailors_bench": 140,
 	"arcane_crucible": 520, "spellbinding_array": 560, "leyline_conductor": 480, "aetheric_stabilizer": 500, "arcane_anvil": 640,
 }
@@ -761,7 +761,7 @@ static func remove_door(plan: Dictionary, d: Dictionary) -> String:
 ## his staff, at least two), the Project Bench once; room capacity, spacing and reachability still decide each place.
 const INSTANCE_SEP := "#"
 const MAX_PER_TYPE := 5
-const SINGLE_TYPES := ["project_bench"]
+const SINGLE_TYPES := ["project_bench", "reliquary"]   # R6: one Reliquary
 ## Each further instance costs this share of the type's price more (2nd ×1.25, 3rd ×1.5 … 5th ×2): fitting another
 ## hearth or bench into a working room, not a bulk discount and not a new economy.
 const EXTRA_PRICE_STEP := 0.25

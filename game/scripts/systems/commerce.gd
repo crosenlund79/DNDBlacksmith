@@ -302,6 +302,8 @@ static func pawnable(it: Dictionary) -> String:
 			return "That is not his to hold."
 	if it.get("quest", false) or it.get("hall_of_fame", false) or it.get("epic", false):
 		return "Some things are not for pawning."
+	if Reliquary.custody_reason(it) != "":
+		return Reliquary.custody_reason(it)   # R6: a family's piece in the forge's care
 	if unit_value(it) <= 1:
 		return "Not worth a ticket."
 	return ""
