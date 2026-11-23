@@ -93,7 +93,9 @@ func run(p: Node) -> void:
 		g += 1
 	var r := Contracts.deliver(cid)
 	pt.expect(bool(r.get("masterpiece", false)), "identity_a1: delivered with the masterpiece")
-	pt.expect(str(ItemRegistry.where(muid).get("holder", "")) == "holdings", "identity_a1: the masterpiece is in the holdings archive")
+	# R4: the Watch is an institution — it keeps the masterpiece in its own stock (before R4: the holdings archive)
+	pt.expect(str(ItemRegistry.where(muid).get("holder", "")) == "institution" and Institutions.stock("watch").any(func(x): return int(x.get("uid", -1)) == muid),
+		"identity_a1: the masterpiece is kept by the Watch itself, the same instance")
 	Events.open_panel.emit("contracts", {"id": cid})
 	await pt.wait(0.8)
 	await pt.shot("id_contract_masterpiece_archived")
