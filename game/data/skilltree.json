@@ -113,7 +113,8 @@
      "iron_helm",
      "iron_shortsword",
      "iron_hatchet",
-     "iron_buckler"
+     "iron_buckler",
+     "make_pattern_muster"
     ],
     "stations": [
      "forge",
@@ -156,7 +157,9 @@
     "recipes": [
      "iron_cuirass",
      "silver_band",
-     "iron_chainmail"
+     "iron_chainmail",
+     "make_mold_ring",
+     "make_mold_amulet"
     ],
     "stations": [],
     "techniques": []
@@ -1887,7 +1890,10 @@
   "moonweave_cowl": "ta_moon",
   "shadow_cloak": "ta_moon",
   "ward_cloth": "ta_archmage",
-  "archmage_robe": "ta_archmage"
+  "archmage_robe": "ta_archmage",
+  "make_pattern_muster": "s_basic",
+  "make_mold_ring": "s_blades",
+  "make_mold_amulet": "s_blades"
  },
  "station_node": {
   "forge": "s_basic",

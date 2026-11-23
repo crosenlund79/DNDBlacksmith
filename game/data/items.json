@@ -2781,5 +2781,50 @@
    "rare",
    "exotic"
   ]
+ },
+ {
+  "id": "mold_ring",
+  "name": "Ring Mold",
+  "type": "tool",
+  "slot": null,
+  "value": 45,
+  "stats": {},
+  "icon": "runestone_blank",
+  "stack": false,
+  "desc": "A two-part casting mold for silver bands and settings. It never wears out; kept in the stores, it steadies ring work and speeds a series at the Project Bench.",
+  "tags": [
+   "tool",
+   "mold"
+  ]
+ },
+ {
+  "id": "mold_amulet",
+  "name": "Amulet Mold",
+  "type": "tool",
+  "slot": null,
+  "value": 55,
+  "stats": {},
+  "icon": "runestone_blank",
+  "stack": false,
+  "desc": "A casting mold for amulet bezels. It never wears out; kept in the stores, it steadies amulet work and speeds a series at the Project Bench.",
+  "tags": [
+   "tool",
+   "mold"
+  ]
+ },
+ {
+  "id": "pattern_muster",
+  "name": "Muster Pattern",
+  "type": "tool",
+  "slot": null,
+  "value": 40,
+  "stats": {},
+  "icon": "recipe_scroll",
+  "stack": false,
+  "desc": "Iron templates and a swage for the muster's helm and round shield, forged to one pattern. It never wears out; kept in the stores, it steadies that work and speeds a series at the Project Bench.",
+  "tags": [
+   "tool",
+   "pattern"
+  ]
  }
 ]

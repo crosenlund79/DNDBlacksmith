@@ -1059,6 +1059,7 @@ static func fulfil(order_id: String, uid: int) -> String:
 			Game.add_gold(paid, "commissions", "Commission for %s (their share)" % a["name"], str(o["npc"]))
 		if subsidy > 0:
 			Game.add_gold(subsidy, "subsidy", "Village subsidy: %s's commission" % a["name"], Payments.VILLAGE)
+			Institutions.pay_from_village(subsidy, "outfitting subsidy: %s's commission" % a["name"], "smith", str(o["id"]))   # R4 (D14)
 		o["status"] = "done"
 		Social.change(o["npc"], 10.0 + margin, 8.0, "order_" + o["id"], "Brannoc delivered my %s, and it was %s." % [it["name"], "superb" if margin >= 4 else "as promised"])
 		# exceptional work is sometimes rewarded with something rare — A2: worth at most Payments.GIFT_SHARE of what the

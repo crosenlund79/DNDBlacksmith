@@ -619,7 +619,8 @@ static func skill_bonus(actor: Variant, rid: String) -> float:
 	var a := resolve(actor)
 	if str(a["kind"]) == "player":
 		return Crafting.skill_bonus(rid)
-	return float(Crafting.cfg("skill").get("quality_per_level", 0.4)) * level(a, Crafting.recipe_skill(rid)) + SkillTree.quality_bonus(rid, a)
+	return float(Crafting.cfg("skill").get("quality_per_level", 0.4)) * level(a, Crafting.recipe_skill(rid)) + SkillTree.quality_bonus(rid, a) \
+		+ CraftTools.quality_bonus(rid)   # R4: the workshop's mold or pattern, for whoever works the Design
 
 
 ## Expected craftsmanship of operation `i` by a simulated worker (apprentices/specialists); -1 for the smith, whose

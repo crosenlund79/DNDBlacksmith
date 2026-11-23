@@ -40,6 +40,8 @@ const STEPS := [
 		"what": "R2 (TECH-019, WLD-011 data model, decision D-7): the single `world.rep` (what the village had heard of the smith) becomes what every audience — villagers, adventurers, traders, artisans, nobility — in the village has heard (`reputation.word[audience][place]`); the region starts with nothing heard (spreading is R8). The general standing is unchanged. Idempotent."},
 	{"to": 11, "name": "one history: the Chronicle in Lore",
 		"what": "R3 (GOV-031, LORE-017, BUG-018): the separate, capped news feed (`chronicle`) is folded into Lore — every feed entry becomes a Lore event (or marks the event it already presented) in its original time and order, linked to its people, items and place, and the Chronicle becomes a view of Lore. Hall of Fame plaques and Epic distinctions are untouched. Nothing is deleted; idempotent."},
+	{"to": 12, "name": "commissions v2",
+		"what": "R4 (ECO-024, TECH-031, D5): every contract (offered, in hand or delivered) gains an empty list of named prestige pieces — an order in hand keeps its lines, hours, quality, crate, masterpiece and deadline exactly. Delivered orders keep their records (no longer capped). The village, its muster and the Watch are created when they first receive something. Idempotent."},
 ]
 
 
@@ -110,6 +112,17 @@ static func apply_step(to: int, data: Dictionary) -> bool:
 		10:
 			if Reputation.migrate(data) > 0:
 				Log.info("  reputation: the village's word of the smith moved into audiences × places")
+		12:
+			var n12 := 0
+			var cs: Variant = data.get("contracts", {})
+			if cs is Dictionary:
+				for k in ["offers", "active", "history"]:
+					for c in (cs.get(k, []) if cs.get(k) is Array else []):
+						if c is Dictionary and not c.has("named"):
+							c["named"] = []
+							n12 += 1
+			if n12 > 0:
+				Log.info("  commissions v2: %d contracts can now hold named pieces" % n12)
 		11:
 			var n11 := Lore.migrate_chronicle(data)
 			if n11 > 0:

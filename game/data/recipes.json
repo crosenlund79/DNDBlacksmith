@@ -4877,5 +4877,138 @@
   },
   "requires": {},
   "desc": "An elven-style warbow: the silverleaf varnish keeps it from ever taking a set."
+ },
+ {
+  "id": "make_mold_ring",
+  "name": "Ring Mold",
+  "discipline": "classic",
+  "category": "tool",
+  "material": "iron",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Pour the mold halves",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "True the ring cavity",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Lap the parting faces",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "crucible",
+   "anvil",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 2,
+   "reagent_salt": 1
+  },
+  "output": "mold_ring",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "smithing": 14
+  },
+  "requires": {},
+  "desc": "A reusable two-part mold for silver bands and ring settings."
+ },
+ {
+  "id": "make_mold_amulet",
+  "name": "Amulet Mold",
+  "discipline": "classic",
+  "category": "tool",
+  "material": "iron",
+  "difficulty": 3,
+  "operations": [
+   {
+    "station": "crucible",
+    "op": "Pour the mold halves",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Cut the bezel cavity",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "grinding_wheel",
+    "op": "Lap the parting faces",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "crucible",
+   "anvil",
+   "grinding_wheel"
+  ],
+  "inputs": {
+   "ingot_iron": 3,
+   "reagent_salt": 1
+  },
+  "output": "mold_amulet",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "smithing": 14
+  },
+  "requires": {},
+  "desc": "A reusable mold for amulet bezels."
+ },
+ {
+  "id": "make_pattern_muster",
+  "name": "Muster Pattern",
+  "discipline": "classic",
+  "category": "tool",
+  "material": "iron",
+  "difficulty": 2,
+  "operations": [
+   {
+    "station": "forge",
+    "op": "Forge the templates",
+    "checks": 1,
+    "weight": 1.0
+   },
+   {
+    "station": "anvil",
+    "op": "Shape the swage",
+    "checks": 1,
+    "weight": 1.0
+   }
+  ],
+  "steps": [
+   "forge",
+   "anvil"
+  ],
+  "inputs": {
+   "ingot_iron": 3
+  },
+  "output": "pattern_muster",
+  "qty": 1,
+  "dice": {
+   "purity": "1d6"
+  },
+  "xp": {
+   "smithing": 14
+  },
+  "requires": {},
+  "desc": "Templates and a swage for the muster's helm and round shield, forged to one pattern."
  }
 ]

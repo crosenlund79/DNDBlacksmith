@@ -8,7 +8,7 @@
 extends Node
 
 ## The save-schema version this build writes; SaveMigrations.STEPS converts every older version up to it.
-const SAVE_VERSION := 11
+const SAVE_VERSION := 12
 const MINUTES_PER_SECOND := 1.6   # one in-game day ≈ 15 real minutes
 const DAY_START_HOUR := 6
 
@@ -63,6 +63,7 @@ func new_game(difficulty := "journeyman") -> void:
 		"exp": {"active": {}, "done": [], "parties": {}},
 		"offers": [],
 	}
+	state["world_seed"] = Living.make_seed()   # R3: first, so every seeded stream of the new campaign starts from it
 	# starting materials — enough to try every open discipline once or twice
 	for pair in [["ore_iron", 8], ["coal", 10], ["ingot_iron", 6], ["ingot_steel", 2], ["leather_cured", 5], ["leather_hide", 4],
 			["thread_linen", 4], ["ore_silver", 2], ["herb_emberleaf", 4], ["herb_moonwort", 4], ["reagent_salt", 3], ["runestone_blank", 2]]:
@@ -198,11 +199,28 @@ func add_gold(amount: int, category: String, note: String, party := "") -> void:
 	MaterialLedger.note_gold(line)   # Living Workshop #46: a purchase names the seller of what arrives with it
 	if Steward.is_active():
 		Steward.note_ledger(amount, category, note)   # the report reconciles every coin of the time away
-	if state["ledger"].size() > 400:
-		state["ledger"].pop_front()
+	while state["ledger"].size() > 400:
+		_archive_ledger_line(state["ledger"].pop_front())
 	Events.gold_changed.emit(state["gold"])
 	if amount != 0:
 		Audio.play("sfx/coins", -6.0)
+
+
+## R4 (BUG-048): a ledger line that scrolls off the 400 kept lines is summed into the month's totals by payer and
+## category, so the record of who paid whom survives the whole campaign.
+func _archive_ledger_line(l: Dictionary) -> void:
+	if not state.get("ledger_archive") is Dictionary:
+		state["ledger_archive"] = {}
+	var month := str((int(l.get("day", 1)) - 1) / 30 + 1)
+	var arch: Dictionary = state["ledger_archive"]
+	if not arch.has(month):
+		arch[month] = {}
+	var k := "%s|%s" % [str(l.get("party", "")), str(l.get("cat", ""))]
+	var m: Dictionary = arch[month]
+	if not m.has(k):
+		m[k] = {"amount": 0, "lines": 0}
+	m[k]["amount"] = int(m[k]["amount"]) + int(l.get("amount", 0))
+	m[k]["lines"] = int(m[k]["lines"]) + 1
 
 
 func can_afford(amount: int) -> bool:

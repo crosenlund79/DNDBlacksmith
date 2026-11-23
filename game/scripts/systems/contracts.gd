@@ -221,6 +221,11 @@ static func _hpu(rid: String) -> float:
 	return snappedf(0.6 + 0.4 * float(Crafting.difficulty(rid)), 0.25)
 
 
+## Hours per piece of a line as worked now: a mold or pattern in the stores speeds the series (R4, D11).
+static func line_hpu(l: Dictionary) -> float:
+	return float(l.get("hpu", _hpu(str(l.get("recipe", ""))))) * CraftTools.hours_factor(str(l.get("recipe", "")))
+
+
 ## Builds a contract from a template (not yet offered). `why`: the accomplishments the letter names.
 static func _build(tpl: Dictionary, why: String) -> Dictionary:
 	var s := st()
@@ -247,6 +252,15 @@ static func _build(tpl: Dictionary, why: String) -> Dictionary:
 		"rare": (tpl.get("rare", {}) as Dictionary).duplicate(), "rare_in": {}, "masterpiece": {}, "status": "offered",
 		"offered_day": Game.day(), "expires": Game.day() + int(_f("offer_days", 5.0)), "accepted_day": -1,
 		"contrib": {}, "log": [], "late_noted": false, "blocker": ""}
+	# R4 (ECO-024, D5): several individually named prestige pieces — each a real piece made in the workshop (a staged
+	# work order with its own uid, maker and contributors), named by the patron in the letter (decision 8)
+	var named := []
+	for nd in tpl.get("named", []):
+		var rid2 := str(nd.get("design", ""))
+		named.append({"design": rid2, "def": str(DB.recipe(rid2).get("output", "")), "name": str(nd.get("name", "")),
+			"label": str(nd.get("label", "")), "min_q": float(nd.get("min_q", 85)), "smith_hand": bool(nd.get("smith_hand", false)),
+			"uid": -1, "item": {}, "task": -1, "ready_uid": -1})
+	c["named"] = named
 	var mp: Variant = tpl.get("masterpiece", null)
 	if mp is Dictionary and not (mp as Dictionary).is_empty():
 		c["masterpiece"] = {"defs": (mp["defs"] as Array).duplicate(), "min_q": float(mp.get("min_q", 100)), "label": str(mp.get("label", "a masterpiece")), "uid": -1, "item": {}}
@@ -298,6 +312,13 @@ static func _offerable(tpl: Dictionary) -> bool:
 	for l in tpl.get("lines", []):
 		if Crafting.recipe_locked_reason(str(l["recipe"])) != "":
 			return false
+	# R4: a letter naming prestige pieces comes only once the workshop knows their Designs and the smith's standing
+	# has reached the order's tier (min_tier)
+	for nd in tpl.get("named", []):
+		if Crafting.recipe_locked_reason(str(nd.get("design", ""))) != "":
+			return false
+	if int(tpl.get("min_tier", 0)) > 0 and int(standing()["tier"]) < int(tpl["min_tier"]):
+		return false
 	var pid := str(tpl.get("patron", ""))
 	if favour(pid) <= -3:
 		return false
@@ -375,8 +396,9 @@ static func accept(id: String) -> String:
 	if int(c["advance"]) > 0:
 		Game.add_gold(int(c["advance"]), "contract", "Advance: " + str(c["title"]), "patron:" + str(c["patron"]))
 	_log(c, "Accepted on day %d; deadline day %d. %s sent a crate: %s." % [Game.day(), int(c["deadline"]), patron_name(str(c["patron"])), defs_text(c["crate"])])
-	Lore.record("commission", "Brannoc accepted a major contract from %s: %s." % [patron_name(str(c["patron"])), c["title"]],
+	c["accept_event"] = Lore.record("commission", "Brannoc accepted a major contract from %s: %s." % [patron_name(str(c["patron"])), c["title"]],
 		{"importance": 1, "place": "brindlewick", "data": {"contract": id}, "chronicle": true})
+	_queue_named(c)
 	Events.toast.emit("Contract accepted — %d g advance. The patron's crate stands by the Project Bench." % int(c["advance"]), "good")
 	_changed()
 	return ""
@@ -535,18 +557,19 @@ static func add_hours(c: Dictionary, hours: float, q: float, who: String) -> flo
 				c["blocker"] = next_unit_problem(c)
 				break
 		var l := _line_of(c, int(c["units_done"]))
-		var need := float(l["hpu"]) - float(c["unit_progress"])
+		var hpu := line_hpu(l)   # R4: a mold or pattern speeds its series
+		var need := hpu - float(c["unit_progress"])
 		var step := minf(left, need)
 		c["unit_progress"] = float(c["unit_progress"]) + step
+		c["q_sum"] = float(c["q_sum"]) + (q + CraftTools.quality_bonus(str(l.get("recipe", "")))) * step
 		left -= step
 		used += step
-		if float(c["unit_progress"]) >= float(l["hpu"]) - 0.0001:
+		if float(c["unit_progress"]) >= hpu - 0.0001:
 			c["units_done"] = int(c["units_done"]) + 1
 			c["unit_open"] = false
 			c["unit_progress"] = 0.0
 	if used > 0.0:
 		c["hours_done"] = float(c["hours_done"]) + used
-		c["q_sum"] = float(c["q_sum"]) + q * used
 		c["q_hours"] = float(c["q_hours"]) + used
 		c["contrib"][who] = float((c["contrib"] as Dictionary).get(who, 0.0)) + used
 		if int(c["units_done"]) >= int(c["units_total"]):
@@ -743,7 +766,7 @@ static func _return_masterpiece(c: Dictionary) -> void:
 # ======================================================================= delivery
 static func ready(id: String) -> bool:
 	var c := _active(id)
-	return not c.is_empty() and int(c["units_done"]) >= int(c["units_total"])
+	return not c.is_empty() and int(c["units_done"]) >= int(c["units_total"]) and named_missing(c) == 0
 
 
 static func quality(c: Dictionary) -> float:
@@ -751,7 +774,9 @@ static func quality(c: Dictionary) -> float:
 
 
 static func progress(c: Dictionary) -> float:
-	return clampf(float(c["hours_done"]) / maxf(0.01, float(c["hours_total"])), 0.0, 1.0)
+	if int(c.get("units_done", 0)) >= int(c.get("units_total", 1)):
+		return 1.0   # a mold or pattern can finish the series in fewer hours than planned
+	return clampf(maxf(float(c["hours_done"]) / maxf(0.01, float(c["hours_total"])), float(c.get("units_done", 0)) / maxf(1.0, float(c.get("units_total", 1)))), 0.0, 1.0)
 
 
 ## The outcome the order would have if delivered now (for the view and for deliver()).
@@ -791,27 +816,39 @@ static func deliver(id: String) -> Dictionary:
 	if c.is_empty():
 		return {"error": "No such contract in hand."}
 	if not ready(id):
+		if int(c["units_done"]) >= int(c["units_total"]):
+			return {"error": "%d named piece%s still to lay in — the order is not finished." % [named_missing(c), "" if named_missing(c) == 1 else "s"]}
 		return {"error": "%d of %d pieces made — the order is not finished." % [int(c["units_done"]), int(c["units_total"])]}
 	var o := outcome_now(c)
 	var pn := patron_name(str(c["patron"]))
 	var mp_item: Dictionary = c["masterpiece"].get("item", {}) if not c["masterpiece"].is_empty() else {}
 	var items := []
-	if not mp_item.is_empty():
+	var to_inst := Institutions.of_patron(str(c["patron"])) != ""   # R4: an institution keeps it in its own stock
+	if not mp_item.is_empty() and not to_inst:
 		Provenance.transfer(mp_item, "patron_" + str(c["patron"]), "commissioned", "brindlewick", "%s was delivered to %s with the order «%s»." % [Items.display_name(mp_item), pn, c["title"]])
 		var ow: Array = Provenance.owners(mp_item)
 		if not ow.is_empty():
 			ow[-1]["name"] = str(patron(str(c["patron"])).get("name", pn))
 		items.append(mp_item)
+	elif not mp_item.is_empty():
+		items.append(mp_item)
+	var named_items := []
+	for slot in c.get("named", []):
+		var ni: Dictionary = slot.get("item", {})
+		if not ni.is_empty() and not ItemRegistry.is_ref(ni):
+			named_items.append(ni)
 	var word := str(OUTCOME_WORD.get(o["outcome"], ""))
 	var text := "Brannoc delivered «%s» to %s — %d pieces at %d%% craftsmanship%s%s. %s." % [c["title"], pn, int(c["units_total"]), int(round(float(o["quality"]))),
 		(", %d day%s late" % [int(o["late_days"]), "" if int(o["late_days"]) == 1 else "s"]) if int(o["late_days"]) > 0 else ", on time",
 		(" with " + Items.display_name(mp_item)) if not mp_item.is_empty() else "", word]
-	_close(c, str(o["outcome"]), int(o["pay"]), float(o["rep"]), int(o["favour"]), text, items)
+	if not named_items.is_empty():
+		text = text.trim_suffix(".") + ". With them: %s." % ", ".join(PackedStringArray(named_items.map(func(x): return Items.display_name(x))))
+	_close(c, str(o["outcome"]), int(o["pay"]), float(o["rep"]), int(o["favour"]), text, items, named_items)
 	return o
 
 
 ## Ends a contract: pay, reputation, favour, history, crate back, story.
-static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: int, text: String, items := []) -> void:
+static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: int, text: String, items := [], named_items := []) -> void:
 	active().erase(c)
 	c["status"] = "delivered" if outcome != "failed" else "failed"
 	c["outcome"] = outcome
@@ -820,6 +857,7 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	c["rep_change"] = rep
 	if outcome == "failed":
 		_return_masterpiece(c)
+		_return_named(c)
 	c["crate_returned"] = (c["crate"] as Dictionary).duplicate()
 	c["crate"] = {}
 	var pid := str(c["patron"])
@@ -841,8 +879,15 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	var imp := 2 if outcome != "poor" else 1
 	if tier >= 3 or outcome == "excellent":
 		imp = 3
-	Lore.record("commission", text, {"importance": imp, "items": items, "place": "brindlewick", "chronicle": true, "notable": true,
-		"data": {"contract": str(c["id"]), "patron": pid, "outcome": outcome}})
+	var dev := Lore.record("commission", text, {"importance": imp, "items": items + named_items, "place": "brindlewick", "chronicle": true, "notable": true,
+		"because": [str(c.get("accept_event", ""))], "data": {"contract": str(c["id"]), "patron": pid, "outcome": outcome}})
+	if outcome != "failed":
+		var handed := named_items.duplicate()
+		var mp_i: Variant = c["masterpiece"].get("item", {}) if not c["masterpiece"].is_empty() else {}
+		if Institutions.of_patron(pid) != "" and mp_i is Dictionary and not (mp_i as Dictionary).is_empty() and not ItemRegistry.is_ref(mp_i):
+			handed.append(mp_i)
+			c["masterpiece"]["item"] = ItemRegistry.ref(mp_i)   # the masterpiece itself is in the institution's stock
+		_hand_over(c, dev, handed)
 	if outcome == "excellent" or (tier >= 3 and outcome == "good"):
 		Recognition.record("commission", str(c["title"]), text, {"contract": str(c["id"]), "uid": int(c["masterpiece"].get("uid", -1)) if not c["masterpiece"].is_empty() else -1},
 			"contract_" + str(c["id"]))
@@ -852,12 +897,168 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	if outcome != "failed" and mpi is Dictionary and not (mpi as Dictionary).is_empty() and not ItemRegistry.is_ref(mpi):
 		ItemRegistry.archive(mpi, "patron_" + pid, str(patron(pid).get("name", pid)), "contract", {"contract": str(c["id"])})
 		c["masterpiece"]["item"] = ItemRegistry.ref(mpi)
-	history().append(c)
-	while history().size() > 30:
-		history().pop_front()
+	history().append(c)   # R4 (BUG-048): a delivered order's record is kept for the whole campaign
 	var kind := "good" if outcome in ["excellent", "good"] else "bad"
 	Events.toast.emit(text, "legendary" if outcome == "excellent" and tier >= 4 else kind)
 	_changed()
+
+
+# ======================================================================= R4: named prestige pieces and recipients
+## Named pieces not yet laid into the order.
+static func named_missing(c: Dictionary) -> int:
+	var n := 0
+	for slot in c.get("named", []):
+		if (slot.get("item", {}) as Dictionary).is_empty():
+			n += 1
+	return n
+
+
+## On acceptance each named piece becomes a work order in the Workshop Ledger (a staged order of its Design, its uid
+## reserved). Without staff the smith makes it himself and lays it in from his stores.
+static func _queue_named(c: Dictionary) -> void:
+	var slots: Array = c.get("named", [])
+	for i in slots.size():
+		var slot: Dictionary = slots[i]
+		if int(slot.get("task", -1)) >= 0 or not (slot.get("item", {}) as Dictionary).is_empty():
+			continue
+		if not Apprentices.unlocked() or Apprentices.staff().is_empty():
+			continue
+		var t := Apprentices.add_task("craft", {"recipe": str(slot["design"]), "priority": 1})
+		if t.has("error"):
+			slot["queue_note"] = str(t["error"])
+			continue
+		t["contract"] = str(c["id"])
+		t["named_index"] = i
+		t["label"] = "«%s» for %s" % [str(slot["name"]), patron_name(str(c["patron"]))]
+		slot["task"] = int(t["id"])
+	_changed()
+
+
+## Why a piece cannot be this named piece ("" = it can).
+static func named_reason(c: Dictionary, i: int, it: Dictionary) -> String:
+	var slots: Array = c.get("named", [])
+	if i < 0 or i >= slots.size():
+		return "No such piece in the order."
+	var slot: Dictionary = slots[i]
+	if not (slot.get("item", {}) as Dictionary).is_empty():
+		return "«%s» is already laid in." % slot["name"]
+	if str(it.get("def", "")) != str(slot["def"]):
+		return "The patron asked for %s." % str(DB.item(str(slot["def"])).get("name", slot["def"]))
+	if bool(it.get("dev", false)) or not Provenance.is_workshop(it):
+		return "It must be made at the Ironhand forge."
+	if float(it.get("quality", 0.0)) < float(slot["min_q"]):
+		return "It needs %d%% craftsmanship (this one has %d%%)." % [int(slot["min_q"]), int(round(float(it.get("quality", 0.0))))]
+	if bool(slot.get("smith_hand", false)) and not smith_worked(it):
+		return "The letter asks for the smith's own hand on this one — forge it yourself or work one of its stages."
+	return ""
+
+
+## Did the smith make the piece or work a stage of it?
+static func smith_worked(it: Dictionary) -> bool:
+	if Provenance.is_mine(it):
+		return true
+	for e in Provenance.contributors(it):
+		if str(e.get("who", e.get("id", ""))) in ["player", Provenance.SMITH_ID]:
+			return true
+	return false
+
+
+## Lays a finished piece from the stores into the order as its named piece: same instance and uid; the patron's name is
+## given (kept apart from any name it may earn later), and Lore records it.
+static func lay_in_named(id: String, i: int, uid: int) -> String:
+	var c := _active(id)
+	if c.is_empty():
+		return "No such contract in hand."
+	var it := Game.find_uid(uid)
+	if it.is_empty():
+		return "That piece is not in your stores."
+	var why := named_reason(c, i, it)
+	if why != "":
+		return why
+	it = Game.take_uid(uid)
+	var slot: Dictionary = c["named"][i]
+	var base := str(it.get("name", ""))
+	it["given_name"] = {"name": str(slot["name"]), "by": patron_name(str(c["patron"])), "patron": str(c["patron"]),
+		"contract": str(c["id"]), "day": Game.day(), "label": str(slot.get("label", "")), "base": base}
+	it["name"] = "%s, %s" % [str(slot["name"]), base]
+	it.erase("for_contract")
+	slot["uid"] = uid
+	slot["item"] = it
+	slot["ready_uid"] = -1
+	var ev := Lore.record("commission", "%s was laid into «%s» and named “%s” by %s%s." % [base, c["title"], str(slot["name"]),
+		patron_name(str(c["patron"])), (" — " + str(slot["label"])) if str(slot.get("label", "")) != "" else ""],
+		{"items": [it], "importance": 2, "place": "brindlewick", "because": [str(c.get("accept_event", ""))],
+		"data": {"contract": str(c["id"]), "given_name": str(slot["name"])}})
+	it["given_name"]["event"] = ev
+	_log(c, "Laid in «%s»: %s (%d%%)." % [str(slot["name"]), base, int(round(float(it.get("quality", 0.0))))])
+	_changed()
+	return ""
+
+
+## Apprentices: a work order for a named piece is finished. The piece is laid in at once — unless the steward runs the
+## forge: then it waits in the stores and the smith decides (D19: a named piece is a weighty matter).
+static func on_named_made(t: Dictionary, it: Dictionary) -> void:
+	var c := _active(str(t.get("contract", "")))
+	var i := int(t.get("named_index", -1))
+	if c.is_empty() or it.is_empty() or i < 0 or i >= (c.get("named", []) as Array).size():
+		return
+	var slot: Dictionary = c["named"][i]
+	slot["task"] = -1
+	var why := named_reason(c, i, it)
+	if why != "":
+		slot["note"] = "The finished %s could not be laid in: %s" % [Items.display_name(it), why]
+		_log(c, str(slot["note"]))
+		return
+	if Steward.is_active():
+		slot["ready_uid"] = int(it.get("uid", -1))
+		it["for_contract"] = str(c["id"])
+		Steward.defer("contract", "«%s» for %s is finished — %s (%d%%). It waits in your stores for you to lay it into the order." % [str(slot["name"]),
+			patron_name(str(c["patron"])), Items.display_name(it), int(round(float(it.get("quality", 0.0))))], {"contract": str(c["id"]), "uid": int(it.get("uid", -1))})
+		return
+	lay_in_named(str(c["id"]), i, int(it.get("uid", -1)))
+
+
+static func _return_named(c: Dictionary) -> void:
+	for slot in c.get("named", []):
+		var it: Dictionary = slot.get("item", {})
+		if it.is_empty() or ItemRegistry.is_ref(it):
+			continue
+		slot["item"] = {}
+		slot["uid"] = -1
+		Game.add_item(it, false)
+
+
+## Delivery to an institution: the named pieces pass to it (same uids, on record) and a lot record says what was
+## delivered. A private patron's named pieces go to the holdings archive, like a masterpiece.
+static func _hand_over(c: Dictionary, delivery_event: String, named_items: Array) -> void:
+	var pid := str(c["patron"])
+	var inst := Institutions.of_patron(pid)
+	var lines := []
+	for l in c.get("lines", []):
+		lines.append({"def": str(l.get("def", "")), "n": int(l.get("n", 0))})
+	if inst != "":
+		var holder := Institutions.holder_id(inst)
+		Lore.push_cause(delivery_event)
+		for it in named_items:
+			Provenance.transfer(it, holder, "commissioned", Institutions.DEFS[inst].get("place", "brindlewick"),
+				"%s passed to %s with the order «%s»." % [Items.display_name(it), Institutions.name_of(inst), c["title"]])
+			var ow: Array = Provenance.owners(it)
+			if not ow.is_empty():
+				ow[-1]["name"] = Institutions.name_of(inst)
+		Lore.pop_cause()
+		var lot := Institutions.receive(inst, "the Ironhand forge", lines, named_items, quality(c), contributors(c),
+			{"contract": str(c["id"]), "title": str(c["title"]), "event": delivery_event})
+		c["lot"] = lot.get("id", "")
+	else:
+		for it in named_items:
+			Provenance.transfer(it, "patron_" + pid, "commissioned", "brindlewick", "%s was delivered to %s with the order «%s»." % [Items.display_name(it), patron_name(pid), c["title"]])
+			ItemRegistry.archive(it, "patron_" + pid, str(patron(pid).get("name", pid)), "contract", {"contract": str(c["id"])})
+		c["lot"] = {"day": Game.day(), "lines": lines, "pieces": named_items.map(func(x): return int(x.get("uid", -1))), "quality": snappedf(quality(c), 0.1),
+			"contributors": contributors(c)}
+	for slot in c.get("named", []):
+		var ni: Dictionary = slot.get("item", {})
+		if not ni.is_empty() and not ItemRegistry.is_ref(ni):
+			slot["item"] = ItemRegistry.ref(ni)
 
 
 # ======================================================================= presentation helpers

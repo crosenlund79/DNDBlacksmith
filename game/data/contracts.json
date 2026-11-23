@@ -241,6 +241,56 @@
     "min_q": 110,
     "label": "the Queen's sword of state"
    }
+  },
+  {
+   "id": "honor_guard",
+   "patron": "brindlewick_muster",
+   "min_tier": 2,
+   "title": "An honour guard for the muster",
+   "text": "The reeve wants the muster to stand at the mill-day gathering like a company that means it: ten iron helms and ten round shields for the ranks, and three pieces for the three who lead them, each named in her letter.",
+   "lines": [
+    {
+     "recipe": "iron_helm",
+     "n": 10
+    },
+    {
+     "recipe": "round_shield",
+     "n": 10
+    }
+   ],
+   "named": [
+    {
+     "design": "steel_longsword",
+     "name": "Vigil",
+     "label": "the sergeant's sword",
+     "min_q": 85,
+     "smith_hand": true
+    },
+    {
+     "design": "steel_cuirass",
+     "name": "Hearthward",
+     "label": "the standard-bearer's cuirass",
+     "min_q": 85
+    },
+    {
+     "design": "steel_tower_shield",
+     "name": "Millstone",
+     "label": "the shield of the front rank",
+     "min_q": 85
+    }
+   ],
+   "min_q": 70,
+   "days": 30,
+   "pay": 2600,
+   "advance": 0.3,
+   "rep": 7,
+   "crate": {
+    "ingot_iron": 20,
+    "leather_cured": 14,
+    "ingot_steel": 8
+   },
+   "rare": {},
+   "masterpiece": null
   }
  ],
  "config": {

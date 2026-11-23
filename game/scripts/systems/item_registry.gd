@@ -23,7 +23,7 @@ class_name ItemRegistry
 
 ## Every physical holder, in lookup order. The first three are the classic "worn or stored" set.
 const HOLDERS := ["stores", "adventurer", "hireling", "smith", "offer", "customer", "returns", "expedition", "pack",
-	"site", "pledge", "contract", "holdings", "pawn_stock", "rival_stock", "caravan_stock", "ship_stock"]
+	"site", "pledge", "contract", "holdings", "pawn_stock", "rival_stock", "caravan_stock", "ship_stock", "institution"]
 ## Last-known copies of the smith's pieces that have left the known world (ItemStory "circulating" pool).
 ## A pool copy is the item's physical form only while no live holder has that uid.
 const DORMANT := "pool"
@@ -38,7 +38,7 @@ const STORY := ["stores", "adventurer", "hireling", "smith", "offer", "customer"
 
 ## Lookup priority when one uid is (wrongly) held twice: the earlier holder is the authentic one.
 const AUTHORITY := ["smith", "stores", "adventurer", "hireling", "contract", "pledge", "holdings", "returns", "expedition",
-	"pack", "customer", "offer", "site", "pawn_stock", "rival_stock", "caravan_stock", "ship_stock"]
+	"pack", "customer", "offer", "site", "pawn_stock", "rival_stock", "caravan_stock", "ship_stock", "institution"]
 
 const REF_KEY := "ref"
 ## What a reference keeps of the piece (enough for every record's readable text: name, ×qty, ✦ Epic, ★, colour, icon).
@@ -208,9 +208,20 @@ static func _collect(s: Dictionary, scope: Array, want: int, out: Array) -> void
 						var mp: Variant = ca[i].get("masterpiece", {}) if ca[i] is Dictionary else {}
 						if mp is Dictionary and _hit(mp.get("item", {}), want, h, "/contracts/active[%d]/masterpiece/item" % i, out):
 							return
+						var nm: Variant = ca[i].get("named", []) if ca[i] is Dictionary else []   # R4: named prestige pieces laid in
+						if nm is Array:
+							for k in (nm as Array).size():
+								if nm[k] is Dictionary and _hit(nm[k].get("item", {}), want, h, "/contracts/active[%d]/named[%d]/item" % [i, k], out):
+									return
 			"holdings":
 				if _wrapped(_dig(s, ["item_registry", "holdings"]), want, h, "/item_registry/holdings", out):
 					return
+			"institution":   # R4: pieces delivered to the village, its muster or the Watch
+				var ins: Variant = s.get("institutions", {})
+				if ins is Dictionary:
+					for iid in ins:
+						if ins[iid] is Dictionary and _arr(ins[iid].get("stock", []), want, h, "/institutions/%s/stock" % str(iid), out):
+							return
 
 
 static func _dig(s: Dictionary, keys: Array) -> Variant:

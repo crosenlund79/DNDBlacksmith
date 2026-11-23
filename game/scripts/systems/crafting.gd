@@ -362,7 +362,7 @@ static func base_quality(j := {}) -> float:
 
 static func skill_bonus(recipe_id: String) -> float:
 	return float(cfg("skill").get("quality_per_level", 0.4)) * Game.player_level(recipe_skill(recipe_id)) + hireling_assist(recipe_id) \
-		+ SkillTree.quality_bonus(recipe_id)
+		+ SkillTree.quality_bonus(recipe_id) + CraftTools.quality_bonus(recipe_id)   # R4: a mold or pattern steadies the work
 
 
 ## A skilled hand at work in the forge steadies the smith's work: +0.25% per level of the best

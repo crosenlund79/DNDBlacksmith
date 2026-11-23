@@ -377,6 +377,10 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append(Recognition.epic_line(it))
 	if it.has("named"):
 		lines.append("[i][color=#%s]“%s” — %s, named on day %d: %s[/color][/i]" % [c, it["named"].get("name", ""), def(it).get("name", ""), int(it["named"].get("day", 0)), it["named"].get("why", "")])
+	if it.has("given_name"):   # R4: named by the patron who commissioned it (apart from any name it earns)
+		var gn: Dictionary = it["given_name"]
+		lines.append("[i]«%s» — named by %s for the order «%s»%s[/i]" % [str(gn.get("name", "")), str(gn.get("by", "")),
+			str(Contracts.get_c(str(gn.get("contract", ""))).get("title", "a major order")), (", " + str(gn["label"])) if str(gn.get("label", "")) != "" else ""])
 	elif it.has("title"):
 		lines.append("[i][color=#%s]%s, once called %s[/color][/i]" % [c, def(it).get("name", ""), it.get("base_name", "")])
 	if it.get("broken", false):

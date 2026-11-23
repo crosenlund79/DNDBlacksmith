@@ -3888,6 +3888,11 @@ func phase_consult_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_consult.gd").new()
 	await ph.run(self)   # A2: the call was missing, so this phase silently tested nothing
 
+# ======================================================================= R4: the Honor Guard (commissions v2, civic recipients)
+func phase_honor_guard() -> void:
+	var ph: RefCounted = load("res://tests/playtest_honor_guard.gd").new()
+	await ph.run(self)
+
 # ======================================================================= The Living Realm: sponsored expeditions (SPONSOR worker)
 func phase_sponsor_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_sponsor.gd").new()

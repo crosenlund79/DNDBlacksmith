@@ -169,6 +169,12 @@ func _terms(c: Dictionary) -> Control:
 		rows.append(["You must find", Contracts.defs_text(c["rare"]) + " (rare)"])
 	if not (c["masterpiece"] as Dictionary).is_empty():
 		rows.append(["Masterpiece", "%s, forged by your own hand, %d%%+" % [c["masterpiece"]["label"], int(c["masterpiece"]["min_q"])]])
+	for slot in c.get("named", []):   # R4: named prestige pieces, named by the patron
+		rows.append(["Named piece", "«%s» — %s: %s, %d%%+%s" % [str(slot["name"]), str(slot.get("label", "")), Guide.iname(str(slot["def"])),
+			int(slot["min_q"]), " (the smith's own hand)" if bool(slot.get("smith_hand", false)) else ""]])
+	var inst := Institutions.of_patron(str(c.get("patron", "")))
+	if inst != "":
+		rows.append(["Delivered to", "%s — the pieces and a lot record stay with them" % Institutions.name_of(inst)])
 	for r in rows:
 		g.add_child(UIKit.label(str(r[0]), 17, "body_bold"))
 		var l := UIKit.label(str(r[1]), 17)
@@ -267,6 +273,28 @@ func _build_closed(c: Dictionary) -> void:
 		h.add_child(ItemSlot.new(mpi, 56.0))
 		h.add_child(UIKit.label("%s now belongs to %s." % [Items.display_name(mpi), str(Contracts.patron(str(c["patron"])).get("name", ""))], 17, "body_italic"))
 		right.add_child(h)
+	# R4: the named pieces, where they went, and the lot record the recipient keeps
+	for slot in c.get("named", []):
+		if (slot.get("item", {}) as Dictionary).is_empty() or o == "failed":
+			continue
+		var ni := ItemRegistry.resolve(slot["item"])
+		var hn := UIKit.hbox(10)
+		hn.add_child(ItemSlot.new(ni, 48.0))
+		var owner := Provenance.owner_id(ni) if not ItemRegistry.is_ref(ni) else ""
+		hn.add_child(_wrap("«%s» — %s, now with %s." % [str(slot["name"]), Items.display_name(ni),
+			Institutions.name_of(owner.trim_prefix("inst_")) if owner.begins_with("inst_") else Contracts.patron_name(str(c["patron"]))], 16, "body_italic", UIKit.INK, 960))
+		right.add_child(hn)
+	var inst := Institutions.of_patron(str(c["patron"]))
+	if inst != "" and str(c.get("lot", "")) != "" and o != "failed":
+		for lot in Institutions.lots(inst):
+			if str(lot.get("id", "")) == str(c["lot"]):
+				var parts := PackedStringArray()
+				for l in lot.get("lines", []):
+					parts.append("%d %s" % [int(l["n"]), Guide.iname(str(l["def"]))])
+				right.add_child(_wrap("The lot record at %s (day %d): %s%s at %d%% craftsmanship; worked by %s." % [Institutions.name_of(inst), int(lot["day"]),
+					", ".join(parts), (" and %d named piece%s" % [(lot["pieces"] as Array).size(), "" if (lot["pieces"] as Array).size() == 1 else "s"]) if not (lot["pieces"] as Array).is_empty() else "",
+					int(round(float(lot.get("quality", 0.0)))), ", ".join(PackedStringArray((lot.get("contributors", []) as Array).map(func(x): return str(x.get("name", "")))))],
+					16, "body", UIKit.INK, 1060))
 	if good:
 		right.add_child(_wrap("Word of the order travels: patrons weigh delivered orders when they decide whom to write to next.", 16, "body_italic", ApprenticeUI.MUTED, 1060))
 
@@ -294,6 +322,8 @@ func _build_contract(c: Dictionary) -> void:
 	right.add_child(_materials(c))
 	if not (c["masterpiece"] as Dictionary).is_empty():
 		right.add_child(_masterpiece(c))
+	if not (c.get("named", []) as Array).is_empty():
+		right.add_child(_named(c))
 	# 4. hands at work
 	right.add_child(UIKit.divider())
 	right.add_child(_workers(c))
@@ -322,6 +352,8 @@ func _next_plate(c: Dictionary) -> Control:
 		txt = "Every piece is made. Deliver the order: %s — %d g on delivery, reputation %+d." % [str(Contracts.OUTCOME_WORD.get(o["outcome"], "")), int(o["pay"]), int(round(float(o["rep"])))]
 		if not bool(o["masterpiece"]):
 			txt += " [color=#ffb08a]The masterpiece is not laid in yet (pay is lower without it).[/color]"
+	elif int(c["units_done"]) >= int(c["units_total"]) and Contracts.named_missing(c) > 0:
+		txt = "Every bench piece is made. %d named piece%s still to lay in (below) before the order can go." % [Contracts.named_missing(c), "" if Contracts.named_missing(c) == 1 else "s"]
 	else:
 		var why := Contracts.can_work(cid)
 		if why == "":
@@ -470,6 +502,54 @@ func _masterpiece(c: Dictionary) -> Control:
 		f.add_child(hb)
 	if f.get_child_count() > 0:
 		v.add_child(f)
+	return v
+
+
+## R4: the order's named prestige pieces — each a work order in the Workshop Ledger, or laid in from the stores.
+func _named(c: Dictionary) -> Control:
+	var cid := str(c["id"])
+	var v := UIKit.vbox(4)
+	v.add_child(InkIcons.heading("icons/star", "The named pieces", 22))
+	var slots: Array = c.get("named", [])
+	for i in slots.size():
+		var slot: Dictionary = slots[i]
+		var it: Dictionary = slot.get("item", {})
+		var head := "«%s» — %s (%s, %d%%+)%s" % [str(slot["name"]), str(slot.get("label", "")), Guide.iname(str(slot["def"])), int(slot["min_q"]),
+			" · the smith's own hand" if bool(slot.get("smith_hand", false)) else ""]
+		if not it.is_empty():
+			var h := UIKit.hbox(10)
+			h.add_child(ItemSlot.new(ItemRegistry.resolve(it), 48.0))
+			h.add_child(_wrap("%s — laid in (%d%%)." % [head, int(round(float(ItemRegistry.resolve(it).get("quality", 0.0))))], 16, "body_bold", Color("#26622f"), 960))
+			v.add_child(h)
+			continue
+		var status := ""
+		if int(slot.get("task", -1)) >= 0:
+			status = "In the Workshop Ledger as a work order (Q)."
+		elif int(slot.get("ready_uid", -1)) >= 0:
+			status = "Finished while the steward ran the forge — it waits in your stores."
+		else:
+			status = "Make it at the stations (or queue it in the Workshop Ledger), then lay it in here." + ((" " + str(slot["queue_note"])) if str(slot.get("queue_note", "")) != "" else "")
+		v.add_child(_wrap("%s — %s" % [head, status], 16, "body_italic", UIKit.INK, 1060))
+		var f := HFlowContainer.new()
+		f.add_theme_constant_override("h_separation", 10)
+		for cand in Game.inventory():
+			if str(cand.get("def", "")) != str(slot["def"]) or bool(cand.get("dev", false)):
+				continue
+			var uid := int(cand["uid"])
+			var why := Contracts.named_reason(c, i, cand)
+			var hb := UIKit.hbox(6)
+			hb.add_child(ItemSlot.new(cand, 44.0))
+			var idx := i
+			var b := UIKit.button("Lay in as «%s» (%d%%)" % [str(slot["name"]), int(round(float(cand.get("quality", 0.0))))], func():
+				var err := Contracts.lay_in_named(cid, idx, uid)
+				Events.toast.emit(err if err != "" else "It waits at the bench with the order.", "bad" if err != "" else "good")
+				build(), 0)
+			b.disabled = why != ""
+			b.tooltip_text = why
+			hb.add_child(b)
+			f.add_child(hb)
+		if f.get_child_count() > 0:
+			v.add_child(f)
 	return v
 
 

@@ -452,11 +452,12 @@ func test_masterpiece_survives_forty_contracts() -> void:
 	var rec: Dictionary = Contracts.get_c(cid)["masterpiece"]["item"]
 	check(ItemRegistry.is_ref(rec), "the contract record keeps a reference")
 	var w := ItemRegistry.where(uid)
-	eq(str(w.get("holder", "")), "holdings", "the masterpiece is kept in the holdings archive")
+	# R4: the Watch is an institution — it keeps the masterpiece in its own stock (before R4: the holdings archive)
+	eq(str(w.get("holder", "")), "institution", "the masterpiece is kept by the Watch itself")
 	check(is_same(w.get("item", {}), fine), "the very sword")
-	eq(Provenance.owner_id(fine), "patron_highmarsh_watch", "owned by the Watch")
+	eq(Provenance.owner_id(fine), Institutions.holder_id("watch"), "owned by the Watch")
 	var n_events := Lore.of_item(uid).size()
-	# forty later orders close; the history keeps 30
+	# forty later orders close; R4 (BUG-048): the history keeps every one
 	for i in 40:
 		var oo := Contracts.make_offer("watch_arms")
 		if oo.has("error"):
@@ -464,14 +465,14 @@ func test_masterpiece_survives_forty_contracts() -> void:
 		var cc := Contracts.get_c(str(oo["id"]))
 		Contracts.offers().erase(cc)
 		Contracts._close(cc, "poor", 0, 0.0, 0, "A test order closed.")
-	check(Contracts.get_c(cid).is_empty(), "the original order has left the capped history (%d kept)" % Contracts.history().size())
+	check(not Contracts.get_c(cid).is_empty(), "the original order's record is still kept (%d orders)" % Contracts.history().size())
 	var w2 := ItemRegistry.where(uid)
 	check(is_same(w2.get("item", {}), fine), "the masterpiece is still in the world, whole")
 	eq(int(Provenance.maker(fine).get("day", -1)), int(Provenance.maker(fine).get("day", -2)), "its maker record intact")
 	check(Lore.of_item(uid).size() >= n_events, "and its story")
 	check(save_load("suite_identity_mp"), "save and load")
 	var w3 := ItemRegistry.where(uid)
-	eq(str(w3.get("holder", "")), "holdings", "after loading it is still in the archive")
+	eq(str(w3.get("holder", "")), "institution", "after loading the Watch still has it")
 	eq(str(Provenance.maker(w3.get("item", {})).get("id", "")), "smith", "maker kept")
 	check(Lore.of_item(uid).any(func(x): return str(x["kind"]) == "commission"), "its delivery is in its story")
 	_clean("after forty contracts and a reload")

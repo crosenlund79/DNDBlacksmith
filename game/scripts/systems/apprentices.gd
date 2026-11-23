@@ -1842,6 +1842,8 @@ static func _complete(t: Dictionary, a: Dictionary) -> void:
 			if not contrib.is_empty():
 				Events.toast.emit("%s is finished — %s made it, %s worked %s." % [nm, mname, ", ".join(PackedStringArray(contrib.map(func(e): return str(e["name"]).split(" ")[0]))),
 					"a stage" if contrib.size() == 1 else "their stages"], "good")
+			if t.has("contract"):
+				Contracts.on_named_made(t, it2)   # R4: a named prestige piece for a major order
 			if kind == "commission":
 				var o := _order(str(t["order_id"]))
 				if not o.is_empty() and str(o.get("status", "")) == "open" and Shop.item_meets(o, it2):
