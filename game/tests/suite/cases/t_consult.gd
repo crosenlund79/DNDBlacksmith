@@ -195,6 +195,8 @@ func test_recommendations_from_data() -> void:
 	p["equipment"]["weapon"] = Items.make("sword_iron", {"quality": 80.0})
 	p["equipment"]["armor"] = Items.make("armor_leather" if not DB.item("armor_leather").is_empty() else "cuirass_steel", {"quality": 75.0})
 	WorldSites.site("drakes_crag")["discovered"] = true
+	WorldSites.site("drakes_crag")["threat"] = WorldSites.THREAT_MAX   # R3: the Crag has grown deadly (the premise, stated)
+	check(Consult.danger_ratio(p, "whisperwood") <= Consult.SAFE, "premise: the home woods are within Pip's reach (%.2f)" % Consult.danger_ratio(p, "whisperwood"))
 	_bound(p, "drakes_crag")
 	var pr := Consult.recommendations(p)
 	var dr := _rec(pr, "dest")
@@ -362,6 +364,8 @@ func test_accepted_advice_changes_decisions() -> void:
 	p["equipment"]["weapon"] = Items.make("sword_iron", {"quality": 80.0})
 	p["equipment"]["armor"] = Items.make("armor_leather" if not DB.item("armor_leather").is_empty() else "cuirass_steel", {"quality": 75.0})
 	WorldSites.site("drakes_crag")["discovered"] = true
+	WorldSites.site("drakes_crag")["threat"] = WorldSites.THREAT_MAX   # R3: the Crag has grown deadly (the premise, stated)
+	check(Consult.danger_ratio(p, "whisperwood") <= Consult.SAFE, "premise: the home woods are within Pip's reach (%.2f)" % Consult.danger_ratio(p, "whisperwood"))
 	_bound(p, "drakes_crag")
 	_persuadable("pip")
 	var rd := _rec(Consult.session("pip")["recs"], "dest")

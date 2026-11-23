@@ -114,6 +114,7 @@ func test_refine_failure_is_small() -> void:
 func test_rework_within_legal_range() -> void:
 	fresh_game()
 	Property.dev_grant_all()
+	SkillTree.unlock_all()   # R3: the affix the rarity rolls may be one reworked at a rune station — know them all
 	var it := _sword(92.0)
 	if not check(not it.is_empty(), "a sword"):
 		return

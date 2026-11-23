@@ -63,7 +63,7 @@ static func make_seed() -> int:
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--seed="):
 			return absi(int(str(arg).split("=")[1]))
-	return Rng.i("world") % 2000000000
+	return randi() % 2000000000   # R3: the campaign's seed comes from the global generator (seed() / New Game), never a stream
 
 
 static func rng_for(key: String) -> RandomNumberGenerator:
@@ -120,7 +120,8 @@ static func active_count() -> int:
 # ======================================================================= campaign generation
 ## New game: the seeded starting roster (called by Adv.init_population). Same seed → same roster.
 static func generate_roster() -> void:
-	Game.state["world_seed"] = make_seed()
+	if not Game.state.has("world_seed"):
+		Game.state["world_seed"] = make_seed()   # (Game.new_game makes it first, before anything is drawn)
 	var r := rng_for("roster")
 	# the established adventurers: same people, varied circumstances
 	for id in DB.characters:

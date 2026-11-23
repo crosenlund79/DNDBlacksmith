@@ -310,12 +310,15 @@ func test_with_apprentices_and_changing_demand() -> void:
 	_hours(4)
 	var by_app := 0
 	var by_smith := 0
+	var finished := 0
 	for oid2 in oids:
 		if not Steward._commission_task(str(oid2)).is_empty():
 			by_app += 1
 		elif StewardSmith.has_order(str(oid2)):
 			by_smith += 1
-	check(by_app + by_smith == oids.size(), "every new commission was taken on (%d by apprentices, %d by the smith)" % [by_app, by_smith])
+		elif str(Steward._order(str(oid2)).get("status", "")) == "done":
+			finished += 1   # R3: already made and delivered within the four hours — taken on and done
+	check(by_app + by_smith + finished == oids.size(), "every new commission was taken on (%d by apprentices, %d by the smith, %d already done)" % [by_app, by_smith, finished])
 	var g := 0
 	while oids.any(func(o): return str(Steward._order(str(o)).get("status", "")) == "open") and g < 96:
 		_hours(1)
