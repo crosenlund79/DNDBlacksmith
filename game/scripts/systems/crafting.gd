@@ -866,11 +866,26 @@ static func treat(item_uid: int, coat_def: String) -> String:
 
 
 ## Sets a runestone into a piece of equipment (Rune Engraving Stand). Quality scales the effect.
+## R5 (EQ-029, decision 10): runes are permanent socketed effects. The first rune any smith can set; the second — a
+## piece carrying two bound runes — is high-end work for a qualified runesmith (level 5+ in runecraft on the staff).
+static func socket_reason(it: Dictionary) -> String:
+	if GearDepth.disabled(it):
+		return "It is unusable — only restoration can bring it back."
+	if (it.get("sockets", []) as Array).size() >= 1:
+		for a in Apprentices.staff():
+			if str(a.get("profession", "")) == "runesmith" and Apprentices.level(a, "runecraft") >= 5:
+				return ""
+		return "A second rune is high-end work: it needs a qualified runesmith on your staff."
+	return ""
+
+
 static func socket(item_uid: int, rune_def: String, quality: float) -> bool:
 	var it := Game.find_uid(item_uid)
 	if it.is_empty() or not Items.is_equipment(it) or Game.count(rune_def) < 1:
 		return false
 	if it.get("sockets", []).size() >= 2:
+		return false
+	if socket_reason(it) != "":
 		return false
 	Game.remove_def(rune_def, 1)
 	var rs: Dictionary = DB.item(rune_def).get("stats", {})

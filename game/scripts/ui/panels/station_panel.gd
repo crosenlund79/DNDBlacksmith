@@ -509,6 +509,10 @@ func _practice() -> void:
 func _on_socket_pressed(ob_item: OptionButton, ob_rune: OptionButton) -> void:
 	var uid := ob_item.get_item_id(ob_item.selected)
 	var rd: String = ob_rune.get_item_metadata(ob_rune.selected)
+	var why := Crafting.socket_reason(Game.find_uid(uid))   # R5: a second rune needs a qualified runesmith
+	if why != "":
+		Events.toast.emit(why, "bad")
+		return
 	ItemSpirit.speak(Game.find_uid(uid), "enchant")   # an awakened piece may have something to say about it
 	var c := Minigames.socket_check(rd)   # LW #58: skill-dependent (was a fixed zone 28 / speed 0.6)
 	Events.open_panel.emit("skillcheck", {"station": "rune_engraving_stand", "count": 1, "speed": c["speed"], "zone": c["zone"],

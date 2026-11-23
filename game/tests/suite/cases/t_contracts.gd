@@ -303,7 +303,7 @@ func test_outcomes_pay_and_reputation() -> void:
 	check(Contracts.favour("odo_varrick") >= 1, "the patron's favour rises")
 	eq(str(Contracts.history()[-1]["status"]), "delivered", "the order is in the record")
 	check((Lore.st()["events"] as Dictionary).values().any(func(e): return str(e.get("kind", "")) == "commission" and str(e.get("text", "")).contains("delivered")), "the delivery is one Lore event")
-	check(Game.state["chronicle"].any(func(e): return str(e.get("text", "")).contains("delivered")), "and in the Chronicle")
+	check(Chronicle.entries().any(func(e): return str(e.get("text", "")).contains("delivered")), "and in the Chronicle")   # R3: the Chronicle is a view of Lore
 	# late
 	_game()
 	_bench()

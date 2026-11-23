@@ -19,6 +19,7 @@ var uid := -1
 var action := ""
 var target := ""
 var show_details := false
+var warned := false   # R5: the experiment's danger was stated and accepted (a second, deliberate click)
 var result: Dictionary = {}
 var list_box: VBoxContainer
 var right: VBoxContainer
@@ -177,6 +178,17 @@ func _work_view() -> void:
 	v.add_child(UIKit.label(str(Refinement.BLURB[action]), 21, "body_italic"))
 	if action == "rework":
 		v.add_child(_target_row(it))
+	elif action == "enchant":
+		v.add_child(_arcana_row(it))
+	# R5 (EQ-038): the risk, stated before the decision
+	var rk: Dictionary = p.get("risk", {})
+	if not rk.is_empty():
+		var col: String = {"routine": "#4a5a3a", "advanced": "#8a5a10", "extraordinary": "#9a2a14"}.get(str(rk["tier"]), "#4a5a3a")
+		var rl := UIKit.rich("[color=%s][b]Risk — %s:[/b] %s[/color]" % [col, str(rk["tier"]), str(rk["text"])], 18)
+		rl.name = "Risk"
+		v.add_child(rl)
+	if action in ["enchant", "attune"] and not (p.get("arcanist", {}) as Dictionary).is_empty():
+		v.add_child(UIKit.rich("[b]Who:[/b] %s, your arcanist, does the binding (no check of yours)." % str(p["arcanist"]["name"]), 18))
 	# at a glance: the station, materials and budget on one line each; the first obstacle in red
 	var here := station == str(p["station"])
 	v.add_child(UIKit.rich("[b]Where:[/b] the %s%s" % [p["station_name"], "  [color=#2f6a1e](you are here)[/color]" if here else "  [color=#7a6a50](walk there to begin)[/color]"], 19))
@@ -211,6 +223,10 @@ func _work_view() -> void:
 	var go := UIKit.hbox(10)
 	var c: Dictionary = p.get("check", {})
 	var label := "Begin: %s at the %s (%d check%s)" % [Refinement.LABEL[action], p["station_name"], int(c.get("count", 1)), "" if int(c.get("count", 1)) == 1 else "s"]
+	if action in ["enchant", "attune"]:
+		label = "Ask %s to begin" % str(p.get("arcanist", {}).get("name", "the arcanist"))
+	elif action == "experiment":
+		label = "I accept the danger — temper it beyond" if warned else "Temper beyond… (read the danger first)"
 	var begin := UIKit.button(label, _begin, 0)
 	begin.name = "BeginWork"
 	begin.disabled = not bool(p["ok"]) or not here
@@ -252,6 +268,26 @@ func _target_row(it: Dictionary) -> Control:
 	if target == "" and not ts.is_empty():
 		target = str(ts[0]["id"])
 	ob.item_selected.connect(func(i: int): target = str(ts[i]["id"]); _build())
+	h.add_child(ob)
+	return h
+
+
+## R5: which arcane property the arcanist is to bind.
+func _arcana_row(it: Dictionary) -> Control:
+	var h := UIKit.hbox(10)
+	h.add_child(UIKit.label("Bind:", 19, "body_bold"))
+	var ob := OptionButton.new()
+	ob.name = "ArcanaTarget"
+	ob.add_theme_font_size_override("font_size", 18)
+	var ts := Refinement.arcana_targets(it)
+	for i in ts.size():
+		var d: Dictionary = GearDepth.ARCANA[ts[i]]
+		ob.add_item("%s — %s (+%d–%d %s)" % [str(d["name"]), str(d["text"]), int(d["lo"]), int(d["hi"]), str(d["stat"])], i)
+		if str(ts[i]) == target or (not ts.has(target) and i == 0):
+			ob.select(i)
+	if not ts.has(target) and not ts.is_empty():
+		target = str(ts[0])
+	ob.item_selected.connect(func(i: int): target = str(ts[i]); _build())
 	h.add_child(ob)
 	return h
 
@@ -333,6 +369,14 @@ func _begin() -> void:
 	if not bool(p["ok"]):
 		Events.toast.emit(str(p["why"]), "bad")
 		return
+	if action in ["enchant", "attune"]:
+		finish(uid, action, target, [Refinement.arcanist_quality()])   # the arcanist's work, not the smith's check
+		return
+	if action == "experiment" and not warned:
+		warned = true   # the first click shows the danger plainly; only a second, deliberate click goes ahead
+		Events.toast.emit(str(p.get("risk", {}).get("text", "")), "bad")
+		_build()
+		return
 	var c: Dictionary = p["check"]
 	var u := uid
 	var a := action
@@ -347,13 +391,20 @@ func finish(u: int, a: String, t: String, qs: Array) -> void:
 	for x in qs:
 		q += float(x)
 	q /= maxf(1.0, float(qs.size()))
-	var r := Refinement.perform(u, a, q, {"target": t, "station": station})
+	var r := Refinement.perform(u, a, q, {"target": t, "station": station, "warned": a == "experiment" and warned})
+	warned = false
 	if not bool(r.get("ok", false)):
 		Events.toast.emit(str(r.get("text", "")), "bad")
 		return
 	Audio.play({"refine": "sfx/grind", "rework": "sfx/hammer_2", "upgrade": "sfx/hammer_2", "reforge": "sfx/hammer_2"}.get(a, "sfx/hammer_2"), -4.0)
-	Events.toast.emit("%s: %s" % [Refinement.LABEL[a], {"success": "the work took.", "partial": "the work did not take.", "fail": "a slip — a small loss."}.get(str(r["outcome"]), "")],
-		"good" if str(r["outcome"]) == "success" else "bad")
+	Events.toast.emit("%s: %s" % [Refinement.LABEL[a], {"success": "the work took.", "partial": "the work did not take.", "fail": "a slip — a small loss.",
+		"destroyed": str(r.get("summary", "it is gone"))}.get(str(r["outcome"]), "")], "good" if str(r["outcome"]) == "success" else "bad")
+	if str(r["outcome"]) == "destroyed":
+		uid = -1
+		result = r
+		if is_inside_tree():
+			_build()
+		return
 	uid = u
 	action = a
 	target = t

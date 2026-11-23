@@ -105,7 +105,10 @@ func test_variants_differ() -> void:
 	var a := func(rid: String, st: String) -> int: return Items.stat(made.get(rid, {}), st)
 	check(a.call("steel_greatsword", "attack") > a.call("steel_shortsword", "attack"), "greatsword attack %d > shortsword %d" % [a.call("steel_greatsword", "attack"), a.call("steel_shortsword", "attack")])
 	check(a.call("steel_rapier", "speed") > a.call("steel_greatsword", "speed"), "rapier speed %d > greatsword %d" % [a.call("steel_rapier", "speed"), a.call("steel_greatsword", "speed")])
-	check(a.call("steel_shortsword", "attack") > a.call("iron_shortsword", "attack"), "steel makes a better shortsword than iron (%d > %d)" % [a.call("steel_shortsword", "attack"), a.call("iron_shortsword", "attack")])
+	# the material's own attack (it["stats"]): a random affix (R5 widened the pool — an iron blade may roll Keen +4)
+	# is not the material; Items.stat would add it
+	var own := func(rid: String, st: String) -> int: return int(made.get(rid, {}).get("stats", {}).get(st, 0))
+	check(own.call("steel_shortsword", "attack") > own.call("iron_shortsword", "attack"), "steel makes a better shortsword than iron (%d > %d)" % [own.call("steel_shortsword", "attack"), own.call("iron_shortsword", "attack")])
 	check(a.call("steel_great_axe", "attack") > a.call("iron_hatchet", "attack"), "great axe out-hits a hatchet")
 	var plate: int = a.call("full_plate", "protection")
 	var mail: int = a.call("iron_chainmail", "protection")

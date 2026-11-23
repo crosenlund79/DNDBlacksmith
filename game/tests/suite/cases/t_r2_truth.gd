@@ -327,16 +327,31 @@ func test_material_cost_is_one_rule() -> void:
 
 # ------------------------------------------------------------------ 7. honest stats
 func test_stats_with_no_effect_are_labelled() -> void:
+	# R5 (decision 10) gave luck, speed and vitality on any piece a real effect (GearDepth.EFFECTS); the truth rule stays:
+	# a stat is labelled "no effect" exactly when it has none — and a stat that now works is no longer labelled
 	var ring := Items.make("ring_silver", {"quality": 80.0})
 	ring["affixes"].append({"id": "fortune", "stat": "luck", "value": 5})
-	check(not Items.stat_in_play(ring, "luck"), "luck changes nothing in play")
-	check(Items.tooltip(ring).contains(Items.NO_EFFECT_NOTE), "the tooltip says so")
+	check(Items.stat_in_play(ring, "luck"), "luck is in play since R5 (Fortune: one more piece from the spoils)")
+	check(not Items.tooltip(ring).contains(Items.NO_EFFECT_NOTE), "so the tooltip no longer calls it idle")
 	var amulet := Items.make("amulet_silver") if not DB.item("amulet_silver").is_empty() else {}
 	if not amulet.is_empty():
 		check(Items.stat_in_play(amulet, "vitality"), "vitality on an amulet adds hit points")
 	var boots := Items.make("boots_leather")
-	check(not Items.stat_in_play(boots, "vitality"), "vitality on boots does not")
+	boots["affixes"].append({"id": "vigor", "stat": "vitality", "value": 6})
+	check(Items.stat_in_play(boots, "vitality"), "vitality on boots counts too (Vigor)")
+	var a := Adv.get_a(str(Adv.all().keys()[0])) if not Adv.all().is_empty() else {}
+	if not a.is_empty():
+		Expeditions.ensure(a)
+		(a["equipment"] as Dictionary).erase("boots")
+		var hp0 := Expeditions.hp_max(a)
+		a["equipment"]["boots"] = boots
+		check(Expeditions.hp_max(a) > hp0, "and really adds hit points (%d > %d) — the label tells the truth" % [Expeditions.hp_max(a), hp0])
 	boots["affixes"].append({"id": "haste", "stat": "speed", "value": 6})
-	check(not EquipmentSheet.key_stats(boots).contains("Spd"), "a sheet's key stats leave out what has no effect")
+	check(EquipmentSheet.key_stats(boots, 8).contains("Spd"), "a sheet's key stats show speed, which now has an effect")
+	# the labelling itself still works for anything outside play
+	check(not Items.stat_in_play(boots, "charm"), "a stat with no effect is not in play")
+	var odd := Items.make("ring_silver", {"quality": 80.0})
+	odd["affixes"].append({"id": "test_charm", "stat": "charm", "value": 3})
+	check(Items.tooltip(odd).contains(Items.NO_EFFECT_NOTE), "and the tooltip says so")
 	for s in ["attack", "protection", "magic", "fire", "frost", "ward", "heal"]:
 		check(Items.stat_in_play(boots, s), "%s is in play" % s)

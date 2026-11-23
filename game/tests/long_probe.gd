@@ -16,10 +16,13 @@ func _ready() -> void:
 	var days := 1095
 	var rng_seed := 9001
 	var mode := "steward"
+	var keep := false   # copy the last save out of the test folder (to user://long_probe_keep.json) for analysis
 	var nums := []
 	for a in OS.get_cmdline_user_args():
 		if str(a) in ["steward", "idle"]:
 			mode = str(a)
+		elif str(a) == "keep":
+			keep = true
 		elif str(a).is_valid_int():
 			nums.append(int(a))
 	if nums.size() > 0:
@@ -47,6 +50,8 @@ func _ready() -> void:
 			worst_day = 0
 	if mode == "steward" and Steward.is_active():
 		Steward.deactivate()
+	if keep:
+		DirAccess.copy_absolute(Saves.path("long_probe"), ProjectSettings.globalize_path("user://long_probe_keep.json"))
 	var bad := _audit()
 	print("AUDIT " + JSON.stringify(bad))
 	Saves.end_test_run()

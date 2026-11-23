@@ -18,22 +18,35 @@
 class_name Refinement
 extends RefCounted
 
-const ACTIONS := ["refine", "rework", "upgrade", "reforge"]
-const KIND := {"refine": "refined", "rework": "reworked", "upgrade": "upgraded", "reforge": "reforged"}
-const LABEL := {"refine": "Refine", "rework": "Rework", "upgrade": "Upgrade", "reforge": "Reforge"}
+const ACTIONS := ["refine", "rework", "upgrade", "reforge", "enchant", "attune", "experiment"]
+const KIND := {"refine": "refined", "rework": "reworked", "upgrade": "upgraded", "reforge": "reforged", "enchant": "enchanted",
+	"attune": "attuned", "experiment": "tempered"}
+const LABEL := {"refine": "Refine", "rework": "Rework", "upgrade": "Upgrade", "reforge": "Reforge", "enchant": "Enchant",
+	"attune": "Attune", "experiment": "Temper beyond"}
 const BLURB := {
 	"refine": "Hone and planish the piece: its craftsmanship rises a little and its stats follow.",
 	"rework": "Re-cut one attribute: it is re-rolled within its legal range, the dice weighted by your work.",
 	"upgrade": "Add a better material: its base stats rise one material step.",
 	"reforge": "Heat and rework it whole: made sound again; fine work can raise its craftsmanship.",
+	"enchant": "Your arcanist binds a deep arcane property into the piece — permanent, the same piece (canonical §6.3, D17).",
+	"attune": "Your arcanist wakes a dormant arcane property.",
+	"experiment": "An extraordinary tempering beyond the piece's ceiling. It can fail badly: the piece may be left unusable or destroyed — its history is kept.",
 }
 ## Improvements allowed per piece (successful ones count; -1 = no count, only the ceiling limits it).
-const LIMIT := {"refine": 3, "rework": 2, "upgrade": 1, "reforge": -1}
+const LIMIT := {"refine": 3, "rework": 2, "upgrade": 1, "reforge": -1, "enchant": 2, "attune": -1, "experiment": 1}
 ## Check thresholds: at or above SUCCESS the work takes; below FAIL it slips (a small, recoverable loss).
-const SUCCESS := {"refine": 70.0, "rework": 50.0, "upgrade": 60.0, "reforge": 0.0}
-const FAIL := {"refine": 50.0, "rework": 40.0, "upgrade": 40.0, "reforge": -1.0}
-const XP := {"refine": 6, "rework": 8, "upgrade": 16, "reforge": 12}
-const SPIRIT_CTX := {"refine": "sharpen", "rework": "enchant", "upgrade": "reforge", "reforge": "reforge"}
+const SUCCESS := {"refine": 70.0, "rework": 50.0, "upgrade": 60.0, "reforge": 0.0, "enchant": 55.0, "attune": 50.0, "experiment": 85.0}
+const FAIL := {"refine": 50.0, "rework": 40.0, "upgrade": 40.0, "reforge": -1.0, "enchant": 40.0, "attune": 35.0, "experiment": 60.0}
+const XP := {"refine": 6, "rework": 8, "upgrade": 16, "reforge": 12, "enchant": 0, "attune": 0, "experiment": 30}
+const SPIRIT_CTX := {"refine": "sharpen", "rework": "enchant", "upgrade": "reforge", "reforge": "reforge", "enchant": "enchant",
+	"attune": "enchant", "experiment": "reforge"}
+## R5 (EQ-038, EQ-039): the risk each kind of work carries. Routine work can only slip a little. Advanced work (re-cutting
+## a magical property at the rune stand, an upgrade to a rare material, an arcane binding) can crack the piece (broken:
+## half strength until reforged) or leave a binding dormant. Only the extraordinary experiment — explicitly warned and
+## confirmed — can leave a piece unusable or destroy it; its history always endures.
+const ADVANCED_STEPS := ["mithril", "wyrmhide", "moonweave"]
+const CRACK_BELOW := 15.0   # this far below FAIL, advanced work cracks the piece
+const DESTROY_SHARE := 0.4  # of a failed experiment: destroyed (else disabled)
 const MAGIC_STATS := ["fire", "frost", "magic", "ward", "luck", "vitality"]
 const FAMILY := {"iron": "metal", "steel": "metal", "silver": "metal", "mithril": "metal", "jewel": "metal", "adamantine": "metal",
 	"starmetal": "metal", "orichalcum": "metal", "dragonscale": "metal", "runestone": "metal", "ore": "metal",
@@ -167,6 +180,10 @@ static func station_label(st: String) -> String:
 static func station_for(it: Dictionary, action: String, target := "") -> String:
 	var fam := family(it)
 	match action:
+		"enchant", "attune":
+			return "spellbinding_array"
+		"experiment":
+			return "anvil"
 		"refine":
 			return "grinding_wheel" if fam == "metal" else "stitching_table"
 		"rework":
@@ -183,6 +200,12 @@ static func inputs_for(it: Dictionary, action: String, target := "") -> Dictiona
 	var fam := family(it)
 	var big := Items.slot(it) in ["armor", "shield"]
 	match action:
+		"enchant":
+			return {"infusion_aether": 1, "thread_ethereal": 1}
+		"attune":
+			return {"infusion_aether": 1}
+		"experiment":
+			return {str(OWN_STOCK.get(material_of(it), "ingot_steel")): 2, "coal": 2}
 		"refine":
 			return {"reagent_salt": 1} if fam == "metal" else {"thread_linen": 1}
 		"rework":
@@ -313,7 +336,35 @@ static func plan(it: Dictionary, action: String, opts := {}) -> Dictionary:
 		obs.append("It must be in your stores to be worked on.")
 	if int(out["left"]) == 0:
 		obs.append("No more %s for this piece (%d of %d used) — more would spoil it." % [{"refine": "refining", "rework": "reworking", "upgrade": "upgrades"}.get(action, action), used(it, action), int(LIMIT[action])])
+	if GearDepth.disabled(it) and action != "experiment":
+		obs.append("It is unusable — only restoration can bring it back (the Reliquary).")
 	match action:
+		"enchant", "attune":
+			var arc := arcanist()
+			if arc.is_empty():
+				obs.append("Only an arcanist binds arcane properties (canonical §6.3, D17) — none on your staff can.")
+			else:
+				out["arcanist"] = {"id": str(arc["id"]), "name": str(arc["name"])}
+			if action == "enchant":
+				var t2 := str(target)
+				var ad: Dictionary = GearDepth.ARCANA.get(t2, {})
+				if ad.is_empty():
+					var opts2 := arcana_targets(it)
+					if opts2.is_empty():
+						obs.append("No arcane property suits a %s." % Items.type_label(it).to_lower())
+					else:
+						out["target"] = {"id": str(opts2[0]), "label": str(GearDepth.ARCANA[opts2[0]]["name"])}
+				elif not (ad["for"] as Array).has(Items.slot(it)):
+					obs.append("%s does not take to a %s." % [str(ad["name"]), Items.type_label(it).to_lower()])
+				elif (it.get("arcana", []) as Array).any(func(x): return str(x.get("id", "")) == t2):
+					obs.append("It already carries %s." % str(ad["name"]))
+				else:
+					out["target"] = {"id": t2, "label": str(ad["name"])}
+			elif not (it.get("arcana", []) as Array).any(func(x): return str(x.get("state", "active")) != "active"):
+				obs.append("Nothing on it is dormant.")
+		"experiment":
+			if int(it.get("experimented", 0)) > 0:
+				obs.append("It has already been tempered beyond — once is all a piece can bear.")
 		"refine":
 			if float(it.get("quality", 0.0)) >= float(out["ceiling"]) - 0.5:
 				obs.append("At its ceiling: %d%% is as fine as your skill and the original work allow." % int(round(float(out["ceiling"]))))
@@ -347,7 +398,8 @@ static func plan(it: Dictionary, action: String, opts := {}) -> Dictionary:
 	out["obstacles"] = obs
 	out["ok"] = obs.is_empty()
 	out["why"] = "" if obs.is_empty() else str(obs[0])
-	out["rows"] = preview_rows(it, action, target)
+	out["risk"] = risk(it, action, target)
+	out["rows"] = preview_rows(it, action, target) if not action in ["enchant", "attune", "experiment"] else []
 	var c := Crafting.check_params(st, str(STEPS.get(material_of(it), {}).get("gate", "")) if action == "upgrade" else "", mini(2, int(DB.station(st).get("check", {}).get("count", 1))))
 	out["check"] = c
 	return out
@@ -444,6 +496,8 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 	if it.is_empty() or not Items.is_equipment(it):
 		return {"ok": false, "text": "Nothing to %s." % action}
 	var p := plan(it, action, opts)
+	if action == "experiment" and not bool(opts.get("warned", false)):
+		return {"ok": false, "text": "This is an extraordinary experiment: it can destroy the piece. It is done only when the danger has been stated and accepted."}
 	if not bool(p["ok"]):
 		if action == "reforge" and p["missing"].has("coal"):
 			return {"ok": false, "text": "You need a sack of coal to heat the forge for reforging."}
@@ -456,7 +510,14 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 		"refine": res = _do_refine(it, quality)
 		"rework": res = _do_rework(it, quality, str(opts.get("target", "")), int(opts.get("roll", 0)))
 		"upgrade": res = _do_upgrade(it, quality)
+		"enchant": res = _do_enchant(it, quality, str(p.get("target", {}).get("id", opts.get("target", ""))), p.get("arcanist", {}))
+		"attune": res = _do_attune(it, quality)
+		"experiment": res = _do_experiment(it, quality)
 		_: res = _do_reforge(it, quality)
+	# R5: advanced work that goes badly wrong cracks the piece (broken: half strength until a reforge makes it whole)
+	if str(risk(it, action, str(opts.get("target", "")))["tier"]) == "advanced" and action in ["rework", "upgrade"] and quality < float(FAIL[action]) - CRACK_BELOW:
+		it["broken"] = true
+		res["summary"] = str(res.get("summary", "")) + "; the piece cracked under the work (broken until reforged)"
 	var outcome := str(res.get("outcome", "success"))
 	var r := rec(it)
 	if outcome == "success":
@@ -466,10 +527,17 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 	var mats := PackedStringArray()
 	for d in p["inputs"]:
 		mats.append("%d %s" % [int(p["inputs"][d]), str(DB.item(str(d)).get("name", d))])
-	var text := "%s at the Ironhand %s (%d%%): %s." % [{"refine": "Refined", "rework": "Reworked", "upgrade": "Upgraded", "reforge": "Reforged"}[action],
+	if bool(res.get("destroyed", false)):
+		Events.inventory_changed.emit()
+		return {"ok": true, "text": str(res.get("summary", "")), "kind": "destroyed", "action": action, "outcome": "destroyed", "before": before,
+			"after": {}, "changes": [], "event": str(res.get("event", "")), "summary": str(res.get("summary", ""))}
+	var text := "%s at the Ironhand %s (%d%%): %s." % [{"refine": "Refined", "rework": "Reworked", "upgrade": "Upgraded", "reforge": "Reforged",
+		"enchant": "Enchanted", "attune": "Attuned", "experiment": "Tempered beyond its limits"}[action],
 		PLACE_WORD.get(str(p["station"]), str(p["station_name"]).to_lower()), int(round(quality)), str(res.get("summary", ""))]
 	if not changes.is_empty():
 		text += " " + change_text(changes) + "."
+	if action in ["enchant", "attune"] and not (p.get("arcanist", {}) as Dictionary).is_empty():
+		text = text.replace("at the Ironhand", "by %s at the Ironhand" % str(p["arcanist"]["name"]))
 	var data := {"action": action, "smith": Provenance.SMITH_ID, "smith_name": Provenance.SMITH_NAME, "station": str(p["station"]),
 		"materials": (p["inputs"] as Dictionary).duplicate(), "check": quality, "outcome": outcome, "changes": changes,
 		"quality_before": float(before["quality"]), "quality_after": float(after["quality"]), "target": str(res.get("target", ""))}
@@ -477,7 +545,8 @@ static func perform(uid: int, action: String, quality: float, opts := {}) -> Dic
 	(r["steps"] as Array).append({"day": Game.day(), "action": action, "outcome": outcome, "event": ev})
 	while (r["steps"] as Array).size() > 20:
 		(r["steps"] as Array).pop_front()
-	Game.grant_player_xp(Crafting.skill_for_station(str(p["station"])), int(XP[action]) if outcome != "fail" else int(float(XP[action]) * 0.5))
+	if int(XP[action]) > 0:
+		Game.grant_player_xp(Crafting.skill_for_station(str(p["station"])), int(XP[action]) if outcome != "fail" else int(float(XP[action]) * 0.5))
 	ItemSpirit.speak(it, SPIRIT_CTX[action])
 	Events.inventory_changed.emit()
 	return {"ok": true, "text": text, "kind": KIND[action], "action": action, "outcome": outcome, "before": before, "after": after,
@@ -601,6 +670,129 @@ static func _do_reforge(it: Dictionary, q: float) -> Dictionary:
 	return {"outcome": "success", "summary": "made whole again; the rework could not better the original %d%%" % int(round(q0))}
 
 
+# ======================================================================= R5: arcana, risk and the warned experiment
+## The best arcanist on the staff (level 5+ in arcane metalwork), {} when none.
+static func arcanist() -> Dictionary:
+	var best := {}
+	var bl := 4
+	for a in Apprentices.staff():
+		if str(a.get("profession", "")) != "arcanist":
+			continue
+		var lv := Apprentices.level(a, "arcane_metalwork")
+		if lv > bl:
+			bl = lv
+			best = a
+	return best
+
+
+## How well the arcanist works a binding (their level, a little luck from the crafting stream).
+static func arcanist_quality() -> float:
+	var a := arcanist()
+	if a.is_empty():
+		return 0.0
+	return clampf(42.0 + 6.0 * float(Apprentices.level(a, "arcane_metalwork")) + Rng.fn("crafting", 0.0, 6.0), 20.0, 120.0)
+
+
+## The arcane properties that suit this piece and it does not carry yet.
+static func arcana_targets(it: Dictionary) -> Array:
+	var out := []
+	for k in GearDepth.ARCANA:
+		if (GearDepth.ARCANA[k]["for"] as Array).has(Items.slot(it)) and not (it.get("arcana", []) as Array).any(func(x): return str(x.get("id", "")) == str(k)):
+			out.append(str(k))
+	return out
+
+
+## The risk of a piece of work, stated before the decision: {tier, text}.
+static func risk(it: Dictionary, action: String, target := "") -> Dictionary:
+	var tier := "routine"
+	var text := "Routine work: at worst a slip costs the materials and a little craftsmanship or wear."
+	match action:
+		"rework":
+			if station_for(it, action, target) == "rune_engraving_stand":
+				tier = "advanced"
+				text = "Advanced work: re-cutting a magical property. Badly done (below %d%%), it cracks the piece — broken, half strength, until reforged." % int(FAIL["rework"] - CRACK_BELOW)
+		"upgrade":
+			if str(STEPS.get(material_of(it), {}).get("to", "")) in ADVANCED_STEPS:
+				tier = "advanced"
+				text = "Advanced work: a rare material. Badly done (below %d%%), it cracks the piece — broken, half strength, until reforged." % int(FAIL["upgrade"] - CRACK_BELOW)
+		"enchant":
+			tier = "advanced"
+			text = "Advanced work: an arcane binding. Half-done, the property is bound but dormant (an arcanist can attune it); badly done, an older binding on the piece may fall dormant too."
+		"attune":
+			tier = "advanced"
+			text = "Advanced work: badly done, the property stays asleep (the materials are spent)."
+		"experiment":
+			tier = "extraordinary"
+			text = "EXTRAORDINARY — beyond the piece's ceiling. Done finely (%d%%+), its craftsmanship and every property rise. Done badly (below %d%%), the piece is destroyed (%d%% of the time) or left unusable — its history is kept either way. This cannot be undone." % [int(SUCCESS["experiment"]), int(FAIL["experiment"]), int(DESTROY_SHARE * 100.0)]
+	return {"tier": tier, "text": text}
+
+
+static func _do_enchant(it: Dictionary, q: float, aid: String, arc: Dictionary) -> Dictionary:
+	var ad: Dictionary = GearDepth.ARCANA.get(aid, {})
+	if ad.is_empty():
+		return {"outcome": "fail", "summary": "no property to bind"}
+	if not it.has("arcana"):
+		it["arcana"] = []
+	var t := clampf((q - float(FAIL["enchant"])) / 60.0, 0.0, 1.0)
+	var val := int(round(lerpf(float(ad["lo"]), float(ad["hi"]), t)))
+	var entry := {"id": aid, "stat": str(ad["stat"]), "value": val, "by": str(arc.get("id", "")), "by_name": str(arc.get("name", "")),
+		"day": Game.day(), "state": "active"}
+	var contrib := [{"who": str(arc.get("id", "")), "name": str(arc.get("name", "")), "profession": "arcanist", "title": "arcane binding (%s)" % str(ad["name"]), "quality": q}]
+	if q >= float(SUCCESS["enchant"]):
+		(it["arcana"] as Array).append(entry)
+		Provenance.add_contributions(it, contrib, str(Provenance.maker(it).get("name", "")))
+		return {"outcome": "success", "summary": "%s bound into it (+%d %s)" % [str(ad["name"]), val, str(ad["stat"])], "target": aid}
+	if q >= float(FAIL["enchant"]):
+		entry["state"] = "dormant"
+		(it["arcana"] as Array).append(entry)
+		Provenance.add_contributions(it, contrib, str(Provenance.maker(it).get("name", "")))
+		return {"outcome": "partial", "summary": "%s is bound but sleeps — an arcanist can attune it" % str(ad["name"]), "target": aid}
+	for ex in it.get("arcana", []):
+		if str(ex.get("state", "active")) == "active":
+			ex["state"] = "dormant"
+			return {"outcome": "fail", "summary": "the binding failed and disturbed %s, which fell dormant" % str(GearDepth.ARCANA.get(str(ex["id"]), {}).get("name", ex["id"])), "target": aid}
+	return {"outcome": "fail", "summary": "the binding failed; the materials are spent", "target": aid}
+
+
+static func _do_attune(it: Dictionary, q: float) -> Dictionary:
+	if q < float(SUCCESS["attune"]):
+		return {"outcome": "fail", "summary": "the property would not wake"}
+	var woke := []
+	for ar in it.get("arcana", []):
+		if str(ar.get("state", "active")) != "active":
+			ar["state"] = "active"
+			woke.append(str(GearDepth.ARCANA.get(str(ar["id"]), {}).get("name", ar["id"])))
+	return {"outcome": "success", "summary": "%s woke" % ", ".join(PackedStringArray(woke))}
+
+
+## The warned experiment: finely done, the piece rises beyond its ceiling; badly done, it is destroyed or disabled.
+static func _do_experiment(it: Dictionary, q: float) -> Dictionary:
+	it["experimented"] = int(it.get("experimented", 0)) + 1
+	if q >= float(SUCCESS["experiment"]):
+		it["quality"] = minf(130.0, float(it.get("quality", 70.0)) + 8.0)
+		for af in it.get("affixes", []):
+			af["value"] = int(af.get("value", 0)) + 1
+		for k in it.get("stats", {}).keys():
+			if k in ["attack", "protection", "magic"] and int(it["stats"][k]) > 0:
+				it["stats"][k] = int(it["stats"][k]) + 1
+		return {"outcome": "success", "summary": "it came out finer than any piece of its kind — beyond its ceiling"}
+	if q >= float(FAIL["experiment"]):
+		var stt: Dictionary = it.get("stats", {})
+		if stt.has("durability"):
+			stt["durability"] = int(stt["durability"]) / 2
+		return {"outcome": "partial", "summary": "the tempering would not take; the strain wore it hard"}
+	if Rng.f("crafting") < DESTROY_SHARE:
+		var name := Items.display_name(it)
+		var uid := int(it.get("uid", -1))
+		Game.take_uid(uid)
+		Provenance.destroy(it, "a warned tempering beyond its limits failed at the Ironhand forge")
+		var tb := ItemRegistry.tombstone_of(uid)
+		return {"outcome": "destroyed", "destroyed": true, "event": str(tb.get("event", "")),
+			"summary": "%s shattered under the tempering. It is gone — its history is kept." % name}
+	var ev := GearDepth.disable(it, "a warned tempering beyond its limits failed")
+	return {"outcome": "fail", "summary": "the tempering failed — it is unusable until restored", "event": ev}
+
+
 # ======================================================================= records
 ## A comparable picture of a piece: quality, every stat, affixes, material and the old service fields.
 static func snapshot(it: Dictionary) -> Dictionary:
@@ -663,9 +855,10 @@ static func tooltip_line(it: Dictionary) -> String:
 static func actions_at(station_id: String) -> Array:
 	var out := []
 	match station_id:
-		"anvil": out = ["reforge", "upgrade", "rework"]
+		"anvil": out = ["reforge", "upgrade", "rework", "experiment"]
 		"grinding_wheel": out = ["refine"]
 		"rune_engraving_stand": out = ["rework"]
 		"stitching_table": out = ["refine", "rework", "upgrade"]
 		"tailors_bench", "arcane_anvil": out = ["upgrade"]
+		"spellbinding_array": out = ["enchant", "attune"]   # R5: the arcanist's bindings
 	return out

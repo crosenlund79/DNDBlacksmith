@@ -3888,6 +3888,11 @@ func phase_consult_rl() -> void:
 	var ph: RefCounted = load("res://tests/playtest_consult.gd").new()
 	await ph.run(self)   # A2: the call was missing, so this phase silently tested nothing
 
+# ======================================================================= R5: equipment depth
+func phase_equipment_depth() -> void:
+	var ph: RefCounted = load("res://tests/playtest_equipment_depth.gd").new()
+	await ph.run(self)
+
 # ======================================================================= R4: the Honor Guard (commissions v2, civic recipients)
 func phase_honor_guard() -> void:
 	var ph: RefCounted = load("res://tests/playtest_honor_guard.gd").new()

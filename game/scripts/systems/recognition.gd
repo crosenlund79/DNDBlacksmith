@@ -171,6 +171,9 @@ static func _on_chronicle(e: Dictionary) -> void:
 ## Expeditions._boss_down: the killing blow on a boss, with the weapon that struck it.
 static func on_boss_down(adv_id: String, weapon: Dictionary, boss_name: String, place: String) -> void:
 	if not made_by_smith(weapon):
+		# R5 (decision 16): another maker's blade earns its Epic too — the Hall of Fame plaque is the smith's alone
+		if not weapon.is_empty():
+			grant_epic(weapon, "struck the killing blow on %s in %s" % [boss_name, place], adv_id, "boss")
 		return
 	var a := Adv.get_a(adv_id)
 	var who: String = a.get("name", Talk.npc_name(adv_id))
@@ -198,8 +201,11 @@ static func is_epic(it: Dictionary) -> bool:
 ## Grants Epic recognition to a piece the smith made. Returns true the first time; later deeds are
 ## added to the item's epic record. Rarity and stats are left exactly as they were.
 static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed") -> bool:
-	if not made_by_smith(it):
+	# R5 (decision 16, QST-022): the history is the piece's, not its maker's — any real piece can earn Epic. The smith's
+	# reputation, the Hall of Fame plaque and the ceremony stay with pieces from his workshop.
+	if it.is_empty() or bool(it.get("dev", false)) or not Items.is_equipment(it):
 		return false
+	var ours := made_by_smith(it)
 	var who := Talk.npc_name(adv_id) if adv_id != "" else ""
 	if it.has("epic"):
 		var ep: Dictionary = it["epic"]
@@ -216,6 +222,9 @@ static func grant_epic(it: Dictionary, deed: String, adv_id := "", kind := "deed
 		{"items": [it], "actors": [adv_id] if adv_id != "" else [], "importance": 3, "chronicle": true, "notable": true,
 		"data": {"deed": deed}})
 	ItemStory.on_epic(it, deed)
+	if not ours:
+		Events.inventory_changed.emit()
+		return true   # an Epic piece from another maker: its history, not the smith's fame
 	Reputation.change(EPIC_REP, "a piece from the Ironhand forge did something epic.")
 	record("epic", Items.display_name(it), "%s — %s." % [_cap(deed), who] if who != "" else _cap(deed) + ".",
 		{"uid": int(it.get("uid", -1)), "adv": adv_id, "def": str(it.get("def", ""))}, "epic_%d" % int(it.get("uid", -1)))

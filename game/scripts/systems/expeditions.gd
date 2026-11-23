@@ -125,7 +125,7 @@ static func ensure(a: Dictionary) -> Dictionary:
 static func hp_max(a: Dictionary) -> int:
 	var ar := arch(a)
 	var con := int(ar["attr"].get("con", 1))
-	return int(ar["hp"]) + (int(a["level"]) - 1) * int(ar["hp_lv"]) + con * int(a["level"]) / 2 + Items.stat(a["equipment"].get("amulet", {}), "vitality")
+	return int(ar["hp"]) + (int(a["level"]) - 1) * int(ar["hp_lv"]) + con * int(a["level"]) / 2 + total(a, "vitality")   # R5 (vigor): vitality from any piece
 
 
 static func attr(a: Dictionary, k: String) -> int:
@@ -146,7 +146,7 @@ static func total(a: Dictionary, stat: String) -> int:
 	var t := 0
 	for slot in a["equipment"]:
 		t += Items.stat(a["equipment"][slot], stat)
-	return t
+	return t + GearDepth.set_stat(a, stat)   # R5: matched set pieces worn together
 
 
 static func coat(it: Dictionary, stat: String) -> int:
@@ -155,7 +155,7 @@ static func coat(it: Dictionary, stat: String) -> int:
 
 
 static func defence(a: Dictionary) -> int:
-	return 10 + attr(a, "dex") + int(round(total(a, "protection") * 0.25))
+	return 10 + attr(a, "dex") + int(round(total(a, "protection") * 0.25)) + (2 if GearDepth.set_fx(a, "sure_footed") else 0)
 
 
 ## Weapon profile: to-hit bonus and damage parts, all derived from the actual item instance.
@@ -791,7 +791,11 @@ static func traveller(e: Dictionary, n: Dictionary) -> int:
 ## `scale` (0..1) is how rich the place still is: a depleted node yields fewer items, or none.
 static func _loot(e: Dictionary, table: String, tier: int, scale := 1.0) -> Array:
 	var items := Loot.roll_table(table, (tier - 1) * 8.0 + (float(diff().get("loot", 1.0)) - 1.0) * 30.0, tier * 2)
-	items = items.slice(0, mini(items.size(), 1 + tier + _carry(e) / 4))
+	var luck := 0
+	for pid in e.get("party", []):
+		luck += GearDepth.fx(Adv.get_a(str(pid)), "fortune")
+	var extra := 1 if luck > 0 and Rng.f("expeditions") < float(luck) * 0.03 else 0   # R5 (fortune): one more piece
+	items = items.slice(0, mini(items.size(), 1 + tier + _carry(e) / 4 + extra))
 	if scale < 1.0:
 		items = items.slice(0, 0 if scale < 0.15 else maxi(1, int(ceil(items.size() * scale))))
 	var names := []
@@ -806,6 +810,8 @@ static func _loot(e: Dictionary, table: String, tier: int, scale := 1.0) -> Arra
 ## A fight, round by round, with real dice and real equipment. Effects are applied as rolled; the
 ## record keeps every action with its timestamp so the observer can replay it in game time.
 static func fight(e: Dictionary, n: Dictionary) -> int:
+	for pid in e.get("party", []):
+		Adv.get_a(str(pid)).erase("stood_fast")   # R5: the Hearthguard stands fast once a fight
 	var df := float(diff().get("enemy", 1.0))
 	var foes := []
 	var size_adj := maxi(0, (e["party"] as Array).size() - 2)
@@ -940,7 +946,7 @@ static func fight(e: Dictionary, n: Dictionary) -> int:
 		e["outcome"] = "retreated" if rec["outcome"] == "retreat" else e["outcome"]
 		for id in e["party"]:
 			var a := Adv.get_a(id)
-			a["morale"] = maxf(0.0, float(a["morale"]) - 15.0)
+			a["morale"] = maxf(0.0, float(a["morale"]) - (7.5 if GearDepth.has_fx(a, "stalwart") else 15.0))   # R5: stalwart
 	# the fallen: death saves depend on difficulty
 	_down_checks(e, rec)
 	companion_heal(e, rec)
@@ -979,7 +985,7 @@ static func _attack(a: Dictionary, f: Dictionary, rec: Dictionary, t: int, ambus
 	var label := Items.display_name(w) if not w.is_empty() else "fists"
 	var dmg := 0.0
 	if spell:
-		to_hit = attr(a, "int") + int(a["level"]) / 2 + (1 if inspired else 0)
+		to_hit = attr(a, "int") + int(a["level"]) / 2 + (1 if inspired else 0) + (1 if GearDepth.has_fx(a, "sage") else 0) + (1 if GearDepth.set_fx(a, "spellwright") else 0)
 		var mg := total(a, "magic")
 		dmg = float(Dice.roll("1d8")["total"]) + attr(a, "int") + int(a["level"]) / 2 + mg * 0.6
 		parts = [["firebolt 1d8 + int + level", int(dmg - mg * 0.6)], ["magic from gear (×0.6)", int(mg * 0.6)]]
@@ -990,7 +996,9 @@ static func _attack(a: Dictionary, f: Dictionary, rec: Dictionary, t: int, ambus
 		if int(wp["aff"]) > 0:
 			parts.append(["%s favours a %s" % [a["cls"], wp["wtype"]], 0])
 	var hit := roll + to_hit >= int(f["ac"]) or roll == 20
-	var crit := roll == 20 or (ambush and has_skill(a, "sneak"))
+	# R5: keen weapons (and the Spellwright's spells) find the gap on a 19 as well
+	var crit_on := 19 if ((not spell and GearDepth.fx_of(w, "keen") > 0) or (spell and GearDepth.set_fx(a, "spellwright"))) and GearDepth.usable(w) else 20
+	var crit := (hit and roll >= crit_on) or (ambush and has_skill(a, "sneak"))
 	var act := {"t": t, "kind": "spell" if spell else "attack", "actor": a["name"], "actor_id": a["id"], "target": f["name"], "target_key": f["key"],
 		"roll": roll, "mod": to_hit, "total": roll + to_hit, "vs": f["ac"], "hit": hit, "crit": crit, "weapon_uid": w.get("uid", -1), "weapon": label}
 	if hit:
@@ -1020,9 +1028,26 @@ static func _attack(a: Dictionary, f: Dictionary, rec: Dictionary, t: int, ambus
 		if ambush and has_skill(a, "sneak"):
 			parts.append(["sneak attack ×2", int(round(dmg))])
 		dmg += elem
+		# R5: the weapon's effects (GearDepth.EFFECTS)
+		var embers := GearDepth.fx_of(w, "embers") if GearDepth.usable(w) and not spell else 0
+		if embers > 0 and str(f.get("resist", "")) != "fire" and Rng.f("expeditions") < 0.25:
+			dmg += embers
+			parts.append(["the embers catch", embers])
+		var haste := GearDepth.fx(a, "haste") + GearDepth.fx(a, "quickening")
+		if haste > 0 and not spell and Rng.f("expeditions") < float(haste) * 0.02:
+			parts.append(["a quick second strike", int(round(float(wp["base"]) * 0.5))])
+			dmg += float(wp["base"]) * 0.5
 		if crit:
 			dmg *= 2.0
 		var total_dmg := maxi(1, int(round(dmg)))
+		var leech := GearDepth.fx_of(w, "leech") if GearDepth.usable(w) and not spell else 0
+		if leech > 0:
+			var hm := hp_max(a)
+			var healed := mini(leech, maxi(0, hm - int(a.get("hp", hm))))
+			a["hp"] = int(a.get("hp", hm)) + healed
+			act["leech"] = healed
+		if GearDepth.fx_of(w, "frost") > 0 and GearDepth.usable(w) and not spell:
+			f["chilled"] = true
 		f["hp"] = int(f["hp"]) - total_dmg
 		act["dmg"] = total_dmg
 		act["hp_after"] = maxi(0, int(f["hp"]))
@@ -1040,18 +1065,27 @@ static func _attack(a: Dictionary, f: Dictionary, rec: Dictionary, t: int, ambus
 static func _enemy_attack(f: Dictionary, v: Dictionary, rec: Dictionary, t: int) -> void:
 	var roll := int(Dice.roll("1d20")["total"])
 	var ac := defence(v)
-	var hit := roll + int(f["atk"]) >= ac or roll == 20
+	var chill := 2 if bool(f.get("chilled", false)) else 0   # R5 (rime): a chilled foe strikes worse, once
+	f.erase("chilled")
+	var hit := roll + int(f["atk"]) - chill >= ac or roll == 20
 	var act := {"t": t, "kind": "enemy", "actor": f["name"], "actor_key": f["key"], "target": v["name"], "target_id": v["id"],
 		"roll": roll, "mod": int(f["atk"]), "total": roll + int(f["atk"]), "vs": ac, "hit": hit}
 	if hit:
-		var raw := int(Dice.roll(str(f["dmg"]))["total"]) * (2 if roll == 20 else 1)
+		var raw := int(Dice.roll(str(f["dmg"]))["total"]) * (2 if roll == 20 and not GearDepth.has_fx(v, "warded") else 1)   # R5: warded turns a critical
 		var prot := total(v, "protection")
 		var red := int(round(prot * 0.12))
 		var ward := 0
 		if str(f["kind"]) in ["undead", "spirit"]:
 			ward = total(v, "ward")
 		var taken := maxi(1, raw - red - ward)
+		# R5 (Hearthguard): once a fight, a blow that would fell the wearer leaves them standing
+		if int(v["hp"]) - taken <= 0 and GearDepth.set_fx(v, "stands_fast") and not bool(v.get("stood_fast", false)):
+			v["stood_fast"] = true
+			taken = maxi(0, int(v["hp"]) - 1)
 		v["hp"] = int(v["hp"]) - taken
+		var thorns := GearDepth.fx(v, "thorns")
+		if thorns > 0:
+			f["hp"] = int(f["hp"]) - thorns   # R5: thorns — the blow costs the foe too
 		var armour: Dictionary = v["equipment"].get("armor", {})
 		act["dmg"] = taken
 		act["hp_after"] = int(v["hp"])
@@ -1086,15 +1120,20 @@ static func _wear(a: Dictionary, rec: Dictionary) -> void:
 
 ## Boots, belts and cloaks wear on the road.
 static func trip_wear(a: Dictionary) -> void:
-	wear_item(a, "boots", Rng.ri("expeditions", 3, 6))
-	wear_item(a, "belt", Rng.ri("expeditions", 1, 3))
-	wear_item(a, "cloak", 2)   # weather and brambles (fixed, so the road's random rolls are unchanged)
+	var half := GearDepth.set_fx(a, "road_wear")   # R5 (Wayfarer's): half the road's wear
+	var b := Rng.ri("expeditions", 3, 6)
+	var bl := Rng.ri("expeditions", 1, 3)
+	wear_item(a, "boots", b / 2 if half else b)
+	wear_item(a, "belt", bl / 2 if half else bl)
+	wear_item(a, "cloak", 1 if half else 2)   # weather and brambles (fixed, so the road's random rolls are unchanged)
 
 
 ## Takes `n` durability from the piece in `slot`; it breaks at zero (recorded in the fight and its history).
 static func wear_item(a: Dictionary, slot: String, n: int, rec := {}) -> bool:
 	var it: Dictionary = a["equipment"].get(slot, {})
 	var st: Dictionary = it.get("stats", {})
+	if GearDepth.fx_of(it, "bear") > 0:
+		n = n / 2   # R5: the Bear wears at half the rate
 	if n <= 0 or not st.has("durability"):
 		return false
 	st["durability"] = maxi(0, int(st["durability"]) - n)
@@ -1225,7 +1264,7 @@ static func _kill(e: Dictionary, a: Dictionary, where: String) -> void:
 	for oid in e["party"]:
 		if oid != a["id"]:
 			var o := Adv.get_a(oid)
-			o["morale"] = maxf(0.0, float(o["morale"]) - 25.0)
+			o["morale"] = maxf(0.0, float(o["morale"]) - (12.5 if GearDepth.has_fx(o, "stalwart") else 25.0))   # R5: stalwart
 			if relation(o, a["id"]) > 20.0:
 				o["achievements"].append({"day": Game.day(), "text": "Lost %s at %s." % [a["name"], where]})
 	var dev := WorldSites.on_death(e, a, where)   # the death, once, in the world's memory (place = the site)

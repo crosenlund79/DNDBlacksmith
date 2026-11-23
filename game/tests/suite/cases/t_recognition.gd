@@ -222,16 +222,26 @@ func test_epic_on_boss_kill() -> void:
 	check(Items.display_name(w).contains("✦"), "the name carries the Epic mark")
 	check(not Recognition.of_kind("epic").is_empty() and not Recognition.of_kind("deed").is_empty(), "the deed and the Epic are on the Hall of Fame")
 	check((w.get("history", []) as Array).any(func(h): return str(h["text"]).contains("Epic")), "the history records the distinction")
-	# a non-smith weapon earns nothing
+	# R5 (decision 16): a blade another smith made earns Epic too — the deed is the blade's — but the workshop's
+	# reputation, Hall of Fame and ceremony stay with the smith's own work
 	var foreign := Items.make("sword_iron", {"quality": 80.0})
+	Provenance.set_maker(foreign, "rival_smith", "a rival smith", "rival", "highmarsh")
 	var b := ""
 	for x in Adv.all().values():
 		if x["id"] != aid and x["status"] == "in_town":
 			b = x["id"]
+	check(b != "", "premise: a second adventurer is in town")
 	if b != "":
 		Adv.give_item(Adv.get_a(b), foreign, 0)
+		var hof0 := (Game.state.get("hall_of_fame", []) as Array).size()
+		var rep_b := Reputation.standing()
+		var cer0 := JSON.stringify(Ceremony.state())
 		_boss_fight(b, int(foreign["uid"]))
-		check(not Game.find_uid_anywhere(int(foreign["uid"])).has("epic"), "a blade the smith did not make earns no Epic")
+		check(Game.find_uid_anywhere(int(foreign["uid"])).has("epic"), "a blade the smith did not make earns Epic for its deed")
+		check(not (Game.state.get("hall_of_fame", []) as Array).any(func(e): return int(e.get("refs", {}).get("uid", -2)) == int(foreign["uid"])), "but no Hall of Fame plaque for the workshop")
+		eq((Game.state.get("hall_of_fame", []) as Array).size(), hof0, "the Hall of Fame is unchanged")
+		check(is_equal_approx(Reputation.standing(), rep_b), "and no reputation for the smith")
+		eq(JSON.stringify(Ceremony.state()), cer0, "and no ceremony for it")
 	# the ceremony is booked for tomorrow at noon, with an invitation marker
 	var c := Ceremony.state()
 	eq(str(c.get("status", "")), "scheduled", "a ceremony is scheduled")

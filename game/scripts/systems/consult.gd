@@ -32,9 +32,9 @@ const STRETCH := 1.9
 const SAFE := 2.0
 const PROPS := ["fire", "frost", "magic"]
 const COATINGS := {"fire": ["coating_wyrmfire", "coating_flame"], "frost": ["coating_frost"], "magic": ["infusion_aether"]}
-const KIND_SKILL := {"repair": "smithing", "buy": "smithing", "coat": "alchemy", "commission": "smithing", "upgrade": "smithing",
+const KIND_SKILL := {"repair": "smithing", "buy": "smithing", "coat": "alchemy", "commission": "smithing", "upgrade": "smithing", "refine": "smithing",
 	"dest": "travelling", "rest": "travelling", "elsewhere": "smithing", "keep": "smithing"}
-const KIND_WORD := {"repair": "Repair", "buy": "Buy from your display", "coat": "Treatment", "commission": "Commission", "upgrade": "Upgrade",
+const KIND_WORD := {"repair": "Repair", "buy": "Buy from your display", "coat": "Treatment", "commission": "Commission", "upgrade": "Upgrade", "refine": "Refine their own piece",
 	"dest": "Change of plan", "rest": "Rest first", "elsewhere": "Elsewhere", "keep": "Keep your kit"}
 const REASON_WORD := {"defeat": "after a hard trip", "broken": "broken gear", "worn": "worn gear", "mismatch": "before a dangerous trip", "goal": "wants better gear"}
 
@@ -308,6 +308,28 @@ static func finish(npc: String) -> void:
 # ======================================================================= recommendations
 ## The small generated list (3–4) from their gear, their plans and what the forge can offer, most pressing first.
 ## Rec: {id, kind, slot, title, why, details[], cost, relevance 0–1, skill, uid?, dest?, prop?, coat?}
+## R5 (BUG-027): advice to refine the adventurer's own weapon ({} when it cannot be bettered now): it is sound, it has
+## refining left and room under its ceiling, the materials are in the stores and they can pay.
+static func refine_offer(a: Dictionary) -> Dictionary:
+	var w: Dictionary = a.get("equipment", {}).get("weapon", {})
+	if w.is_empty() or bool(w.get("broken", false)) or GearDepth.disabled(w) or Refinement.left(w, "refine") == 0:
+		return {}
+	if float(w.get("quality", 0.0)) >= Refinement.ceiling(w) - 3.0:
+		return {}
+	var inp := Refinement.inputs_for(w, "refine")
+	for d in inp:
+		if Game.count(str(d)) < int(inp[d]):
+			return {}
+	var cost := 15 + int(float(Valuation.value(w)) * 0.08)
+	if int(a.get("gold", 0)) < cost:
+		return {}
+	return {"id": "refine_weapon", "kind": "refine", "slot": "weapon", "uid": int(w.get("uid", -1)), "cost": cost,
+		"title": "Let me hone your %s — better it, don't replace it" % str(w.get("name", "weapon")),
+		"why": "It is %d%% now; the wheel can take it nearer %d%%." % [int(round(float(w.get("quality", 0.0)))), int(round(Refinement.ceiling(w)))],
+		"details": ["Refined at the grinding wheel while they wait: about %d g." % cost, "The same piece — its maker, name and history stay."],
+		"relevance": 0.45 + (0.1 if Living.has_goal(a, "gear") else 0.0)}
+
+
 static func recommendations(a: Dictionary) -> Array:
 	var out := []
 	var rid := planned_dest(a)
@@ -404,6 +426,10 @@ static func recommendations(a: Dictionary) -> Array:
 			"why": "Level %d, still swinging plain iron." % int(a.get("level", 1)),
 			"details": ["A commission for a steel weapon: about %d g." % ucost, "Steel or better is required."],
 			"relevance": 0.35 + (0.1 if Living.has_goal(a, "gear") else 0.0)})
+	# 4b. R5 (BUG-027): improve the piece they already carry — honed at the smith's wheel, the same piece, not a new one
+	var rf := refine_offer(a)
+	if not rf.is_empty() and not _has(out, "kind", "upgrade"):
+		out.append(rf)
 	# 5. a safer place first — never for a party on the smith's sponsored expedition (R2, ADV-018): the agreed objective
 	#    stands (better kit, above, is how the smith helps them)
 	for gp in g:
@@ -670,6 +696,24 @@ static func _apply(a: Dictionary, rec: Dictionary) -> String:
 			if str(keep.get("want", "")) == "repair" and Shop.customer(npc).is_empty():
 				Shop.customers().append(keep)   # a repair agreed to in the same visit still waits
 			return "%s bought it (%d g)." % [a["name"], int(rec["cost"])]
+		"refine":
+			# R5 (BUG-027): the smith hones their own piece while they wait — it stays theirs (no change of owner)
+			var w: Dictionary = a["equipment"].get("weapon", {})
+			if w.is_empty() or int(w.get("uid", -1)) != int(rec.get("uid", -2)):
+				return "!the piece is gone"
+			if int(a.get("gold", 0)) < int(rec["cost"]):
+				return "!can't afford it"
+			a["equipment"].erase("weapon")
+			Game.inventory().append(w)   # on the bench for the work only
+			var q := Contracts.smith_hour_quality(Refinement.recipe_of(w), Rng.gen("crafting"))
+			var r := Refinement.perform(int(w["uid"]), "refine", q)
+			Game.inventory().erase(w)
+			a["equipment"]["weapon"] = w
+			if not bool(r.get("ok", false)):
+				return "!" + str(r.get("text", "the work could not be done"))
+			a["gold"] = int(a["gold"]) - int(rec["cost"])
+			Game.add_gold(int(rec["cost"]), "sales", "Refined %s's %s" % [a["name"], str(w.get("name", "weapon"))], npc)
+			return "Their %s — %s" % [str(w.get("name", "weapon")), str(r.get("summary", "refined"))]
 		"repair":
 			var it: Dictionary = a["equipment"].get(str(rec["slot"]), {})
 			if it.is_empty():

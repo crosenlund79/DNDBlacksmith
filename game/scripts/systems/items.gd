@@ -30,6 +30,9 @@ const AFFIXES := [
 	{"id": "sage", "prefix": "Sage's", "stat": "magic", "lo": 2, "hi": 6, "for": ["ring", "amulet", "weapon", "helmet"]},
 	{"id": "frost", "suffix": "of Rime", "stat": "frost", "lo": 2, "hi": 6, "for": ["weapon"]},
 	{"id": "stalwart", "prefix": "Stalwart", "stat": "ward", "lo": 2, "hi": 5, "for": ["armor", "shield"]},
+	# R5 (decision 10): two more, so the twelve effects of GearDepth.EFFECTS each have an affix
+	{"id": "leech", "suffix": "of the Leech", "stat": "leech", "lo": 1, "hi": 3, "for": ["weapon"]},
+	{"id": "thorns", "suffix": "of Thorns", "stat": "thorns", "lo": 1, "hi": 3, "for": ["armor", "shield"]},
 ]
 const LEGEND_NAMES := ["Emberfang", "Widow's Promise", "The Last Bell", "Ashbrand", "Oathkeeper", "Gravewarden",
 	"Hearthguard", "Nightglass", "The Cinder Saint", "Brindle's Mercy", "Wyrmbane", "Sorrowsteel"]
@@ -255,6 +258,8 @@ static func _migrate_cloaks_in(v: Variant, moved: Array, depth: int) -> void:
 ## Condition of a worn piece as an effectiveness factor: 1.0 while durability is at least half,
 ## falling to 0.8 as it nears zero; a broken piece works at half strength. Pieces without durability: 1.0.
 static func condition(it: Dictionary) -> float:
+	if GearDepth.disabled(it):
+		return 0.0   # R5: unusable until restored
 	if it.get("broken", false):
 		return 0.5
 	var st: Dictionary = it.get("stats", {})
@@ -294,7 +299,7 @@ static func base_stat(it: Dictionary, key: String) -> int:
 	for a in it.get("affixes", []):
 		if a["stat"] == key:
 			v += int(a["value"])
-	return v
+	return v + GearDepth.arcana_stat(it, key)   # R5: an arcanist's deep property (while it is awake)
 
 
 ## A stat as it works now: worn pieces lose some effectiveness, broken ones half of every stat.
@@ -310,7 +315,7 @@ static func stat(it: Dictionary, key: String) -> int:
 
 ## Single number used by adventurers/customers to judge gear.
 static func score(it: Dictionary) -> float:
-	if it.is_empty():
+	if it.is_empty() or GearDepth.disabled(it):
 		return 0.0
 	return stat(it, "attack") + stat(it, "protection") * 1.2 + stat(it, "magic") * 1.5 + stat(it, "fire") \
 		+ stat(it, "frost") + stat(it, "ward") * 1.2 + stat(it, "vitality") * 0.5 + stat(it, "speed") * 0.4 \
@@ -322,16 +327,16 @@ static func score(it: Dictionary) -> float:
 ## magic, fire, frost and ward are fought with; healing heals; vitality adds hit points only on an amulet. Speed and
 ## scouting only weigh in how much a buyer likes a piece; luck, carry and the Bear's extra durability are read by
 ## nothing. Displays show the first group plainly and label the rest — making them matter is equipment depth (R5).
-const STATS_IN_PLAY := ["attack", "protection", "magic", "fire", "frost", "ward", "heal"]
+## R5: every affix now has an effect (GearDepth.EFFECTS): speed, luck, the Bear's durability, vitality on any piece, leech
+## and thorns count in play too. Scouting (the party's best scout, Expeditions._best) and carry (the haul a party brings
+## home) were always in play — before R5 they were wrongly listed as idle.
+const STATS_IN_PLAY := ["attack", "protection", "magic", "fire", "frost", "ward", "heal", "speed", "luck", "durability", "vitality", "leech", "thorns",
+	"scouting", "carry"]
 const NO_EFFECT_NOTE := "[color=#a89a80](no effect in play yet)[/color]"
 
 
 static func stat_in_play(it: Dictionary, stat_id: String) -> bool:
-	if STATS_IN_PLAY.has(stat_id):
-		return true
-	if stat_id == "vitality":
-		return slot(it) == "amulet"
-	return false
+	return STATS_IN_PLAY.has(stat_id)
 
 
 static func value(it: Dictionary) -> int:
@@ -345,6 +350,8 @@ static func value(it: Dictionary) -> int:
 
 static func display_name(it: Dictionary) -> String:
 	var n: String = it.get("name", "?")
+	if Uniques.is_legacy_copy(it):
+		n += " (a contemporary copy)"   # R5, decision 15
 	if int(it.get("qty", 1)) > 1:
 		n += " ×%d" % int(it["qty"])
 	if it.has("epic"):
@@ -377,6 +384,10 @@ static func tooltip(it: Dictionary) -> String:
 		lines.append(Recognition.epic_line(it))
 	if it.has("named"):
 		lines.append("[i][color=#%s]“%s” — %s, named on day %d: %s[/color][/i]" % [c, it["named"].get("name", ""), def(it).get("name", ""), int(it["named"].get("day", 0)), it["named"].get("why", "")])
+	for ln in GearDepth.lines(it):   # R5: what its affixes, arcana and set DO, and its state — apart from the plain stats
+		lines.append(str(ln))
+	if Uniques.is_legacy_copy(it):   # R5 (decision 15): an old save's second Grimhold is not the artifact
+		lines.append("[i]A contemporary copy — not the authentic %s, which is one of a kind.[/i]" % str(def(it).get("name", "")))
 	if it.has("given_name"):   # R4: named by the patron who commissioned it (apart from any name it earns)
 		var gn: Dictionary = it["given_name"]
 		lines.append("[i]«%s» — named by %s for the order «%s»%s[/i]" % [str(gn.get("name", "")), str(gn.get("by", "")),
