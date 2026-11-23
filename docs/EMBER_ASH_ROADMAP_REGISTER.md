@@ -2,8 +2,8 @@
 
 **Status:** tracking register, created in Run 0 (roadmap reconciliation), 10 November 2026, at development commit
 `fa7b5b7` (A1, S1 and A2 integrated). **Updated in Run 0.1** (10 November 2026) and **in S2** (10 November 2026, branch `claude/s2-living-smithy`) and **in the Living Workshop** (11 November 2026,
-branch `claude/living-workshop`), **in R1** (17 November 2026, branch `claude/r1-integration`) and **in R2** (17 November 2026,
-branch `claude/r2-truthful-world`).
+branch `claude/living-workshop`), **in R1** (17 November 2026, branch `claude/r1-integration`), **in R2** (17 November 2026,
+branch `claude/r2-truthful-world`) and **in the completion run R3–R8** (22–23 November 2026, branch `claude/completion-r3-r8`).
 
 **Authority.** The canonical roadmap is [`EMBER_ASH_CANONICAL_VISION.md`](EMBER_ASH_CANONICAL_VISION.md) §12: the original
 creative Phases 0–10 remain canonical, and the gate letters A–J are a **recommended technical sequence, not implementation
@@ -39,6 +39,12 @@ Entry details live in [`EMBER_ASH_DECISION_REGISTER.md`](EMBER_ASH_DECISION_REGI
 | Final completion audit (docs) | CLAUDE.md §2 | Complete | `be92b9a` | — | `docs/final_completion/` | — |
 | **R1** Integration & Foundation Closure | Gate A (remainder); roadmap R1 | Complete on its isolated branch; **not integrated, not released** (decision D-1) | branch `claude/r1-integration` | No — private Windows artifact 0.17 only | `t_r1_identity` (9), `t_r1_workshop` (4), `t_steward_ui.test_look_only_buttons_disabled_away`, `t_saves` (+3 golden artifacts, schema 9); see the R1 report | Checklist `docs/final_completion/R1_ACCEPTANCE_CHECKLIST.md` — Windows playtest accepted by the user (17 Nov 2026) |
 | **R2** Truthful World Model | Gate A entry points; roadmap R2; decision D-7 (data only) | Complete on its isolated branch; **not integrated, not released** | branch `claude/r2-truthful-world` | No (internal; roadmap) | `t_r2_truth` (21), `t_saves` (golden saves keep the standing through schema 10), 20-seed 90-day comparison (no metric at \|t\| ≥ 1.6); suite 482/482, unit 394/394, 72/72 rendered on `87ee9a6`; see `docs/final_completion/R2_BUILD_REPORT.md` | Wish-list weakness calibration (report §7.1) |
+| **R3** One History | Gate J (§10.4) | Complete (branch) | `e04581a`, `aad2fe4` | No | `t_r3_history` (8), 3-year probes (3 seeds/modes, audits clean), bit-identical replay | No |
+| **R4** Commissions v2 & civic recipients | Gate D (§7, §13) | Complete (branch) | `d020bc7` | No | `t_r4_commissions` (7), rendered `honor_guard` | No |
+| **R5** Equipment depth | Gate E (§6.3–§6.4) | Complete (branch) | `2ed2a61` | No | `t_r5_equipment` (10), rendered `equipment_depth`, 20-seed aggregate | No |
+| **R6** Legacy: the Reliquary & Heirs | Gate E/I (§6.5–§6.6, §13) | Complete (branch) | `47687e9` | No | `t_r6_reliquary` (8), rendered `reliquary` | No |
+| **R7** Negotiation & Procurement | Gate F (§7) | Complete (branch) | `b25e533` | No | `t_r7_procurement` (6), rendered `harbour_captains` | No |
+| **R8** World Recognition | Gate G (§9.1–§9.2, §13) | Complete (branch); decision 7's title open | `9271f24` | No | `t_r8_recognition` (5), `t_zz_integration`, rendered `world_recognition`, playtest artifact 0.18 | No — awaiting the user's playtest |
 
 **Test status at `fa7b5b7`:** compile 221 scripts, suite 283/283, unit 384/384 (Run 0). Real saves untouched by tests
 (`t_saves.test_mode_refuses_real_saves`).
