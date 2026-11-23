@@ -111,17 +111,17 @@ is still open.* Roadmap: [`FINAL_DEVELOPMENT_ROADMAP.md`](FINAL_DEVELOPMENT_ROAD
 
 | Milestone | Compile | Suite | Unit | Focused tests | Rendered phase |
 |---|---|---|---|---|---|
-| R3 | — | not recorded in the commit | — | `t_r3_history` 8/8; 3-year probes clean | (existing regression) |
-| R4 | — | not recorded in the commit | — | `t_r4_commissions` 7/7 | `honor_guard` 0 failures |
+| R3 | CI full gate ✓ (Tests run 45085298367 on `e04581a`) | ✓ | ✓ | `t_r3_history` 8/8; 3-year probes clean | (existing regression) |
+| R4 (+ R3's seed fix) | CI full gate ✓ (Tests run 45088628547 on `d020bc7`) | ✓ | ✓ | `t_r4_commissions` 7/7 | `honor_guard` 0 failures |
 | R5 | 289 / 0 failed | 507/507 | 394/394 | `t_r5_equipment` 10/10 | `equipment_depth` 0 failures |
 | R6 | 293 / 0 failed | 515/515 | 394/394 | `t_r6_reliquary` 8/8 | `reliquary` 0 failures |
 | R7 | 298 / 0 failed | 521/521 | 394/394 | `t_r7_procurement` 6/6 | `harbour_captains` 0 failures |
 | R8 (+ integration) | 303 / 0 failed | 527/527 | 394/394 | `t_r8_recognition` 5/5, `t_zz_integration` 1/1 (37 checks) | `world_recognition` 0 failures |
 
-**Honest note on R3/R4:** their commits record the focused tests and probes but no full-suite count. The first full run
-after them (during R5) showed one R3 leftover — `t_contracts` still read the retired `Game.state["chronicle"]` (a script
-error inside a passing test) — fixed in R5's commit; every gate from R5 on is a complete, recorded full run, and R8's
-527/527 covers everything R3 and R4 delivered.
+**Honest note on R3/R4:** their commit messages record the focused tests and probes, not the local suite counts; their
+full gate is the CI "Tests" workflow (compile, suite, unit), green on both commits. One R3 leftover was found later — a
+`t_contracts` check still read the retired `Game.state["chronicle"]` (a script error inside a test that still passed) —
+and fixed in R5's commit. Every CI "Tests" run on the branch (R3 through the report) is green.
 
 Every fallout in older tests was fixed honestly — by stating a fixture's premise or by asserting the new design
 decision both ways — never by weakening an assertion: `t_tailoring` compares the material's own attack (a random
@@ -170,13 +170,16 @@ a lower live danger there and a safer trade road for a hireling (`t_r8_recogniti
 
 ### 3.6 Rendered regression
 
-**69 of 69 phases pass with 0 failures** — the 64 existing phases plus the five new ones (`honor_guard`,
+**77 of 77 phases pass with 0 failures** — the 72 phases of R2's regression plus the five new ones (`honor_guard`,
 `equipment_depth`, `reliquary`, `harbour_captains`, `world_recognition`), on the final code at 1920×1080.
 
 - `identity_a1` failed once on an assertion written before R4 ("the masterpiece is in the holdings archive"); since R4
   an institution patron (the Watch) keeps a delivered masterpiece in its own stock — the suite's `t_identity` and
   `t_contracts` were updated in R4, this rendered phase was missed. Updated to assert the same instance in the Watch's
   stock; rerun: 0 failures.
+- `stations` (and `full`, which includes it) failed once: it opens every station and expected a crafting panel, but the
+  Reliquary opens its own panel (as the Project Bench opens the contracts). The phase now accepts that, as it did for
+  the bench; rerun: `stations`, `full` and its pair `reload` 0 failures.
 - `iter2_reload` failed in the long run because it reloads the save its partner `iter2` wrote twenty phases earlier, and
   phases in between write the same slot; run as a pair (`iter2` then `iter2_reload`) both pass with 0 failures.
 

@@ -335,7 +335,7 @@ func phase_full() -> void:
 	for sid in DB.stations:
 		await close_panel()
 		# the Project Bench (major contracts) opens the contract view instead of a recipe list
-		if await use("station", sid) and (panel() is StationPanel or (sid == "project_bench" and panel() is ContractsPanel)):
+		if await use("station", sid) and (panel() is StationPanel or (sid == "project_bench" and panel() is ContractsPanel) or (sid == Reliquary.STATION and panel() is ReliquaryPanel)):
 			opened += 1
 		if sid in ["forge", "arcane_crucible", "cauldron", "resonance_pedestal", "thread_spinner"]:
 			await shot("station_" + sid)
@@ -537,7 +537,7 @@ func phase_stations() -> void:
 	for sid in DB.stations:
 		await close_panel()
 		await use("station", sid)
-		var ok: bool = (panel() is StationPanel and (panel() as StationPanel).station_id == sid) or (sid == "project_bench" and panel() is ContractsPanel)
+		var ok: bool = (panel() is StationPanel and (panel() as StationPanel).station_id == sid) or (sid == "project_bench" and panel() is ContractsPanel) or (sid == Reliquary.STATION and panel() is ReliquaryPanel)
 		var focus: Dictionary = W()._focus
 		expect(ok, "station %s (focus %s/%s, panel %s)" % [sid, focus.get("kind", "-"), focus.get("id", "-"), panel().get_class() if panel() else "none"])
 
@@ -2920,7 +2920,7 @@ func phase_tailor10() -> void:
 		await close_panel()
 		await use("station", sid)
 		await wait(0.5)
-		var ok: bool = (panel() is StationPanel and (panel() as StationPanel).station_id == sid) or (sid == "project_bench" and panel() is ContractsPanel)
+		var ok: bool = (panel() is StationPanel and (panel() as StationPanel).station_id == sid) or (sid == "project_bench" and panel() is ContractsPanel) or (sid == Reliquary.STATION and panel() is ReliquaryPanel)
 		expect(ok, "tailor10: the %s panel opens" % sid)
 		await shot("tailor10_panel_%s" % sid)
 	await close_panel()
