@@ -250,6 +250,7 @@ static func _dock(type: String, ship_name := "", captain := "") -> void:
 	t["ship"] = {"type": type, "name": ship_name, "captain": captain, "arrived": Game.now(), "leaves": Game.now() + stay * 1440, "stock": stock}
 	t["last_type"] = type
 	t["next"] = {}
+	Captains.on_dock(type, ship_name, captain)   # R7: the call is the captain's visit — counted and remembered
 	Chronicle.add("trade", "%s (%s) docked at Brindlewick harbour — %s." % [ship_name, captain, str(sd.get("desc", "")).to_lower().trim_suffix(".")], {"ship": type})
 	Events.toast.emit("%s has docked at the harbour — %s." % [ship_name, sd.get("label", "a merchant ship")], "good")
 
@@ -260,6 +261,7 @@ static func _depart() -> void:
 	if s.is_empty():
 		return
 	Chronicle.add("trade", "%s cast off and left Brindlewick harbour." % s["name"], {"ship": s["type"]})
+	Captains.on_sail(str(s.get("captain", "")))   # R7: a voyage the smith commissioned is under way
 	ItemRegistry.retire_stock(s.get("stock", []), "ship_" + str(s.get("type", "")), str(s.get("name", "a ship")))   # R1 (EQ-004)
 	t["ship"] = {}
 	var g: Array = cfg().get("schedule", {}).get("gap", [3, 6])

@@ -47,7 +47,8 @@ func _build() -> void:
 
 	UIKit.clear(tabs_row)
 	var n_del := Trade.deliveries().size()
-	for t in [["quay", "The Quay"], ["imports", "Special Imports"], ["orders", "Orders & Deliveries" + (" (%d waiting)" % n_del if n_del > 0 else "")], ["knowledge", "Lore & Cargo"]]:
+	var n_cap := Captains.open_voyages().filter(func(v): return str(v["status"]) == "arrived").size()
+	for t in [["quay", "The Quay"], ["captains", "Captains" + (" (%d landed)" % n_cap if n_cap > 0 else "")], ["imports", "Special Imports"], ["orders", "Orders & Deliveries" + (" (%d waiting)" % n_del if n_del > 0 else "")], ["knowledge", "Lore & Cargo"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): tab = key; _build(), 0)
 		b.disabled = tab == key
@@ -65,6 +66,7 @@ func _build() -> void:
 	UIKit.clear(body)
 	match tab:
 		"quay": _quay()
+		"captains": _captains()
 		"imports": _imports()
 		"orders": _orders()
 		"knowledge": body.add_child(GuideUI.knowledge_box("harbourmaster", _build))
@@ -176,6 +178,82 @@ func _ship_card(i: int, e: Dictionary) -> Control:
 
 
 # ------------------------------------------------------------------ special imports
+# ------------------------------------------------------------------ R7: the captains and their voyages
+func _captains() -> void:
+	var c := Captains.in_port()
+	if c.is_empty():
+		var n := Trade.next_arrival()
+		body.add_child(UIKit.label("No captain in port%s." % ((" — %s (%s) is expected %s" % [str(n.get("captain", "")), str(n.get("name", "")), "today" if int(n.get("days", 0)) == 0 else "in %d days" % int(n.get("days", 0))]) if not n.is_empty() else ""), 22, "body_italic"))
+	else:
+		var box := UIKit.vbox(4)
+		box.name = "CaptainInPort"
+		box.add_child(UIKit.label("%s of %s" % [str(c["name"]), str(c["ship"])], 26, "heading", UIKit.RUBRIC))
+		var tr := int(c.get("trust", 0))
+		box.add_child(UIKit.rich("Visit %d to Brindlewick · %s" % [int(c["visits"]), "trusts you (%+d)" % tr if tr > 0 else ("wary of you (%d)" % tr if tr < 0 else "no dealings with you yet")], 20))
+		var g := Captains.greeting(c)
+		if g != "":
+			var gl := UIKit.rich("[i]%s[/i]" % g, 21)
+			gl.name = "Greeting"
+			box.add_child(gl)
+		body.add_child(box)
+		body.add_child(UIKit.rich("Commission a voyage: they fetch a good you know of on their next run, priced by the harbour's book%s. A deposit now (coin, or crafted pieces from your stores as cargo), the balance when it lands. Voyages can be delayed — and lost at sea." % (" less their %d%% for your good name" % int(round(float(Captains.quote(str(c["id"]), "ingot_steel", 1).get("discount", 0.0)) * 100.0)) if tr > 0 else ""), 20))
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 22)
+		grid.add_theme_constant_override("v_separation", 8)
+		for info in Trade.importables().slice(0, 8):
+			grid.add_child(_voyage_card(str(c["id"]), str(info["def"])))
+		body.add_child(grid)
+	body.add_child(UIKit.divider())
+	body.add_child(UIKit.label("Your voyages", 24, "heading", UIKit.RUBRIC))
+	var vs := Captains.voyages()
+	if vs.is_empty():
+		body.add_child(UIKit.label("None commissioned.", 20, "body_italic"))
+	for i in range(vs.size() - 1, maxi(-1, vs.size() - 9), -1):
+		var v: Dictionary = vs[i]
+		var vid := str(v["id"])
+		var row := UIKit.hbox(12)
+		var word: String = {"agreed": "agreed — sails when the ship leaves", "at_sea": "at sea — due day %d" % int(v["due"]), "delayed": "[color=#9a6a14]delayed[/color] — now due day %d" % int(v["due"]),
+			"arrived": "[color=#26622f][b]landed[/b][/color] — %d g balance due" % int(v["balance"]), "collected": "collected and paid", "failed": "[color=#9a2a14]lost at sea[/color] — %d g of the deposit returned" % int(v.get("refund", 0)),
+			"abandoned": "[color=#9a2a14]left unpaid[/color] — sold elsewhere"}.get(str(v["status"]), str(v["status"]))
+		var r := UIKit.rich("[b]%d × %s[/b] — %s (%s) · %s" % [int(v["qty"]), DB.item(str(v["def"])).get("name", v["def"]), str(v["captain_name"]), str(v["ship"]), word], 19)
+		r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(r)
+		if str(v["status"]) == "arrived":
+			var b := UIKit.button("Pay %d g & collect" % int(v["balance"]), func():
+				var err := Captains.collect(vid)
+				Events.toast.emit(err if err != "" else "Collected and paid.", "bad" if err != "" else "good")
+				_build(), 240)
+			b.disabled = not Game.can_afford(int(v["balance"]))
+			row.add_child(b)
+		body.add_child(row)
+	body.add_child(UIKit.divider())
+	body.add_child(UIKit.label("The captains", 24, "heading", UIKit.RUBRIC))
+	var known := PackedStringArray()
+	for d in Captains.roster_data():
+		var cc := Captains.get_c(str(d["id"]))
+		known.append("%s (%s) — %s" % [str(d["name"]), str(d["ship"]), "not yet met" if cc.is_empty() else "%d visit%s, trust %+d" % [int(cc["visits"]), "" if int(cc["visits"]) == 1 else "s", int(cc.get("trust", 0))]])
+	body.add_child(UIKit.rich("\n".join(known), 18))
+
+
+func _voyage_card(cid: String, def_id: String) -> Control:
+	var q := Captains.quote(cid, def_id, qty)
+	var h := UIKit.hbox(10)
+	h.custom_minimum_size = Vector2(660, 0)
+	h.add_child(ItemSlot.new(Items.make(def_id, {"qty": qty, "quality": 80.0}), 56))
+	var v := UIKit.vbox(2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(UIKit.rich("[b]%s[/b] — %d g each · %d–%d days at sea" % [DB.item(def_id).get("name", def_id), int(q["unit"]), int(q["lead"][0]), int(q["lead"][1])], 19))
+	var b := UIKit.button("Commission %d — %d g down (of %d g)" % [qty, int(q["deposit"]), int(q["total"])], func():
+		var err := Captains.commission(def_id, qty, int(q["deposit"]))
+		Events.toast.emit(err if err != "" else "Agreed — they sail with your order.", "bad" if err != "" else "good")
+		_build(), 0)
+	b.disabled = not Game.can_afford(int(q["deposit"]))
+	v.add_child(b)
+	h.add_child(v)
+	return h
+
+
 func _imports() -> void:
 	var dep := int(round(float(Trade.cfg().get("harbour", {}).get("deposit", 0.4)) * 100))
 	body.add_child(UIKit.rich("Order goods from abroad through the harbourmaster's book: [b]%d%% deposit[/b] now, the balance when the goods are landed. Only things you know of can be asked for — rarer goods take longer." % dep, 21))

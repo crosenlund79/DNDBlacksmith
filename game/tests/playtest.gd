@@ -3893,6 +3893,11 @@ func phase_equipment_depth() -> void:
 	var ph: RefCounted = load("res://tests/playtest_equipment_depth.gd").new()
 	await ph.run(self)
 
+# ======================================================================= R7: named captains, voyages, escorts
+func phase_harbour_captains() -> void:
+	var ph: RefCounted = load("res://tests/playtest_harbour_captains.gd").new()
+	await ph.run(self)
+
 # ======================================================================= R6: the Reliquary and an heir
 func phase_reliquary() -> void:
 	var ph: RefCounted = load("res://tests/playtest_reliquary.gd").new()

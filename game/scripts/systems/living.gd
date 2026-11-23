@@ -110,7 +110,7 @@ static func is_story(id: String) -> bool:
 
 ## Still part of the adventuring world (not fallen, retired or gone).
 static func is_active(a: Dictionary) -> bool:
-	return str(a.get("status", "")) in ["in_town", "away", "injured", "missing"]
+	return str(a.get("status", "")) in ["in_town", "away", "injured", "missing", "escorting"]   # R7: escorting a hireling
 
 
 static func active_count() -> int:

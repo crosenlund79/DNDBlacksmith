@@ -472,10 +472,13 @@ static func on_day() -> void:
 
 
 ## Expedition odds for a hireling and destination (also shown in the ledger before sending).
-static func odds(h: Dictionary, dest_id: String) -> Dictionary:
+static func odds(h: Dictionary, dest_id: String, escort_cover := -1.0) -> Dictionary:
 	var d: Dictionary = DB.destinations.get(dest_id, {})
 	var lvl := SkillSys.level(h["skills"], str(d.get("skill", "mining")))
 	var danger := Danger.trip(dest_id) * trait_mult(h, "danger")
+	# R7 (ECO-032): an escort takes on part of the road's danger (the hireling's own escort unless a cover is given)
+	var cv := escort_cover if escort_cover >= 0.0 else float(h.get("escort", {}).get("cover", 0.0))
+	danger *= 1.0 - clampf(cv, 0.0, Escorts.COVER_MAX)
 	var power := lvl * 1.0 + SkillSys.level(h["skills"], "travelling") * 0.4 + gear_score(h) * 0.05
 	var success := clampf(0.5 + (power - danger) * 0.09, 0.1, 0.97)
 	var injury := clampf((0.08 + (danger - power) * 0.06) * trait_mult(h, "injury"), 0.02, 0.6)
@@ -520,6 +523,7 @@ static func _resolve(h: Dictionary) -> void:
 	h["expeditions"] = int(h.get("expeditions", 0)) + 1
 	var first_bag: bool = h["id"] == "borin" and not Game.has_flag("borin_first_bag")
 	var contents: Array = []
+	Escorts.on_return(h, injury, death)   # R7: the escort comes home with them (wounded by a bad road)
 	if death:
 		h["status"] = "dead"
 		h["expedition"] = {}

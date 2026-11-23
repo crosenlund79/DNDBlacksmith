@@ -338,7 +338,16 @@ static func valued(terms: Dictionary, obj: Dictionary, ids: Array, a: Dictionary
 		if Living.has_goal(m, "wealth") or str(m.get("trait", "")) == "greedy":
 			share_w = 1.3
 	var share_val := 0.0 if str(obj["kind"]) == "discovery" else float(obj.get("value", 30)) * float(terms.get("share", 0)) / 100.0 * share_w
-	return float(terms.get("fee", 0)) + float(terms.get("bonus", 0)) * p + share_val
+	return float(terms.get("fee", 0)) + float(terms.get("bonus", 0)) * p + share_val + float(goods_value(terms, ids))
+
+
+## R7 (ECO-030): pieces offered as part of the fee, each worth what it is to the member who would take it up (Barter).
+static func goods_value(terms: Dictionary, ids: Array) -> int:
+	var v := 0
+	for u in terms.get("goods", []):
+		var it := Game.find_uid(int(u))
+		v += Barter.worth_to(Barter.best_taker(ids, it), it)
+	return v
 
 
 ## The party's answer: {verdict: accept|counter|refuse, reason, counter: {fee, bonus, share, site?, node?}, ask, offered}.
@@ -465,6 +474,10 @@ static func propose(obj: Dictionary, party: String, terms: Dictionary) -> Dictio
 		return {"verdict": "refuse", "reason": "Those terms make no sense.", "error": true}
 	if not Game.can_afford(int(terms.get("fee", 0))):
 		return {"verdict": "refuse", "reason": "You cannot pay %d g up front." % int(terms.get("fee", 0)), "error": true}
+	for u in terms.get("goods", []):
+		var gw := Barter.payable_reason(Game.find_uid(int(u)))
+		if gw != "":
+			return {"verdict": "refuse", "reason": gw, "error": true}
 	var t := talk()
 	var same := not t.is_empty() and str(t.get("party", "")) == party and str(t.get("obj", {}).get("kind", "")) == str(obj["kind"]) \
 		and str(t.get("obj", {}).get("def", "")) == str(obj["def"]) and int(t.get("obj", {}).get("uid", -1)) == int(obj["uid"])
@@ -492,7 +505,7 @@ static func agree() -> String:
 		return "They are no longer in town."
 	var c: Dictionary = t["answer"]["counter"]
 	var obj: Dictionary = t["answer"].get("alt", t["obj"]) if c.has("site") else t["obj"]
-	var terms := {"fee": int(c["fee"]), "bonus": int(c["bonus"]), "share": int(c["share"])}
+	var terms := {"fee": int(c["fee"]), "bonus": int(c["bonus"]), "share": int(c["share"]), "goods": (t["terms"].get("goods", []) as Array).duplicate()}
 	if not Game.can_afford(int(terms["fee"])):
 		return "You cannot pay %d g up front." % int(terms["fee"])
 	_contract(obj, cand, terms)
@@ -520,6 +533,14 @@ static func _contract(obj: Dictionary, cand: Dictionary, terms: Dictionary) -> S
 		"company": str(cand.get("company", "")), "who": str(cand["name"]), "terms": {"fee": fee, "bonus": int(terms.get("bonus", 0)), "share": int(terms.get("share", 0))},
 		"status": "contracted", "escrow": fee, "paid": {}, "exp": "", "pid": "", "outcome": "", "result": {}, "lore": "", "reached": false, "searched": false}
 	s["list"][sid] = rec
+	# R7 (ECO-030, ECO-031): goods paid now, to the member who would take each up (a piece that serves them is equipped)
+	var given := []
+	for u in terms.get("goods", []):
+		var it := Game.find_uid(int(u))
+		var taker := Barter.best_taker(ids, it)
+		if Barter.pay_adventurer(taker, int(u), "a sponsored expedition to %s" % WorldSites.name_of(str(obj["site"]))) == "":
+			given.append({"uid": int(u), "to": str(taker["id"])})
+	rec["terms"]["goods"] = given
 	# the party, formed now; it prepares at 07:00 and leaves at 08:00 with the others (Expeditions)
 	var pid := "party_%d" % Game.new_uid()
 	Expeditions.st()["parties"][pid] = {"id": pid, "members": ids.duplicate(), "leader": str(ids[0]), "dest": str(obj["site"]), "goal": "sponsored",
@@ -558,6 +579,23 @@ static func _refund(sp: Dictionary) -> void:
 	if fee > 0:
 		Game.add_gold(fee, "sponsor", "Fee returned by %s" % sp["who"], str(sp.get("leader", "")))
 	sp["escrow"] = 0
+	# R7: goods paid in kind come back with the fee (the same pieces, returned by whoever took them)
+	for g in sp.get("terms", {}).get("goods", []):
+		var a := Adv.get_a(str(g.get("to", "")))
+		if a.is_empty():
+			continue
+		var back := {}
+		for slot in a.get("equipment", {}).keys():
+			if int(a["equipment"][slot].get("uid", -1)) == int(g["uid"]):
+				back = a["equipment"][slot]
+				a["equipment"].erase(slot)
+		for i in range((a.get("loot", []) as Array).size() - 1, -1, -1):
+			if int(a["loot"][i].get("uid", -1)) == int(g["uid"]):
+				back = a["loot"][i]
+				(a["loot"] as Array).remove_at(i)
+		if not back.is_empty():
+			back["_arrives_how"] = "returned"
+			Game.add_item(back, false)
 
 
 # ======================================================================= the expedition hooks
@@ -922,6 +960,11 @@ static func terms_text(t: Dictionary) -> String:
 		parts.append("%d g on success" % int(t["bonus"]))
 	if int(t.get("share", 0)) > 0:
 		parts.append("%d%% share" % int(t["share"]))
+	for g in t.get("goods", []):   # R7: goods paid in kind (uids before the contract, {uid, to} after)
+		var u := int(g["uid"]) if g is Dictionary else int(g)
+		var it := ItemRegistry.find(u)
+		if not it.is_empty():
+			parts.append(Items.display_name(it))
 	return ", ".join(parts) if not parts.is_empty() else "no pay"
 
 

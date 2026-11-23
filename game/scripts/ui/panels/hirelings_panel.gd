@@ -167,10 +167,34 @@ func _card(h: Dictionary) -> Control:
 					purse.add_item("no purse" if amt == 0 else "%d g purse" % amt, amt)
 				purse.tooltip_text = "Gold to spend with the suppliers you know; trade goods you have marked are sold on the way."
 				line.add_child(purse)
+			# R7 (ECO-032): an escort from the adventurers in town, priced on the road's danger
+			var esc := OptionButton.new()
+			esc.name = "Escort_" + did
+			esc.add_item("no escort", 0)
+			var esc_ids := [""]
+			for ea in Escorts.candidates():
+				var w := Escorts.weigh(ea, did, Escorts.price(did, ea), [])
+				if not bool(w["ok"]):
+					continue
+				var oe := Hire.odds(h, did, Escorts.cover(ea, did))
+				esc.add_item("%s (L%d) — %d g · injury ~%d%%" % [str(ea["name"]), int(ea["level"]), int(w["price"]), int(float(oe["injury"]) * 100.0)], esc_ids.size())
+				esc_ids.append(str(ea["id"]))
+			esc.tooltip_text = "An adventurer in town can go along: the price follows the road's danger, and they take on part of it."
+			esc.fit_to_longest_item = false   # a fixed, clipped width: the road's line keeps its room
+			esc.clip_text = true
+			esc.custom_minimum_size = Vector2(190, 0)
+			esc.disabled = esc_ids.size() <= 1
+			line.add_child(esc)
 			var b := UIKit.button("Send", func():
 				var opts := {}
 				if purse != null:
 					opts["budget"] = purse.get_item_id(purse.selected)
+				var eid: String = esc_ids[esc.get_selected_id()] if esc.selected >= 0 else ""
+				if eid != "":
+					var ew := Escorts.hire(hid, eid, did, Escorts.price(did, Adv.get_a(eid)))
+					if ew != "":
+						Events.toast.emit(ew, "bad")
+						return
 				var err := Hire.send(hid, did, opts)
 				if err != "":
 					Events.toast.emit(err, "bad")
