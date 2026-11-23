@@ -18,7 +18,12 @@ row; do not regenerate the existing ones unless their release code is used again
 | `artifact-0.16.19.json` | playtest artifact 0.16.19 (the Living Workshop, unpublished) | `587399c` | 7 | 32 | 5113 | `e11130b194841b5048840b48297cbd509d4425ee07b44fdbc3655013d32f981f` |
 | `artifact-0.16.21.json` | playtest artifact 0.16.21 (the Living Village & Workshop, unpublished) | `65e70b5` | 8 | 32 | 5215 | `7820facb65aeea19244cd7607d7d2be5dc0b1c8407e9e58a66fde8ca93c52ac8` |
 | `artifact-0.17.json` | playtest artifact 0.17 (R1, unpublished — decision D-1) | `32b7be0` | 9 | 32 | 5215 | `656dcf4b0bcd64928769c096d88c93bd17d991b46cdea4086fc15212a339e1ec` |
+| `branch-r2.json` | the R2 head ("Truthful World Model", branch `claude/r2-truthful-world`, unpublished) | `e61053f` | 10 | 32 | 5043 | `9bd49d57de3dee02757395048c0fe6db88e1158ef92ecab06e9961d5eb294e94` |
 
+- **Completion run addition (23 November 2026):** `branch-r2.json`, from `git archive e61053f` (the R2 head — the last
+  schema before R3's one history, step 11, and R4's commissions v2, step 12), with the same verbatim driver, seed and
+  engine; apprentice Ithil Kettle with 3 tasks, `ct_1` delivered (18 h), 113 crafted (43 smelts), 7 sold, 10
+  commissions, 105 repairs, 5 mining trips; no script error.
 - **Produced:** 9 November 2026 (each file's `meta.saved_at` records the moment), Milestone A1 "Protect the
   Foundation".
 - **Engine:** Godot `4.3.stable.official.77dcf97d8`, headless, Linux.
