@@ -438,6 +438,7 @@ static func depart_parties() -> void:
 
 
 static func start(p: Dictionary) -> Dictionary:
+	Reputation.carry("village", "region", "travel")   # R8: a party on the road carries the village's news out
 	var rid: String = p["dest"]
 	var reg := region(rid)
 	var d: Dictionary = DB.destinations.get(rid, {})
@@ -1408,6 +1409,7 @@ static func _reveal_fate(a: Dictionary, mi: Dictionary, finder: String) -> void:
 
 ## Home again: wounds, experience, levels, loot, gold, renown, the smith's work judged.
 static func finish(e: Dictionary) -> void:
+	Reputation.carry("region", "village", "travel")   # R8: and brings the region's news home
 	e["phase"] = "done"
 	e["end"] = Game.now()
 	var reg := region(e["dest"])

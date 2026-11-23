@@ -46,6 +46,8 @@ static func on_day(day: int) -> void:
 	Institutions.on_day(day)   # R4: the village purse takes in its weekly income
 	Reliquary.on_day(day)   # R6: heirs write about relics in the case; answers to the smith's letters arrive
 	Captains.on_day()   # R7: voyages come due (landed, delayed or lost); unpaid cargo is given up
+	Militia.on_day(day)   # R8: the muster's patrols follow the kit it holds
+	Visitors.on_day(day)   # R8: a renowned visitor comes when news of the smith's work has reached them
 
 
 # ------------------------------------------------------------------ grocer

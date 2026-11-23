@@ -149,6 +149,11 @@ func _site_page(id: String) -> void:
 	page.add_child(UIKit.rich("[i]%s[/i]%s\n%s" % [tw, found, str(WorldSites.info(id).get("desc", ""))], 18))
 	page.add_child(UIKit.rich("Danger: [b]%s[/b] (%.0f)   ·   Status: [b][color=%s]%s[/color][/b]   ·   Expeditions: %d" % [Danger.word(id), Danger.site(id), stc, st.capitalize(), int(s["visits"])], 18))
 	var conds := WorldSites.conditions(id)
+	var ml := Militia.line(id)   # R8 (WLD-009): the patrols, from real values only
+	if ml != "":
+		var mlab := UIKit.rich("[color=#26622f]•[/color] [i]%s[/i]" % ml, 17)
+		mlab.name = "MilitiaLine"
+		page.add_child(mlab)
 	for c in conds:
 		page.add_child(UIKit.rich("[color=#7e2418]•[/color] [i]%s[/i]" % str(c), 17))
 	# who is there now

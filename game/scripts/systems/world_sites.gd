@@ -223,6 +223,11 @@ static func boss_alive(id: String) -> bool:
 ## The enemies at a node, as the site is now: a slain unique master is gone (or replaced by a weaker
 ## successor), and a growing threat puts more foes at the dens.
 static func enemies_at(rid: String, n: Dictionary) -> Array:
+	var foes := _enemies_at(rid, n)
+	return Militia.thin(rid, foes) if not foes.is_empty() else foes   # R8 (decision 13): the muster's patrols thin the bandits
+
+
+static func _enemies_at(rid: String, n: Dictionary) -> Array:
 	var base: Array = n.get("enemies", [])
 	if not cfg().has(rid) or base.is_empty():
 		return base

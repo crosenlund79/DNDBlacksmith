@@ -77,6 +77,13 @@ dice, so runs are deterministic.
 | `t_social` | **Scenario F.** Family ripple, memories, gifts, fatigue from crafting and its effect, rest and sleep, finds offered at the counter, the herbalist, persistence |
 | `t_tailoring` | Iteration 010 textiles: fibres spun and woven at the loom and sewn into a robe at the cutting table and tailor's bench (the robe lends magic, a warded cloak ward), tailoring nodes gate the recipes, weapon/armour variants differ (greatsword > shortsword attack, rapier faster, plate > chainmail > leather), save/load |
 | `t_trade` | Import orders from deposit to delivery, ships visit and their schedule persists |
+| `t_r3_history` | R3: the Chronicle is a view of Lore, causal links and indices, retention digests without dangling ids, migration of old feeds in order, seeded streams, bit-identical replay across save/load |
+| `t_r4_commissions` | R4: institutions, lots and purse, named prestige pieces, molds and patterns, the Honor Guard journey, steward deferral of named pieces |
+| `t_r5_equipment` | R5: every affix changes a seeded fight, sets, the arcanist's enchantment of an existing piece, risk tiers, the warned experiment, dormant/attune, the runesmith rule, refine advice, legacy copies and Epic for any maker |
+| `t_r6_reliquary` | R6: the case's rules (no fame), heirs only from records (negative test), the journey "a relic and its heir", custody, decline, sale, the bloodline Unique, steward letters, save/load |
+| `t_r7_procurement` | R7: goods as payment equipped and in provenance (and returned on cancel), escorts priced and effective by danger, "the sailor who remembers", delayed / lost / unpaid voyages told truthfully |
+| `t_r8_recognition` | R8: "a town safer by craftsmanship" (seeded with/without campaigns, explained by state), patrols that fade, reputation that crosses only by channel, credible visitors, political deferral |
+| `t_zz_integration` | The completion run's cross-system scenario: forge → sell → equip → deed → renown → inheritance → Reliquary → heir → restoration → civic consequence → one history |
 | `t_adventurers` | Durability falls in real fights (weapon, armour, shield, boots) and on the road, worn and broken gear lowers combat numbers and damage dealt, a missing slot is filled from the display, broken gear leads to a repair request or commission, a poor adventurer saves, class preferences read from item data, the companion slot strikes/guards/scouts/heals/carries, and the new state persists |
 | `t_biography` | Pilot 003, adventurer biographies (`Biography`, canonical v1.5 §8.1): every adventurer's pre-game history is 100–150 words, agrees with established facts (family links, personality lines, race, pronouns from the look), is written once when the roster is made and never rewritten, survives save/load, reaches an older save adding nothing else, leaves adventurer generation and the global random sequence alone, and shows as a scrollable Biography section in the character sheet's overview |
 
@@ -168,3 +175,9 @@ green. Releases are published only from the repository's default branch.
 6. Report the remaining failures honestly, with their diagnostics.
 
 Keep the suite practical: tests that guarantee real gameplay, not test counts.
+
+## Rendered phases added in the completion run (R3–R8)
+
+`honor_guard` (R4), `equipment_depth` (R5), `reliquary` (R6), `harbour_captains` (R7), `world_recognition` (R8) —
+each runs with `godot --path game res://tests/playtest.tscn -- <phase>` (a display or xvfb is needed). The long-campaign
+probe `res://tests/long_probe.tscn -- [days] [seed] [steward|idle] [keep]` runs years of play and audits history.

@@ -277,27 +277,37 @@ It is saved with the item, and the results panel can be reopened from the stores
 - **Difficulty** factors live in `expeditions.json → difficulty` and are read at use: `Expeditions.diff()` (enemy, death, death_dc, heal_rate, prices, wages, loot, observe, detail).
 - **UI:** `WantedPanel` (board, `WantedSheet` cards), `DossierPanel`, `ObserverPanel` (`MapView`, `EncounterView`), `DifficultyPanel`. These set `blocks_time = false`; `Game.ui_open` freezes the player while any window is open.
 
-## History: Lore and the Chronicle (known inconsistency, preserved until Gate J)
+## History: one Lore, the Chronicle as its view (R3, completion run)
 
-The canonical design wants **one** history: Lore as the shared memory and the Chronicle of the Realm as a *view* of it
-(canon §10.4; a separate chronicle truth database is outside the approved design, §15). The code is not there yet, and
-Run 0.1 deliberately **documents rather than rebuilds** it (decision register LORE-017, GOV-031; roadmap Gate J):
+Since R3 there is **one** history (canon §10.4, Gate J): `Lore` (`lore.gd`, `Game.state["lore"]`) is authoritative and
+the Chronicle of the Realm (`chronicle.gd`) is a *view* of it (`Lore.chron_ids`; save step 11 converted old feeds in
+order). `Chronicle.add` records a Lore event and lists it; there is no cap. Events carry `refs`, `roles` (heir, giver,
+receiver, escort, captain, visitor …) and `because` (causal links pushed with `Lore.push_cause`); runtime indices answer
+`of_item`, `of_actor`, `of_place`, `why` and `consequences`. Retention: routine workshop events (note, repaired,
+sharpened, treated) at importance 0 older than 60 days fold into monthly digests per item (`Lore.compact`, every 30
+days); folded ids redirect (`Lore.folded`), so nothing that referenced them dangles. Seeded streams (`rng.gd`: world,
+expeditions, commerce, crafting) are persisted after every draw and saves keep floats exactly (the `floats` sidecar),
+so a saved game replays bit-identically. `tests/long_probe.tscn` runs multi-year campaigns and audits history.
 
-- **Two stores.** `Lore` (`lore.gd`, `Game.state["lore"]`) keeps events with stable ids linked to items, actors and
-  places; importance ≥ 1 and anything still referenced is kept, routine events beyond 4,000 are *pruned* (not
-  summarised). `Chronicle` (`chronicle.gd`, `Game.state["chronicle"]`) is a feed capped at 400 entries.
-- **Who writes where.** `Lore.record(..., {"chronicle": true})` writes both. 66 call sites write `Chronicle.add`
-  directly and never reach Lore (33 call sites use `Lore.record`) — for example hireling deaths, funerals and graves
-  (`memorial.gd`) and many social notes. Such entries disappear once 400 newer ones arrive.
-- **Who reads where.** Item, adventurer and place histories (`Lore.of_item`, `of_actor`, `of_place`) and the
-  Steward's away report (including the welcome-back "wider world" section) read Lore. The Most Wanted "Legends & History" tab, dossier histories and the History panels
-  read the Chronicle; `Recognition.on_chronicle` awards plaques and Epic by matching Chronicle *text*.
-- **Old saves.** Chronicle entries from before Iteration 011 were never converted to Lore.
-- **Rule until Gate J:** keep both paths working as they are; do not move a writer from one store to the other
-  piecemeal. The Gate J work (Lore coverage, roles and causal links, indices, a retention policy that summarises
-  routine activity without losing meaningful links, converting old entries, retiring the separate store) is one
-  planned change. `t_run01.test_chronicle_and_lore_split_is_as_documented` pins today's behaviour so any change is
-  deliberate.
+## The completion run R3–R8 (architecture notes)
+
+- **R4 institutions** (`institutions.gd`): the village (Reeve Tamsin Hale — her title is kept; decision 7's
+  "mayor" naming is still the user's to make), the muster and the Highmarsh Watch hold supply (bulk counts with mean
+  quality), stock (real items, registry holder "institution"), lots, a purse and payments. Contracts can name prestige
+  pieces (staged work orders; `given_name`); molds and patterns (`craft_tools.gd`) speed series work.
+- **R5 equipment depth** (`gear_depth.gd`): twelve affix effects, three sets matched by maker's mark, arcana bound by
+  an arcanist (`Refinement` enchant/attune), states broken → disabled → destroyed (only by the warned experiment).
+- **R6 Reliquary & heirs** (`reliquary.gd`, station "reliquary", registry holder "reliquary"): out-of-service pieces
+  with earned significance; heirs only from ownership records and `characters.json` families; letters, the four
+  answers (decline, custody, return, sale), custody guards on sale/pawn/display, `Refinement` "restore", the
+  bloodline tag (Grimhold) and its ancestral nature (`Items.base_stat` × `Reliquary.strength_factor`).
+- **R7 procurement**: `barter.gd` (goods as payment, valued by `Valuation`; a piece that serves the taker is equipped),
+  `escorts.gd` (hireling escorts priced on `Danger.trip`; cover lowers `Hire.odds`; status "escorting"),
+  `captains.gd` (the nine data captains as persistent people: visits, timed voyages, outcomes, memory and trust).
+- **R8 world recognition**: `militia.gd` (readiness from the muster's real kit, a patrol that drifts toward it,
+  `WorldSites.enemies_at` thins common bandits by patrol × reach), `Reputation` news and channels (`carry`: travel,
+  ship, letter — `Expeditions.start/finish`, `Trade._depart`, `Contracts._close`), `visitors.gd` (patrons who come for
+  a recorded reason), political letters sealed for the smith (`Steward.POLITICAL_PATRONS`).
 
 ## Iteration 009 architecture notes
 

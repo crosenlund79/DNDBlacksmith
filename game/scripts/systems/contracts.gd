@@ -900,6 +900,8 @@ static func _close(c: Dictionary, outcome: String, pay: int, rep: float, fav: in
 	history().append(c)   # R4 (BUG-048): a delivered order's record is kept for the whole campaign
 	var kind := "good" if outcome in ["excellent", "good"] else "bad"
 	Events.toast.emit(text, "legendary" if outcome == "excellent" and tier >= 4 else kind)
+	if pid != "brindlewick_muster":
+		Reputation.carry("village", "region", "letter")   # R8: a regional patron's letters carry the village's news out
 	_changed()
 
 

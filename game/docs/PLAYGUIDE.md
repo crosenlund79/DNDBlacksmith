@@ -318,6 +318,28 @@ Equipment) and work in blocks of hours; apprentices can help.
   later), the millpond and watermill, the illustrated village map (M), Barnaby's Ironfront (his house), and the three
   dangerous places on the world map for the rarest metals.
 
+## The completion-run build (0.18): one history, honour guards, relics, captains and a safer road
+
+- **One history.** Every line in the Chronicle is part of the world's memory; a piece's, a person's and a place's
+  history agree, and you can follow why something happened (a death → the homecoming of a blade).
+- **Honour guards and institutions.** The reeve, the muster and the Highmarsh Watch order in bulk and may name
+  prestige pieces in their letter; delivered pieces stay theirs, traceable. Molds and patterns speed a series.
+- **Equipment that does things.** Every affix has an effect (Keen, Rime, Leech, Thorns …), matched sets from one maker
+  reward wearing them together, an arcanist can bind a deep property into an existing piece, and the anvil's "Temper
+  beyond" states its danger plainly — only it can ruin a piece, and only after a second, deliberate click.
+- **The Reliquary.** Buy it and set it up in the smithy. It holds only broken or unusable pieces whose service is
+  remembered. A real heir — only someone the records name — may write; answer with compensation (and an offer to buy,
+  if you wish). Their terms bind you: a piece in a family's care cannot be sold; one promised home goes home once you
+  restore it ("Restore" at the anvil). Grimhold, the Last Hammer, wakes fully only with its line's consent.
+- **The harbour's captains (Harbour → Captains).** Commission a voyage from the captain in port; it may land on time,
+  late, or be lost at sea (half the deposit back). Pay promptly and they remember it — better terms next time.
+- **Escorts and goods as payment.** In the hirelings' ledger, pick an escort from the adventurers in town: the price
+  follows the road's danger, and the odds you see are the odds the run uses. Sponsorships may be paid partly in pieces
+  from your stores; a piece that serves its new owner is worn at once.
+- **A safer road.** Pieces delivered to the Brindlewick muster arm its patrols. Over weeks they thin the bandits on the
+  nearer roads (the world map says so, with the real figure). News of your work travels with parties, ships and
+  letters; a merchant or a lord may come in person — and says how they heard.
+
 ## Quick evaluation with Developer Tools (F10)
 
 The tools are locked until **Enable cheats for this session** at the top of the F10 panel. Cheats are never saved and switch off after a new game or a load; a red **CHEATS ON** banner shows while they are on, and a save made since is marked as tested with cheats. The same bar holds the optional **skill-check bypass** (every check scores 100% without the minigame); **Test scenarios** open the forge with materials, the workshop with an apprentice, a commission request at the counter or a contract at the Project Bench.

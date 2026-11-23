@@ -55,6 +55,9 @@ const SHIFT_MINUTES := 540.0
 ## Goods a "goods" customer asks for (Shop._add_customer).
 const GOODS := ["potion_healing", "oil_whetstone"]
 const SEALED_PATRONS := ["royal", "leader"]
+## R8 (STW-014): political commitments are left to the smith — letters from the village's muster, a watch, a lord or the
+## Crown wait sealed and marked political; the steward never answers them.
+const POLITICAL_PATRONS := ["militia", "watch", "leader", "royal"]
 
 ## The steward's pace choices (standing instruction "pace"): normal speed or half again as fast.
 const PACES := [1.0, 1.5]
@@ -1747,10 +1750,11 @@ static func _scan_deferrals(at_start: bool, full := true) -> void:
 		if known.has("contract:" + cid):
 			continue
 		var p := Contracts.patron(str(c["patron"]))
-		var sealed := seal_ok and SEALED_PATRONS.has(str(p.get("kind", "")))
-		defer("contract", "A letter from %s: %s. They ask for an answer by day %d. %s" % [Contracts.patron_name(str(c["patron"])), str(c.get("title", "")),
-			int(c.get("expires", 0)), str(c.get("why", ""))], {"type": "contract", "id": cid, "key": "contract:" + cid,
-			"from": Contracts.patron_name(str(c["patron"]))}, sealed, {"route": "contracts", "args": {"id": cid}})
+		var political := POLITICAL_PATRONS.has(str(p.get("kind", "")))
+		var sealed := seal_ok and (SEALED_PATRONS.has(str(p.get("kind", ""))) or political)
+		defer("contract", "A letter from %s: %s. They ask for an answer by day %d. %s%s" % [Contracts.patron_name(str(c["patron"])), str(c.get("title", "")),
+			int(c.get("expires", 0)), str(c.get("why", "")), " A political commitment — yours to make." if political else ""], {"type": "contract", "id": cid, "key": "contract:" + cid,
+			"from": Contracts.patron_name(str(c["patron"])), "political": political}, sealed, {"route": "contracts", "args": {"id": cid}})
 	if full and Game.state.has("apprentices"):
 		var ap: Dictionary = Game.state["apprentices"]
 		for n in ap.get("notices", []):

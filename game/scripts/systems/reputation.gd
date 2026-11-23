@@ -95,16 +95,100 @@ static func standing_of(audience: String, place := "village") -> float:
 	return clampf(_mean_aff(kinds) * AFFECTION_WEIGHT + word(audience, place), -100.0, 100.0)
 
 
-## Word of the smith's deeds: until R8's spreading, every audience in the village hears it at once (as the single
-## number did) and other places hear nothing.
-static func change(delta: float, why := "") -> void:
+## Word of the smith's deeds. Where it happens (`place`, the village unless said otherwise) every audience hears it at
+## once, as the single number did. R8 (WLD-012, QST-010): it becomes news there, and other places hear it only when a
+## real channel carries it (carry: travel, a ship, a letter) — never instantly.
+static func change(delta: float, why := "", place := "village") -> void:
 	var w := _w()
 	for a in audiences():
 		if not w.get(a) is Dictionary:
 			w[a] = {}
-		w[a]["village"] = clampf(float(w[a].get("village", 0.0)) + delta, WORD_MIN, WORD_MAX)
+		w[a][place] = clampf(float(w[a].get(place, 0.0)) + delta, WORD_MIN, WORD_MAX)
 	if why != "" and absf(delta) >= 3.0:
 		Game.journal(("Word gets around: " if delta > 0 else "Tongues wag: ") + why)
+	_news(delta, why, place)
+
+
+# ======================================================================= R8: news and its channels
+## How much of a piece of news survives being carried to another place.
+const CARRY := 0.5
+const NEWS_KEEP := 120
+## The channels and the audiences each one reaches.
+const CHANNELS := {"travel": ["adventurers", "traders", "villagers"], "ship": ["traders", "artisans"], "letter": ["nobility", "traders"]}
+
+
+static func news() -> Array:
+	return _st().get("news", []) if _st().get("news") is Array else []
+
+
+## One piece of news per place and day: the day's changes there, summed, with the first reasons.
+static func _news(delta: float, why: String, place: String) -> void:
+	if absf(delta) < 0.01:
+		return
+	var r: Dictionary = Game.state["reputation"]
+	if not r.get("news") is Array:
+		r["news"] = []
+	var list: Array = r["news"]
+	var today := Game.day()
+	var n: Dictionary = {}
+	for i in range(list.size() - 1, maxi(-1, list.size() - 6), -1):
+		# the day's news at that place, while it has not yet left it (news already carried away stays as it was heard)
+		if int(list[i]["day"]) == today and str(list[i]["origin"]) == place and (list[i]["heard"] as Dictionary).size() == 1:
+			n = list[i]
+			break
+	if n.is_empty():
+		r["seq"] = int(r.get("seq", 0)) + 1
+		n = {"id": "news_%d_%s_%d" % [today, place, int(r["seq"])], "day": today, "origin": place, "delta": 0.0, "why": [], "heard": {place: {}}, "via": {}}
+		for a in audiences():
+			n["heard"][place][a] = today
+		list.append(n)
+		while list.size() > NEWS_KEEP:
+			list.pop_front()
+	n["delta"] = float(n["delta"]) + delta
+	if why != "" and (n["why"] as Array).size() < 3:
+		(n["why"] as Array).append(why)
+
+
+## Has `audience` in `place` heard this news?
+static func heard(n: Dictionary, place: String, audience: String) -> bool:
+	return (n.get("heard", {}).get(place, {}) as Dictionary).has(audience)
+
+
+## A channel carries what `from` knows to `to`: each audience the channel reaches hears there what it had not heard,
+## at CARRY of its weight. Returns how many pieces of news reached someone new.
+static func carry(from: String, to: String, channel: String) -> int:
+	if from == to or _st().is_empty():
+		return 0
+	var auds: Array = CHANNELS.get(channel, [])
+	var w := _w()
+	var moved := 0
+	for n in news():
+		var any := false
+		for a in auds:
+			if not heard(n, from, a) or heard(n, to, a):
+				continue
+			if not (n["heard"] as Dictionary).has(to):
+				n["heard"][to] = {}
+			n["heard"][to][a] = Game.day()
+			if not (n["via"] as Dictionary).has(to):
+				n["via"][to] = {}
+			n["via"][to][a] = channel   # how this audience there heard it
+			if not w.get(a) is Dictionary:
+				w[a] = {}
+			w[a][to] = clampf(float(w[a].get(to, 0.0)) + float(n["delta"]) * CARRY, WORD_MIN, WORD_MAX)
+			any = true
+		if any:
+			moved += 1
+	return moved
+
+
+## The latest news `audience` in `place` has heard from elsewhere, with its channel ({} when none).
+static func latest_heard(place: String, audience: String) -> Dictionary:
+	for i in range(news().size() - 1, -1, -1):
+		var n: Dictionary = news()[i]
+		if str(n["origin"]) != place and heard(n, place, audience) and float(n["delta"]) > 0.0:
+			return n
+	return {}
 
 
 ## Tests and developer tools: set what the village has heard (every audience).

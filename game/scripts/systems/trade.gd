@@ -262,6 +262,7 @@ static func _depart() -> void:
 		return
 	Chronicle.add("trade", "%s cast off and left Brindlewick harbour." % s["name"], {"ship": s["type"]})
 	Captains.on_sail(str(s.get("captain", "")))   # R7: a voyage the smith commissioned is under way
+	Reputation.carry("village", "region", "ship")   # R8: the crew talk in every port down the coast
 	ItemRegistry.retire_stock(s.get("stock", []), "ship_" + str(s.get("type", "")), str(s.get("name", "a ship")))   # R1 (EQ-004)
 	t["ship"] = {}
 	var g: Array = cfg().get("schedule", {}).get("gap", [3, 6])
